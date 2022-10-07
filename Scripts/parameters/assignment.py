@@ -443,24 +443,28 @@ vot_classes = {
     "truck": "business",
     "van": "business",
 }
-transit_modes = [
+local_transit_modes = [
     'b',
     'd',
-    'e',
     'g',
-    'j',
     'm',
     'p',
     'r',
     't',
     'w',
 ]
+long_dist_transit_modes = [
+    'e',
+    'j',
+]
 aux_modes = [
     'a',
     's',
 ]
 park_and_ride_mode = 'u'
-transit_assignment_modes = transit_modes + aux_modes
+transit_assignment_modes = (local_transit_modes
+                            + long_dist_transit_modes
+                            + aux_modes)
 external_modes = [
     "car",
     "transit",
@@ -809,8 +813,11 @@ emme_result_mtx = {
     },
 }
 background_traffic_attr = "ul3"
-inactive_line_penalty_attr = "ut1"
+line_penalty_attr = "ut1"
 boarding_penalty_attr = "ut3"
+dist_fare_attr = "@dist_fare"
+board_fare_attr = "@board_fare"
+board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 railtypes = {
     2: "tram",

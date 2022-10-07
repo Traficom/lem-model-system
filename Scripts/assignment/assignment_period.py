@@ -8,6 +8,7 @@ import parameters.assignment as param
 import parameters.zone as zone_param
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
+from assignment.datatypes.journey_level import BOARDED_LOCAL, BOARDED_LONG_D
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.abstract_assignment import Period
 
@@ -176,78 +177,15 @@ class AssignmentPeriod(Period):
         mapping : dict
             Dictionary of zone numbers and corresponding indices
         """
-        # Move transfer penalty to boarding penalties,
-        # a side effect is that it then also affects first boarding
-        self._calc_boarding_penalties(5)
-        has_visited = {}
         network = self.emme_scenario.get_network()
-        transit_zones = {node.label for node in network.nodes()}
-        tc = "transit_work"
-        spec = TransitSpecification(
-            self._segment_results[tc], self._park_and_ride_results[tc],
-            self.extra("hw"), self.demand_mtx[tc]["id"],
-            self.result_mtx["time"][tc]["id"],
-            self.result_mtx["dist"][tc]["id"],
-            self.result_mtx["trip_part_"+tc],
-            count_zone_boardings=True)
-        is_in_transit_zone_attr = param.is_in_transit_zone_attr.replace(
-            "ui", "data")
-        for transit_zone in transit_zones:
-            # Set tag to 1 for nodes in transit zone and 0 elsewhere
-            for node in network.nodes():
-                node[is_in_transit_zone_attr] = (node.label == transit_zone)
-            self.emme_scenario.publish_network(network)
-            # Transit assignment with zone tag as weightless boarding cost
-            self.emme_project.transit_assignment(
-                specification=spec.transit_spec, scenario=self.emme_scenario,
-                save_strategies=True)
-            self.emme_project.matrix_results(
-                spec.transit_result_spec, self.emme_scenario)
-            nr_visits = self._get_matrix(
-                "trip_part_transit_work", "board_cost")
-            # If the number of visits is less than 1, there seems to
-            # be an easy way to avoid visiting this transit zone
-            has_visited[transit_zone] = (nr_visits > 0.99)
-        for centroid in network.centroids():
-            # Add transit zone of destination to visited
-            has_visited[centroid.label][:, mapping[centroid.number]] = True
-        maxfare = 999
-        cost = numpy.full_like(nr_visits, maxfare)
-        mtx = next(iter(has_visited.values()))
-        for zone_combination in fares.zone_fares:
-            goes_outside = numpy.full_like(mtx, False)
-            for transit_zone in has_visited:
-                # Check if the OD-flow has been at a node that is
-                # outside of this zone combination
-                if transit_zone not in zone_combination:
-                    goes_outside |= has_visited[transit_zone]
-            is_inside = ~goes_outside
-            if zone_combination in fares.exclusive:
-                # Calculate fares exclusive for municipality citizens
-                exclusion = pandas.DataFrame(
-                    is_inside, self.emme_scenario.zone_numbers,
-                    self.emme_scenario.zone_numbers)
-                municipality = fares.exclusive[zone_combination]
-                inclusion = zone_param.municipalities[municipality]
-                exclusion.loc[:inclusion[0]-1] = False
-                exclusion.loc[inclusion[1]+1:] = False
-                is_inside = exclusion.values
-            zone_fare = fares.zone_fares[zone_combination]
-            # If OD-flow matches several combinations, pick cheapest
-            cost[is_inside] = numpy.minimum(cost[is_inside], zone_fare)
-        # Replace fare for peripheral zones with fixed matrix
-        bounds = zone_param.areas["peripheral"]
-        zn = pandas.Index(self.emme_scenario.zone_numbers)
-        l, u = zn.slice_locs(bounds[0], bounds[1])
-        cost[l:u, :u] = peripheral_cost
-        cost[:u, l:u] = peripheral_cost.T
-        # Calculate distance-based cost from inv-distance
-        dist = self._get_matrix("dist", "transit_work")
-        dist_cost = fares.start_fare + fares.dist_fare*dist
-        cost[cost>=maxfare] = dist_cost[cost>=maxfare]
-        # Reset boarding penalties
-        self._calc_boarding_penalties()
-        return cost
+        penalty_attr = param.line_penalty_attr.replace("ut", "data")
+        for line in network.transit_lines():
+            line[param.dist_fare_attr] = fares["dist"][line.data1]
+            line[penalty_attr] = line[param.dist_fare_attr]
+            line[param.board_fare_attr] = fares["firstb"][line.data1]
+            line[param.board_long_dist_attr] = (line[param.board_fare_attr]
+                if line.mode.id in param.long_dist_transit_modes else 0)
+        self.emme_scenario.publish_network(network)
 
     def transit_results_links_nodes(self):
         """
@@ -768,23 +706,20 @@ class AssignmentPeriod(Period):
         log.info("Congested transit assignment started...")
         network = self.emme_scenario.get_network()
         headway_attr = self.extra("hw")
-        penalty_attr = param.inactive_line_penalty_attr.replace("ut", "data")
+        penalty_attr = param.line_penalty_attr.replace("ut", "data")
         for line in network.transit_lines():
             line.headway = line[headway_attr]
             if line[headway_attr] > 900:
                 line[penalty_attr] = 9999
             else:
-                line[penalty_attr] = 0
+                line[penalty_attr] = line[param.dist_fare_attr]
         self.emme_scenario.publish_network(network)
         specs = self._transit_specs
         for transit_class in specs:
             spec = specs[transit_class].transit_spec
-            (spec["journey_levels"][1]["boarding_cost"]["global"]
-                 ["penalty"]) = param.transfer_penalty[transit_class]
-            spec["in_vehicle_cost"] = {
-                "penalty": param.inactive_line_penalty_attr,
-                "perception_factor": 1,
-            }
+            for jl in (BOARDED_LOCAL, BOARDED_LONG_D):
+                (spec["journey_levels"][jl]["boarding_cost"]["global"]
+                    ["penalty"]) = param.transfer_penalty[transit_class]
         assign_report = self.emme_project.congested_assignment(
             transit_assignment_spec=[specs[tc].transit_spec for tc in specs],
             class_names=list(specs),

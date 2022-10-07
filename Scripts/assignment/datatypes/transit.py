@@ -1,7 +1,6 @@
 import copy
 
 import parameters.assignment as param
-from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.datatypes.journey_level import JourneyLevel
 
 
@@ -76,6 +75,10 @@ class TransitSpecification:
             "in_vehicle_time": {
                 "perception_factor": 1
             },
+            "in_vehicle_cost": {
+                "penalty": "length",
+                "perception_factor": param.line_penalty_attr,
+            },
             "aux_transit_time": param.aux_transit_time,
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
@@ -100,7 +103,7 @@ class TransitSpecification:
         self.transit_spec["journey_levels"] = [JourneyLevel(
                 level, headway_attribute, park_and_ride_results,
                 count_zone_boardings).spec
-            for level in range(5)]
+            for level in range(6)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "on_segments": segment_results,
