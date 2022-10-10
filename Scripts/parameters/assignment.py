@@ -442,6 +442,10 @@ vot_classes = {
     "trailer_truck": "business",
     "truck": "business",
     "van": "business",
+    "transit_work": "work",
+    "transit_leisure": "leisure",
+    "car_first_mile": "work",
+    "car_last_mile": "work",
 }
 local_transit_modes = [
     'b',
@@ -662,6 +666,22 @@ emme_result_mtx = {
             "id": 42,
             "description": "car leisure travel generalized cost",
         },
+        "transit_work": {
+            "id": 43,
+            "description": "transit travel generalized cost",
+        },
+        "transit_leisure": {
+            "id": 44,
+            "description": "transit travel generalized cost",
+        },
+        "car_first_mile":  {
+            "id": 45,
+            "description": "park-and-ride generalized cost",
+        },
+        "car_last_mile":  {
+            "id": 46,
+            "description": "park-and-ride generalized cost",
+        },
         "trailer_truck": {
             "id": 47,
             "description": "trailer truck travel generalized cost",
@@ -813,7 +833,7 @@ emme_result_mtx = {
     },
 }
 background_traffic_attr = "ul3"
-line_penalty_attr = "ut1"
+line_penalty_attr = "us1"
 boarding_penalty_attr = "ut3"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"

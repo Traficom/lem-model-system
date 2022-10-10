@@ -157,31 +157,24 @@ class AssignmentPeriod(Period):
         return mtxs
 
     def calc_transit_cost(self, fares, peripheral_cost, mapping):
-        """Calculate transit zone cost matrix.
-        
-        Perform multiple transit assignments.
-        For each assignment, check if a specific zone has been visited
-        by the OD-pair flows. For all the zones that are visited, 
-        check if there is a zone combination fare that includes them all.
-        If not, distance fare is applied.
-
-        Some fares can be exclusively for municipality citizens
-        (i.e., tours starting in that municipality).
+        """Insert line costs.
         
         Parameters
         ----------
-        fares : assignment.datatypes.transit_fare.TransitFareZoneSpecification
+        fares : pandas.DataFrame
             Transit fare zone specification
         peripheral_cost : numpy 2-d matrix
-            Fixed cost matrix for peripheral zones
+            Deprecated
         mapping : dict
-            Dictionary of zone numbers and corresponding indices
+            Deprecated
         """
         network = self.emme_scenario.get_network()
-        penalty_attr = param.line_penalty_attr.replace("ut", "data")
+        penalty_attr = param.line_penalty_attr.replace("us", "data")
         for line in network.transit_lines():
-            line[param.dist_fare_attr] = fares["dist"][line.data1]
-            line[penalty_attr] = line[param.dist_fare_attr]
+            for segment in line.segments():
+                segment[param.dist_fare_attr] = (fares["dist"][line.data1]
+                                                 * segment.link.length)
+                segment[penalty_attr] = segment[param.dist_fare_attr]
             line[param.board_fare_attr] = fares["firstb"][line.data1]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in param.long_dist_transit_modes else 0)
@@ -371,19 +364,17 @@ class AssignmentPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        last_iteration_classes = param.freight_classes + ("transit_leisure",)
         matrices = {}
         for subtype in self.result_mtx[mtx_type]:
-            if is_last_iteration or subtype not in last_iteration_classes:
+            if is_last_iteration or subtype not in param.freight_classes:
                 if mtx_type == "time" and subtype in param.assignment_modes:
                     mtx = self._extract_timecost_from_gcost(subtype)
                 elif mtx_type == "time" and subtype in param.transit_classes:
+                    self._extract_transit_time_from_gcost(subtype)
                     mtx = self._damp_travel_time(subtype)
                 else:
                     mtx = self._get_matrix(mtx_type, subtype)
                 matrices[subtype] = mtx
-        if not is_last_iteration:
-            matrices["transit_leisure"] = matrices["transit_work"]
         return matrices
 
     def _get_matrix(self, assignment_result_type, subtype):
@@ -424,6 +415,23 @@ class AssignmentPeriod(Period):
         dist = self._get_matrix("dist", ass_class)
         time = gcost - vot_inv*(cost + self.dist_unit_cost*dist)
         self._set_matrix(ass_class, time, "time")
+        return time
+
+    def _extract_transit_time_from_gcost(self, transit_class):
+        """Remove monetary cost from generalized cost.
+
+        Transit assignment produces a generalized cost matrix.
+        To get travel time, monetary cost is removed from generalized cost.
+        """
+        vot_inv = param.vot_inv[param.vot_classes[transit_class]]
+        gcost = self._get_matrix("gen_cost", transit_class)
+        cost = (self._get_matrix("cost", transit_class)
+                + self._get_matrix("trip_part_"+transit_class, "board_cost")
+                - param.transfer_penalty[transit_class]
+                * (self._get_matrix("trip_part_"+transit_class, "num_board")-1))
+        time = gcost - vot_inv*cost
+        self._set_matrix(transit_class, time, "time")
+        self._set_matrix(transit_class, cost, "cost")
         return time
 
     def _calc_background_traffic(self, include_trucks=False):
@@ -491,10 +499,11 @@ class AssignmentPeriod(Period):
         self._car_spec = CarSpecification(
             self.extra, self.demand_mtx, self.result_mtx)
         self._transit_specs = {tc: TransitSpecification(
-                self._segment_results[tc], self._park_and_ride_results[tc],
+                tc, self._segment_results[tc], self._park_and_ride_results[tc],
                 self.extra("hw"), self.demand_mtx[tc]["id"],
-                self.result_mtx["time"][tc]["id"],
+                self.result_mtx["gen_cost"][tc]["id"],
                 self.result_mtx["dist"][tc]["id"],
+                self.result_mtx["cost"][tc]["id"],
                 self.result_mtx["trip_part_"+tc])
             for tc in param.transit_classes}
         self.bike_spec = {
@@ -689,8 +698,7 @@ class AssignmentPeriod(Period):
         log.info("Transit assignment started...")
         # Here we assign all transit in one class, multi-class assignment is
         # performed in last iteration (congested assignment)
-        transit_classes = param.park_and_ride_classes + ("transit_work",)
-        for i, transit_class in enumerate(transit_classes):
+        for i, transit_class in enumerate(param.transit_classes):
             spec = self._transit_specs[transit_class]
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
@@ -706,20 +714,17 @@ class AssignmentPeriod(Period):
         log.info("Congested transit assignment started...")
         network = self.emme_scenario.get_network()
         headway_attr = self.extra("hw")
-        penalty_attr = param.line_penalty_attr.replace("ut", "data")
+        penalty_attr = param.line_penalty_attr.replace("us", "data")
         for line in network.transit_lines():
             line.headway = line[headway_attr]
             if line[headway_attr] > 900:
-                line[penalty_attr] = 9999
+                for segment in line.segments():
+                    segment[penalty_attr] = 9999
             else:
-                line[penalty_attr] = line[param.dist_fare_attr]
+                for segment in line.segments():
+                    segment[penalty_attr] = segment[param.dist_fare_attr]
         self.emme_scenario.publish_network(network)
         specs = self._transit_specs
-        for transit_class in specs:
-            spec = specs[transit_class].transit_spec
-            for jl in (BOARDED_LOCAL, BOARDED_LONG_D):
-                (spec["journey_levels"][jl]["boarding_cost"]["global"]
-                    ["penalty"]) = param.transfer_penalty[transit_class]
         assign_report = self.emme_project.congested_assignment(
             transit_assignment_spec=[specs[tc].transit_spec for tc in specs],
             class_names=list(specs),

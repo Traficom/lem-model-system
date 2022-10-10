@@ -21,8 +21,10 @@ class JourneyLevel:
     ----------
     level : int
         Journey level: 0 - not boarded yet, 1 - parked,
-        2 - boarded at least once, 3 - left transit system,
-        4 - forbidden (virtual level)
+        2 - boarded local service, 3 - boarded long-distance service,
+        3 - left transit system, 4 - forbidden (virtual level)
+    transit_class : str
+        Name of transit class (transit_work/transit_leisure/...)
     headway_attribute : str
         Line attribute where headway is stored
     park_and_ride : str or False (optional)
@@ -31,8 +33,8 @@ class JourneyLevel:
     count_zone_boardings : bool (optional)
         Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, level, headway_attribute, park_and_ride=False,
-            count_zone_boardings=False):
+    def __init__(self, level, transit_class, headway_attribute,
+            park_and_ride=False, count_zone_boardings=False):
         # Boarding transit modes allowed only on levels 0-3
         next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
         transitions = [{
@@ -79,11 +81,15 @@ class JourneyLevel:
             "boarding_time": None,
             "boarding_cost": {
                 "global": {
-                    "penalty": 0,
+                    "penalty": param.transfer_penalty[transit_class],
                     "perception_factor": 1,
                 },
                 "at_nodes": None,
-                "on_lines": None,
+                "on_lines": {
+                    "penalty": param.board_fare_attr,
+                    "perception_factor": param.vot_inv[param.vot_classes[
+                        transit_class]],
+                },
                 "on_segments": None,
             },
             "waiting_time": {
@@ -96,19 +102,12 @@ class JourneyLevel:
         if level < BOARDED_LOCAL:
             (self.spec["waiting_time"]
                       ["headway_fraction"]) = param.first_headway_fraction
-        else:
+            # No transfer penalty for first boarding
+            self.spec["boarding_cost"]["global"]["penalty"] = 0
+        elif level == BOARDED_LOCAL:
+            # Free transfers within local transit
             (self.spec["boarding_cost"]
-                      ["global"]["penalty"]) = param.transfer_penalty["transit"]
-        if level == BOARDED_LOCAL:
-            self.spec["boarding_cost"]["on_lines"] = {
-                "penalty": param.board_long_dist_attr,
-                "perception_factor": 1,
-            }
-        else:
-            self.spec["boarding_cost"]["on_lines"] = {
-                "penalty": param.board_fare_attr,
-                "perception_factor": 1,
-            }
+                      ["on_lines"]["penalty"]) =  param.board_long_dist_attr
         if count_zone_boardings:
             self.spec["boarding_cost"]["global"] = None
             self.spec["boarding_cost"]["at_nodes"] = {
