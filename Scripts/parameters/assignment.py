@@ -374,6 +374,14 @@ volume_factors["aux_transit"] = volume_factors["transit"]
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
 share_7_22_of_day = 0.9
+# Effective headway as function of actual headway
+effective_headway = {
+    (0, 10): lambda x: 1.1*x,
+    (10, 30): lambda x: 11 + 0.9*x,
+    (30, 60): lambda x: 29 + 0.5*x,
+    (60, 120): lambda x: 44 + 0.3*x,
+    (120, float("inf")): lambda x: 62 + 0.2*x,
+}
 # Noise zone width as function of start noise
 noise_zone_width = {
     (0, 55): lambda x: 5,
@@ -834,6 +842,8 @@ emme_result_mtx = {
 }
 background_traffic_attr = "ul3"
 line_penalty_attr = "us1"
+line_operator_attr = "ut1"
+effective_headway_attr = "ut2"
 boarding_penalty_attr = "ut3"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"

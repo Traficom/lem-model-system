@@ -92,16 +92,9 @@ class JourneyLevel:
                 },
                 "on_segments": None,
             },
-            "waiting_time": {
-                "headway_fraction": param.standard_headway_fraction,
-                "effective_headways": headway_attribute,
-                "spread_factor": 1,
-                "perception_factor": param.waiting_time_perception_factor,
-            },
+            "waiting_time": None,
         }
         if level < BOARDED_LOCAL:
-            (self.spec["waiting_time"]
-                      ["headway_fraction"]) = param.first_headway_fraction
             # No transfer penalty for first boarding
             self.spec["boarding_cost"]["global"]["penalty"] = 0
         elif level == BOARDED_LOCAL:

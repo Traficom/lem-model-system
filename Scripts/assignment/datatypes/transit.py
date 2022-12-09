@@ -59,10 +59,10 @@ class TransitSpecification:
             "modes": copy.copy(param.transit_assignment_modes),
             "demand": demand_mtx_id,
             "waiting_time": {
-                "headway_fraction": param.standard_headway_fraction,
+                "headway_fraction": 1,
                 "effective_headways": headway_attribute,
                 "spread_factor": 1,
-                "perception_factor": param.waiting_time_perception_factor
+                "perception_factor": 1,
             },
             "boarding_time": {
                 "global": None,
@@ -92,7 +92,7 @@ class TransitSpecification:
                 "choices_at_regular_nodes": "OPTIMAL_STRATEGY",
             },
             "flow_distribution_between_lines": {
-                "consider_total_impedance": False
+                "consider_total_impedance": True,
             },
             "journey_levels": None,
             "performance_settings": param.performance_settings,
