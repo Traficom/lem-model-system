@@ -42,7 +42,7 @@ class JourneyLevel:
                 "next_journey_level": next,
             } for mode in param.local_transit_modes]
         next = BOARDED_LONG_D if level <= BOARDED_LONG_D else FORBIDDEN
-        transitions = [{
+        transitions += [{
                 "mode": mode,
                 "next_journey_level": next,
             } for mode in param.long_dist_transit_modes]
