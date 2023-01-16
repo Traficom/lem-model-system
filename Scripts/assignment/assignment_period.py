@@ -202,6 +202,7 @@ class AssignmentPeriod(Period):
         log.info("Sets car and transit functions for scenario {}".format(
             self.emme_scenario.id))
         network = self.emme_scenario.get_network()
+        delay_attr = param.transit_delay_attr.replace("us", "data")
         transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
             for modes in param.transit_delay_funcs}
         main_mode = network.mode(param.main_mode)
@@ -260,7 +261,7 @@ class AssignmentPeriod(Period):
                                 log.warn("Bus mode on link {}, type {}".format(
                                     link.id, link.type))
                         for segment in link.segments():
-                            segment.data2 = bus_delay
+                            segment[delay_attr] = bus_delay
                     else:
                         func = funcs[self.name]
                     break
