@@ -137,9 +137,9 @@ volume_delay_funcs = {
     "fd98": "length*(60/12)",
     # Transit functions
     ## Bus, no bus lane
-    "ft01": "us2*length+timau",
+    "ft01": "us1*length+timau",
     ## Bus on bus lane
-    "ft02": "us2*length",
+    "ft02": "us1*length",
     ## Tram aht
     "ft03": "(length / (int(ul1 / 10000))) * 60",
     ## Tram pt
@@ -833,7 +833,8 @@ emme_result_mtx = {
     },
 }
 background_traffic_attr = "ul3"
-line_penalty_attr = "us1"
+transit_delay_attr = "us1"
+line_penalty_attr = "us2"
 boarding_penalty_attr = "ut3"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
