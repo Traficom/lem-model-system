@@ -591,6 +591,7 @@ class TransitVehicle:
 
 
 class NetworkObject:
+    network: Network
     def __init__(self, network, extra_attr):
         self.network = network
         self._extra_attr = {idx: extra_attr[idx].default_value
@@ -633,7 +634,9 @@ class Node(NetworkObject):
     @property
     def id(self):
         return str(self.number)
-
+    
+    def outgoing_segments(self, include_hidden: bool = False):
+        return [s for s in self.network.transit_segments() if s.link.i_node == self.number]    
 
 class Link(NetworkObject):
     def __init__(self, network, i_node, j_node, modes):
