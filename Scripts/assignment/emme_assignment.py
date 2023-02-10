@@ -304,44 +304,34 @@ class EmmeAssignmentModel(AssignmentModel):
         return "@{}_{}".format(attr, "vrk")
 
     def _set_stop_code(self):
-        class StopStats(NamedTuple):
-            stop_counts: int
-            stop_ratio: float
-            is_stop: bool
-
-        STOP_TYPE_ATTRIBUTE = '@stop_type'
-        KEEP_STOP_ATTRIBUTE = '@keep_stops'
-
-        self.mod_scenario.create_extra_attribute('NODE',STOP_TYPE_ATTRIBUTE)
-        self.mod_scenario.create_extra_attribute('TRANSIT_LINE',KEEP_STOP_ATTRIBUTE)
-
+        node_type_attr = param.node_type_attr.replace("ui", "data")
         network = self.mod_scenario.get_network()
         for node in network.nodes():
-            stops: Dict[str, StopStats] = {}
+            stops = []
             for mode in ['e', 'b']:
-                segments = [segment.allow_boardings or segment.allow_alightings for segment in node.outgoing_segments(include_hidden=True) if segment.line.mode.id==mode]
+                segments = [segment.allow_boardings or segment.allow_alightings
+                    for segment in node.outgoing_segments(include_hidden=True)
+                    if segment.line.mode.id == mode
+                    and segment.line[param.keep_stops_attr]]
                 stop_counts = sum(segments)
                 stop_ratio = 0.0 if stop_counts < 1 else stop_counts/len(segments)
-                stops[mode] = StopStats(
-                    stop_counts, 
-                    stop_ratio,
-                    stop_ratio > 0.49 or stop_counts > 9)
-            node[STOP_TYPE_ATTRIBUTE] = 0
-            if stops['b'].is_stop:
-                node[STOP_TYPE_ATTRIBUTE] = 1
-            if stops['e'].is_stop:
-                node[STOP_TYPE_ATTRIBUTE] = 2
-            if (stops['e'].is_stop) and (stops['b'].is_stop):
-                node[STOP_TYPE_ATTRIBUTE] = 3
+                is_stop = stop_ratio > 0.49 or stop_counts > 9
+                if is_stop:
+                    node[node_type_attr] = param.stop_codes[mode][0]
+                stops.append(is_stop)
+            if all(stops):
+                node[node_type_attr] = 5
         self.mod_scenario.publish_network(network)
 
     def _add_bus_stops(self):
+        node_type_attr = param.node_type_attr.replace("ui", "data")
         network = self.mod_scenario.get_network()
         for line in network.transit_lines():
-            if line.mode.id in param.stop_codes and line["@keep_stops"] == 0:
+            if (line.mode.id in param.stop_codes
+                    and line[param.keep_stops_attr] == 0):
                 stop_codes = param.stop_codes[line.mode.id]
                 for segment in line.segments():
-                    is_stop = segment.i_node.data2 in stop_codes
+                    is_stop = segment.i_node[node_type_attr] in stop_codes
                     segment.allow_alightings = is_stop
                     segment.allow_boardings = is_stop
         self.mod_scenario.publish_network(network)
