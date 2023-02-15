@@ -235,8 +235,8 @@ class EmmeAssignmentModel(AssignmentModel):
             volume_factor = param.volume_factors["bus"][ap.name]
             for line in network.transit_lines():
                 mode = line.vehicle.description
-                headway = line[ap.extra("hw")]
-                if 0 < headway < 900:
+                headway = line[ap.extra("hdw")]
+                if 0 < headway < 990:
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
                         dists[mode] += departures * segment.link.length

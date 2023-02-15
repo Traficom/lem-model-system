@@ -50,7 +50,7 @@ def validate(network, fares=None):
     validate_mode(network, param.main_mode, EMME_AUTO_MODE)
     for m in param.assignment_modes.values():
         validate_mode(network, m, EMME_AUX_AUTO_MODE)
-    for m in param.transit_modes:
+    for m in param.local_transit_modes + param.long_dist_transit_modes:
         validate_mode(network, m, EMME_TRANSIT_MODE)
     for m in param.aux_modes + [param.bike_mode]:
         validate_mode(network, m, EMME_AUX_TRANSIT_MODE)
@@ -95,8 +95,8 @@ def validate(network, fares=None):
                 ', '.join(unofficial_nodes)
         ))
     for line in network.transit_lines():
-        for hdwy in ("@hw_aht", "@hw_pt", "@hw_iht"):
-            if line[hdwy] < 0.02:
+        for hdw in ("@hdw_aht", "@hdw_pt", "@hdw_iht"):
+            if line[hdw] < 0.02:
                 msg = "Headway missing for line {}".format(line.id)
                 log.error(msg)
                 raise ValueError(msg)

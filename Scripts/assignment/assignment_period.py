@@ -454,7 +454,7 @@ class AssignmentPeriod(Period):
             if link.type > 100: # If car or bus link
                 freq = 0
                 for segment in link.segments():
-                    segment_hdw = segment.line[self.extra("hw")]
+                    segment_hdw = segment.line[self.extra("hdw")]
                     if 0 < segment_hdw < 900:
                         freq += 60 / segment_hdw
                 link[self.extra("bus")] = freq
@@ -646,7 +646,7 @@ class AssignmentPeriod(Period):
         log.info("Calculates effective headways "
                  + "and cumulative travel times for scenario "
                  + str(self.emme_scenario.id))
-        headway_attr = self.extra("hw")
+        headway_attr = self.extra("hdw")
         effective_headway_attr = param.effective_headway_attr.replace(
             "ut", "data")
         func = param.effective_headway
@@ -707,7 +707,8 @@ class AssignmentPeriod(Period):
                                   + b["ctime"]*cumulative_time
                                   + b["cspeed"]*cumulative_speed)
                 # Estimated waiting time addition caused by headway deviation
-                segment["@wait_time_dev"] = headway_sd**2 / (2.0*line.headway)
+                segment["@wait_time_dev"] = (headway_sd**2
+                                             / (2.0*line[effective_headway_attr]))
         self.emme_scenario.publish_network(network)
 
     def _assign_transit(self):
@@ -730,7 +731,7 @@ class AssignmentPeriod(Period):
         """Perform congested transit assignment for one scenario."""
         log.info("Congested transit assignment started...")
         network = self.emme_scenario.get_network()
-        headway_attr = self.extra("hw")
+        headway_attr = self.extra("hdw")
         penalty_attr = param.line_penalty_attr.replace("us", "data")
         for line in network.transit_lines():
             line.headway = line[headway_attr]

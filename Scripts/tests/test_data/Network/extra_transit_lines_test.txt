@@ -1,10 +1,10 @@
 t extra_attributes
-@hw_aht TRANSIT_LINE 0.0 ''
-@hw_pt TRANSIT_LINE 0.0 ''
-@hw_iht TRANSIT_LINE 0.0 ''
+@hdw_aht TRANSIT_LINE 0.0 ''
+@hdw_pt TRANSIT_LINE 0.0 ''
+@hdw_iht TRANSIT_LINE 0.0 ''
 @keep_stops TRANSIT_LINE 0.0 ''
 end extra_attributes
-    line   @hw_aht    @hw_pt   @hw_iht  @keep_stops
+    line   @hdw_aht    @hdw_pt   @hdw_iht  @keep_stops
 '10101 '         6       7.5         6            0
 '10102 '         6       7.5         6            0
 '10191 '        40        40        40            0
