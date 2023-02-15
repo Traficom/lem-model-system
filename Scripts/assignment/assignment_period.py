@@ -170,12 +170,13 @@ class AssignmentPeriod(Period):
         """
         network = self.emme_scenario.get_network()
         penalty_attr = param.line_penalty_attr.replace("us", "data")
+        op_attr = param.line_operator_attr.replace("ut", "data")
         for line in network.transit_lines():
             for segment in line.segments():
-                segment[param.dist_fare_attr] = (fares["dist"][line.data1]
+                segment[param.dist_fare_attr] = (fares["dist"][line[op_attr]]
                                                  * segment.link.length)
                 segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fares["firstb"][line.data1]
+            line[param.board_fare_attr] = fares["firstb"][line[op_attr]]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in param.long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
@@ -372,7 +373,6 @@ class AssignmentPeriod(Period):
                     mtx = self._extract_timecost_from_gcost(subtype)
                 elif mtx_type == "time" and subtype in param.transit_classes:
                     self._extract_transit_time_from_gcost(subtype)
-                    mtx = self._damp_travel_time(subtype)
                 else:
                     mtx = self._get_matrix(mtx_type, subtype)
                 matrices[subtype] = mtx
@@ -396,13 +396,6 @@ class AssignmentPeriod(Period):
         emme_id = self.result_mtx[assignment_result_type][subtype]["id"]
         return (self.emme_project.modeller.emmebank.matrix(emme_id)
                 .get_numpy_data())
-
-    def _damp_travel_time(self, demand_type):
-        """Reduce the impact from first waiting time on total travel time."""
-        travel_time = self._get_matrix("time", demand_type)
-        fw_time = self._get_matrix("trip_part_"+demand_type, "fw_time")
-        wt_weight = param.waiting_time_perception_factor
-        return travel_time + wt_weight*((5./3.*fw_time)**0.8 - fw_time)
 
     def _extract_timecost_from_gcost(self, ass_class):
         """Remove monetary cost from generalized cost.
@@ -501,7 +494,7 @@ class AssignmentPeriod(Period):
             self.extra, self.demand_mtx, self.result_mtx)
         self._transit_specs = {tc: TransitSpecification(
                 tc, self._segment_results[tc], self._park_and_ride_results[tc],
-                self.extra("hw"), self.demand_mtx[tc]["id"],
+                param.effective_headway_attr, self.demand_mtx[tc]["id"],
                 self.result_mtx["gen_cost"][tc]["id"],
                 self.result_mtx["dist"][tc]["id"],
                 self.result_mtx["cost"][tc]["id"],
@@ -638,9 +631,20 @@ class AssignmentPeriod(Period):
     def _calc_extra_wait_time(self):
         """Calculate extra waiting time for one scenario."""
         network = self.emme_scenario.get_network()
-        # Calculation of cumulative line segment travel time and speed
-        log.info("Calculates cumulative travel times for scenario " + str(self.emme_scenario.id))
+        log.info("Calculates effective headways "
+                 + "and cumulative travel times for scenario "
+                 + str(self.emme_scenario.id))
+        headway_attr = self.extra("hw")
+        effective_headway_attr = param.effective_headway_attr.replace(
+            "ut", "data")
+        func = param.effective_headway
         for line in network.transit_lines():
+            hw = line[headway_attr]
+            for interval in func:
+                if interval[0] <= hw < interval[1]:
+                    effective_hw = func[interval](hw - interval[0])
+                    break
+            line[effective_headway_attr] = effective_hw
             cumulative_length = 0
             cumulative_time = 0
             cumulative_speed = 0
