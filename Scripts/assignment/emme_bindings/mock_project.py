@@ -4,6 +4,14 @@ import copy
 import os
 
 
+MODE_TYPES = {
+    "1": "AUTO",
+    "2": "TRANSIT",
+    "3": "AUX_TRANSIT",
+    "4": "AUX_AUTO",
+}
+
+
 class MockProject:
     """Mock-up version of `EmmeProject`.
 
@@ -87,7 +95,13 @@ class MockProject:
                 if f.readline() == "t modes\n":
                     break
             while True:
-                rec = f.readline().split()
+                rec = f.readline().split("'")
+                if len(rec) == 3:
+                    rec = rec[0].split() + [rec[1]] + rec[2].split()
+                elif len(rec) <= 1:
+                    rec = rec[0].split()
+                else:
+                    raise SyntaxError("Extra single quotes (') found in mode table")
                 if not rec:
                     break
                 if rec[0] == "c":
@@ -97,11 +111,13 @@ class MockProject:
                     pass
                 else:
                     if rec[0] == "a":
-                        network.create_mode(mode_type=rec[3], idx=rec[1])
+                        mode = network.create_mode(
+                            mode_type=MODE_TYPES[rec[3]], idx=rec[1])
                     elif rec[0] == "m":
-                        network.mode(idx=rec[1])
+                        mode = network.mode(idx=rec[1])
                     else:
                         raise SyntaxError("Unknown update code")
+                    mode.description = rec[2]
 
     def base_network_transaction(self, transaction_file, revert_on_error=True,
                                  scenario=None):
@@ -209,10 +225,7 @@ class MockProject:
                         vehicle_id = int(rec[3])
                         headway = float(rec[4])
                         itinerary = []
-                        ttf = []
-                        data1 = []
-                        data2 = []
-                        data3 = []
+                        segment_data = []
                         while True:
                             segrec = f.readline().replace("'", " ").split()
                             if not segrec or segrec[0] in "amd":
@@ -221,21 +234,24 @@ class MockProject:
                             elif segrec[0] not in ("c", "path=no"):
                                 itinerary.append(segrec[0])
                                 try:
-                                    ttf.append(int(segrec[2][4:]))
-                                    data1.append(float(segrec[3][4:]))
-                                    data2.append(float(segrec[4][4:]))
-                                    data3.append(float(segrec[5][4:]))
+                                    symbol = segrec[1][4]
+                                    segment_data.append({
+                                        "allow_alightings": symbol in ">+",
+                                        "allow_boardings": symbol in "<+",
+                                        "transit_time_func": int(segrec[2][4:]),
+                                        "data1": float(segrec[3][4:]),
+                                        "data2": float(segrec[4][4:]),
+                                        "data3": float(segrec[5][4:]),
+                                    })
                                 except IndexError:
                                     pass
                         line = network.create_transit_line(
                             line_id, vehicle_id, itinerary)
-                        for i, segment in enumerate(line.segments()):
-                            segment.transit_time_func = ttf[i]
-                            segment.data1 = data1[i]
-                            segment.data2 = data2[i]
-                            segment.data3 = data3[i]
+                        for data, segment in zip(segment_data, line.segments()):
+                            segment.__dict__.update(data)
                     elif rec[0] == "m":
                         line = network.transit_line(idx=rec[1])
+                        vehicle_id = int(rec[3])
                         headway = float(rec[4])
                     else:
                         raise SyntaxError("Unknown update code")
@@ -490,7 +506,7 @@ class Network:
     def create_mode(self, mode_type, idx):
         if not isinstance(idx, str) or len(idx) != 1:
             raise Exception("Invalid mode ID: " + idx)
-        mode = Mode(idx)
+        mode = Mode(idx, mode_type)
         self._modes[idx] = mode
         return mode
 
@@ -553,8 +569,9 @@ class Network:
     def transit_lines(self):
         return iter(self._lines.values())
 
-    def transit_segments(self):
-        return iter(self._segments)
+    def transit_segments(self, include_hidden=False):
+        return (segment for line in self.transit_lines()
+            for segment in line.segments(include_hidden))
 
     def create_transit_line(self, idx, transit_vehicle_id, itinerary):
         line = TransitLine(self, idx, transit_vehicle_id)
@@ -562,15 +579,18 @@ class Network:
         for i in range(len(itinerary) - 1):
             link = self.link(itinerary[i], itinerary[i + 1])
             segment = TransitSegment(self, line, link)
-            self._segments.append(segment)
             line._segments.append(segment)
             link._segments.append(segment)
+        line._segments.append(
+            HiddenSegment(self, line, self.node(itinerary[-1])))
         return line
 
 
 class Mode:
-    def __init__(self, idx):
+    def __init__(self, idx, mode_type):
         self.id = idx
+        self.type = mode_type
+        self.description = ""
 
     def __str__(self):
         return self.id
@@ -591,6 +611,8 @@ class TransitVehicle:
 
 
 class NetworkObject:
+    network: Network
+
     def __init__(self, network, extra_attr):
         self.network = network
         self._extra_attr = {idx: extra_attr[idx].default_value
@@ -633,7 +655,10 @@ class Node(NetworkObject):
     @property
     def id(self):
         return str(self.number)
-
+    
+    def outgoing_segments(self, include_hidden=False):
+        return (s for s in self.network.transit_segments(include_hidden)
+            if s.i_node is self)
 
 class Link(NetworkObject):
     def __init__(self, network, i_node, j_node, modes):
@@ -696,8 +721,11 @@ class TransitLine(NetworkObject):
     def segment(self, idx):
         return self._segments[idx]
 
-    def segments(self):
-        return iter(self._segments)
+    def segments(self, include_hidden=False):
+        if include_hidden:
+            return iter(self._segments)
+        else:
+            return iter(self._segments[:-1])
 
 
 class TransitSegment(NetworkObject):
@@ -706,6 +734,8 @@ class TransitSegment(NetworkObject):
             self, network, network._extra_attr["TRANSIT_SEGMENT"])
         self.line = line
         self.link = link
+        self.allow_alightings = False
+        self.allow_boardings = False
         self.transit_time_func = 0
         self.dwell_time = 0.01
 
@@ -720,6 +750,24 @@ class TransitSegment(NetworkObject):
     @property
     def j_node(self):
         return self.link.j_node
+
+
+class HiddenSegment(TransitSegment):
+    def __init__(self, network, line, node):
+        TransitSegment.__init__(self, network, line, None)
+        self._node = node
+
+    @property
+    def id(self):
+        return "{}-{}".format(self.line, self.i_node)
+
+    @property
+    def i_node(self):
+        return self._node
+
+    @property
+    def j_node(self):
+        return None
 
 
 class ExistenceError(Exception):

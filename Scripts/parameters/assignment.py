@@ -9,28 +9,47 @@ RoadClass = namedtuple(
     ))
 # Code derived from three-digit link type xyz, where yz is the road class code
 roadclasses = {
-    21: RoadClass("motorway", "<3", 1, 2100, 113, 0.265),
-    22: RoadClass("motorway", ">=3", 1, 1900, 113, 0.265),
-    23: RoadClass("motorway", "<3", 1, 2000, 97, 0.309),
-    24: RoadClass("motorway", ">=3", 1, 1800, 97, 0.309),
-    25: RoadClass("motorway", "<3", 1, 2000, 81, 0.370),
-    26: RoadClass("motorway", ">=3", 1, 1800, 81, 0.370),
-    27: RoadClass("highway", "<3", 2, 1900, 97, 0.309),
-    28: RoadClass("highway", ">=3", 2, 1800, 97, 0.309),
-    29: RoadClass("highway", "<3", 2, 1850, 81, 0.370),
-    30: RoadClass("highway", ">=3", 2, 1800, 81, 0.370),
-    31: RoadClass("highway", "any", 2, 1600, 73, 0.411),
-    32: RoadClass("highway", "any", 2, 1600, 63, 0.556),
-    33: RoadClass("arterial", "any", 3, 1450, 61, 0.492),
-    34: RoadClass("arterial", "any", 3, 1250, 54, 0.556),
-    35: RoadClass("arterial", "any", 4, 1150, 48, 0.625),
-    36: RoadClass("arterial", "any", 4, 1000, 44, 0.682),
-    37: RoadClass("arterial", "any", 4, 1000, 41, 0.732),
-    38: RoadClass("collector", "any", 5, 900, 41, 0.732),
-    39: RoadClass("collector", "any", 5, 750, 36, 0.833),
-    40: RoadClass("collector", "any", 5, 900, 36, 0.833),
-    41: RoadClass("local", "any", 5, 600, 30, 1.000),
-    42: RoadClass("local", "any", 5, 500, 23, 1.304),
+    1: RoadClass("motorway", "<3", 1, 2100, 113, 0.265),
+    2: RoadClass("motorway", "<3", 1, 2100, 113, 0.265),
+    3: RoadClass("motorway", ">3", 1, 1900, 113, 0.265),
+    4: RoadClass("motorway", "<3", 1, 2000, 97, 0.309),
+    5: RoadClass("motorway", ">3", 1, 1800, 97, 0.309),
+    6: RoadClass("motorway", "<3", 1, 2000, 81, 0.370),
+    7: RoadClass("motorway", ">3", 1, 1800, 81, 0.370),
+    8: RoadClass("highway", "any", 2, 1900, 97, 0.309),
+    9: RoadClass("highway", "any", 2, 1700, 97, 0.309),
+    10: RoadClass("highway", "any", 2, 1900, 90, 0.309),
+    11: RoadClass("highway", "any", 2, 1700, 90, 0.309),
+    12: RoadClass("highway", "any", 2, 1850, 81, 0.370),
+    13: RoadClass("highway", "any", 2, 1650, 81, 0.370),
+    14: RoadClass("highway", "any", 2, 1600, 73, 0.411),
+    15: RoadClass("highway", "any", 2, 1500, 73, 0.411),
+    16: RoadClass("highway", "any", 2, 1600, 63, 0.556),
+    17: RoadClass("highway", "any", 2, 1400, 63, 0.556),
+    18: RoadClass("arterial", "any", 3, 1400, 97, 0.309),
+    19: RoadClass("arterial", "any", 3, 1400, 90, 0.309),
+    20: RoadClass("arterial", "any", 3, 1350, 81, 0.370),
+    21: RoadClass("arterial", "any", 3, 1450, 61, 0.492),
+    22: RoadClass("arterial", "any", 3, 1100, 73, 0.492),
+    23: RoadClass("arterial", "any", 3, 1250, 54, 0.556),
+    24: RoadClass("arterial", "any", 3, 1100, 63, 0.492),
+    25: RoadClass("arterial", "any", 4, 1150, 48, 0.625),
+    26: RoadClass("arterial", "any", 4, 1050, 48, 0.625),
+    27: RoadClass("arterial", "any", 4, 1000, 44, 0.682),
+    28: RoadClass("arterial", "any", 4, 1000, 41, 0.732),
+    29: RoadClass("arterial", "any", 4, 900, 41, 0.732),
+    30: RoadClass("collector", "any", 5, 900, 48, 0.625),
+    31: RoadClass("collector", "any", 5, 900, 41, 0.732),
+    32: RoadClass("collector", "any", 5, 900, 36, 0.833),
+    33: RoadClass("collector", "any", 5, 750, 36, 0.833),
+    34: RoadClass("collector", "any", 5, 700, 41, 0.732),
+    35: RoadClass("local", "any", 5, 700, 30, 1.000),
+    36: RoadClass("local", "any", 5, 600, 30, 1.000),
+    37: RoadClass("local", "any", 5, 500, 30, 1.000),
+    38: RoadClass("local", "any", 5, 500, 23, 1.304),
+    39: RoadClass("local", "any", 5, 700, 20, 1.304),
+    40: RoadClass("local", "any", 5, 600, 20, 1.304),
+    41: RoadClass("local", "any", 5, 500, 20, 1.304),
 }
 connector_link_types = (84, 85, 86, 87, 88, 98, 99)
 connector = RoadClass("connector", "any", 99, 0, 0, 0)
@@ -166,7 +185,7 @@ stop_codes = {
     'p': (8,),
     'b': (2, 3, 4, 5, 11),
     'g': (3, 5, 11),
-    'e': (4, 5, 7, 11),
+    'e': (7, 4, 5, 11),
     'd': (2, 3, 4, 5, 7, 11),
 }
 # Node labels for HSL members (new and old fare zones)
@@ -183,6 +202,8 @@ vot_inv = {
 }
 # Default distance unit cost [eur/km]
 dist_unit_cost = 0.12
+# Default distance unit time for trucks and trailer trucks [min/km]
+freight_dist_unit_time = 0.2
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -239,14 +260,14 @@ headway_sd_func = {
 }
 # Stopping criteria for last traffic assignment
 stopping_criteria_fine = {
-    "max_iterations": 200,
+    "max_iterations": 400,
     "relative_gap": 0.00001,
     "best_relative_gap": 0.001,
     "normalized_gap": 0.0005,
 }
 # Stopping criteria for traffic assignment in loop
 stopping_criteria_coarse = {
-    "max_iterations": 100,
+    "max_iterations": 200,
     "relative_gap": 0.0001,
     "best_relative_gap": 0.01,
     "normalized_gap": 0.005,
@@ -454,6 +475,11 @@ vot_classes = {
     "transit_leisure": "leisure",
     "car_first_mile": "work",
     "car_last_mile": "work",
+}
+# Distance unit cost for freight [eur/km]
+freight_dist_unit_cost = {
+    "truck": freight_dist_unit_time / vot_inv[vot_classes["truck"]],
+    "trailer_truck": freight_dist_unit_time / vot_inv[vot_classes["trailer_truck"]],
 }
 local_transit_modes = [
     'b',
@@ -850,6 +876,8 @@ dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
+node_type_attr = "ui2"
+keep_stops_attr = "@keep_stops"
 railtypes = {
     2: "tram",
     3: "metro",
