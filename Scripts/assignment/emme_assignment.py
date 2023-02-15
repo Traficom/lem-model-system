@@ -265,18 +265,13 @@ class EmmeAssignmentModel(AssignmentModel):
         default_cost : numpy 2-d matrix
             (optional) Fixed cost matrix to use instead of calculated cost
         """
-        emmebank = self.emme_project.modeller.emmebank
-        if default_cost is None:
-            cost = self.assignment_periods[0].calc_transit_cost(
-                fares, peripheral_cost, self.mapping)
+        if self.separate_emme_scenarios:
+            for ap in self.assignment_periods:
+                ap.calc_transit_cost(
+                    fares, peripheral_cost, self.mapping)
         else:
-            cost = default_cost
-        for ap in self.assignment_periods:
-            for transit_class in param.transit_classes:
-                idx = ap.result_mtx["cost"][transit_class]["id"]
-                emmebank.matrix(idx).set_numpy_data(cost)
-            if not self.save_matrices:
-                break
+            self.assignment_periods[0].calc_transit_cost(
+                fares, peripheral_cost, self.mapping)
 
     def _copy_matrix(self, mtx_type, ass_class, ass_period_1, ass_period_2):
         from_mtx = ass_period_1.result_mtx[mtx_type][ass_class]
@@ -364,6 +359,16 @@ class EmmeAssignmentModel(AssignmentModel):
             self.emme_project.create_extra_attribute(
                 "LINK", extra(attr), attr,
                 overwrite=True, scenario=scenario)
+        # Create transit line attributes
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_SEGMENT", param.dist_fare_attr,
+            "distance fare attribute", overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.board_fare_attr,
+            "boarding fare attribute", overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.board_long_dist_attr,
+            "boarding fare attribute", overwrite=True, scenario=scenario)
         # Create node and transit segment attributes
         attr = param.segment_results
         segment_results = {}

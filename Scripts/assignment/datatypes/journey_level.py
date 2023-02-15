@@ -1,15 +1,16 @@
 import parameters.assignment as param
 
 
-NOT_BOARDED, PARKED, BOARDED, LEFT, FORBIDDEN = range(5)
+NOT_BOARDED, PARKED, BOARDED_LOCAL, BOARDED_LONG_D, LEFT, FORBIDDEN = range(6)
 DESCRIPTION = [
     "Not boarded yet",
     "Parked",
-    "Boarded at least once",
+    "Boarded local service",
+    "Boarded long-distance service",
     "Left transit system",
     "Forbidden",
 ]
-DESTINATIONS_REACHABLE = [False, False, True, True, False]
+DESTINATIONS_REACHABLE = [False, False, True, True, True, False]
 
 
 class JourneyLevel:
@@ -20,8 +21,10 @@ class JourneyLevel:
     ----------
     level : int
         Journey level: 0 - not boarded yet, 1 - parked,
-        2 - boarded at least once, 3 - left transit system,
-        4 - forbidden (virtual level)
+        2 - boarded local service, 3 - boarded long-distance service,
+        3 - left transit system, 4 - forbidden (virtual level)
+    transit_class : str
+        Name of transit class (transit_work/transit_leisure/...)
     headway_attribute : str
         Line attribute where headway is stored
     park_and_ride : str or False (optional)
@@ -30,14 +33,19 @@ class JourneyLevel:
     count_zone_boardings : bool (optional)
         Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, level, headway_attribute, park_and_ride=False,
-            count_zone_boardings=False):
-        # Boarding transit modes allowed only on levels 0-2
-        next = BOARDED if level <= BOARDED else FORBIDDEN
+    def __init__(self, level, transit_class, headway_attribute,
+            park_and_ride=False, count_zone_boardings=False):
+        # Boarding transit modes allowed only on levels 0-3
+        next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
         transitions = [{
                 "mode": mode,
                 "next_journey_level": next,
-            } for mode in param.transit_modes]
+            } for mode in param.local_transit_modes]
+        next = BOARDED_LONG_D if level <= BOARDED_LONG_D else FORBIDDEN
+        transitions += [{
+                "mode": mode,
+                "next_journey_level": next,
+            } for mode in param.long_dist_transit_modes]
         if park_and_ride:
             if "first_mile" in park_and_ride:
                 # Park-and-ride (car) mode allowed only on level 0.
@@ -73,26 +81,26 @@ class JourneyLevel:
             "boarding_time": None,
             "boarding_cost": {
                 "global": {
-                    "penalty": 0,
+                    "penalty": param.transfer_penalty[transit_class],
                     "perception_factor": 1,
                 },
                 "at_nodes": None,
-                "on_lines": None,
+                "on_lines": {
+                    "penalty": param.board_fare_attr,
+                    "perception_factor": param.vot_inv[param.vot_classes[
+                        transit_class]],
+                },
                 "on_segments": None,
             },
-            "waiting_time": {
-                "headway_fraction": param.standard_headway_fraction,
-                "effective_headways": headway_attribute,
-                "spread_factor": 1,
-                "perception_factor": param.waiting_time_perception_factor,
-            },
+            "waiting_time": None,
         }
-        if level < BOARDED:
-            (self.spec["waiting_time"]
-                      ["headway_fraction"]) = param.first_headway_fraction
-        elif level == BOARDED:
+        if level < BOARDED_LOCAL:
+            # No transfer penalty for first boarding
+            self.spec["boarding_cost"]["global"]["penalty"] = 0
+        elif level == BOARDED_LOCAL:
+            # Free transfers within local transit
             (self.spec["boarding_cost"]
-                      ["global"]["penalty"]) = param.transfer_penalty["transit"]
+                      ["on_lines"]["penalty"]) =  param.board_long_dist_attr
         if count_zone_boardings:
             self.spec["boarding_cost"]["global"] = None
             self.spec["boarding_cost"]["at_nodes"] = {

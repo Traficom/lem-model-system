@@ -137,9 +137,9 @@ volume_delay_funcs = {
     "fd98": "length*(60/12)",
     # Transit functions
     ## Bus, no bus lane
-    "ft01": "us2*length+timau",
+    "ft01": "us1*length+timau",
     ## Bus on bus lane
-    "ft02": "us2*length",
+    "ft02": "us1*length",
     ## Tram aht
     "ft03": "(length / (int(ul1 / 10000))) * 60",
     ## Tram pt
@@ -374,6 +374,14 @@ volume_factors["aux_transit"] = volume_factors["transit"]
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
 share_7_22_of_day = 0.9
+# Effective headway as function of actual headway
+effective_headway = {
+    (0, 10): lambda x: 1.1*x,
+    (10, 30): lambda x: 11 + 0.9*x,
+    (30, 60): lambda x: 29 + 0.5*x,
+    (60, 120): lambda x: 44 + 0.3*x,
+    (120, float("inf")): lambda x: 62 + 0.2*x,
+}
 # Noise zone width as function of start noise
 noise_zone_width = {
     (0, 55): lambda x: 5,
@@ -442,25 +450,33 @@ vot_classes = {
     "trailer_truck": "business",
     "truck": "business",
     "van": "business",
+    "transit_work": "work",
+    "transit_leisure": "leisure",
+    "car_first_mile": "work",
+    "car_last_mile": "work",
 }
-transit_modes = [
+local_transit_modes = [
     'b',
     'd',
-    'e',
     'g',
-    'j',
     'm',
     'p',
     'r',
     't',
     'w',
 ]
+long_dist_transit_modes = [
+    'e',
+    'j',
+]
 aux_modes = [
     'a',
     's',
 ]
 park_and_ride_mode = 'u'
-transit_assignment_modes = transit_modes + aux_modes
+transit_assignment_modes = (local_transit_modes
+                            + long_dist_transit_modes
+                            + aux_modes)
 external_modes = [
     "car",
     "transit",
@@ -658,6 +674,22 @@ emme_result_mtx = {
             "id": 42,
             "description": "car leisure travel generalized cost",
         },
+        "transit_work": {
+            "id": 43,
+            "description": "transit travel generalized cost",
+        },
+        "transit_leisure": {
+            "id": 44,
+            "description": "transit travel generalized cost",
+        },
+        "car_first_mile":  {
+            "id": 45,
+            "description": "park-and-ride generalized cost",
+        },
+        "car_last_mile":  {
+            "id": 46,
+            "description": "park-and-ride generalized cost",
+        },
         "trailer_truck": {
             "id": 47,
             "description": "trailer truck travel generalized cost",
@@ -809,8 +841,14 @@ emme_result_mtx = {
     },
 }
 background_traffic_attr = "ul3"
-inactive_line_penalty_attr = "ut1"
+transit_delay_attr = "us1"
+line_penalty_attr = "us2"
+line_operator_attr = "ut1"
+effective_headway_attr = "ut2"
 boarding_penalty_attr = "ut3"
+dist_fare_attr = "@dist_fare"
+board_fare_attr = "@board_fare"
+board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 railtypes = {
     2: "tram",
