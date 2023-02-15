@@ -185,7 +185,7 @@ stop_codes = {
     'p': (8,),
     'b': (2, 3, 4, 5, 11),
     'g': (3, 5, 11),
-    'e': (4, 5, 7, 11),
+    'e': (7, 4, 5, 11),
     'd': (2, 3, 4, 5, 7, 11),
 }
 # Node labels for HSL members (new and old fare zones)
@@ -721,6 +721,8 @@ background_traffic_attr = "ul3"
 inactive_line_penalty_attr = "ut1"
 boarding_penalty_attr = "ut3"
 is_in_transit_zone_attr = "ui1"
+node_type_attr = "ui2"
+keep_stops_attr = "@keep_stops"
 railtypes = {
     2: "tram",
     3: "metro",

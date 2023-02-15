@@ -45,6 +45,7 @@ class EmmeAssignmentModel(AssignmentModel):
 
     def prepare_network(self, car_dist_unit_cost=None):
         """Create matrices, extra attributes and calc background variables."""
+        self._set_stop_code()
         self._add_bus_stops()
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
@@ -301,30 +302,37 @@ class EmmeAssignmentModel(AssignmentModel):
         """
         return "@{}_{}".format(attr, "vrk")
 
+    def _set_stop_code(self):
+        node_type_attr = param.node_type_attr.replace("ui", "data")
+        network = self.mod_scenario.get_network()
+        for node in network.nodes():
+            stops = []
+            for mode in ['e', 'b']:
+                segments = [segment.allow_boardings or segment.allow_alightings
+                    for segment in node.outgoing_segments(include_hidden=True)
+                    if segment.line.mode.id == mode
+                    and segment.line[param.keep_stops_attr]]
+                stop_counts = sum(segments)
+                stop_ratio = 0.0 if stop_counts < 1 else stop_counts/len(segments)
+                is_stop = stop_ratio > 0.49 or stop_counts > 9
+                if is_stop:
+                    node[node_type_attr] = param.stop_codes[mode][0]
+                stops.append(is_stop)
+            if all(stops):
+                node[node_type_attr] = 5
+        self.mod_scenario.publish_network(network)
+
     def _add_bus_stops(self):
+        node_type_attr = param.node_type_attr.replace("ui", "data")
         network = self.mod_scenario.get_network()
         for line in network.transit_lines():
-            if line.mode.id in param.stop_codes:
+            if (line.mode.id in param.stop_codes
+                    and line[param.keep_stops_attr] == 0):
                 stop_codes = param.stop_codes[line.mode.id]
                 for segment in line.segments():
-                    is_stop = segment.i_node.data2 in stop_codes
-                    if line.mode.id in "de":
-                        # Non-HSL bus lines
-                        not_hsl = segment.i_node.label not in param.hsl_area
-                        if line.id[-1] == '1':
-                            # Line starts in HSL area
-                            segment.allow_alightings = not_hsl and is_stop
-                            segment.allow_boardings = is_stop
-                        elif line.id[-1] == '2':
-                            # Line ends in HSL area
-                            segment.allow_alightings = is_stop
-                            segment.allow_boardings = not_hsl and is_stop
-                        else:
-                            raise ValueError(
-                                "Unknown direction code for line " + line.id)
-                    else:
-                        segment.allow_alightings = is_stop
-                        segment.allow_boardings = is_stop
+                    is_stop = segment.i_node[node_type_attr] in stop_codes
+                    segment.allow_alightings = is_stop
+                    segment.allow_boardings = is_stop
         self.mod_scenario.publish_network(network)
 
     def _create_attributes(self, scenario, extra):
