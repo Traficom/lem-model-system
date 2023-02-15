@@ -1,7 +1,6 @@
 import numpy
 import pandas
 from math import log10
-from typing import NamedTuple, Dict
 
 import utils.log as log
 from utils.zone_interval import belongs_to_area, faulty_kela_code_nodes
