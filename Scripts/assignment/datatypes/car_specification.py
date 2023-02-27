@@ -28,23 +28,18 @@ class CarSpecification:
                     Matrix description
     """
     def __init__(self, extra, demand_mtx, result_mtx):
-        self.car_work = Car(
-            "car_work", extra, demand_mtx, result_mtx,
-            link_costs=extra("total_cost"))
-        self.car_leisure = Car(
-            "car_leisure", extra, demand_mtx, result_mtx,
-            link_costs=extra("total_cost"))
-        self.van = Car(
-            "van", extra, demand_mtx, result_mtx,
-            link_costs=extra("total_cost"))
-        self.truck = Car(
-            "truck", extra, demand_mtx, result_mtx,
-            value_of_time_inv=param.freight_dist_unit_time,
-            link_costs="length")
-        self.trailer_truck = Car(
-            "trailer_truck", extra, demand_mtx, result_mtx,
-            value_of_time_inv=param.freight_dist_unit_time,
-            link_costs="length")
+        self._modes = {}
+        self._freight_modes = list(param.freight_dist_unit_cost)
+        for mode in param.assignment_modes:
+            if mode in self._freight_modes:
+                kwargs = {
+                    "link_costs": "length",
+                    "value_of_time_inv": param.freight_dist_unit_time,
+                }
+            else:
+                kwargs = {"link_costs": extra("total_cost")}
+            self._modes[mode] = Car(
+                mode, extra, demand_mtx, result_mtx, **kwargs)
         self._spec = {
             "type": "SOLA_TRAFFIC_ASSIGNMENT",
             "background_traffic": {
@@ -55,19 +50,7 @@ class CarSpecification:
             "stopping_criteria": None, # This is defined later
         }
 
-    def spec (self, lightweight=False):
-        if lightweight:
-            self._spec["classes"] = [
-                self.car_work.spec,
-                self.car_leisure.spec,
-                self.van.spec,
-            ]
-        else:
-            self._spec["classes"] = [
-                self.car_work.spec,
-                self.car_leisure.spec,
-                self.trailer_truck.spec,
-                self.truck.spec,
-                self.van.spec,
-            ]
+    def spec(self, lightweight=False):
+        self._spec["classes"] = [self._modes[mode].spec for mode in self._modes
+            if not lightweight or mode not in self._freight_modes]
         return self._spec
