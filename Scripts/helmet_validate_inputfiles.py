@@ -166,15 +166,15 @@ def main(args):
                 "@hinta_aht",
                 "@hinta_pt",
                 "@hinta_iht",
-                "@hw_aht",
-                "@hw_pt",
-                "@hw_iht",
+                "@hdw_aht",
+                "@hdw_pt",
+                "@hdw_iht",
             )
             for attr in attrs:
                 if scen.extra_attribute(attr) is None:
                     msg = "Extra attribute {} missing from scenario {}".format(
                         attr, scen.id)
-            validate(scen.get_network(), forecast_zonedata.transit_zone)
+            validate(scen.get_network())
             app.close()
 
     log.info("Successfully validated all input files")
