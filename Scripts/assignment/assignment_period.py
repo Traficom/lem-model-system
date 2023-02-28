@@ -714,8 +714,6 @@ class AssignmentPeriod(Period):
     def _assign_transit(self):
         """Perform transit assignment for one scenario."""
         log.info("Transit assignment started...")
-        # Here we assign all transit in one class, multi-class assignment is
-        # performed in last iteration (congested assignment)
         for i, transit_class in enumerate(param.transit_classes):
             spec = self._transit_specs[transit_class]
             self.emme_project.transit_assignment(
