@@ -37,15 +37,7 @@ class ZoneData:
             data_dir, ".ext",
             all_zone_numbers[all_zone_numbers.searchsorted(external[0]):],
             float)
-        transit = read_csv_file(data_dir, ".tco")
-        try:
-            transit["fare"] = transit["fare"].astype(
-                dtype=float, errors='raise')
-        except ValueError:
-            msg = "Zonedata file .tco has fare values not convertible to float"
-            log.error(msg)
-            raise ValueError(msg)
-        self.transit_zone = TransitFareZoneSpecification(transit)
+        self.transit_zone = read_csv_file(data_dir, ".tco")
         try:
             cardata = read_csv_file(data_dir, ".car")
             self["parking_norm"] = cardata["prknorm"]

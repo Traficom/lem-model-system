@@ -50,7 +50,7 @@ def validate(network, fares=None):
     validate_mode(network, param.main_mode, EMME_AUTO_MODE)
     for m in param.assignment_modes.values():
         validate_mode(network, m, EMME_AUX_AUTO_MODE)
-    for m in param.transit_modes:
+    for m in param.local_transit_modes + param.long_dist_transit_modes:
         validate_mode(network, m, EMME_TRANSIT_MODE)
     for m in param.aux_modes + [param.bike_mode]:
         validate_mode(network, m, EMME_AUX_TRANSIT_MODE)
@@ -59,7 +59,6 @@ def validate(network, fares=None):
     for modes in param.official_node_numbers:
         modesets.append({network.mode(m) for m in modes})
         intervals += param.official_node_numbers[modes]
-    unofficial_nodes = set()
     for link in network.links():
         if network.mode('c') in link.modes:
             linktype = link.type % 100
@@ -68,35 +67,9 @@ def validate(network, fares=None):
                 msg = "Link type missing for link {}".format(link.id)
                 log.error(msg)
                 raise ValueError(msg)
-        if network.mode('t') in link.modes:
-            speedstr = str(int(link.data1))
-            speed = {
-                "aht": int(speedstr[:-4]),
-                "pt": int(speedstr[-4:-2]),
-                "iht": int(speedstr[-2:]),
-            }
-            for timeperiod in speed:
-                if speed[timeperiod] == 0:
-                    msg = "Speed is zero for time period {} on link {}".format(
-                        timeperiod, link.id)
-                    log.error(msg)
-                    raise ValueError(msg)
-        for node in (link.i_node, link.j_node):
-            i = bisect.bisect(intervals, node.number)
-            if i % 2 == 0:
-                # If node number is not in one of the official intervals
-                unofficial_nodes.add(node.id)
-            elif not link.modes <= modesets[i // 2]:
-                # If link has unallowed modes
-                unofficial_nodes.add(node.id)
-    if unofficial_nodes:
-        log.warn(
-            "Node number(s) {} not consistent with official HSL network".format(
-                ', '.join(unofficial_nodes)
-        ))
     for line in network.transit_lines():
-        for hdwy in ("@hw_aht", "@hw_pt", "@hw_iht"):
-            if line[hdwy] < 0.02:
+        for hdw in ("@hdw_aht", "@hdw_pt", "@hdw_iht"):
+            if line[hdw] < 0.02:
                 msg = "Headway missing for line {}".format(line.id)
                 log.error(msg)
                 raise ValueError(msg)

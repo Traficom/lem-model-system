@@ -1,5 +1,6 @@
+import copy
+
 import parameters.assignment as param
-from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.datatypes.journey_level import JourneyLevel
 
 
@@ -14,19 +15,26 @@ class TransitSpecification:
 
     Parameters
     ----------
+    transit_class : str
+        Name of transit class (transit_work/transit_leisure/...)
     segment_results : dict
         key : str
             Segment result (transit_volumes/...)
         value : str
             Extra attribute name (@transit_work_vol_aht/...)
+    park_and_ride_results : str or False (optional)
+        Extra attribute name for park-and-ride aux volume if
+        this is park-and-ride assignment, else False
     headway_attribute : str
         Line attribute where headway is stored
     demand_mtx_id : str
         Emme matrix id for demand matrix
-    time_mtx_id : str
-        Emme matrix id for time matrix
+    gcost_mtx_id : str
+        Emme matrix id for generalized cost matrix
     dist_mtx_id : str
         Emme matrix id for distance matrix
+    cost_mtx_id : str
+        Emme matrix id for cost matrix
     trip_part : dict
         key : str
             Impedance type (inv_time/aux_time/num_board/...)
@@ -38,9 +46,9 @@ class TransitSpecification:
     count_zone_boardings : bool (optional)
         Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, segment_results, headway_attribute,
-                 demand_mtx_id, time_mtx_id, dist_mtx_id, trip_part,
-                 count_zone_boardings=False):
+    def __init__(self, transit_class, segment_results, park_and_ride_results,
+                 headway_attribute, demand_mtx_id, gcost_mtx_id, dist_mtx_id,
+                 cost_mtx_id, trip_part, count_zone_boardings=False):
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0, 
@@ -48,13 +56,13 @@ class TransitSpecification:
         }
         self.transit_spec = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
-            "modes": param.transit_assignment_modes,
+            "modes": copy.copy(param.transit_assignment_modes),
             "demand": demand_mtx_id,
             "waiting_time": {
-                "headway_fraction": param.standard_headway_fraction,
+                "headway_fraction": 1,
                 "effective_headways": headway_attribute,
                 "spread_factor": 1,
-                "perception_factor": param.waiting_time_perception_factor
+                "perception_factor": 1,
             },
             "boarding_time": {
                 "global": None,
@@ -71,6 +79,11 @@ class TransitSpecification:
             "in_vehicle_time": {
                 "perception_factor": 1
             },
+            "in_vehicle_cost": {
+                "penalty": param.line_penalty_attr,
+                "perception_factor": (param.vot_inv[param.vot_classes[
+                    transit_class]]),
+            },
             "aux_transit_time": param.aux_transit_time,
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
@@ -79,21 +92,29 @@ class TransitSpecification:
                 "choices_at_regular_nodes": "OPTIMAL_STRATEGY",
             },
             "flow_distribution_between_lines": {
-                "consider_total_impedance": False
+                "consider_total_impedance": True,
             },
             "journey_levels": None,
             "performance_settings": param.performance_settings,
         }
+        if park_and_ride_results:
+            self.transit_spec["modes"].append(param.park_and_ride_mode)
+            self.transit_spec["results"] = {
+                "aux_transit_volumes_by_mode": [{
+                    "mode": param.park_and_ride_mode,
+                    "volume": park_and_ride_results,
+                }],
+            }
+        self.transit_spec["journey_levels"] = [JourneyLevel(
+                level, transit_class, headway_attribute, park_and_ride_results,
+                count_zone_boardings).spec
+            for level in range(6)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "on_segments": segment_results,
-            }
+        }
         if count_zone_boardings:
-            jlevel1 = JourneyLevel(
-                headway_attribute, boarded=False, count_zone_boardings=True)
-            jlevel2 = JourneyLevel(
-                headway_attribute, boarded=True, count_zone_boardings=True)
-            mtx_results_spec = {
+            self.transit_result_spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
                 "by_mode_subset": {
                     "modes": param.transit_modes,
@@ -102,11 +123,9 @@ class TransitSpecification:
                 },
             }
         else:
-            jlevel1 = JourneyLevel(headway_attribute, boarded=False)
-            jlevel2 = JourneyLevel(headway_attribute, boarded=True)
-            mtx_results_spec = {
+            self.transit_result_spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
-                "total_impedance": time_mtx_id,
+                "total_impedance": gcost_mtx_id,
                 "total_travel_time": trip_part["total_time"]["id"],
                 "actual_first_waiting_times": trip_part["fw_time"]["id"],
                 "actual_total_waiting_times": trip_part["tw_time"]["id"],
@@ -117,9 +136,7 @@ class TransitSpecification:
                     "actual_total_boarding_times": trip_part["board_time"]["id"],
                     "actual_in_vehicle_times": trip_part["inv_time"]["id"],
                     "actual_aux_transit_times": trip_part["aux_time"]["id"],
+                    "actual_total_boarding_costs": trip_part["board_cost"]["id"],
+                    "actual_in_vehicle_costs": cost_mtx_id,
                 },
             }
-
-        self.transit_spec["journey_levels"] = [jlevel1.spec, jlevel2.spec]
-        self.transit_result_spec = mtx_results_spec
-

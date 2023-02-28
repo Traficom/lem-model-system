@@ -156,9 +156,9 @@ volume_delay_funcs = {
     "fd98": "length*(60/12)",
     # Transit functions
     ## Bus, no bus lane
-    "ft01": "us2*length+timau",
+    "ft01": "us1*length+timau",
     ## Bus on bus lane
-    "ft02": "us2*length",
+    "ft02": "us1*length",
     ## Tram aht
     "ft03": "(length / (int(ul1 / 10000))) * 60",
     ## Tram pt
@@ -291,6 +291,8 @@ trass_stop = {
 transfer_penalty = {
     "transit_work": 3,
     "transit_leisure": 5,
+    "car_first_mile": 5,
+    "car_last_mile": 5,
     "transit": 5,
 }
 extra_waiting_time = {
@@ -342,6 +344,16 @@ volume_factors = {
         "pt": 1. / 0.117,
         "iht": 1. / 0.373,
     },
+    "car_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "car_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
     "bike": {
         "aht": 1. / 0.604,
         "pt": 1. / 0.105,
@@ -383,6 +395,14 @@ volume_factors["aux_transit"] = volume_factors["transit"]
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
 share_7_22_of_day = 0.9
+# Effective headway as function of actual headway
+effective_headway = {
+    (0, 10): lambda x: 1.1*x,
+    (10, 30): lambda x: 11 + 0.9*x,
+    (30, 60): lambda x: 29 + 0.5*x,
+    (60, 120): lambda x: 44 + 0.3*x,
+    (120, float("inf")): lambda x: 62 + 0.2*x,
+}
 # Noise zone width as function of start noise
 noise_zone_width = {
     (0, 55): lambda x: 5,
@@ -407,7 +427,11 @@ transport_classes = (
     "truck",
     "van",
 )
-transit_classes = (
+park_and_ride_classes = (
+    "car_first_mile",
+    "car_last_mile",
+)
+transit_classes = park_and_ride_classes + (
     "transit_work",
     "transit_leisure",
 )
@@ -447,29 +471,38 @@ vot_classes = {
     "trailer_truck": "business",
     "truck": "business",
     "van": "business",
+    "transit_work": "work",
+    "transit_leisure": "leisure",
+    "car_first_mile": "work",
+    "car_last_mile": "work",
 }
 # Distance unit cost for freight [eur/km]
 freight_dist_unit_cost = {
     "truck": freight_dist_unit_time / vot_inv[vot_classes["truck"]],
     "trailer_truck": freight_dist_unit_time / vot_inv[vot_classes["trailer_truck"]],
 }
-transit_modes = [
+local_transit_modes = [
     'b',
     'd',
-    'e',
     'g',
-    'j',
     'm',
     'p',
     'r',
     't',
     'w',
 ]
+long_dist_transit_modes = [
+    'e',
+    'j',
+]
 aux_modes = [
     'a',
     's',
 ]
-transit_assignment_modes = transit_modes + aux_modes
+park_and_ride_mode = 'u'
+transit_assignment_modes = (local_transit_modes
+                            + long_dist_transit_modes
+                            + aux_modes)
 external_modes = [
     "car",
     "transit",
@@ -518,6 +551,14 @@ emme_demand_mtx = {
         "id": 9,
         "description": "van demand",
     },
+    "car_first_mile":  {
+        "id": 91,
+        "description": "park-and-ride demand",
+    },
+    "car_last_mile":  {
+        "id": 92,
+        "description": "park-and-ride demand",
+    },
 }
 emme_result_mtx = {
     "time": {
@@ -557,6 +598,14 @@ emme_result_mtx = {
             "id": 19,
             "description": "van time",
         },
+        "car_first_mile":  {
+            "id": 93,
+            "description": "park-and-ride time",
+        },
+        "car_last_mile":  {
+            "id": 94,
+            "description": "park-and-ride time",
+        },
     },
     "dist": {
         "car_work": {
@@ -595,6 +644,14 @@ emme_result_mtx = {
             "id": 29,
             "description": "van distance",
         },
+        "car_first_mile":  {
+            "id": 95,
+            "description": "park-and-ride distance",
+        },
+        "car_last_mile":  {
+            "id": 96,
+            "description": "park-and-ride distance",
+        },
     },
     "cost": {
         "car_work": {
@@ -625,6 +682,14 @@ emme_result_mtx = {
             "id": 39,
             "description": "van cost",
         },
+        "car_first_mile":  {
+            "id": 97,
+            "description": "park-and-ride cost",
+        },
+        "car_last_mile":  {
+            "id": 98,
+            "description": "park-and-ride cost",
+        },
     },
     "gen_cost": {
         "car_work": {
@@ -634,6 +699,22 @@ emme_result_mtx = {
         "car_leisure": {
             "id": 42,
             "description": "car leisure travel generalized cost",
+        },
+        "transit_work": {
+            "id": 43,
+            "description": "transit travel generalized cost",
+        },
+        "transit_leisure": {
+            "id": 44,
+            "description": "transit travel generalized cost",
+        },
+        "car_first_mile":  {
+            "id": 45,
+            "description": "park-and-ride generalized cost",
+        },
+        "car_last_mile":  {
+            "id": 46,
+            "description": "park-and-ride generalized cost",
         },
         "trailer_truck": {
             "id": 47,
@@ -716,10 +797,84 @@ emme_result_mtx = {
             "description": "transit boarding cost",
         },
     },
+    "trip_part_car_first_mile":{
+        "inv_time": {
+            "id": 71,
+            "description": "transit in-vehicle time",
+        },
+        "aux_time": {
+            "id": 72,
+            "description": "transit auxilliary time",
+        },
+        "tw_time": {
+            "id": 73,
+            "description": "transit total waiting time",
+        },
+        "fw_time": {
+            "id": 74,
+            "description": "transit first waiting time",
+        },
+        "board_time": {
+            "id": 75,
+            "description": "transit boarding time",
+        },
+        "total_time": {
+            "id": 76,
+            "description": "transit unweighted travel time",
+        },
+        "num_board": {
+            "id": 77,
+            "description": "transit trip number of boardings",
+        },
+        "board_cost": {
+            "id": 78,
+            "description": "transit boarding cost",
+        },
+    },
+    "trip_part_car_last_mile":{
+        "inv_time": {
+            "id": 81,
+            "description": "transit in-vehicle time",
+        },
+        "aux_time": {
+            "id": 82,
+            "description": "transit auxilliary time",
+        },
+        "tw_time": {
+            "id": 83,
+            "description": "transit total waiting time",
+        },
+        "fw_time": {
+            "id": 84,
+            "description": "transit first waiting time",
+        },
+        "board_time": {
+            "id": 85,
+            "description": "transit boarding time",
+        },
+        "total_time": {
+            "id": 86,
+            "description": "transit unweighted travel time",
+        },
+        "num_board": {
+            "id": 87,
+            "description": "transit trip number of boardings",
+        },
+        "board_cost": {
+            "id": 88,
+            "description": "transit boarding cost",
+        },
+    },
 }
 background_traffic_attr = "ul3"
-inactive_line_penalty_attr = "ut1"
+transit_delay_attr = "us1"
+line_penalty_attr = "us2"
+line_operator_attr = "ut1"
+effective_headway_attr = "ut2"
 boarding_penalty_attr = "ut3"
+dist_fare_attr = "@dist_fare"
+board_fare_attr = "@board_fare"
+board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 node_type_attr = "ui2"
 keep_stops_attr = "@keep_stops"

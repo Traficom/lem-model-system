@@ -20,17 +20,18 @@ class EmmeAssignmentTest(unittest.TestCase):
             "..", "test_data", "Network")
         scenario_id = 19
         context.import_scenario(scenario_dir, scenario_id, "test")
-        fares = TransitFareZoneSpecification(pandas.DataFrame({
-            "fare": {
-                "A": 59,
-                "AB": 109,
-                "dist": 3.0,
-                "start": 35,
+        fares = pandas.DataFrame({
+            "firstb": {
+                0: 60,
+                1: 80,
             },
-        }))
+            "dist": {
+                0: 1.0,
+                1: 0.5,
+            }
+        })
         validate(
-            context.modeller.emmebank.scenario(scenario_id).get_network(),
-            fares)
+            context.modeller.emmebank.scenario(scenario_id).get_network())
         ass_model = EmmeAssignmentModel(
             context, scenario_id)
         ass_model.prepare_network()
@@ -43,6 +44,8 @@ class EmmeAssignmentTest(unittest.TestCase):
             "car_leisure": car_matrix,
             "transit_work": car_matrix,
             "transit_leisure": car_matrix,
+            "car_first_mile": car_matrix,
+            "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
             "truck": car_matrix,
