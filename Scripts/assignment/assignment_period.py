@@ -219,15 +219,17 @@ class AssignmentPeriod(Period):
         for link in network.links():
             # Car volume delay function definition
             linktype = link.type % 100
-            if linktype in param.roadclasses:
+            if link.type > 80 and linktype in param.roadclasses:
                 # Car link with standard attributes
                 roadclass = param.roadclasses[linktype]
-                link.volume_delay_func = roadclass.volume_delay_func
+                if link.volume_delay_func != 90:
+                    link.volume_delay_func = roadclass.volume_delay_func
                 link.data1 = roadclass.lane_capacity
                 link.data2 = roadclass.free_flow_speed
             elif linktype in param.custom_roadtypes:
                 # Custom car link
-                link.volume_delay_func = linktype - 90
+                if link.volume_delay_func != 90:
+                    link.volume_delay_func = linktype - 90
                 for linktype in param.roadclasses:
                     roadclass = param.roadclasses[linktype]
                     if (link.volume_delay_func == roadclass.volume_delay_func

@@ -142,6 +142,7 @@ volume_delay_funcs = {
     "fd10": "(put(60/ul2)*(1+0.3*put((volau+volad)/((lanes-1).max.0.8))/"
             + "(ul1-get(2))))*(get(2).le.put(ul1*0.81))*length+(get(2).gt."
             + "get(3))*(2.28*get(1)*length+0.017*(get(2)-get(3))*length)",
+    "fd90": "length*(60/ul2)",
     "fd99": "length * 1.3",
     # Bike functions
     "fd70": "length*(60/19)",
