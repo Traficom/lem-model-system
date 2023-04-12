@@ -417,6 +417,7 @@ noise_zone_width = {
 }
 
 ### ASSIGNMENT REFERENCES ###
+time_periods = ("aht", "pt", "iht")
 transport_classes = (
     "car_work",
     "car_leisure",
