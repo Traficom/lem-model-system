@@ -137,7 +137,8 @@ class AssignmentPeriod(Period):
             self._assign_cars(param.stopping_criteria_fine)
             self._calc_boarding_penalties(is_last_iteration=True)
             self._calc_extra_wait_time()
-            self._assign_congested_transit()
+            self._assign_transit()
+            self._calc_transit_network_results()
         else:
             raise ValueError("Iteration number not valid")
 
@@ -729,52 +730,16 @@ class AssignmentPeriod(Period):
         log.info("Transit assignment performed for scenario {}".format(
             str(self.emme_scenario.id)))
 
-    def _assign_congested_transit(self):
-        """Perform congested transit assignment for one scenario."""
-        log.info("Congested transit assignment started...")
-        network = self.emme_scenario.get_network()
-        headway_attr = self.extra("hdw")
-        penalty_attr = param.line_penalty_attr.replace("us", "data")
-        for line in network.transit_lines():
-            line.headway = line[headway_attr]
-            if line[headway_attr] > 900:
-                for segment in line.segments():
-                    segment[penalty_attr] = 9999
-            else:
-                for segment in line.segments():
-                    segment[penalty_attr] = segment[param.dist_fare_attr]
-        self.emme_scenario.publish_network(network)
+    def _calc_transit_network_results(self):
+        """Calculate transit network results for one scenario."""
+        log.info("Calculates transit network results")
         specs = self._transit_specs
-        assign_report = self.emme_project.congested_assignment(
-            transit_assignment_spec=[specs[tc].transit_spec for tc in specs],
-            class_names=list(specs),
-            congestion_function=param.trass_func,
-            stopping_criteria=param.trass_stop,
-            log_worksheets=False, scenario=self.emme_scenario,
-            save_strategies=True)
-        # save results for both classes
         for tc in specs:
-            self.emme_project.matrix_results(
-                specs[tc].transit_result_spec, scenario=self.emme_scenario,
-                class_name=tc)
             self.emme_project.network_results(
                 specs[tc].ntw_results_spec, scenario=self.emme_scenario,
                 class_name=tc)
-        base_timtr = param.uncongested_transit_time
-        time_attr = self.extra(base_timtr)
         volax_attr = self.extra("aux_transit")
         network = self.emme_scenario.get_network()
         for link in network.links():
             link[volax_attr] = link.aux_transit_volume
-        for segment in network.transit_segments():
-            segment[time_attr] = segment['@'+base_timtr]
         self.emme_scenario.publish_network(network)
-        log.info("Congested transit assignment performed for scenario {}".format(
-            str(self.emme_scenario.id)))
-        log.info("Stopping criteria: {}, iteration {} / {}".format(
-            assign_report["stopping_criteria"],
-            assign_report["iterations"][-1]["number"],
-            param.trass_stop["max_iterations"]
-            ))
-        if assign_report["stopping_criteria"] == "MAX_ITERATIONS":
-            log.warn("Congested transit assignment not fully converged.")
