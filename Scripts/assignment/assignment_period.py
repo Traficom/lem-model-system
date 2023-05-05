@@ -654,6 +654,7 @@ class AssignmentPeriod(Period):
         headway_attr = self.extra("hdw")
         effective_headway_attr = param.effective_headway_attr.replace(
             "ut", "data")
+        delay_attr = param.transit_delay_attr.replace("us", "data")
         func = param.effective_headway
         for line in network.transit_lines():
             hw = line[headway_attr]
@@ -667,16 +668,19 @@ class AssignmentPeriod(Period):
             cumulative_speed = 0
             headway_sd = 0
             for segment in line.segments():
+                if segment.dwell_time >= 2:
+                    # Time-point stops reset headway deviation
+                    cumulative_length = 0
+                    cumulative_time = 0
                 cumulative_length += segment.link.length
                 # Travel time for buses in mixed traffic
                 if segment.transit_time_func == 1:
-                    cumulative_time += (segment.data2 * segment.link.length
-                                        # + segment.link["@timau"]
-                                        + segment.link.auto_time
+                    cumulative_time += (segment.link.auto_time
                                         + segment.dwell_time)
                 # Travel time for buses on bus lanes
                 if segment.transit_time_func == 2:
-                    cumulative_time += (segment.data2 * segment.link.length
+                    cumulative_time += (segment.link.length/segment.link.data2
+                                        * 60
                                         + segment.dwell_time)
                 # Travel time for trams AHT
                 if segment.transit_time_func == 3:
@@ -701,6 +705,9 @@ class AssignmentPeriod(Period):
                     speed = int(speedstr[-2:])
                     cumulative_time += ((segment.link.length / speed) * 60
                                         + segment.dwell_time)
+                # Travel time for rail
+                if segment.transit_time_func == 6:
+                    cumulative_time += segment[delay_attr] + segment.dwell_time
                 if cumulative_time > 0:
                     cumulative_speed = (cumulative_length
                                         / cumulative_time

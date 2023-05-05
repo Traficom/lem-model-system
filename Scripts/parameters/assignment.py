@@ -90,12 +90,7 @@ transit_delay_funcs = {
         "no_buslane": 1,
         "buslane": 2,
     },
-    ("lightrail", "tp"): {
-        "aht": 3,
-        "pt": 4,
-        "iht": 5,
-    },
-    ("rail", "rjmw"): {
+    ("rail", "rjmwtp"): {
         "aht": 6,
         "pt": 6,
         "iht": 6,
@@ -157,9 +152,9 @@ volume_delay_funcs = {
     "fd98": "length*(60/12)",
     # Transit functions
     ## Bus, no bus lane
-    "ft01": "us1*length+timau",
+    "ft01": "timau",
     ## Bus on bus lane
-    "ft02": "us1*length",
+    "ft02": "length*(60/ul2)",
     ## Tram aht
     "ft03": "(length / (int(ul1 / 10000))) * 60",
     ## Tram pt
@@ -182,12 +177,17 @@ bus_lane_link_codes = {
 buslane_delay = 60 * 1.5
 # Codes defining whether transit mode stops at node, stored in data2
 stop_codes = {
-    't': (1, 8),
-    'p': (8,),
-    'b': (2, 3, 4, 5, 11),
+    't': (1, 8, 5),
+    'p': (8, 5),
+    'b': (2, 3, 5, 11),
     'g': (3, 5, 11),
-    'e': (7, 4, 5, 11),
-    'd': (2, 3, 4, 5, 7, 11),
+    'e': (7, 5, 11),
+}
+# Default bus stop dwell time in minutes
+bus_dwell_time = {
+    'b': 0.4,
+    'g': 0.4,
+    'e': 0.4,
 }
 # Node labels for HSL members (new and old fare zones)
 hsl_area = "ABCDE HEXL"
@@ -485,7 +485,6 @@ freight_dist_unit_cost = {
 }
 local_transit_modes = [
     'b',
-    'd',
     'g',
     'm',
     'p',

@@ -308,7 +308,7 @@ class EmmeAssignmentModel(AssignmentModel):
         network = self.mod_scenario.get_network()
         for node in network.nodes():
             stops = []
-            for mode in ['e', 'b']:
+            for mode in param.stop_codes:
                 segments = [segment.allow_boardings or segment.allow_alightings
                     for segment in node.outgoing_segments(include_hidden=True)
                     if segment.line.mode.id == mode
@@ -327,13 +327,24 @@ class EmmeAssignmentModel(AssignmentModel):
         node_type_attr = param.node_type_attr.replace("ui", "data")
         network = self.mod_scenario.get_network()
         for line in network.transit_lines():
-            if (line.mode.id in param.stop_codes
-                    and line[param.keep_stops_attr] == 0):
-                stop_codes = param.stop_codes[line.mode.id]
+            if line.mode.id in param.stop_codes:
+                if not line[param.keep_stops_attr]:
+                    stop_codes = param.stop_codes[line.mode.id]
+                    for segment in line.segments():
+                        is_stop = segment.i_node[node_type_attr] in stop_codes
+                        segment.allow_alightings = is_stop
+                        segment.allow_boardings = is_stop
+            try:
+                dwell_time = param.bus_dwell_time[line.mode.id]
+            except KeyError:
+                pass
+            else:
                 for segment in line.segments():
-                    is_stop = segment.i_node[node_type_attr] in stop_codes
-                    segment.allow_alightings = is_stop
-                    segment.allow_boardings = is_stop
+                    if segment.dwell_time < 2:
+                        # Unless a longer stop is scheduled,
+                        # we set default dwell time for buses
+                        segment.dwell_time = (dwell_time
+                            if segment.allow_boardings else 0)
         self.mod_scenario.publish_network(network)
 
     def _create_attributes(self, scenario, extra):
