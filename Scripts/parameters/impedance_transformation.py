@@ -283,6 +283,9 @@ impedance_share = {
         },
     },
 }
+for purpose in impedance_share:
+    for mode in impedance_share[purpose]:
+        impedance_share[purpose][mode]["vrk"] = (1, 1)
 
 ### IMPEDANCE TRANSFORMATION REFERENCES ###
 

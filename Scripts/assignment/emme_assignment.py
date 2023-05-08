@@ -28,6 +28,12 @@ class EmmeAssignmentModel(AssignmentModel):
     save_matrices : bool (optional)
         Whether matrices will be saved in Emme format for all time periods.
         If false, Emme matrix ids 0-99 will be used for all time periods.
+    use_free_flow_speeds : bool (optional)
+        Whether traffic assignment is all-or-nothing with free-flow speeds.
+    use_stored_speeds : bool (optional)
+        Whether traffic assignment is all-or-nothing with speeds stored
+        in `@car_time_xxx`. Overrides `use_free_flow_speeds` if this is
+        also set to `True`.
     time_periods : list of str (optional)
             Time period names, default is aht, pt, iht
     first_matrix_id : int (optional)
@@ -37,9 +43,12 @@ class EmmeAssignmentModel(AssignmentModel):
     """
     def __init__(self, emme_context, first_scenario_id,
                  separate_emme_scenarios=False, save_matrices=False,
+                 use_free_flow_speeds=False, use_stored_speeds=False,
                  time_periods=param.time_periods, first_matrix_id=100):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
+        self.use_free_flow_speeds = use_free_flow_speeds
+        self.use_stored_speeds = use_stored_speeds
         self.time_periods = time_periods
         self.first_matrix_id = first_matrix_id if save_matrices else 0
         self.emme_project = emme_context
@@ -76,7 +85,9 @@ class EmmeAssignmentModel(AssignmentModel):
             self.assignment_periods.append(AssignmentPeriod(
                 tp, scen_id, self.emme_project,
                 save_matrices=self.save_matrices,
-                separate_emme_scenarios=self.separate_emme_scenarios))
+                separate_emme_scenarios=self.separate_emme_scenarios,
+                use_free_flow_speeds=self.use_free_flow_speeds,
+                use_stored_speeds=self.use_stored_speeds))
         for i, ap in enumerate(self.assignment_periods):
             tag = ap.name if self.save_matrices else ""
             id_hundred = 100*i + self.first_matrix_id
@@ -380,7 +391,7 @@ class EmmeAssignmentModel(AssignmentModel):
             self.emme_project.create_extra_attribute(
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)
-        for attr in ("total_cost", "toll_cost", "car_time", "aux_transit"):
+        for attr in ("total_cost", "toll_cost", "aux_transit"):
             self.emme_project.create_extra_attribute(
                 "LINK", extra(attr), attr,
                 overwrite=True, scenario=scenario)

@@ -56,6 +56,8 @@ class Config:
         self.FIRST_SCENARIO_ID = None
         self.FIRST_MATRIX_ID = None
         self.END_ASSIGNMENT_ONLY = False
+        self.FREE_FLOW_ASSIGNMENT = False
+        self.STORED_SPEED_ASSIGNMENT = False
         self.RUN_AGENT_SIMULATION = False
         self.DO_NOT_USE_EMME = False
         self.SEPARATE_EMME_SCENARIOS = False

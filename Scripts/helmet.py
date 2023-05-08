@@ -14,6 +14,8 @@ from datahandling.matrixdata import MatrixData
 def main(args):
     if args.end_assignment_only:
         iterations = 0
+    elif args.free_flow_assignment or args.stored_speed_assignment:
+        iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
     else:
@@ -49,6 +51,7 @@ def main(args):
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
     # Choose and initialize the Traffic Assignment (supply)model
+    kwargs = {"time_periods": ["vrk"]} if args.free_flow_assignment else {}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = os.path.join(
@@ -57,7 +60,7 @@ def main(args):
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
                     mock_result_path))
-        ass_model = MockAssignmentModel(MatrixData(mock_result_path))
+        ass_model = MockAssignmentModel(MatrixData(mock_result_path), **kwargs)
     else:
         if not os.path.isfile(emme_project_path):
             raise NameError(
@@ -70,7 +73,9 @@ def main(args):
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
-            first_matrix_id=args.first_matrix_id)
+            first_matrix_id=args.first_matrix_id,
+            use_free_flow_speeds=args.free_flow_assignment,
+            use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
@@ -158,6 +163,18 @@ if __name__ == "__main__":
         action="store_true",
         default=config.END_ASSIGNMENT_ONLY,
         help="Using this flag runs only end assignment of base demand matrices.",
+    )
+    parser.add_argument(
+        "-f", "--free-flow-assignment",
+        action="store_true",
+        default=config.FREE_FLOW_ASSIGNMENT,
+        help="Using this flag runs assigment with free flow speed."
+    )
+    parser.add_argument(
+        "-x", "--stored-speed-assignment",
+        action="store_true",
+        default=config.STORED_SPEED_ASSIGNMENT,
+        help="Using this flag runs assigment with stored (fixed) speed."
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",

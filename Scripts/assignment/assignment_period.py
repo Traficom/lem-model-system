@@ -14,10 +14,45 @@ from assignment.abstract_assignment import Period
 
 
 class AssignmentPeriod(Period):
+    """
+    EMME assignment period definition.
+
+    This typically represents an hour of the day, which may or may not
+    have a dedicated EMME scenario. In case it does not have its own
+    EMME scenario, assignment results are stored only in extra attributes.
+
+    Parameters
+    ----------
+    name : str
+        Time period name (aht/pt/iht)
+    emme_scenario : int
+        EMME scenario linked to the time period
+    emme_context : assignment.emme_bindings.emme_project.EmmeProject
+        Emme projekt to connect to this assignment
+    demand_mtx : dict (optional)
+        Dict of matrix numbers representing demand for different
+        assignment classes.
+    result_mtx : dict (optional)
+        Dict of matrix numbers representing results for different
+        assignment classes.
+    save_matrices : bool (optional)
+        Whether matrices will be saved in Emme format for all time periods.
+        If false, EMME matrix ids 0-99 will be used for all time periods.
+    separate_emme_scenarios : bool (optional)
+        Whether separate scenarios have been created in EMME
+        for storing time-period specific network results.
+    use_free_flow_speeds : bool (optional)
+        Whether traffic assignment is all-or-nothing with free-flow speeds.
+    use_stored_speeds : bool (optional)
+        Whether traffic assignment is all-or-nothing with speeds stored
+        in `@car_time_xxx`. Overrides `use_free_flow_speeds` if this is
+        also set to `True`.
+    """
     def __init__(self, name, emme_scenario, emme_context,
                  demand_mtx=param.emme_demand_mtx,
                  result_mtx=param.emme_result_mtx, save_matrices=False,
-                 separate_emme_scenarios=False):
+                 separate_emme_scenarios=False, use_free_flow_speeds=False,
+                 use_stored_speeds=False):
         self.name = name
         self.emme_scenario = emme_context.modeller.emmebank.scenario(
             emme_scenario)
@@ -31,6 +66,12 @@ class AssignmentPeriod(Period):
             self.demand_mtx = demand_mtx
             self.result_mtx = result_mtx
         self.dist_unit_cost = param.dist_unit_cost
+        self.use_stored_speeds = use_stored_speeds
+        self.stopping_criteria = copy.deepcopy(
+            param.stopping_criteria)
+        if use_free_flow_speeds or use_stored_speeds:
+            for criteria in self.stopping_criteria.values():
+                criteria["max_iterations"] = 0
 
     def extra(self, attr):
         """Add prefix "@" and time-period suffix.
@@ -103,21 +144,21 @@ class AssignmentPeriod(Period):
             self._set_car_and_transit_vdfs()
             if not self._separate_emme_scenarios:
                 self._calc_background_traffic()
-            self._assign_cars(param.stopping_criteria_coarse)
+            self._assign_cars(self.stopping_criteria["coarse"])
             self._calc_extra_wait_time()
             self._assign_transit()
         elif iteration==0:
             self._set_car_and_transit_vdfs()
             if not self._separate_emme_scenarios:
                 self._calc_background_traffic()
-            self._assign_cars(param.stopping_criteria_coarse)
+            self._assign_cars(self.stopping_criteria["coarse"])
             self._calc_extra_wait_time()
             self._assign_transit()
         elif iteration==1:
             if not self._separate_emme_scenarios:
                 self._set_car_and_transit_vdfs()
                 self._calc_background_traffic()
-            self._assign_cars(param.stopping_criteria_coarse)
+            self._assign_cars(self.stopping_criteria["coarse"])
             self._calc_extra_wait_time()
             self._assign_transit()
             self._calc_background_traffic(include_trucks=True)
@@ -126,7 +167,7 @@ class AssignmentPeriod(Period):
                 self._set_car_and_transit_vdfs()
                 self._calc_background_traffic(include_trucks=True)
             self._assign_cars(
-                param.stopping_criteria_coarse, lightweight=True)
+                self.stopping_criteria["coarse"],lightweight=True)
             self._calc_extra_wait_time()
             self._assign_transit()
         elif iteration=="last":
@@ -134,7 +175,7 @@ class AssignmentPeriod(Period):
             self._assign_bikes(self.result_mtx["dist"]["bike"]["id"], "all")
             self._set_car_and_transit_vdfs()
             self._calc_background_traffic()
-            self._assign_cars(param.stopping_criteria_fine)
+            self._assign_cars(self.stopping_criteria["fine"])
             self._calc_boarding_penalties(is_last_iteration=True)
             self._calc_extra_wait_time()
             self._assign_transit()
@@ -212,6 +253,7 @@ class AssignmentPeriod(Period):
             self.emme_scenario.id))
         network = self.emme_scenario.get_network()
         delay_attr = param.transit_delay_attr.replace("us", "data")
+        car_time_attr = self.extra("car_time")
         transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
             for modes in param.transit_delay_funcs}
         main_mode = network.mode(param.main_mode)
@@ -240,6 +282,11 @@ class AssignmentPeriod(Period):
             else:
                 # Link with no car traffic
                 link.volume_delay_func = 0
+            if self.use_stored_speeds:
+                try:
+                    link.data2 = (link.length / link[car_time_attr]) * 60
+                except ZeroDivisionError:
+                    link.data2 = 0
 
             # Transit function definition
             for modeset in param.transit_delay_funcs:

@@ -94,6 +94,7 @@ transit_delay_funcs = {
         "aht": 6,
         "pt": 6,
         "iht": 6,
+        "vrk": 6,
     },
 }
 # Node numbers used in HSL official networks and their allowed modes
@@ -172,6 +173,7 @@ bus_lane_link_codes = {
     "aht": (2, 3, 4, 6),
     "pt": (3, 6),
     "iht": (2, 3, 5, 6),
+    "vrk": (2, 3, 6)
 }
 # Bus lane delay equivalent to 1.5 km per link
 buslane_delay = 60 * 1.5
@@ -259,19 +261,21 @@ headway_sd_func = {
         "cspeed": -0.039,
     },
 }
-# Stopping criteria for last traffic assignment
-stopping_criteria_fine = {
-    "max_iterations": 400,
-    "relative_gap": 0.00001,
-    "best_relative_gap": 0.001,
-    "normalized_gap": 0.0005,
-}
-# Stopping criteria for traffic assignment in loop
-stopping_criteria_coarse = {
-    "max_iterations": 200,
-    "relative_gap": 0.0001,
-    "best_relative_gap": 0.01,
-    "normalized_gap": 0.005,
+stopping_criteria = {
+    "fine": {
+        # Stopping criteria for last traffic assignment
+        "max_iterations": 400,
+        "relative_gap": 0.00001,
+        "best_relative_gap": 0.001,
+        "normalized_gap": 0.0005,
+    },
+    "coarse": {
+        # Stopping criteria for traffic assignment in loop
+        "max_iterations": 200,
+        "relative_gap": 0.0001,
+        "best_relative_gap": 0.01,
+        "normalized_gap": 0.005,
+    },
 }
 # Congestion function for congested transit assignment
 trass_func = {
@@ -392,6 +396,8 @@ volume_factors = {
     },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
+for mode in volume_factors:
+        volume_factors[mode]["vrk"] = 1
 # Factor for converting weekday traffic into yearly day average
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic

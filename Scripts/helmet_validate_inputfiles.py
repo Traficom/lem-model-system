@@ -120,6 +120,7 @@ def main(args):
             line_attrs = []
             for tp in param.time_periods:
                 link_attrs.append(f"@hinta_{tp}")
+                link_attrs.append(f"@car_time_{tp}")
                 line_attrs.append(f"@hdw_{tp}")
             nr_attr = {
                 # Number of existing extra attributes
@@ -135,7 +136,7 @@ def main(args):
             nr_vehicle_classes = len(param.emme_demand_mtx) + 1
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_vehicle_classes + 4,
+                "links": nr_vehicle_classes + 3,
                 "transit_lines": 0,
                 "transit_segments": nr_transit_classes*nr_segment_results + 1,
             }
