@@ -351,12 +351,15 @@ class AssignmentPeriod(Period):
                 link["@pyoratieluokka"] = 3
             try:
                 pathclass = param.bikepath_vdfs[int(link["@pyoratieluokka"])]
-                if roadtype in pathclass:
+            except KeyError:
+                link.volume_delay_func = 98
+            else:
+                if link.volume_delay_func == 90:
+                    pass
+                elif roadtype in pathclass:
                     link.volume_delay_func = pathclass[roadtype]
                 else:
                     link.volume_delay_func = pathclass[None]
-            except KeyError:
-                link.volume_delay_func = 98
             if bike_mode in link.modes:
                 link.modes |= {main_mode}
             elif main_mode in link.modes:
