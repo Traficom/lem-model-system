@@ -501,10 +501,10 @@ local_transit_modes = [
 long_dist_transit_modes = [
     'e',
     'j',
+    'l',
 ]
 aux_modes = [
     'a',
-    's',
 ]
 park_and_ride_mode = 'u'
 transit_assignment_modes = (local_transit_modes

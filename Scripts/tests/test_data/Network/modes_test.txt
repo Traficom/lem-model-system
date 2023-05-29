@@ -16,6 +16,7 @@ a j 'Muu juna' 2   1
 a t 'Ratikka'  2   1
 a p 'Pikaratikk' 2   1
 a w 'Vesiliiken' 2   1
+a l 'Lentokone' 2   1
 a a 'Kavely'   3   1   0.00   0.00   0.00   0.00          5.0
 a s 'Ulkokavely' 3   1   0.00   0.00   0.00   0.00          5.0
 a f 'Polkupyora' 3   1   0.00   0.00   0.00   0.00         17.0
