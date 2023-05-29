@@ -141,12 +141,6 @@ class AssignmentPeriod(Period):
             self._assign_pedestrians()
             self._set_bike_vdfs()
             self._assign_bikes(self.result_mtx["dist"]["bike"]["id"], "all")
-            self._set_car_and_transit_vdfs()
-            if not self._separate_emme_scenarios:
-                self._calc_background_traffic()
-            self._assign_cars(self.stopping_criteria["coarse"])
-            self._calc_extra_wait_time()
-            self._assign_transit()
         elif iteration==0:
             self._set_car_and_transit_vdfs()
             if not self._separate_emme_scenarios:
