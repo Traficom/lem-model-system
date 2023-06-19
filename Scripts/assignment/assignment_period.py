@@ -429,7 +429,7 @@ class AssignmentPeriod(Period):
                 if mtx_type == "time" and subtype in param.assignment_modes:
                     mtx = self._extract_timecost_from_gcost(subtype)
                 elif mtx_type == "time" and subtype in param.transit_classes:
-                    self._extract_transit_time_from_gcost(subtype)
+                    mtx = self._extract_transit_time_from_gcost(subtype)
                 else:
                     mtx = self._get_matrix(mtx_type, subtype)
                 matrices[subtype] = mtx
