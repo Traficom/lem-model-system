@@ -152,8 +152,8 @@ volume_delay_funcs = {
     "fd78": "length*(60/12)",
     "fd98": "length*(60/12)",
     # Transit functions
-    ## Bus, no bus lane
-    "ft01": "timau",
+    ## Bus, no bus lane, max speed set to 100 km/h
+    "ft01": "timau.max.(length*0.6)",
     ## Bus on bus lane
     "ft02": "length*(60/ul2)",
     ## Tram aht
