@@ -479,12 +479,16 @@ class AssignmentPeriod(Period):
         To get travel time, monetary cost is removed from generalized cost.
         """
         vot_inv = param.vot_inv[param.vot_classes[transit_class]]
+        transfer_penalty = param.transfer_penalty[transit_class] / vot_inv
+        num_transfers = (self._get_matrix(
+            "trip_part_"+transit_class, "num_board") - 1).clip(0, None)
         gcost = self._get_matrix("gen_cost", transit_class)
         cost = (self._get_matrix("cost", transit_class)
                 + self._get_matrix("trip_part_"+transit_class, "board_cost")
-                - param.transfer_penalty[transit_class]
-                * (self._get_matrix("trip_part_"+transit_class, "num_board")-1))
-        time = gcost - vot_inv*cost
+                - num_transfers * transfer_penalty)
+        time = self._get_matrix("time", transit_class)
+        path_found = cost < 999999
+        time[path_found] = gcost[path_found] - vot_inv*cost[path_found]
         self._set_matrix(transit_class, time, "time")
         self._set_matrix(transit_class, cost, "cost")
         return time
