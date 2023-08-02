@@ -6,7 +6,6 @@ from modelsystem import ModelSystem, AgentModelSystem
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datatypes.demand import Demand
-import parameters
 import os
 
 TEST_DATA_PATH = os.path.join(
@@ -53,7 +52,7 @@ class ModelTest(unittest.TestCase):
         self._validate_impedances(impedance["iht"])
 
         # Check that model result does not change
-        self.assertAlmostEquals(model.mode_share[0]["car"], 0.22489513375983478)
+        self.assertAlmostEquals(model.mode_share[0]["car"], 0.19396692706025762)
         
         print("Model system test done")
     
@@ -83,7 +82,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["cost"])
         self.assertIsNotNone(impedances["dist"])
         self.assertIs(type(impedances["time"]), dict)
-        self.assertEquals(len(impedances["time"]), 10)
+        self.assertEquals(len(impedances["time"]), 12)
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)

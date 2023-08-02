@@ -107,9 +107,9 @@ tour_purposes = (
 # hence need sub-intervals defined.
 purpose_areas = {
     "metropolitan": (0, 6000, 16000),
-    "peripheral": (16000, 31000),
-    "all": (0, 6000, 31000),
-    "external": (31031, 40000),
+    "peripheral": (16000, 36000),
+    "all": (0, 6000, 36000),
+    "external": (36000, 40000),
 }
 areas = {
     "helsinki_cbd": (0, 999),
@@ -128,8 +128,8 @@ areas = {
         (12000, 12999),
         (15000, 15499),
     ),
-    "peripheral": (16000, 30999),
-    "external": (31031, None),
+    "peripheral": (16000, 35999),
+    "external": (36000, None),
 }
 municipalities = {
     "Helsinki": (0, 1999),
