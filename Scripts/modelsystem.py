@@ -311,7 +311,6 @@ class ModelSystem:
             if tp == "aht":
                 self._update_ratios(impedance[tp], tp)
             if iteration=="last":
-                impedance[tp]["time"]["transit_uncongested"] = previous_iter_impedance[tp]["time"]["transit_work"]
                 self._save_to_omx(impedance[tp], tp)
         if iteration=="last":
             self.ass_model.aggregate_results(self.resultdata)
