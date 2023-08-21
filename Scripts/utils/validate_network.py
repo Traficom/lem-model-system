@@ -81,10 +81,6 @@ def validate(network, fares=None):
             msg = "Link {} has zero length. Link length can be zero only if linktype is 70. (vaihtokävelyt)".format(link.id)
             log.error(msg)
             raise ValueError(msg)
-        if (linktype == 1):
-            msg = "Link type 1 for link {}. Link type 1 is out of use in Helmet 4+ versions".format(link.id)
-            log.error(msg)
-            raise ValueError(msg)
         if network.mode('c') in link.modes:
             if (linktype not in param.roadclasses
                     and linktype not in param.custom_roadtypes):
