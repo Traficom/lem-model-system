@@ -45,7 +45,7 @@ class JourneyLevel:
         transitions += [{
                 "mode": mode,
                 "next_journey_level": next,
-            } for mode in param.long_dist_transit_modes]
+            } for mode in param.long_dist_transit_modes[transit_class]]
         if park_and_ride:
             if "first_mile" in park_and_ride:
                 # Park-and-ride (car) mode allowed only on level 0.
@@ -107,4 +107,4 @@ class JourneyLevel:
                 "penalty": param.is_in_transit_zone_attr,
                 "perception_factor": 0,
             }
-        
+

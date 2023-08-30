@@ -50,7 +50,9 @@ def validate(network, fares=None):
     validate_mode(network, param.main_mode, EMME_AUTO_MODE)
     for m in param.assignment_modes.values():
         validate_mode(network, m, EMME_AUX_AUTO_MODE)
-    for m in param.local_transit_modes + param.long_dist_transit_modes:
+    for m in param.local_transit_modes:
+        validate_mode(network, m, EMME_TRANSIT_MODE)
+    for m in (n for l in param.long_dist_transit_modes.values() for n in l):
         validate_mode(network, m, EMME_TRANSIT_MODE)
     for m in param.aux_modes + [param.bike_mode]:
         validate_mode(network, m, EMME_AUX_TRANSIT_MODE)

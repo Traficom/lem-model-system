@@ -481,18 +481,16 @@ local_transit_modes = [
     't',
     'w',
 ]
-long_dist_transit_modes = [
-    'e',
-    'j',
-    'l',
-]
+long_dist_transit_modes = {
+  	"transit_work": ['e', 'j', 'l'],
+    "transit_leisure": ['e', 'j', 'l'],
+    "car_first_mile": ['e', 'j', 'l'],
+    "car_last_mile": ['e', 'j', 'l'],
+}
 aux_modes = [
     'a',
 ]
 park_and_ride_mode = 'u'
-transit_assignment_modes = (local_transit_modes
-                            + long_dist_transit_modes
-                            + aux_modes)
 external_modes = [
     "car",
     "transit",

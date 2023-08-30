@@ -54,9 +54,11 @@ class TransitSpecification:
             "penalty": 0, 
             "perception_factor": 1,
         }
+        modes = (param.local_transit_modes + param.aux_modes
+                 + param.long_dist_transit_modes[transit_class])
         self.transit_spec = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
-            "modes": copy.copy(param.transit_assignment_modes),
+            "modes": modes,
             "demand": demand_mtx_id,
             "waiting_time": {
                 "headway_fraction": 1,
@@ -130,7 +132,7 @@ class TransitSpecification:
                 "actual_first_waiting_times": trip_part["fw_time"]["id"],
                 "actual_total_waiting_times": trip_part["tw_time"]["id"],
                 "by_mode_subset": {
-                    "modes": param.transit_assignment_modes,
+                    "modes": modes,
                     "distance": dist_mtx_id,
                     "avg_boardings": trip_part["num_board"]["id"],
                     "actual_total_boarding_times": trip_part["board_time"]["id"],
