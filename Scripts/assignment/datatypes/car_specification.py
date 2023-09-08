@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import Any, Dict, List, Union
 import parameters.assignment as param
 from assignment.datatypes.car import Car
+from collections.abc import Callable
 
 class CarSpecification:
     """
@@ -7,27 +10,21 @@ class CarSpecification:
 
     Parameters
     ----------
-    demand_mtx : dict
+    extra : assignment_period.AssignmentPeriod.extra()
+        Function for generating extra attribute name
+        for specific assignment period
+    emme_matrices : dict
         key : str
-            Assignment class (transit_work/transit_leisure)
-        value : dict
-            id : str
-                Emme matrix id
-            description : dict
-                Matrix description
-    result_mtx : dict
-        key : str
-            Impedance type (time/cost/dist)
+                Assignment class (car_work/transit_leisure/...)
         value : dict
             key : str
-                Assignment class (transit_work/transit_leisure)
-            value : dict
-                id : str
-                    Emme matrix id
-                description : dict
-                    Matrix description
+                Impedance type (time/cost/dist/...)
+            value : str
+                Emme matrix id
     """
-    def __init__(self, extra, demand_mtx, result_mtx):
+    def __init__(self,
+                 extra: Callable, 
+                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
         self._modes = {}
         self._freight_modes = list(param.freight_dist_unit_cost)
         for mode in param.assignment_modes:
@@ -38,8 +35,7 @@ class CarSpecification:
                 }
             else:
                 kwargs = {"link_costs": extra("total_cost")}
-            self._modes[mode] = Car(
-                mode, extra, demand_mtx, result_mtx, **kwargs)
+            self._modes[mode] = Car(mode, extra, emme_matrices[mode], **kwargs)
         self._spec = {
             "type": "SOLA_TRAFFIC_ASSIGNMENT",
             "background_traffic": {
@@ -50,7 +46,7 @@ class CarSpecification:
             "stopping_criteria": None, # This is defined later
         }
 
-    def spec(self, lightweight=False):
+    def spec(self, lightweight: bool = False) -> Dict[str, Any]:
         self._spec["classes"] = [self._modes[mode].spec for mode in self._modes
             if not lightweight or mode not in self._freight_modes]
         return self._spec

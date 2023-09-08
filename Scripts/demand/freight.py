@@ -1,5 +1,10 @@
-import numpy
+from __future__ import annotations
+from typing import TYPE_CHECKING
+import numpy # type: ignore
 import pandas
+if TYPE_CHECKING:
+    from datahandling.matrixdata import MatrixData
+    from datahandling.zonedata import ZoneData
 
 import parameters.tour_generation as param
 from utils.freight import fratar, calibrate
@@ -20,7 +25,10 @@ class FreightModel:
         Base demand matrices
     """
 
-    def __init__(self, zone_data_base, zone_data_forecast, base_demand):
+    def __init__(self, 
+                 zone_data_base: ZoneData, 
+                 zone_data_forecast: ZoneData, 
+                 base_demand: MatrixData):
         self.zdata_b = zone_data_base
         self.zdata_f = zone_data_forecast
         self.base_demand = base_demand
@@ -32,7 +40,7 @@ class FreightModel:
         }
         self.purpose = Purpose(spec, zone_data_base)
 
-    def calc_freight_traffic(self, mode):
+    def calc_freight_traffic(self, mode: str) -> Demand:
         """Calculate freight traffic matrix.
 
         Parameters

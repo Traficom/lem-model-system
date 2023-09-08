@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import Any, Dict, Union
 import parameters.assignment as param
 
 
@@ -33,8 +35,9 @@ class JourneyLevel:
     count_zone_boardings : bool (optional)
         Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, level, transit_class, headway_attribute,
-            park_and_ride=False, count_zone_boardings=False):
+    def __init__(self, level: int, transit_class: str, headway_attribute: str,
+            park_and_ride: Union[str, bool] = False,
+            count_zone_boardings: bool = False):
         # Boarding transit modes allowed only on levels 0-3
         next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
         transitions = [{
