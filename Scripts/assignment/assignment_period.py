@@ -485,23 +485,24 @@ class AssignmentPeriod(Period):
         self._set_matrix(ass_class, time, "time")
         return time
 
-    def _extract_transit_time_from_gcost(self, transit_class):
+    def _extract_transit_time_from_gcost(self,
+            transit_class: str) -> numpy.ndarray:
         """Remove monetary cost from generalized cost.
 
         Transit assignment produces a generalized cost matrix.
         To get travel time, monetary cost is removed from generalized cost.
         """
         vot_inv = param.vot_inv[param.vot_classes[transit_class]]
-        transfer_penalty = param.transfer_penalty[transit_class] / vot_inv
-        num_transfers = (self._get_matrix(
-            transit_class, "avg_boardings") - 1).clip(0, None)
+        boards = self._get_matrix(transit_class, "avg_boardings") > 0
+        transfer_penalty = boards * param.transfer_penalty[transit_class]
         gcost = self._get_matrix(transit_class, "gen_cost")
         cost = (self._get_matrix(transit_class, "cost")
-                + self._get_matrix(transit_class, "actual_total_boarding_costs")
-                - num_transfers * transfer_penalty)
+                + self._get_matrix(transit_class, "actual_total_boarding_costs"))
         time = self._get_matrix(transit_class, "time")
         path_found = cost < 999999
-        time[path_found] = gcost[path_found] - vot_inv*cost[path_found]
+        time[path_found] = (gcost[path_found]
+                            - vot_inv*cost[path_found]
+                            - transfer_penalty[path_found])
         self._set_matrix(transit_class, time, "time")
         self._set_matrix(transit_class, cost, "cost")
         return time
@@ -554,16 +555,19 @@ class AssignmentPeriod(Period):
         # Definition of line specific boarding penalties
         network = self.emme_scenario.get_network()
         if is_last_iteration:
-            penalty = param.last_boarding_penalty
+            penalties = param.last_boarding_penalty
         else:
-            penalty = param.boarding_penalty
+            penalties = param.boarding_penalty
         missing_penalties = set()
-        penalty_attr = param.boarding_penalty_attr.replace("ut", "data")
+        penalty_attr = param.boarding_penalty_attr
         for line in network.transit_lines():
             try:
-                line[penalty_attr] = penalty[line.mode.id] + extra_penalty
+                penalty = penalties[line.mode.id] + extra_penalty
             except KeyError:
+                penalty = extra_penalty
                 missing_penalties.add(line.mode.id)
+            for transit_class, transfer_pen in param.transfer_penalty.items():
+                line[penalty_attr + transit_class] = penalty + transfer_pen
         if missing_penalties:
             missing_penalties_str: str = ", ".join(missing_penalties)
             log.warn("No boarding penalty found for transit modes " + missing_penalties_str)

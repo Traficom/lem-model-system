@@ -63,7 +63,7 @@ class TransitSpecification:
                 "global": None,
                 "at_nodes": None,
                 "on_lines": {
-                    "penalty": param.boarding_penalty_attr,
+                    "penalty": param.boarding_penalty_attr + transit_class,
                     "perception_factor": 1
                 },
                 "on_segments": param.extra_waiting_time,

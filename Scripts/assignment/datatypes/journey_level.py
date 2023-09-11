@@ -83,10 +83,7 @@ class JourneyLevel:
             "transition_rules": transitions,
             "boarding_time": None,
             "boarding_cost": {
-                "global": {
-                    "penalty": param.transfer_penalty[transit_class],
-                    "perception_factor": 1,
-                },
+                "global": None,
                 "at_nodes": None,
                 "on_lines": {
                     "penalty": param.board_fare_attr,
@@ -97,10 +94,7 @@ class JourneyLevel:
             },
             "waiting_time": None,
         }
-        if level < BOARDED_LOCAL:
-            # No transfer penalty for first boarding
-            self.spec["boarding_cost"]["global"]["penalty"] = 0
-        elif level == BOARDED_LOCAL:
+        if level == BOARDED_LOCAL:
             # Free transfers within local transit
             (self.spec["boarding_cost"]
                       ["on_lines"]["penalty"]) =  param.board_long_dist_attr

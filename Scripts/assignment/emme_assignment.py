@@ -472,6 +472,11 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.board_long_dist_attr,
             "boarding fare attribute", overwrite=True, scenario=scenario)
+        for transit_class in param.transfer_penalty:
+            self.emme_project.create_extra_attribute(
+                "TRANSIT_LINE", param.boarding_penalty_attr + transit_class,
+                "boarding pentalty attribute", overwrite=True,
+                scenario=scenario)
         # Create node and transit segment attributes
         attr = param.segment_results
         segment_results = {}
