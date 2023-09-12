@@ -9,8 +9,6 @@ if TYPE_CHECKING:
     from datahandling.zonedata import BaseZoneData
 
 import utils.log as log
-from utils.read_csv_file import read_csv_file
-from utils.zone_interval import zone_interval
 import parameters.assignment as param
 import parameters.zone as zone_param
 
@@ -31,32 +29,6 @@ class MatrixData:
         mtxfile = MatrixFile(omx.open_file(file_name, m), zone_numbers)
         yield mtxfile
         mtxfile.close()
-
-    def get_external(self, transport_mode: str):
-        return read_csv_file(self.path, "external_"+transport_mode+".txt")
-
-    def peripheral_transit_cost(self, zonedata: BaseZoneData):
-        filename = "transit_cost_peripheral.txt"
-        try:
-            aggr_mtx = read_csv_file(self.path, filename)
-        except NameError:
-            log.warn("Aggregated data {} missing".format(filename))
-            log.info("Using disaggregated transit cost data cost_peripheral.omx")
-            with self.open("cost", "peripheral") as peripheral_mtx:
-                peripheral_cost = numpy.array(peripheral_mtx._file["transit"])
-            return peripheral_cost
-        else:
-            log.info("Using aggregated transit cost data {}".format(filename))
-            first_zone = zonedata.all_zone_numbers.searchsorted(
-                zone_param.areas["peripheral"][0])
-            mtx = pandas.DataFrame(
-                0, zonedata.zone_numbers[first_zone:], zonedata.zone_numbers)
-            for periph_municipality in aggr_mtx.index:
-                i = zone_interval("municipalities", periph_municipality)
-                for municipality in aggr_mtx.columns:
-                    j = zone_interval("municipalities", municipality)
-                    mtx.loc[i, j] = aggr_mtx.loc[periph_municipality, municipality]
-            return mtx.values
 
 
 class MatrixFile:

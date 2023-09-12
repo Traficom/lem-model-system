@@ -39,7 +39,7 @@ class MockAssignmentModel(AssignmentModel):
         """int: Number of zones in assignment model."""
         return len(self.zone_numbers)
 
-    def calc_transit_cost(self, fare, peripheral_cost, default_cost=None):
+    def calc_transit_cost(self, fare):
         pass
 
     def aggregate_results(self, resultdata):

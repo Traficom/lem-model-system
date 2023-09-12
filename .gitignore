@@ -57,8 +57,8 @@ Scripts/.pytest_cache
 Scripts/tests/.pytest_cache
 Scripts/.env
 Scripts/tests/test_data/Results/*
-!Scripts/tests/test_data/Results/test/Matrices/cost*
-!Scripts/tests/test_data/Results/test/Matrices/dist*
-!Scripts/tests/test_data/Results/test/Matrices/time*
+!Scripts/tests/test_data/Results/test/uusimaa/Matrices/cost*
+!Scripts/tests/test_data/Results/test/uusimaa/Matrices/dist*
+!Scripts/tests/test_data/Results/test/uusimaa/Matrices/time*
 project.mtbx-shm
 project.mtbx-wal

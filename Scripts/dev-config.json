@@ -4,6 +4,7 @@
     "LOG_FORMAT": "TEXT",
     "SCENARIO_NAME": "test",
     "RESULTS_PATH": "C:\\XXX\\Results",
+    "SUBMODEL": "uusimaa",
     "EMME_PROJECT_PATH": "C:\\XXX\\xxx.emp",
     "FIRST_SCENARIO_ID": 19,
     "FIRST_MATRIX_ID": 100,

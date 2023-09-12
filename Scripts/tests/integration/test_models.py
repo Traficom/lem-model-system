@@ -24,7 +24,8 @@ class ModelTest(unittest.TestCase):
         log.initialize(Config())
         results_path = os.path.join(TEST_DATA_PATH, "Results")
         ass_model = MockAssignmentModel(
-            MatrixData(os.path.join(results_path, "test", "Matrices")))
+            MatrixData(
+                os.path.join(results_path, "test", "uusimaa", "Matrices")))
         zone_data_path = os.path.join(
             TEST_DATA_PATH, "Scenario_input_data", "2030_test")
         base_zone_data_path = os.path.join(
@@ -33,7 +34,7 @@ class ModelTest(unittest.TestCase):
             TEST_DATA_PATH, "Base_input_data", "base_matrices")
         model = ModelSystem(
             zone_data_path, base_zone_data_path, base_matrices_path,
-            results_path, ass_model, "test")
+            results_path, ass_model, "test", "uusimaa")
         impedance = model.assign_base_demand()
         for ap in ass_model.assignment_periods:
             tp = ap.name
@@ -60,7 +61,7 @@ class ModelTest(unittest.TestCase):
         log.initialize(Config())
         results_path = os.path.join(TEST_DATA_PATH, "Results")
         ass_model = MockAssignmentModel(MatrixData(
-            os.path.join(results_path, "test", "Matrices")))
+            os.path.join(results_path, "test", "uusimaa", "Matrices")))
         zone_data_path = os.path.join(
             TEST_DATA_PATH, "Scenario_input_data", "2030_test")
         base_zone_data_path = os.path.join(
@@ -69,7 +70,7 @@ class ModelTest(unittest.TestCase):
             TEST_DATA_PATH, "Base_input_data", "base_matrices")
         model = AgentModelSystem(
             zone_data_path, base_zone_data_path, base_matrices_path,
-            results_path, ass_model, "test")
+            results_path, ass_model, "test", "uusimaa")
         impedance = model.assign_base_demand()
         impedance = model.run_iteration(impedance)
         impedance = model.run_iteration(impedance, "last")

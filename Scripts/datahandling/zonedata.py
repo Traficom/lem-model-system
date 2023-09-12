@@ -1,23 +1,33 @@
 from __future__ import annotations
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Sequence, Optional, Union
 import numpy # type: ignore
 import pandas
 
 import parameters.zone as param
-from utils.read_csv_file import read_csv_file
+from utils.read_csv_file import FileReader
 from utils.zone_interval import ZoneIntervals, zone_interval
 import utils.log as log
 from datatypes.zone import Zone
-from assignment.datatypes.transit_fare import TransitFareZoneSpecification
 
 
 class ZoneData:
-    def __init__(self, data_dir: str, zone_numbers: numpy.array):
-        self._values: Dict[str,Any]= {}
+    """Container for zone data read from input files.
+
+    Parameters
+    ----------
+    data_dir : str
+        Directory where scenario input data files are found
+    zone_numbers : list
+        Zone numbers to compare with for validation
+    zone_mapping_file : str (optional)
+        Name of zone mapping file
+    """
+    def __init__(self, data_dir: str, zone_numbers: Sequence,
+                 zone_mapping_file: Optional[str] = None):
+        self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
         self.all_zone_numbers = all_zone_numbers
-        surrounding = param.areas["surrounding"]
         peripheral = param.areas["peripheral"]
         external = param.areas["external"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
@@ -25,25 +35,26 @@ class ZoneData:
         Zone.counter = 0
         self.zones = {number: Zone(number) for number in self.zone_numbers}
         first_peripheral = self.zone_numbers.searchsorted(peripheral[0])
-        dtype = numpy.float32
-        popdata = read_csv_file(data_dir, ".pop", self.zone_numbers, dtype)
-        workdata = read_csv_file(data_dir, ".wrk", self.zone_numbers, dtype)
-        schooldata = read_csv_file(data_dir, ".edu", self.zone_numbers, dtype)
-        landdata = read_csv_file(data_dir, ".lnd", self.zone_numbers, dtype)
-        parkdata = read_csv_file(data_dir, ".prk", self.zone_numbers, dtype)
-        self.externalgrowth = read_csv_file(
-            data_dir, ".ext",
-            all_zone_numbers[all_zone_numbers.searchsorted(external[0]):],
-            float)
-        self.transit_zone = read_csv_file(data_dir, ".tco")
+        files = FileReader(
+            data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
+        popdata = files.read_csv_file(".pop")
+        workdata = files.read_csv_file(".wrk")
+        schooldata = files.read_csv_file(".edu")
+        landdata = files.read_csv_file(".lnd")
+        parkdata = files.read_csv_file(".prk")
+        files = FileReader(data_dir)
+        self.transit_zone = files.read_csv_file(".tco")
         try:
-            cardata = read_csv_file(data_dir, ".car")
+            cardata = files.read_csv_file(".car")
             self["parking_norm"] = cardata["prknorm"]
         except (NameError, KeyError):
             self._values["parking_norm"] = None
-        car_cost = read_csv_file(data_dir, ".cco", squeeze=False)
+        car_cost = files.read_csv_file(".cco", squeeze=False)
         self.car_dist_cost = car_cost["dist_cost"][0]
-        truckdata = read_csv_file(data_dir, ".trk", squeeze=True)
+        truckdata = files.read_csv_file(".trk", squeeze=True)
+        files.zone_numbers = all_zone_numbers[all_zone_numbers.searchsorted(external[0]):]
+        files.dtype = numpy.float32
+        self.externalgrowth = files.read_csv_file(".ext")
         self.trailers_prohibited = list(map(int, truckdata.loc[0, :]))
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["total"]
@@ -211,10 +222,12 @@ class ZoneData:
 
 
 class BaseZoneData(ZoneData):
-    def __init__(self, data_dir: str, zone_numbers: numpy.array):
-        ZoneData.__init__(self, data_dir, zone_numbers)
-        cardata = read_csv_file(data_dir, ".car", self.zone_numbers)
-        self["car_density"] = cardata["cardens"]
+    def __init__(self, data_dir: str, zone_numbers: Sequence,
+                 zone_mapping_file: Optional[str] = None):
+        ZoneData.__init__(self, data_dir, zone_numbers, zone_mapping_file)
+        files = FileReader(
+            data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
+        self["car_density"] = files.read_csv_file(".car")["cardens"]
         self["cars_per_1000"] = 1000 * self["car_density"]
 
 

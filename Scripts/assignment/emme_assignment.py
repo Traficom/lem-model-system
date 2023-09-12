@@ -262,37 +262,19 @@ class EmmeAssignmentModel(AssignmentModel):
         resultdata.print_data(dists, "transit_kms.txt", "dist")
         resultdata.print_data(times, "transit_kms.txt", "time")
 
-    def calc_transit_cost(self, 
-                          fares: TransitFareZoneSpecification, 
-                          peripheral_cost: numpy.ndarray, 
-                          default_cost: numpy.ndarray = None):
-        """Calculate transit zone cost matrix.
-        
-        Perform multiple transit assignments.
-        For each assignment, check if a specific zone has been visited
-        by the OD-pair flows. For all the zones that are visited, 
-        check if there is a zone combination fare that includes them all.
-        If not, distance fare is applied.
-
-        Some fares can be exclusively for municipality citizens
-        (i.e., tours starting in that municipality).
+    def calc_transit_cost(self, fares: pandas.DataFrame):
+        """Insert line costs.
         
         Parameters
         ----------
-        fares : assignment.datatypes.transit_fare.TransitFareZoneSpecification
+        fares : pandas.DataFrame
             Transit fare zone specification
-        peripheral_cost : numpy 2-d matrix
-            Fixed cost matrix for peripheral zones
-        default_cost : numpy 2-d matrix
-            (optional) Fixed cost matrix to use instead of calculated cost
         """
         if self.separate_emme_scenarios:
             for ap in self.assignment_periods:
-                ap.calc_transit_cost(
-                    fares, peripheral_cost, self.mapping)
+                ap.calc_transit_cost(fares)
         else:
-            self.assignment_periods[0].calc_transit_cost(
-                fares, peripheral_cost, self.mapping)
+            self.assignment_periods[0].calc_transit_cost(fares)
 
     def _copy_matrix(self, 
                      mtx_type: str, 

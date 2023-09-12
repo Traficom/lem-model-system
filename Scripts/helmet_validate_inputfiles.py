@@ -14,7 +14,8 @@ import parameters.assignment as param
 
 def main(args):
     base_zonedata_path = os.path.join(args.baseline_data_path, "2018_zonedata")
-    base_matrices_path = os.path.join(args.baseline_data_path, "base_matrices")
+    base_matrices_path = os.path.join(
+        args.baseline_data_path, "base_matrices", args.submodel)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -58,7 +59,7 @@ def main(args):
         raise ValueError(msg)
     if args.do_not_use_emme:
         mock_result_path = os.path.join(
-            args.results_path, args.scenario_name, "Matrices")
+            args.results_path, args.scenario_name, args.submodel, "Matrices")
         if not os.path.exists(mock_result_path):
             msg = "Mock Results directory {} does not exist.".format(
                 mock_result_path)
@@ -86,7 +87,7 @@ def main(args):
             zone_numbers = scen.zone_numbers
         app.close()
     # Check base zonedata
-    base_zonedata = ZoneData(base_zonedata_path, zone_numbers)
+    base_zonedata = ZoneData(base_zonedata_path, zone_numbers, f"{args.submodel}.zmp")
     # Check base matrices
     matrixdata = MatrixData(base_matrices_path)
     for tp in param.time_periods:
@@ -105,7 +106,8 @@ def main(args):
                 forecast_zonedata_paths[i])
             log.error(msg)
             raise ValueError(msg)
-        forecast_zonedata = ZoneData(forecast_zonedata_paths[i], zone_numbers)
+        forecast_zonedata = ZoneData(
+            forecast_zonedata_paths[i], zone_numbers, f"{args.submodel}.zmp")
 
         # Check network
         if not args.do_not_use_emme:
@@ -228,6 +230,11 @@ if __name__ == "__main__":
         default=config.BASELINE_DATA_PATH,
         help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
     # Scenarios' individual input
+    parser.add_argument(
+        "--submodel",
+        type=str,
+        default=config.SUBMODEL,
+        help="Name of submodel, used for choosing appropriate zone mapping"),
     parser.add_argument(
         "--emme-paths",
         type=str,

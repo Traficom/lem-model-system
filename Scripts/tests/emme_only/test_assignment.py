@@ -114,9 +114,9 @@ class EmmeAssignmentTest:
     def test_transit_cost(self):
         zdata = ZoneData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "..", "test_data",
-            "Scenario_input_data", "2030_test"), self.ass_model.zone_numbers)
-        peripheral_cost = numpy.ones((1, 10))
-        self.ass_model.calc_transit_cost(zdata.transit_zone, peripheral_cost)
+            "Scenario_input_data", "2030_test"), self.ass_model.zone_numbers,
+            "uusimaa.zmp")
+        self.ass_model.calc_transit_cost(zdata.transit_zone)
 
 if emme_available:
     em = EmmeAssignmentTest()

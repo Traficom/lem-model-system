@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy # type: ignore
+import pandas # type: ignore
 import copy
 
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
@@ -13,7 +14,6 @@ from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.abstract_assignment import Period
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.datatypes.transit_fare import TransitFareZoneSpecification
     from emme_context.modeller.emmebank import Scenario # type: ignore
 
 
@@ -201,20 +201,13 @@ class AssignmentPeriod(Period):
                 mtxs["cost"][ass_cl] += self.dist_unit_cost * mtxs["dist"][ass_cl]
         return mtxs
 
-    def calc_transit_cost(self, 
-                          fares: TransitFareZoneSpecification, 
-                          peripheral_cost: numpy.ndarray, 
-                          mapping: dict):
+    def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
         
         Parameters
         ----------
         fares : pandas.DataFrame
             Transit fare zone specification
-        peripheral_cost : numpy 2-d matrix
-            Deprecated
-        mapping : dict
-            Deprecated
         """
         network = self.emme_scenario.get_network()
         penalty_attr = param.line_penalty_attr.replace("us", "data")

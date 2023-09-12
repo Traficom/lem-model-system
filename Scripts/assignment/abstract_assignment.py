@@ -23,7 +23,7 @@ class AssignmentModel:
         pass
 
     @abstractmethod
-    def calc_transit_cost(self, fares, peripheral_cost, default_cost=None):
+    def calc_transit_cost(self, fares):
         pass
 
     @abstractmethod

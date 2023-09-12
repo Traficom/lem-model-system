@@ -35,8 +35,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model = EmmeAssignmentModel(
             context, scenario_id)
         ass_model.prepare_network()
-        peripheral_cost = numpy.arange(10).reshape((1, 10))
-        ass_model.calc_transit_cost(fares, peripheral_cost)
+        ass_model.calc_transit_cost(fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
         demand = {

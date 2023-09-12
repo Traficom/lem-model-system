@@ -30,14 +30,16 @@ class MatrixDataTest(unittest.TestCase):
     def test_constructor(self):
         log.initialize(Config())
         m = MatrixData(
-            os.path.join(TEST_DATA_PATH, "Base_input_data", "base_matrices"))
+            os.path.join(
+                TEST_DATA_PATH, "Base_input_data", "base_matrices", "uusimaa"))
         # Verify that the base folder exists
         self.assertTrue(os.path.isdir(m.path))
 
     def test_matrix_operations(self):
         log.initialize(Config())
         m = MatrixData(
-            os.path.join(TEST_DATA_PATH, "Base_input_data", "base_matrices"))
+            os.path.join(
+                TEST_DATA_PATH, "Base_input_data", "base_matrices", "uusimaa"))
         MATRIX_TYPES = ["demand"]
         for matrix_type in MATRIX_TYPES:
             print("validating matrix type", matrix_type)
@@ -72,7 +74,7 @@ class ZoneDataTest(unittest.TestCase):
 
         zdata2030 = ZoneData(
             os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test"),
-            ZONE_INDEXES)
+            ZONE_INDEXES, "uusimaa.zmp")
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 

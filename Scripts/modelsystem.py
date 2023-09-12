@@ -47,6 +47,8 @@ class ModelSystem:
         can be EmmeAssignmentModel or MockAssignmentModel
     name : str
         Name of scenario, used for results subfolder
+    submodel: str
+        Name of submodel, used for choosing appropriate zone mapping
     """
 
     def __init__(self, 
@@ -55,22 +57,25 @@ class ModelSystem:
                  base_matrices_path: str,
                  results_path: str, 
                  assignment_model: AssignmentModel, 
-                 name: str):
+                 name: str,
+                 submodel: str):
         self.ass_model = cast(Union[MockAssignmentModel,EmmeAssignmentModel], assignment_model) #type checker hint
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
         self.travel_modes: Dict[str, bool] = {}  # Dict instead of set, to preserve order
 
         # Input data
         self.zdata_base = BaseZoneData(
-            base_zone_data_path, self.zone_numbers)
-        self.basematrices = MatrixData(base_matrices_path)
+            base_zone_data_path, self.zone_numbers, f"{submodel}.zmp")
+        self.basematrices = MatrixData(
+            os.path.join(base_matrices_path, submodel))
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers)
+            zone_data_path, self.zone_numbers, f"{submodel}.zmp")
 
         # Output data
+        results_path = os.path.join(results_path, name, submodel)
+        self.resultdata = ResultsData(results_path)
         self.resultmatrices = MatrixData(
-            os.path.join(results_path, name, "Matrices"))
-        self.resultdata = ResultsData(os.path.join(results_path, name))
+            os.path.join(results_path, "Matrices"))
 
         self.dm = self._init_demand_model()
         self.fm = FreightModel(
@@ -153,15 +158,11 @@ class ModelSystem:
 
     # possibly merge with init
     def assign_base_demand(self, 
-                           use_fixed_transit_cost: bool = False, 
-                           is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
+            is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign base demand to network (before first iteration).
 
         Parameters
         ----------
-        use_fixed_transit_cost : bool (optional)
-            If transit cost is already calculated for this scenario and is
-            found in Results folder, it can be reused to save time
         is_end_assignment : bool (optional)
             If base demand is assigned without demand calculations
 
@@ -188,17 +189,7 @@ class ModelSystem:
             base_demand = {ass_class: mtx[ass_class]
                 for ass_class in param.transport_classes}
         self.ass_model.init_assign(base_demand)
-        if use_fixed_transit_cost:
-            log.info("Using fixed transit cost matrix")
-            with self.resultmatrices.open("cost", time_periods[0]) as aht_mtx:
-                fixed_cost = aht_mtx["transit_work"]
-        else:
-            log.info("Calculating transit cost")
-            fixed_cost = None
-        self.ass_model.calc_transit_cost(
-            self.zdata_forecast.transit_zone,
-            self.basematrices.peripheral_transit_cost(self.zdata_base),
-            fixed_cost)
+        self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
 
         # Perform traffic assignment and get result impedance, 
         # for each time period

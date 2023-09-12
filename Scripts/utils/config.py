@@ -52,6 +52,7 @@ class Config:
         self.BASELINE_DATA_PATH = None
         self.FORECAST_DATA_PATH = None
         self.RESULTS_PATH = None
+        self.SUBMODEL = None
         self.EMME_PROJECT_PATH = None
         self.FIRST_SCENARIO_ID = None
         self.FIRST_MATRIX_ID = None

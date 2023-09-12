@@ -56,7 +56,7 @@ def main(args):
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = os.path.join(
-            results_path, args.scenario_name, "Matrices")
+            results_path, args.scenario_name, args.submodel, "Matrices")
         if not os.path.exists(mock_result_path):
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
@@ -81,14 +81,11 @@ def main(args):
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
-    if args.is_agent_model:
-        model = AgentModelSystem(
-            forecast_zonedata_path, base_zonedata_path, base_matrices_path,
-            results_path, ass_model, args.scenario_name)
-    else:
-        model = ModelSystem(
-            forecast_zonedata_path, base_zonedata_path, base_matrices_path,
-            results_path, ass_model, args.scenario_name)
+    model_args = (forecast_zonedata_path, base_zonedata_path,
+                  base_matrices_path, results_path, ass_model,
+                  args.scenario_name, args.submodel)
+    model = (AgentModelSystem(*model_args) if args.is_agent_model
+             else ModelSystem(*model_args))
     log_extra["status"]["results"] = model.mode_share
 
     # Run traffic assignment simulation for N iterations,
@@ -97,8 +94,7 @@ def main(args):
     log.info(
         "Starting simulation with {} iterations...".format(iterations),
         extra=log_extra)
-    impedance = model.assign_base_demand(
-        args.use_fixed_transit_cost, iterations==0)
+    impedance = model.assign_base_demand(iterations==0)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -227,6 +223,11 @@ if __name__ == "__main__":
         default=config.RESULTS_PATH,
         help="Path to folder where result data is saved to."),
     # HELMET scenario input data
+    parser.add_argument(
+        "--submodel",
+        type=str,
+        default=config.SUBMODEL,
+        help="Name of submodel, used for choosing appropriate zone mapping"),
     parser.add_argument(
         "--emme-path",
         type=str,
