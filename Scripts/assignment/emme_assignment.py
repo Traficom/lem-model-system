@@ -393,7 +393,7 @@ class EmmeAssignmentModel(AssignmentModel):
                         j += 1
                         id = f"mf{id_hundred + id_ten[ass_class] + j}"
                         matrix_ids[subset][longer_name] = id
-                        matrix_ids[longer_name] = id
+                        matrix_ids[mtx_type] = id
                         self.emme_project.create_matrix(
                             matrix_id=id,
                             matrix_name=f"{mtx_type}_{ass_class}_{tag}",

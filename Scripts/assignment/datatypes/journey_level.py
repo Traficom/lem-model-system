@@ -99,7 +99,6 @@ class JourneyLevel:
             (self.spec["boarding_cost"]
                       ["on_lines"]["penalty"]) =  param.board_long_dist_attr
         if count_zone_boardings:
-            self.spec["boarding_cost"]["global"] = None
             self.spec["boarding_cost"]["at_nodes"] = {
                 "penalty": param.is_in_transit_zone_attr,
                 "perception_factor": 0,

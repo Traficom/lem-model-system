@@ -212,6 +212,11 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         penalty_attr = param.line_penalty_attr.replace("us", "data")
         op_attr = param.line_operator_attr.replace("ut", "data")
+        long_dist_transit_modes = {mode for mode_set
+            in param.long_dist_transit_modes.values() for mode in mode_set}
+        for mode in long_dist_transit_modes:
+            if network.mode(mode) is None:
+                raise AttributeError(f"Long-dist mode {mode} does not exist.")
         for line in network.transit_lines():
             for segment in line.segments():
                 segment[param.dist_fare_attr] = (fares["dist"][line[op_attr]]
@@ -219,7 +224,7 @@ class AssignmentPeriod(Period):
                 segment[penalty_attr] = segment[param.dist_fare_attr]
             line[param.board_fare_attr] = fares["firstb"][line[op_attr]]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
-                if line.mode.id in param.long_dist_transit_modes else 0)
+                if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
 
     def transit_results_links_nodes(self):
@@ -486,11 +491,11 @@ class AssignmentPeriod(Period):
         To get travel time, monetary cost is removed from generalized cost.
         """
         vot_inv = param.vot_inv[param.vot_classes[transit_class]]
-        boards = self._get_matrix(transit_class, "avg_boardings") > 0
+        boards = self._get_matrix(transit_class, "num_board") > 0
         transfer_penalty = boards * param.transfer_penalty[transit_class]
         gcost = self._get_matrix(transit_class, "gen_cost")
         cost = (self._get_matrix(transit_class, "cost")
-                + self._get_matrix(transit_class, "actual_total_boarding_costs"))
+                + self._get_matrix(transit_class, "board_cost"))
         time = self._get_matrix(transit_class, "time")
         path_found = cost < 999999
         time[path_found] = (gcost[path_found]
