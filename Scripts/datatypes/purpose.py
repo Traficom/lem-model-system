@@ -6,10 +6,10 @@ from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
 import parameters.zone as param
-from parameters.destination_choice import secondary_destination_threshold
 import models.logit as logit
 import models.generation as generation
 from datatypes.demand import Demand
+from transform.impedance_transformer import ImpedanceTransformer
 from utils.zone_interval import MatrixAggregator, ArrayAggregator
 from datatypes.histogram import TourLengthHistogram
 
@@ -56,6 +56,8 @@ class Purpose:
         self.zone_data = zone_data
         self.resultdata = resultdata
         self.model = None
+        self.impedance_transformer = ImpedanceTransformer(
+            self, specification["impedance_share"])
         self.modes: List[str] = []
         self.generated_tours: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
@@ -110,13 +112,15 @@ class TourPurpose(Purpose):
         else:
             self.gen_model = generation.GenerationModel(self, resultdata)
         if self.name == "sop":
-            self.model: Union[logit.OriginModel, logit.DestModeModel, logit.ModeDestModel] = logit.OriginModel(zone_data, self, resultdata)
-        elif self.name == "so":
-            self.model = logit.DestModeModel(zone_data, self, resultdata)
+            self.model: Union[logit.OriginModel, logit.DestModeModel, logit.ModeDestModel] = logit.OriginModel(zone_data, self, specification, resultdata)
+        elif specification["struct"] == "mode>dest":
+            self.model = logit.DestModeModel(
+                zone_data, self, specification, resultdata)
         else:
-            self.model = logit.ModeDestModel(zone_data, self, resultdata)
+            self.model = logit.ModeDestModel(
+                zone_data, self, specification, resultdata)
             self.accessibility_model = logit.AccessibilityModel(
-                zone_data, self, resultdata)
+                zone_data, self, specification, resultdata)
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
         self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
@@ -224,7 +228,8 @@ class SecDestPurpose(Purpose):
     def __init__(self, specification, zone_data, resultdata):
         Purpose.__init__(self, specification, zone_data, resultdata)
         self.gen_model = generation.SecDestGeneration(self, resultdata)
-        self.model = logit.SecDestModel(zone_data, self, resultdata)
+        self.model = logit.SecDestModel(
+            zone_data, self, specification, resultdata)
         self.modes = self.model.dest_choice_param.keys()
 
     def init_sums(self):
@@ -264,7 +269,7 @@ class SecDestPurpose(Purpose):
         generation = self.tours[mode][orig, :]
         # All o-d pairs below threshold are neglected,
         # total demand is increased for other pairs.
-        dests = generation > secondary_destination_threshold
+        dests = generation > param.secondary_destination_threshold
         if not dests.any():
             # If no o-d pairs have demand above threshold,
             # the sole destination with largest demand is picked

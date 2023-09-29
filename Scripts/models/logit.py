@@ -8,9 +8,7 @@ if TYPE_CHECKING:
     from datahandling.zonedata import ZoneData
     from datatypes.purpose import TourPurpose
 
-from parameters.destination_choice import destination_choice, distance_boundary
-from parameters.mode_choice import mode_choice
-import parameters.zone as zone_params
+import parameters.zone as param
 from utils.zone_interval import ZoneIntervals
 
 
@@ -29,7 +27,8 @@ class LogitModel:
 
     def __init__(self, 
                  zone_data: ZoneData, 
-                 purpose: TourPurpose, 
+                 purpose: TourPurpose,
+                 parameters: dict,
                  resultdata: ResultsData):
         self.resultdata = resultdata
         self.purpose = purpose
@@ -39,8 +38,8 @@ class LogitModel:
         self.dest_exps: Dict[str, numpy.array] = {}
         self.mode_exps: Dict[str, numpy.array] = {}
         purpose.name = cast(str, purpose.name) #type checker help
-        self.dest_choice_param: Dict[str, Dict[str, Any]] = destination_choice[purpose.name]
-        self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = mode_choice[purpose.name]
+        self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
+        self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
 
     def _calc_mode_util(self, impedance):
         expsum = numpy.zeros_like(
@@ -76,7 +75,7 @@ class LogitModel:
             impedance["transform"] = transimp
         self._add_log_impedance(self.dest_exps[mode], impedance, b["log"])
         if mode != "logsum":
-            threshold = distance_boundary[mode]
+            threshold = param.distance_boundary[mode]
             self.dest_exps[mode][impedance["dist"] > threshold] = 0
         try:
             return self.dest_exps[mode].sum(1)
@@ -94,7 +93,7 @@ class LogitModel:
         impedance["size"] = size
         self._add_log_impedance(dest_exps, impedance, b["log"])
         if mode != "logsum":
-            threshold = distance_boundary[mode]
+            threshold = param.distance_boundary[mode]
             dest_exps[impedance["dist"] > threshold] = 0
         return dest_exps
 
@@ -593,7 +592,7 @@ class AccessibilityModel(ModeDestModel):
         for i in b:
             try: # If only one parameter
                 # Remove area dummies from accessibility indicators
-                if i not in zone_params.areas:
+                if i not in param.areas:
                     utility += b[i] * zdata.get_data(
                         i, self.bounds, generation)
             except ValueError: # Separate params for cap region and surrounding

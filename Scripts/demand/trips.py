@@ -30,19 +30,20 @@ class DemandModel:
     
     def __init__(self, 
                  zone_data: ZoneData, 
-                 resultdata: ResultsData, 
+                 resultdata: ResultsData,
+                 tour_purpose_parameters: list,
                  is_agent_model: bool=False):
         self.resultdata = resultdata
         self.zone_data = zone_data
         self.tour_purposes = []
         self.purpose_dict: Dict[str,Purpose] = {}
-        for purpose_spec in param.tour_purposes:
+        for purpose_spec in tour_purpose_parameters:
             args = (purpose_spec, zone_data, resultdata)
             purpose = (SecDestPurpose(*args) if "sec_dest" in purpose_spec
                 else TourPurpose(*args))
             self.tour_purposes.append(purpose)
             self.purpose_dict[purpose_spec["name"]] = purpose
-        for purpose_spec in param.tour_purposes:
+        for purpose_spec in tour_purpose_parameters:
             if "source" in purpose_spec:
                 purpose = self.purpose_dict[purpose_spec["name"]]
                 for source in purpose_spec["source"]:

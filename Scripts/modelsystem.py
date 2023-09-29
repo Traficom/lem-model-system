@@ -1,6 +1,7 @@
 import threading
 import multiprocessing
 import os
+import json
 from typing import Any, Callable, Dict, List, Set, Union, cast
 import numpy # type: ignore
 import pandas
@@ -76,15 +77,19 @@ class ModelSystem:
         self.resultdata = ResultsData(results_path)
         self.resultmatrices = MatrixData(
             os.path.join(results_path, "Matrices"))
-
-        self.dm = self._init_demand_model()
+        parameters_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), "parameters", "demand")
+        tour_purpose_parameters = []
+        for file_name in os.listdir(parameters_path):
+            with open(os.path.join(parameters_path, file_name), 'r') as file:
+                tour_purpose_parameters.append(json.load(file))
+        self.dm = self._init_demand_model(tour_purpose_parameters)
         self.fm = FreightModel(
             self.zdata_base, self.zdata_forecast, self.basematrices)
         self.em = ExternalModel(
             self.basematrices, self.zdata_forecast, self.zone_numbers)
         self.dtm = dt.DepartureTimeModel(
             self.ass_model.nr_zones, self.ass_model.time_periods)
-        self.imptrans = ImpedanceTransformer()
         bounds = slice(0, self.zdata_forecast.nr_zones)
         self.cdm = CarDensityModel(
             self.zdata_base, self.zdata_forecast, bounds, self.resultdata)
@@ -93,8 +98,10 @@ class ModelSystem:
         self.trucks = self.fm.calc_freight_traffic("truck")
         self.trailer_trucks = self.fm.calc_freight_traffic("trailer_truck")
 
-    def _init_demand_model(self):
-        return DemandModel(self.zdata_forecast, self.resultdata, is_agent_model=False)
+    def _init_demand_model(self, parameters):
+        return DemandModel(
+            self.zdata_forecast, self.resultdata, parameters,
+            is_agent_model=False)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
         """Produce mode-specific demand matrices.
@@ -124,8 +131,8 @@ class ModelSystem:
             if isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.init_tours()
             else:
-                purpose_impedance = self.imptrans.transform(
-                    purpose, previous_iter_impedance)
+                purpose_impedance = purpose.imptrans.transform(
+                    previous_iter_impedance)
                 purpose.calc_prob(purpose_impedance)
                 if is_last_iteration and purpose.name not in ("sop", "so"):
                     purpose.accessibility_model.calc_accessibility(
@@ -137,8 +144,8 @@ class ModelSystem:
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
-                purpose_impedance = self.imptrans.transform(
-                    purpose, previous_iter_impedance)
+                purpose_impedance = purpose.imptrans.transform(
+                    previous_iter_impedance)
                 purpose.generate_tours()
                 if is_last_iteration:
                     for mode in purpose.model.dest_choice_param:
@@ -508,10 +515,12 @@ class AgentModelSystem(ModelSystem):
         Name of scenario, used for results subfolder
     """
 
-    def _init_demand_model(self):
+    def _init_demand_model(self, parameters):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
-        return DemandModel(self.zdata_forecast, self.resultdata, is_agent_model=True)
+        return DemandModel(
+            self.zdata_forecast, self.resultdata, parameters,
+            is_agent_model=True)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
         """Produce tours and add fractions of them
@@ -538,8 +547,8 @@ class AgentModelSystem(ModelSystem):
             if isinstance(purpose, SecDestPurpose):
                 purpose.init_sums()
             else:
-                purpose_impedance = self.imptrans.transform(
-                    purpose, previous_iter_impedance)
+                purpose_impedance = purpose.imptrans.transform(
+                    previous_iter_impedance)
                 if (purpose.area == "peripheral" or purpose.dest == "source"
                         or purpose.name == "oop"):
                     purpose.calc_prob(purpose_impedance)
@@ -576,8 +585,8 @@ class AgentModelSystem(ModelSystem):
         self.dm.car_use_model.print_results(
             car_users / self.dm.zone_population, self.dm.zone_population)
         log.info("Primary destinations assigned")
-        purpose_impedance = self.imptrans.transform(
-            purpose, previous_iter_impedance)
+        purpose_impedance = purpose.imptrans.transform(
+            previous_iter_impedance)
         nr_threads = param.performance_settings["number_of_processors"]
         if nr_threads == "max":
             nr_threads = multiprocessing.cpu_count()
