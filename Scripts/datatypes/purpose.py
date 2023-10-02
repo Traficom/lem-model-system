@@ -56,8 +56,6 @@ class Purpose:
         self.zone_data = zone_data
         self.resultdata = resultdata
         self.model = None
-        self.impedance_transformer = ImpedanceTransformer(
-            self, specification["impedance_share"])
         self.modes: List[str] = []
         self.generated_tours: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
@@ -121,6 +119,8 @@ class TourPurpose(Purpose):
                 zone_data, self, specification, resultdata)
             self.accessibility_model = logit.AccessibilityModel(
                 zone_data, self, specification, resultdata)
+        self.impedance_transformer = ImpedanceTransformer(
+            self, specification["impedance_share"])
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
         self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
@@ -230,6 +230,8 @@ class SecDestPurpose(Purpose):
         self.gen_model = generation.SecDestGeneration(self, resultdata)
         self.model = logit.SecDestModel(
             zone_data, self, specification, resultdata)
+        self.impedance_transformer = ImpedanceTransformer(
+            self, specification["impedance_share"])
         self.modes = self.model.dest_choice_param.keys()
 
     def init_sums(self):

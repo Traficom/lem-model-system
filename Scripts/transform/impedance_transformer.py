@@ -1,8 +1,7 @@
 from collections import defaultdict
 import numpy # type: ignore
 
-import parameters.impedance_transformation as param
-from parameters.assignment import assignment_classes
+import parameters.assignment as param
 
 
 class ImpedanceTransformer:
@@ -39,7 +38,7 @@ class ImpedanceTransformer:
             day_imp[mode] = defaultdict(float)
             if mode in param.divided_classes:
                 ass_class = "{}_{}".format(
-                    mode, assignment_classes[self.name])
+                    mode, param.assignment_classes[self.name])
             else:
                 ass_class = mode
             for time_period in impedance:

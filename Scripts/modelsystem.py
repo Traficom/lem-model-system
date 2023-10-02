@@ -131,7 +131,7 @@ class ModelSystem:
             if isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.init_tours()
             else:
-                purpose_impedance = purpose.imptrans.transform(
+                purpose_impedance = purpose.impedance_transformer.transform(
                     previous_iter_impedance)
                 purpose.calc_prob(purpose_impedance)
                 if is_last_iteration and purpose.name not in ("sop", "so"):
@@ -144,7 +144,7 @@ class ModelSystem:
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
-                purpose_impedance = purpose.imptrans.transform(
+                purpose_impedance = purpose.impedance_transformer.transform(
                     previous_iter_impedance)
                 purpose.generate_tours()
                 if is_last_iteration:
@@ -547,7 +547,7 @@ class AgentModelSystem(ModelSystem):
             if isinstance(purpose, SecDestPurpose):
                 purpose.init_sums()
             else:
-                purpose_impedance = purpose.imptrans.transform(
+                purpose_impedance = purpose.impedance_transformer.transform(
                     previous_iter_impedance)
                 if (purpose.area == "peripheral" or purpose.dest == "source"
                         or purpose.name == "oop"):
@@ -585,7 +585,7 @@ class AgentModelSystem(ModelSystem):
         self.dm.car_use_model.print_results(
             car_users / self.dm.zone_population, self.dm.zone_population)
         log.info("Primary destinations assigned")
-        purpose_impedance = purpose.imptrans.transform(
+        purpose_impedance = purpose.impedance_transformer.transform(
             previous_iter_impedance)
         nr_threads = param.performance_settings["number_of_processors"]
         if nr_threads == "max":
