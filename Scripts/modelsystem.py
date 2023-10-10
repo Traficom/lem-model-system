@@ -20,10 +20,10 @@ from datahandling.matrixdata import MatrixData
 from demand.freight import FreightModel
 from demand.trips import DemandModel
 from demand.external import ExternalModel
+from datatypes.purpose import new_tour_purpose
 from datatypes.purpose import SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
-from transform.impedance_transformer import ImpedanceTransformer
 from models.linear import CarDensityModel
 import parameters.assignment as param
 import parameters.zone as zone_param
@@ -79,11 +79,12 @@ class ModelSystem:
             os.path.join(results_path, "Matrices"))
         parameters_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "parameters", "demand")
-        tour_purpose_parameters = []
+        tour_purposes = []
         for file_name in os.listdir(parameters_path):
             with open(os.path.join(parameters_path, file_name), 'r') as file:
-                tour_purpose_parameters.append(json.load(file))
-        self.dm = self._init_demand_model(tour_purpose_parameters)
+                tour_purposes.append(new_tour_purpose(
+                    json.load(file), self.zdata_forecast, self.resultdata))
+        self.dm = self._init_demand_model(tour_purposes)
         self.fm = FreightModel(
             self.zdata_base, self.zdata_forecast, self.basematrices)
         self.em = ExternalModel(
@@ -112,12 +113,15 @@ class ModelSystem:
         ----------
         previous_iter_impedance : dict
             key : str
-                Assignment class (car/transit/bike/walk)
+                Time period (aht/pt/iht)
             value : dict
                 key : str
                     Impedance type (time/cost/dist)
-                value : numpy.ndarray
-                    Impedance (float 2-d matrix)
+                value : dict
+                    key : str
+                        Assignment class (car_work/transit/...)
+                    value : numpy.ndarray
+                        Impedance (float 2-d matrix)
         is_last_iteration : bool (optional)
             If this is the last iteration, 
             secondary destinations are calculated for all modes
@@ -131,7 +135,7 @@ class ModelSystem:
             if isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.init_tours()
             else:
-                purpose_impedance = purpose.impedance_transformer.transform(
+                purpose_impedance = purpose.transform_impedance(
                     previous_iter_impedance)
                 purpose.calc_prob(purpose_impedance)
                 if is_last_iteration and purpose.name not in ("sop", "so"):
@@ -144,7 +148,7 @@ class ModelSystem:
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
-                purpose_impedance = purpose.impedance_transformer.transform(
+                purpose_impedance = purpose.transform_impedance(
                     previous_iter_impedance)
                 purpose.generate_tours()
                 if is_last_iteration:
@@ -530,12 +534,15 @@ class AgentModelSystem(ModelSystem):
         ----------
         previous_iter_impedance : dict
             key : str
-                Assignment class (car/transit/bike/walk)
+                Time period (aht/pt/iht)
             value : dict
                 key : str
                     Impedance type (time/cost/dist)
-                value : numpy.ndarray
-                    Impedance (float 2-d matrix)
+                value : dict
+                    key : str
+                        Assignment class (car_work/transit/...)
+                    value : numpy.ndarray
+                        Impedance (float 2-d matrix)
         is_last_iteration : bool (optional)
             If this is the last iteration, 
             secondary destinations are calculated for all modes
@@ -547,7 +554,7 @@ class AgentModelSystem(ModelSystem):
             if isinstance(purpose, SecDestPurpose):
                 purpose.init_sums()
             else:
-                purpose_impedance = purpose.impedance_transformer.transform(
+                purpose_impedance = purpose.transform_impedance(
                     previous_iter_impedance)
                 if (purpose.area == "peripheral" or purpose.dest == "source"
                         or purpose.name == "oop"):
@@ -585,7 +592,7 @@ class AgentModelSystem(ModelSystem):
         self.dm.car_use_model.print_results(
             car_users / self.dm.zone_population, self.dm.zone_population)
         log.info("Primary destinations assigned")
-        purpose_impedance = purpose.impedance_transformer.transform(
+        purpose_impedance = purpose.transform_impedance(
             previous_iter_impedance)
         nr_threads = param.performance_settings["number_of_processors"]
         if nr_threads == "max":

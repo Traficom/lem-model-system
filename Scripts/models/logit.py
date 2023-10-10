@@ -37,7 +37,6 @@ class LogitModel:
         self.zone_data = zone_data
         self.dest_exps: Dict[str, numpy.array] = {}
         self.mode_exps: Dict[str, numpy.array] = {}
-        purpose.name = cast(str, purpose.name) #type checker help
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
 
