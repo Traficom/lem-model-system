@@ -21,7 +21,7 @@ from demand.freight import FreightModel
 from demand.trips import DemandModel
 from demand.external import ExternalModel
 from datatypes.purpose import new_tour_purpose
-from datatypes.purpose import SecDestPurpose
+from datatypes.purpose import Purpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from models.linear import CarDensityModel
@@ -99,9 +99,9 @@ class ModelSystem:
         self.trucks = self.fm.calc_freight_traffic("truck")
         self.trailer_trucks = self.fm.calc_freight_traffic("trailer_truck")
 
-    def _init_demand_model(self, parameters):
+    def _init_demand_model(self, tour_purposes: List[Purpose]):
         return DemandModel(
-            self.zdata_forecast, self.resultdata, parameters,
+            self.zdata_forecast, self.resultdata, tour_purposes,
             is_agent_model=False)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
@@ -519,11 +519,11 @@ class AgentModelSystem(ModelSystem):
         Name of scenario, used for results subfolder
     """
 
-    def _init_demand_model(self, parameters):
+    def _init_demand_model(self, tour_purposes: List[Purpose]):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
         return DemandModel(
-            self.zdata_forecast, self.resultdata, parameters,
+            self.zdata_forecast, self.resultdata, tour_purposes,
             is_agent_model=True)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
