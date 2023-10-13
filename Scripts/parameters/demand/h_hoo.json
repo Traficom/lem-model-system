@@ -70,6 +70,24 @@
             ]
         }
     },
+    "distance_boundaries": {
+        "car": [
+            0,
+            9999
+        ],
+        "transit": [
+            0,
+            9999
+        ],
+        "bike": [
+            0,
+            60
+        ],
+        "walk": [
+            0,
+            15
+        ]
+    },
     "destination_choice": {
         "car": {
             "attraction": {

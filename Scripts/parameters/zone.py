@@ -1,13 +1,6 @@
 # Share of demand that will be simulated in agent model
 from typing import Any, Dict, List, Tuple, Union
 
-# Maximum possible distance to destination
-distance_boundary = {
-    "car": 9999,
-    "transit": 9999,
-    "bike": 60,
-    "walk": 15,
-}
 # O-D pairs with demand below threshold are neglected in sec dest calculation
 secondary_destination_threshold = 0.1
 

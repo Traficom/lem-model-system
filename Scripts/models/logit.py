@@ -35,10 +35,11 @@ class LogitModel:
         self.bounds = purpose.bounds
         self.sub_bounds = purpose.sub_bounds
         self.zone_data = zone_data
-        self.dest_exps: Dict[str, numpy.array] = {}
+        self._dest_exps: Dict[str, numpy.array] = {}
         self.mode_exps: Dict[str, numpy.array] = {}
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
+        self.distance_boundary = parameters["distance_boundaries"]
 
     def _calc_mode_util(self, impedance):
         expsum = numpy.zeros_like(
@@ -62,7 +63,7 @@ class LogitModel:
         utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(utility, b["attraction"])
         self._add_impedance(utility, impedance, b["impedance"])
-        self.dest_exps[mode] = numpy.exp(utility)
+        self._dest_exps[mode] = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_zone_util(size, b["size"])
         impedance["size"] = size
@@ -72,14 +73,15 @@ class LogitModel:
             self._add_zone_util(transimp, b_transf["attraction"])
             self._add_impedance(transimp, impedance, b_transf["impedance"])
             impedance["transform"] = transimp
-        self._add_log_impedance(self.dest_exps[mode], impedance, b["log"])
+        self._add_log_impedance(self._dest_exps[mode], impedance, b["log"])
         if mode != "logsum":
-            threshold = param.distance_boundary[mode]
-            self.dest_exps[mode][impedance["dist"] > threshold] = 0
+            l, u = self.distance_boundary[mode]
+            dist = self.purpose.dist
+            self._dest_exps[mode][(dist < l) | (dist >= u)] = 0
         try:
-            return self.dest_exps[mode].sum(1)
+            return self._dest_exps[mode].sum(1)
         except ValueError:
-            return self.dest_exps[mode].sum()
+            return self._dest_exps[mode].sum()
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
         b = self.dest_choice_param[mode]
@@ -92,8 +94,8 @@ class LogitModel:
         impedance["size"] = size
         self._add_log_impedance(dest_exps, impedance, b["log"])
         if mode != "logsum":
-            threshold = param.distance_boundary[mode]
-            dest_exps[impedance["dist"] > threshold] = 0
+            l, u = self.distance_boundary[mode]
+            dest_exps[(impedance["dist"] < l) | (impedance["dist"] >= u)] = 0
         return dest_exps
 
     def _add_constant(self, utility, b):
@@ -294,6 +296,7 @@ class ModeDestModel(LogitModel):
                     no_dummy = (1 - dummy_share) * prob[mode]
                     dummy = dummy_share * ind_prob[mode]
                     prob[mode] = no_dummy + dummy
+        self._dest_exps = {}
         return prob
     
     def calc_basic_prob(self, impedance):
@@ -312,7 +315,7 @@ class ModeDestModel(LogitModel):
         self._calc_utils(impedance)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
-            cumsum = self.dest_exps[mode].T.cumsum(axis=0)
+            cumsum = self._dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
     
     def calc_individual_prob(self, mod_mode, dummy):
@@ -426,7 +429,7 @@ class ModeDestModel(LogitModel):
         prob = {}
         for mode in self.mode_choice_param:
             mode_prob = self.mode_exps[mode] / mode_expsum
-            dest_prob = (self.dest_exps[mode].T
+            dest_prob = (self._dest_exps[mode].T
                          / self.dest_expsums[mode]["logsum"])
             prob[mode] = mode_prob * dest_prob
         return prob
@@ -455,6 +458,7 @@ class AccessibilityModel(ModeDestModel):
                     Impedances
         """
         mode_expsum = self._calc_utils(impedance)
+        self._dest_exps = {}
 
         # Calculate sustainable and car accessibility
         sustainable_sum = numpy.zeros_like(mode_expsum)
@@ -644,7 +648,7 @@ class DestModeModel(LogitModel):
         logsum = {"logsum": mode_expsum}
         dest_expsum = self._calc_dest_util("logsum", logsum)
         prob = {}
-        dest_prob = self.dest_exps["logsum"].T / dest_expsum
+        dest_prob = self._dest_exps["logsum"].T / dest_expsum
         for mode in self.mode_choice_param:
             mode_prob = (self.mode_exps[mode] / mode_expsum).T
             prob[mode] = mode_prob * dest_prob

@@ -45,6 +45,16 @@
             ]
         }
     },
+    "distance_boundaries": {
+        "car": [
+            0,
+            9999
+        ],
+        "transit": [
+            0,
+            9999
+        ]
+    },
     "destination_choice": {
         "car": {
             "attraction": {

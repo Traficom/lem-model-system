@@ -48,6 +48,7 @@ class LogitModelTest(unittest.TestCase):
         pur.bounds = slice(0, 9)
         pur.sub_bounds = [slice(0, 7), slice(7, 9)]
         pur.zone_numbers = METROPOLITAN_ZONES
+        pur.dist = mtx
         parameters_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "..", "..", "parameters", "demand")
         for file_name in os.listdir(parameters_path):

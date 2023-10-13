@@ -38,6 +38,7 @@ class Purpose:
     resultdata : ResultsData (optional)
         Writer object to result directory
     """
+    distance: numpy.ndarray
 
     def __init__(self, 
                  specification: Dict[str,Optional[str]], 
@@ -66,6 +67,10 @@ class Purpose:
     @property
     def zone_numbers(self):
         return self.zone_data.zone_numbers[self.bounds]
+
+    @property
+    def dest_interval(self):
+        return slice(0, self.zone_data.nr_zones)
 
     def transform_impedance(self, impedance):
         """Perform transformation from time period dependent matrices
@@ -97,8 +102,7 @@ class Purpose:
                     Impedance (float 2-d matrix)
         """
         rows = self.bounds
-        cols = (self.bounds if self.name == "hoo"
-            else slice(0, self.zone_data.nr_zones))
+        cols = self.dest_interval
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
@@ -191,6 +195,10 @@ class TourPurpose(Purpose):
             for mode in self.modes}
         self.sec_dest_purpose = None
 
+    @property
+    def dist(self):
+        return self.distance[self.bounds, self.dest_interval]
+
     def print_data(self):
         self.resultdata.print_data(
             pandas.Series(
@@ -227,7 +235,7 @@ class TourPurpose(Purpose):
             self.aggregates[mode].init_matrix()
             self.own_zone_aggregates[mode].init_array()
 
-    def calc_prob(self, impedance):
+    def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
         
         Parameters
@@ -236,10 +244,13 @@ class TourPurpose(Purpose):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
         """
-        self.prob = self.model.calc_prob(impedance)
-        self.dist = impedance["car"]["dist"]
+        purpose_impedance = self.transform_impedance(impedance)
+        self.prob = self.model.calc_prob(purpose_impedance)
+        if is_last_iteration and self.name[0] != 's':
+            self.accessibility_model.calc_accessibility(
+                purpose_impedance)
 
-    def calc_basic_prob(self, impedance):
+    def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
 
         Individual dummy variables are not included.
@@ -250,8 +261,11 @@ class TourPurpose(Purpose):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
         """
-        self.model.calc_basic_prob(impedance)
-        self.dist = impedance["car"]["dist"]
+        purpose_impedance = self.transform_impedance(impedance)
+        self.model.calc_basic_prob(purpose_impedance)
+        if is_last_iteration and self.name[0] != 's':
+            self.accessibility_model.calc_accessibility(
+                purpose_impedance)
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
@@ -301,6 +315,10 @@ class SecDestPurpose(Purpose):
         self.model = logit.SecDestModel(
             zone_data, self, specification, resultdata)
         self.modes = list(self.model.dest_choice_param)
+
+    @property
+    def dest_interval(self):
+        return self.bounds
 
     def init_sums(self):
         for mode in self.model.dest_choice_param:

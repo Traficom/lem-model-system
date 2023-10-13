@@ -135,12 +135,7 @@ class ModelSystem:
             if isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.init_tours()
             else:
-                purpose_impedance = purpose.transform_impedance(
-                    previous_iter_impedance)
-                purpose.calc_prob(purpose_impedance)
-                if is_last_iteration and purpose.name not in ("sop", "so"):
-                    purpose.accessibility_model.calc_accessibility(
-                        purpose_impedance)
+                purpose.calc_prob(previous_iter_impedance, is_last_iteration)
         
         # Tour generation
         self.dm.generate_tours()
@@ -224,6 +219,7 @@ class ModelSystem:
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.init_demand()
+        Purpose.distance = next(iter(impedance.values()))["dist"]["car_work"]
         return impedance
 
     def run_iteration(self, previous_iter_impedance, iteration=None):
@@ -554,11 +550,10 @@ class AgentModelSystem(ModelSystem):
             if isinstance(purpose, SecDestPurpose):
                 purpose.init_sums()
             else:
-                purpose_impedance = purpose.transform_impedance(
-                    previous_iter_impedance)
                 if (purpose.area == "peripheral" or purpose.dest == "source"
                         or purpose.name == "oop"):
-                    purpose.calc_prob(purpose_impedance)
+                    purpose.calc_prob(
+                        previous_iter_impedance, is_last_iteration)
                     purpose.gen_model.init_tours()
                     purpose.gen_model.add_tours()
                     demand = purpose.calc_demand()
@@ -570,10 +565,8 @@ class AgentModelSystem(ModelSystem):
                     for mode in purpose.modes:
                         self.travel_modes[mode] = True
                     purpose.init_sums()
-                    purpose.calc_basic_prob(purpose_impedance)
-                if is_last_iteration and purpose.dest != "source":
-                    purpose.accessibility_model.calc_accessibility(
-                        purpose_impedance)
+                    purpose.calc_basic_prob(
+                        previous_iter_impedance, is_last_iteration)
         tour_probs = self.dm.generate_tour_probs()
         log.info("Assigning mode and destination for {} agents ({} % of total population)".format(
             len(self.dm.population), int(zone_param.agent_demand_fraction*100)))
