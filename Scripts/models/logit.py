@@ -296,7 +296,7 @@ class ModeDestModel(LogitModel):
                     no_dummy = (1 - dummy_share) * prob[mode]
                     dummy = dummy_share * ind_prob[mode]
                     prob[mode] = no_dummy + dummy
-        self._dest_exps = {}
+        self._dest_exps.clear()
         return prob
     
     def calc_basic_prob(self, impedance):
