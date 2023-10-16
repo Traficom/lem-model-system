@@ -458,7 +458,7 @@ class AccessibilityModel(ModeDestModel):
                     Impedances
         """
         mode_expsum = self._calc_utils(impedance)
-        self._dest_exps = {}
+        self._dest_exps.clear()
 
         # Calculate sustainable and car accessibility
         sustainable_sum = numpy.zeros_like(mode_expsum)
