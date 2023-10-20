@@ -582,9 +582,15 @@ class AgentModelSystem(ModelSystem):
             for tour in person.tours:
                 tour.choose_mode(person.is_car_user)
                 tour.choose_destination(sec_dest_tours)
+        for purpose in self.dm.tour_purposes:
+            try:
+                purpose.model.cumul_dest_prob.clear()
+            except AttributeError:
+                pass
         self.dm.car_use_model.print_results(
             car_users / self.dm.zone_population, self.dm.zone_population)
         log.info("Primary destinations assigned")
+        purpose = self.dm.purpose_dict["hoo"]
         purpose_impedance = purpose.transform_impedance(
             previous_iter_impedance)
         nr_threads = param.performance_settings["number_of_processors"]
