@@ -43,7 +43,7 @@ class LogitModel:
 
     def _calc_mode_util(self, impedance):
         expsum = numpy.zeros_like(
-            next(iter(impedance["car"].values())))
+            next(iter(next(iter(impedance.values())).values())))
         for mode in self.mode_choice_param:
             b = self.mode_choice_param[mode]
             utility = numpy.zeros_like(expsum)

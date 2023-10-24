@@ -414,6 +414,7 @@ class FreightPurpose(Purpose):
         Purpose.__init__(self, specification, zone_data, resultdata)
         self.model = logit.ModeDestModel(
             zone_data, self, specification, resultdata)
+        self.modes = list(self.model.mode_choice_param)
 
     def calc_traffic(self, impedance: dict) -> List[Demand]:
         """Calculate freight traffic matrix.
@@ -429,10 +430,10 @@ class FreightPurpose(Purpose):
         datatypes.demand.Demand
             Freight mode demand matrix for whole day
         """
-        zone_numbers = self.zone_data.zone_numbers
-        demand = defaultdict(Demand)
+        self.dist = impedance["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
         probs = self.model._calc_prob(self.model._calc_utils(impedance))
         self.model._dest_exps.clear()
-        nr_trips = numpy.ones((zone_numbers, zone_numbers)) # Insert generation model here
-        demand = {mode: (self.prob.pop(mode) * nr_trips).T for mode in probs}
+        nr_trips = numpy.ones((nr_zones, nr_zones)) # Insert generation model here
+        demand = {mode: (probs.pop(mode) * nr_trips).T for mode in self.modes}
         return demand
