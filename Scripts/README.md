@@ -117,6 +117,17 @@ flags are separated by commas (e.g., `"OPTIONAL_FLAGS": ["RUN_AGENT_SIMULATION",
 
 Using this flag runs only end assignment of base demand matrices.
 
+### `FREE_FLOW_ASSIGNMENT`
+
+Using this flag runs assigment with free flow speed.
+Only one time period "vrk" is assigned.
+Forces the number of iterations to one, as speeds will not change.
+
+### `STORED_SPEED_ASSIGNMENT`
+
+Using this flag runs assigment with stored (fixed) speed.
+Forces the number of iterations to one, as speeds will not change.
+
 #### `RUN_AGENT_SIMULATION`
 
 Using this flag runs agent simulations instead of aggregate model.

@@ -23,14 +23,14 @@ class MockAssignmentModel(AssignmentModel):
     @property
     def zone_numbers(self) -> numpy.array:
         """Numpy array of all zone numbers.""" 
-        with self.matrices.open("time", "aht") as mtx:
+        with self.matrices.open("time", self.time_periods[0]) as mtx:
             zone_numbers = mtx.zone_numbers
         return zone_numbers
 
     @property
     def mapping(self):
         """dict: Dictionary of zone numbers and corresponding indices."""
-        with self.matrices.open("time", "aht") as mtx:
+        with self.matrices.open("time", self.time_periods[0]) as mtx:
             mapping = mtx.mapping
         return mapping
 

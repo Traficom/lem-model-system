@@ -57,6 +57,7 @@ def main(args):
             base_matrices_path)
         log.error(msg)
         raise ValueError(msg)
+    time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
     if args.do_not_use_emme:
         mock_result_path = os.path.join(
             args.results_path, args.scenario_name, args.submodel, "Matrices")
@@ -65,7 +66,8 @@ def main(args):
                 mock_result_path)
             log.error(msg)
             raise NameError(msg)
-        assignment_model = MockAssignmentModel(MatrixData(mock_result_path))
+        assignment_model = MockAssignmentModel(
+            MatrixData(mock_result_path), time_periods)
         zone_numbers = assignment_model.zone_numbers
     else:
         emp_path = emme_paths[0]
@@ -90,7 +92,7 @@ def main(args):
     base_zonedata = ZoneData(base_zonedata_path, zone_numbers, f"{args.submodel}.zmp")
     # Check base matrices
     matrixdata = MatrixData(base_matrices_path)
-    for tp in param.time_periods:
+    for tp in time_periods:
         with matrixdata.open("demand", tp, zone_numbers) as mtx:
             for ass_class in param.transport_classes:
                 a = mtx[ass_class]
@@ -121,7 +123,7 @@ def main(args):
             emmebank = app.data_explorer().active_database().core_emmebank
             link_attrs = ["@pyoratieluokka"]
             line_attrs = []
-            for tp in param.time_periods:
+            for tp in time_periods:
                 link_attrs.append(f"@hinta_{tp}")
                 link_attrs.append(f"@car_time_{tp}")
                 line_attrs.append(f"@hdw_{tp}")
@@ -136,18 +138,18 @@ def main(args):
             }
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
-            nr_vehicle_classes = len(param.emme_matrices)
+            nr_veh_classes = len(param.emme_matrices)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_vehicle_classes + 3,
-                "transit_lines": 0,
-                "transit_segments": nr_transit_classes*nr_segment_results + 1,
+                "links": nr_veh_classes + len(param.park_and_ride_classes) + 3,
+                "transit_lines": nr_transit_classes + 2,
+                "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
             if not args.separate_emme_scenarios:
                 # If results from all time periods are stored in same
                 # EMME scenario
                 for key in nr_new_attr:
-                    nr_new_attr[key] *= 4
+                    nr_new_attr[key] *= len(time_periods) + 1
             # Attributes created during congested transit assignment
             nr_new_attr["transit_segments"] += 3
             dim = emmebank.dimensions
@@ -179,7 +181,7 @@ def main(args):
                         attr, scen.id)
                     log.error(msg)
                     raise ValueError(msg)
-            validate(scen.get_network())
+            validate(scen.get_network(), time_periods)
             app.close()
 
     log.info("Successfully validated all input files")
@@ -200,6 +202,12 @@ if __name__ == "__main__":
         "--log-format",
         choices={"TEXT", "JSON"},
         default=config.LOG_FORMAT,
+    )
+    parser.add_argument(
+        "-f", "--free-flow-assignment",
+        action="store_true",
+        default=config.FREE_FLOW_ASSIGNMENT,
+        help="Using this flag runs assigment with free flow speed."
     )
     parser.add_argument(
         "--do-not-use-emme",

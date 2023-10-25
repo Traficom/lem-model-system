@@ -67,6 +67,7 @@ class AssignmentPeriod(Period):
         self.emme_matrices = emme_matrices
         self.dist_unit_cost = param.dist_unit_cost
         self.use_stored_speeds = use_stored_speeds
+        self.use_free_flow_speeds = use_free_flow_speeds
         self.stopping_criteria = copy.deepcopy(
             param.stopping_criteria)
         if use_free_flow_speeds or use_stored_speeds:
@@ -262,13 +263,19 @@ class AssignmentPeriod(Period):
                 # Car link with standard attributes
                 roadclass = param.roadclasses[linktype]
                 if link.volume_delay_func != 90:
-                    link.volume_delay_func = roadclass.volume_delay_func
+                    if self.use_stored_speeds or self.use_free_flow_speeds:
+                        link.volume_delay_func = 91
+                    else:
+                        link.volume_delay_func = roadclass.volume_delay_func
                 link.data1 = roadclass.lane_capacity
                 link.data2 = roadclass.free_flow_speed
             elif linktype in param.custom_roadtypes:
                 # Custom car link
                 if link.volume_delay_func != 90:
-                    link.volume_delay_func = linktype - 90
+                    if self.use_stored_speeds or self.use_free_flow_speeds:
+                        link.volume_delay_func = 91
+                    else:
+                        link.volume_delay_func = linktype - 90
                 for linktype in param.roadclasses:
                     roadclass = param.roadclasses[linktype]
                     if (link.volume_delay_func == roadclass.volume_delay_func

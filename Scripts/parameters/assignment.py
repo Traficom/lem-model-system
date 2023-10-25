@@ -123,6 +123,8 @@ volume_delay_funcs = {
     "fd8": vdf_temp.format(0.10, buslane, 0.915, 2.08, 0.0110),
     "fd9": vdf_temp.format(0.20, buslane, 0.870, 2.34, 0.0140),
     "fd10": vdf_temp.format(0.3, buslane, 0.810, 2.28, 0.0170),
+    "fd90": "length*(60/ul2)",
+    "fd91": "length*(60/ul2)",
     "fd99": "length * 1.3",
     # Bike functions
     "fd70": "length*(60/19)",

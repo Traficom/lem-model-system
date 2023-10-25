@@ -25,6 +25,7 @@ class Args:
     results_path = os.path.join(TEST_DATA_PATH, "Results")
     scenario_name = "test"
     do_not_use_emme = True
+    free_flow_assignment = False
     submodel = "uusimaa"
 
 

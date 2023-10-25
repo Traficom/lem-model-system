@@ -1,5 +1,3 @@
-import bisect
-
 import utils.log as log
 import parameters.assignment as param
 
@@ -9,7 +7,7 @@ EMME_AUX_AUTO_MODE = "AUX_AUTO"
 EMME_TRANSIT_MODE = "TRANSIT"
 EMME_AUX_TRANSIT_MODE = "AUX_TRANSIT"
 
-def validate(network, fares=None):
+def validate(network, time_periods=param.time_periods, fares=None):
     """Validate EMME network in terms of HELMET compatibility.
 
     Check that:
@@ -22,6 +20,8 @@ def validate(network, fares=None):
     ----------
     network : inro.emme.network.Network
         Network to be validated
+    time_periods : list of str (optional)
+        Time period names, default is aht, pt, iht
     fares : assignment.datatypes.transit_fare.TransitFareZoneSpecification
             Transit fare zone specification (optional)
     """
@@ -89,7 +89,7 @@ def validate(network, fares=None):
                 msg = "Link type missing for link {}".format(link.id)
                 log.error(msg)
                 raise ValueError(msg)
-    hdw_attrs = [f"@hdw_{tp}" for tp in param.time_periods]
+    hdw_attrs = [f"@hdw_{tp}" for tp in time_periods]
     for line in network.transit_lines():
         for hdwy in hdw_attrs:
             if line[hdwy] < 0.02:
