@@ -1,16 +1,14 @@
-![olusanya](https://github.com/HSLdevcom/helmet-model-system/actions/workflows/pythonapp.yml/badge.svg?branch=olusanya)
+# lem-model-system
 
-# helmet-model-system
-
-This repository contains python files for Helmet 4.1 Model System. Source codes can be found in the [Scripts-folder](Scripts).
+This repository contains python files for LEM model system. Source codes can be found in the [Scripts-folder](Scripts).
 
 ## Usage
 
-You can run HELMET 4.1 from the command line or by using [helmet-ui](https://github.com/HSLdevcom/helmet-ui).
-In this chapter, we will guide you how to install HELMET 4.1 to work with Inro EMME software from the command line.
-The user is not expected to install any new software apart from [helmet-model-system](https://github.com/HSLdevcom/helmet-model-system) and EMME.
+You can run LEM from the command line or by using [helmet-ui](https://github.com/HSLdevcom/helmet-ui).
+In this chapter, we will guide you how to install LEM to work with Inro EMME software from the command line.
+The user is not expected to install any new software apart from model-system and EMME.
 
-If you do not have an Emme license or you wish to develop HELMET 4.1 further, please scroll down to [Development](#development) chapter.
+If you do not have an Emme license or you wish to develop LEM further, please scroll down to [Development](#development) chapter.
 
 ### Setup
 
@@ -59,7 +57,7 @@ Run `python helmet.py --help` to see parameter syntax.
 
 ## Development
 
-If you do not have INRO Emme license or you wish to develop HELMET 4.1 source code, you need to set up a development environment. 
+If you do not have INRO Emme license or you wish to develop LEM source code, you need to set up a development environment. 
 Although not covered here, installing [Git](https://git-scm.com/downloads) is highly recommended!
 
 ### Environment and dependencies
@@ -90,7 +88,7 @@ or [Jonathan Cutrer's blog](https://jcutrer.com/python/pipenv-pipfile).
     4. Click "New" and write `%APPDATA%\Python\Scripts`.
     5. Click OK in the "Edit environment variable" window, and then click OK again in the "Environment Variables" window.
 4. Close and reopen Command Prompt and check that `pipenv` is recognised by typing `pipenv --version`. It should return `pipenv, version 2020.11.15`.
-5. Download [helmet-model-system](https://github.com/HSLdevcom/helmet-model-system) repository and open a Command Prompt to its "Scripts" folder.
+5. Download model-system repository and open a Command Prompt to its "Scripts" folder.
 6. Install dependencies from `Pipfile`:
     - First setup: `pipenv --python 3.7 install --dev`
     - Additional syncing if new packages are added: `pipenv --python 3.7 sync --dev`
@@ -107,12 +105,12 @@ pipenv run python helmet.py
 ```
 
 
-### Mock assignment run in Helmet UI
+### Mock assignment run in LEM
 
 Refer to this manual: [https://hsldevcom.github.io/helmet-docs/kaytto-ohje.html#helmet-asennus](https://hsldevcom.github.io/helmet-docs/kaytto-ohje.html#helmet-asennus).
 
 #### Change the config settings
-1. Download latest version of helmet-model-system in `Projektin asetukset` (edit: or set this manually to `helmet-model-system\Scripts` folder which you probably downloaded when installing Python environment!).
+1. Download latest version of helmet-model-system in `Projektin asetukset` (edit: or set this manually to `model-system\Scripts` folder which you probably downloaded when installing Python environment!).
 2. Find out where that version is saved by hovering over the text box (for example: `C:\Users\xxx\helmet-model-system-v4.1.3-24-04-1684924655775`)
 3. Open `dev-config.json` inside that previous folder and modify OPTIONAL_FLAGS argument:
     -     `"OPTIONAL_FLAGS": ["DO_NOT_USE_EMME"]`

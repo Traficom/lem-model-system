@@ -42,6 +42,11 @@ When running the `SCENARIO_NAME` scenario, its results are written in `RESULT_PA
 If you are using mock assignment instead or proper Emme assignment,
 you need to initialize temporary result matrices to `RESULT_PATH\\SCENARIO_NAME\\Matrices`.
 
+### `SUBMODEL`
+
+Name of submodel (e.g., "uusimaa", "koko_suomi"),
+used for choosing appropriate zone mapping and base matrices.
+
 ### `EMME_PROJECT_PATH`
 
 If you are using Emme assignment, you need to specify where your `.emp` file is located.
