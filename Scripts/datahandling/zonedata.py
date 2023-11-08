@@ -28,13 +28,12 @@ class ZoneData:
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
         self.all_zone_numbers = all_zone_numbers
-        peripheral = param.areas["peripheral"]
-        external = param.areas["external"]
+        peripheral = param.purpose_areas["peripheral"]
+        external = param.purpose_areas["external"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
-            peripheral[1], "right")]
+            peripheral[1])]
         Zone.counter = 0
         self.zones = {number: Zone(number) for number in self.zone_numbers}
-        first_peripheral = self.zone_numbers.searchsorted(peripheral[0])
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
         popdata = files.read_csv_file(".pop")
@@ -59,11 +58,11 @@ class ZoneData:
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["total"]
         self["population"] = pop
-        self.share["share_age_7-17"] = popdata["sh_7-17"][:first_peripheral]
-        self.share["share_age_18-29"] = popdata["sh_1829"][:first_peripheral]
-        self.share["share_age_30-49"] = popdata["sh_3049"][:first_peripheral]
-        self.share["share_age_50-64"] = popdata["sh_5064"][:first_peripheral]
-        self.share["share_age_65-99"] = popdata["sh_65-"][:first_peripheral]
+        self.share["share_age_7-17"] = popdata["sh_7-17"]
+        self.share["share_age_18-29"] = popdata["sh_1829"]
+        self.share["share_age_30-49"] = popdata["sh_3049"]
+        self.share["share_age_50-64"] = popdata["sh_5064"]
+        self.share["share_age_65-99"] = popdata["sh_65-"]
         self.share["share_age_7-99"] = (self["share_age_7-17"]      
                                         + self["share_age_18-29"]
                                         + self["share_age_30-49"]
@@ -93,7 +92,7 @@ class ZoneData:
         self["cbd"] = self.dummy("areas", "helsinki_cbd")
         self["lauttasaari"] = self.dummy("areas", "lauttasaari")
         self["helsinki_other"] = self.dummy("areas", "helsinki_other")
-        self["espoo_vant_kau"] = self.dummy("areas", "espoo_vant_kau")
+        self["espoo_vant_kau"] = self.dummy("areas", "espoo_vantaa")
         self["surrounding"] = self.dummy("areas", "surrounding")
         self["shops_cbd"] = self["cbd"] * self["shops"]
         self["shops_elsewhere"] = (1-self["cbd"]) * self["shops"]

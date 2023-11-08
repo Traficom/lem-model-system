@@ -151,7 +151,7 @@ class CarUseModel(LogitModel):
             # Comparison data has car user shares of population
             # over 6 years old (from HEHA)
             population_7_99 = (self.zone_data["population"][self.bounds]
-                               * self.zone_data["share_age_7-99"])
+                               * self.zone_data["share_age_7-99"][self.bounds])
         # print car use share by municipality and area
         for area_type in ("municipalities", "areas"):
             prob_area = ZoneIntervals(area_type).averages(prob, population_7_99)

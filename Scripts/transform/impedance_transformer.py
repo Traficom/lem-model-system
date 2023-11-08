@@ -1,5 +1,5 @@
 from collections import defaultdict
-import numpy # type: ignore
+import numpy
 
 import parameters.impedance_transformation as param
 from parameters.assignment import assignment_classes
@@ -47,12 +47,4 @@ class ImpedanceTransformer:
                         imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-        # transit cost to eur per day
-        trips_month = (param.transit_trips_per_month
-            [purpose.area][assignment_classes[purpose.name]])
-        trips_per_month = numpy.full_like(
-            day_imp["transit"]["cost"], trips_month[0])
-        for i in range(1, len(purpose.sub_bounds)):
-            trips_per_month[purpose.sub_bounds[i], :] = trips_month[i]
-        day_imp["transit"]["cost"] /= trips_per_month
         return day_imp
