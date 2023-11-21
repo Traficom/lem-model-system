@@ -37,6 +37,7 @@ class FreightModel:
             "orig": None,
             "dest": None,
             "area": "all",
+            "impedance_share": None,
         }
         self.purpose = Purpose(spec, zone_data_base)
 

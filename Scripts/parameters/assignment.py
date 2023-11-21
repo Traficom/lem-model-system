@@ -450,6 +450,10 @@ assignment_classes = {
     "oop": "leisure",
     "external": "leisure",
 }
+divided_classes = (
+    "car",
+    "transit",
+)
 main_mode = 'h'
 bike_mode = 'f'
 assignment_modes = {

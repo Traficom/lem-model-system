@@ -1,0 +1,263 @@
+{
+    "name": "oo",
+    "orig": "source",
+    "dest": "other",
+    "source": [
+        "hc",
+        "hu",
+        "hs",
+        "ho"
+    ],
+    "area": "all",
+    "struct": "mode>dest",
+    "impedance_share": {
+        "car": {
+            "aht": [
+                0.129495,
+                0.055808
+            ],
+            "pt": [
+                0.668475,
+                0.666841
+            ],
+            "iht": [
+                0.20203,
+                0.277352
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        },
+        "transit": {
+            "aht": [
+                0.129495,
+                0.055808
+            ],
+            "pt": [
+                0.668475,
+                0.666841
+            ],
+            "iht": [
+                0.20203,
+                0.277352
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        },
+        "bike": {
+            "aht": [
+                0,
+                0
+            ],
+            "pt": [
+                1,
+                1
+            ],
+            "iht": [
+                0,
+                0
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        },
+        "walk": {
+            "aht": [
+                0,
+                0
+            ],
+            "pt": [
+                1,
+                1
+            ],
+            "iht": [
+                0,
+                0
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        }
+    },
+    "distance_boundaries": {
+        "car": [
+            0,
+            9999
+        ],
+        "transit": [
+            0,
+            9999
+        ],
+        "bike": [
+            0,
+            60
+        ],
+        "walk": [
+            0,
+            15
+        ]
+    },
+    "destination_choice": {
+        "car": {
+            "attraction": {
+                "parking_cost_errand": -0.291338216556
+            },
+            "impedance": {
+                "time": -0.0371080433,
+                "cost": -0.281121539905
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "workplaces": 1.4931447755055838,
+                "service": 4.899936388531657,
+                "shops_cbd": 36.161227785768844,
+                "shops_elsewhere": 29.03185180709253,
+                "own_zone": [
+                    1034.3523780364185,
+                    1034.3523780364185
+                ]
+            }
+        },
+        "transit": {
+            "attraction": {
+                "cbd": 0.350354942258,
+                "own_zone": -1.87675547285
+            },
+            "impedance": {
+                "time": -0.0190572340198,
+                "cost": -0.281121539905
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "workplaces": 1.4931447755055838,
+                "service": 4.899936388531657,
+                "shops_cbd": 36.161227785768844,
+                "shops_elsewhere": 29.03185180709253,
+                "own_zone": [
+                    1034.3523780364185,
+                    1034.3523780364185
+                ]
+            }
+        },
+        "bike": {
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "dist": [
+                    -2.05206422461,
+                    -1.82198542728
+                ],
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "workplaces": 1.4931447755055838,
+                "service": 4.899936388531657,
+                "shops_cbd": 36.161227785768844,
+                "shops_elsewhere": 29.03185180709253,
+                "own_zone": [
+                    1034.3523780364185,
+                    1034.3523780364185
+                ]
+            }
+        },
+        "walk": {
+            "attraction": {
+                "own_zone_area_sqrt": [
+                    -1.10044318679,
+                    -1.94548368752
+                ]
+            },
+            "impedance": {},
+            "log": {
+                "dist": -3.38855455974,
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "workplaces": 1.4931447755055838,
+                "service": 4.899936388531657,
+                "shops_cbd": 36.161227785768844,
+                "shops_elsewhere": 29.03185180709253,
+                "own_zone": [
+                    1034.3523780364185,
+                    1034.3523780364185
+                ]
+            }
+        }
+    },
+    "mode_choice": {
+        "car": {
+            "constant": [
+                -0.067506470045476,
+                0.021544618099619998
+            ],
+            "generation": {
+                "car_density": [
+                    2.019845153892125,
+                    2.203129466617543
+                ]
+            },
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.718153936654
+            },
+            "individual_dummy": {}
+        },
+        "transit": {
+            "constant": [
+                1.7046365819946085,
+                1.2364002152962006
+            ],
+            "generation": {
+                "cbd": 0.2,
+                "helsinki_other": -0.4,
+                "espoo_vant_kau": -0.4
+            },
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.718153936654
+            },
+            "individual_dummy": {}
+        },
+        "bike": {
+            "constant": [
+                -0.48049552319564687,
+                0.9366572351899854
+            ],
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.718153936654
+            },
+            "individual_dummy": {}
+        },
+        "walk": {
+            "constant": [
+                4.4433485205622025,
+                4.732764557033764
+            ],
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.718153936654
+            },
+            "individual_dummy": {}
+        }
+    }
+}

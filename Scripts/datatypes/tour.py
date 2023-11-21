@@ -9,8 +9,7 @@ from models.logit import ModeDestModel
 
 import parameters.car as param
 import parameters.zone as zone_param
-from parameters.assignment import assignment_classes, vot_inv
-from parameters.impedance_transformation import divided_classes, transit_trips_per_month
+from parameters.assignment import assignment_classes, vot_inv, divided_classes
 
 
 class Tour:
@@ -245,12 +244,6 @@ class Tour:
             # bike and walk modes do not have cost matrices specified
             # KeyErrors are produced when trying to access matrix
             pass
-        # scale transit costs from month to day
-        self.purpose.area = cast(str, self.purpose.area) #type checker help
-        if self.mode == "transit" and mtx_type == "cost":
-            i = self.purpose.sub_intervals.searchsorted(
-                self.position[0], side="right")
-            cost /= transit_trips_per_month[self.purpose.area][demand_type][i]
         return cost
 
     def __str__(self) -> str:

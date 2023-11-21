@@ -1,12 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from collections import defaultdict
 import numpy # type: ignore
 import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
 import parameters.zone as param
-from parameters.destination_choice import secondary_destination_threshold
+from parameters.assignment import divided_classes, assignment_classes
 import models.logit as logit
 import models.generation as generation
 from datatypes.demand import Demand
@@ -30,9 +31,14 @@ class Purpose:
             Destination of the tours
         "area" : str
             Model area
+        "impedance_share" : dict
+            Impedance shares
     zone_data : ZoneData
         Data used for all demand calculations
+    resultdata : ResultsData (optional)
+        Writer object to result directory
     """
+    distance: numpy.ndarray
 
     def __init__(self, 
                  specification: Dict[str,Optional[str]], 
@@ -42,9 +48,9 @@ class Purpose:
         self.orig = specification["orig"]
         self.dest = specification["dest"]
         self.area = specification["area"]
+        self.impedance_share = specification["impedance_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
-        self.sources: List[Any] = []
         zone_numbers = zone_data.all_zone_numbers
         zone_intervals = param.purpose_areas[self.area]
         self.bounds = slice(*zone_numbers.searchsorted(
@@ -55,14 +61,141 @@ class Purpose:
         self.sub_intervals = sub_intervals[1:]
         self.zone_data = zone_data
         self.resultdata = resultdata
-        self.model = None
-        self.modes: List[str] = []
         self.generated_tours: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
 
     @property
     def zone_numbers(self):
         return self.zone_data.zone_numbers[self.bounds]
+
+    @property
+    def dest_interval(self):
+        return slice(0, self.zone_data.nr_zones)
+
+    def transform_impedance(self, impedance):
+        """Perform transformation from time period dependent matrices
+        to aggregate impedance matrices for specific travel purpose.
+
+        Parameters
+        ----------
+        impedance: dict
+            key : str
+                Time period (aht/pt/iht)
+            value : dict
+                key : str
+                    Impedance type (time/cost/dist)
+                value : dict
+                    key : str
+                        Assignment class (car_work/transit/...)
+                    value : numpy.ndarray
+                        Impedance (float 2-d matrix)
+
+        Return
+        ------
+        dict
+            key : str
+                Mode (car/transit/bike/walk)
+            value : dict
+                key : str
+                    Type (time/cost/dist)
+                value : numpy 2-d matrix
+                    Impedance (float 2-d matrix)
+        """
+        rows = self.bounds
+        cols = self.dest_interval
+        day_imp = {}
+        for mode in self.impedance_share:
+            day_imp[mode] = defaultdict(float)
+            if mode in divided_classes:
+                ass_class = "{}_{}".format(
+                    mode, assignment_classes[self.name])
+            else:
+                ass_class = mode
+            for time_period in impedance:
+                for mtx_type in impedance[time_period]:
+                    if ass_class in impedance[time_period][mtx_type]:
+                        share = self.impedance_share[mode][time_period]
+                        imp = impedance[time_period][mtx_type][ass_class]
+                        day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
+                        day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
+        return day_imp
+
+
+def new_tour_purpose(specification, zone_data, resultdata):
+    """Create purpose for two-way tour or for secondary destination of tour.
+
+    Parameters
+    ----------
+    specification : dict
+        "name" : str
+            Tour purpose name (hw/oo/hop/sop/...)
+        "orig" : str
+            Origin of the tours (home/source)
+        "dest" : str
+            Destination of the tours (work/other/source/...)
+        "area" : str
+            Model area (metropolitan/peripheral)
+        "struct" : str
+            Model structure (dest>mode/mode>dest)
+        "impedance_share" : dict
+            Impedance shares
+        "destination_choice" : dict
+            Destionation choice parameters
+        "mode_choice" dict
+            Mode choice parameters
+    zone_data : ZoneData
+        Data used for all demand calculations
+    resultdata : ResultData
+        Writer object for result directory
+    """
+    args = (specification, zone_data, resultdata)
+    purpose = (SecDestPurpose(*args) if "sec_dest" in specification
+                else TourPurpose(*args))
+    try:
+        purpose.sources = specification["source"]
+    except KeyError:
+        pass
+    return purpose
+
+
+class TourPurpose(Purpose):
+    """Standard two-way tour purpose.
+
+    Parameters
+    ----------
+    specification : dict
+        See `new_tour_purpose()`
+    zone_data : ZoneData
+        Data used for all demand calculations
+    resultdata : ResultData
+        Writer object for result directory
+    """
+
+    def __init__(self, specification, zone_data, resultdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+        if self.orig == "source":
+            self.gen_model = generation.NonHomeGeneration(self, resultdata)
+        else:
+            self.gen_model = generation.GenerationModel(self, resultdata)
+        if self.name == "sop":
+            self.model = logit.OriginModel(*args)
+        elif specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+            self.accessibility_model = logit.AccessibilityModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+        self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
+        self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
+            for mode in self.modes}
+        self.own_zone_aggregates = {mode: ArrayAggregator(zone_data.zone_numbers)
+            for mode in self.modes}
+        self.sec_dest_purpose = None
+
+    @property
+    def dist(self):
+        return self.distance[self.bounds, self.dest_interval]
 
     def print_data(self):
         self.resultdata.print_data(
@@ -81,52 +214,6 @@ class Purpose:
         self.resultdata.print_data(
             pandas.Series(mode_shares),
             "mode_share.txt", self.name)
-
-
-class TourPurpose(Purpose):
-    """Standard two-way tour purpose.
-
-    Parameters
-    ----------
-    specification : dict
-        "name" : str
-            Tour purpose name (hw/oo/hop/sop/...)
-        "orig" : str
-            Origin of the tours (home/source)
-        "dest" : str
-            Destination of the tours (work/other/source/...)
-        "area" : str
-            Model area (metropolitan/peripheral)
-    zone_data : ZoneData
-        Data used for all demand calculations
-    resultdata : ResultData
-        Writer object for result directory
-    """
-
-    def __init__(self, specification, zone_data, resultdata):
-        Purpose.__init__(self, specification, zone_data, resultdata)
-        if self.orig == "source":
-            self.gen_model = generation.NonHomeGeneration(self, resultdata)
-        else:
-            self.gen_model = generation.GenerationModel(self, resultdata)
-        if self.name == "sop":
-            self.model: Union[logit.OriginModel, logit.DestModeModel, logit.ModeDestModel] = logit.OriginModel(zone_data, self, resultdata)
-        elif self.name == "so":
-            self.model = logit.DestModeModel(zone_data, self, resultdata)
-        else:
-            self.model = logit.ModeDestModel(zone_data, self, resultdata)
-            self.accessibility_model = logit.AccessibilityModel(
-                zone_data, self, resultdata)
-        self.modes = list(self.model.mode_choice_param)
-        self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
-        self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
-            for mode in self.modes}
-        self.own_zone_aggregates = {mode: ArrayAggregator(zone_data.zone_numbers)
-            for mode in self.modes}
-        self.sec_dest_purpose = None
-
-    def print_data(self):
-        Purpose.print_data(self)
         for mode in self.histograms:
             self.resultdata.print_data(
                 self.histograms[mode].histogram, "trip_lengths.txt",
@@ -146,7 +233,7 @@ class TourPurpose(Purpose):
             self.aggregates[mode].init_matrix()
             self.own_zone_aggregates[mode].init_array()
 
-    def calc_prob(self, impedance):
+    def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
         
         Parameters
@@ -155,10 +242,13 @@ class TourPurpose(Purpose):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
         """
-        self.prob = self.model.calc_prob(impedance)
-        self.dist = impedance["car"]["dist"]
+        purpose_impedance = self.transform_impedance(impedance)
+        self.prob = self.model.calc_prob(purpose_impedance)
+        if is_last_iteration and self.name[0] != 's':
+            self.accessibility_model.calc_accessibility(
+                purpose_impedance)
 
-    def calc_basic_prob(self, impedance):
+    def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
 
         Individual dummy variables are not included.
@@ -169,8 +259,11 @@ class TourPurpose(Purpose):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
         """
-        self.model.calc_basic_prob(impedance)
-        self.dist = impedance["car"]["dist"]
+        purpose_impedance = self.transform_impedance(impedance)
+        self.model.calc_basic_prob(purpose_impedance)
+        if is_last_iteration and self.name[0] != 's':
+            self.accessibility_model.calc_accessibility(
+                purpose_impedance)
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
@@ -207,14 +300,7 @@ class SecDestPurpose(Purpose):
     Parameters
     ----------
     specification : dict
-        "name" : str
-            Tour purpose name (hoo)
-        "orig" : str
-            Origin of the tours (home)
-        "dest" : str
-            Destination of the tours (any)
-        "area" : str
-            Model area (metropolitan)
+        See `new_tour_purpose()`
     zone_data : ZoneData
         Data used for all demand calculations
     resultdata : ResultData
@@ -222,10 +308,15 @@ class SecDestPurpose(Purpose):
     """
 
     def __init__(self, specification, zone_data, resultdata):
-        Purpose.__init__(self, specification, zone_data, resultdata)
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
         self.gen_model = generation.SecDestGeneration(self, resultdata)
-        self.model = logit.SecDestModel(zone_data, self, resultdata)
-        self.modes = self.model.dest_choice_param.keys()
+        self.model = logit.SecDestModel(*args)
+        self.modes = list(self.model.dest_choice_param)
+
+    @property
+    def dest_interval(self):
+        return self.bounds
 
     def init_sums(self):
         for mode in self.model.dest_choice_param:
@@ -264,7 +355,7 @@ class SecDestPurpose(Purpose):
         generation = self.tours[mode][orig, :]
         # All o-d pairs below threshold are neglected,
         # total demand is increased for other pairs.
-        dests = generation > secondary_destination_threshold
+        dests = generation > param.secondary_destination_threshold
         if not dests.any():
             # If no o-d pairs have demand above threshold,
             # the sole destination with largest demand is picked

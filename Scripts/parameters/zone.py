@@ -1,6 +1,8 @@
 # Share of demand that will be simulated in agent model
 from typing import Any, Dict, List, Tuple, Union
 
+# O-D pairs with demand below threshold are neglected in sec dest calculation
+secondary_destination_threshold = 0.1
 
 agent_demand_fraction = 1.0
 
@@ -20,91 +22,6 @@ age_groups: List[Tuple[int, int]] = [ #changed to list for type checker
 
 ### DEMAND MODEL REFERENCES ###
 
-tour_purposes: List[Dict[str, Any]] = [ #changed to list for type checker
-    {
-        "name": "hw",
-        "orig": "home",
-        "dest": "work",
-        "area": "metropolitan",
-    },
-    {
-        "name": "hc",
-        "orig": "home",
-        "dest": "comprehensive_school",
-        "area": "metropolitan",
-    },
-    {
-        "name": "hu",
-        "orig": "home",
-        "dest": "tertiary_education",
-        "area": "metropolitan",
-    },
-    {
-        "name": "hs",
-        "orig": "home",
-        "dest": "shopping",
-        "area": "metropolitan",
-    },
-    {
-        "name": "ho",
-        "orig": "home",
-        "dest": "other",
-        "area": "metropolitan",
-    },
-    {
-        "name": "wo",
-        "orig": "source",
-        "dest": "other",
-        "source": ("hw",),
-        "area": "all",
-    },
-    {
-        "name": "oo",
-        "orig": "source",
-        "dest": "other",
-        "source": ("hc", "hu", "hs", "ho",),
-        "area": "all",
-    },
-    {
-        "name": "hoo",
-        "orig": "home",
-        "dest": "any",
-        "sec_dest": "any",
-        "source": ("hw", "hc", "hu", "hs", "ho", "wo", "oo",),
-        "area": "metropolitan",
-    },
-    {  # Only for calculation of work-force accessibility, not assigned
-        "name": "wh",
-        "orig": "work",
-        "dest": "source",
-        "area": "metropolitan",
-    },
-    {
-        "name": "hwp",
-        "orig": "home",
-        "dest": "work",
-        "area": "peripheral",
-    },
-    {
-        "name": "hop",
-        "orig": "home",
-        "dest": "other",
-        "area": "peripheral",
-    },
-    {
-        "name": "sop",
-        "orig": "home",
-        "dest": "source",
-        "area": "peripheral",
-    },
-    {
-        "name": "oop",
-        "orig": "source",
-        "dest": "other",
-        "source": ("sop",),
-        "area": "all",
-    },
-]
 # Tour purpose zone intervals
 # Some demand models have separate sub-region parameters,
 # hence need sub-intervals defined.

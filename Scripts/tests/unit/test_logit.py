@@ -7,6 +7,7 @@ from datahandling.zonedata import BaseZoneData
 from models.logit import ModeDestModel
 from datahandling.resultdata import ResultsData
 import os
+import json
 
 TEST_DATA_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "test_data")
 METROPOLITAN_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291]
@@ -47,29 +48,22 @@ class LogitModelTest(unittest.TestCase):
         pur.bounds = slice(0, 9)
         pur.sub_bounds = [slice(0, 7), slice(7, 9)]
         pur.zone_numbers = METROPOLITAN_ZONES
-        for i in ("hw", "hc", "hu", "hs", "ho"):
-            pur.name = i
-            model = ModeDestModel(zd, pur, resultdata)
-            prob = model.calc_prob(impedance)
-            for mode in ("car", "transit", "bike", "walk"):
-                self._validate(prob[mode])
-        for i in ("wo", "oo"):
-            pur.name = i
-            model = ModeDestModel(zd, pur, resultdata)
-            prob = model.calc_prob(impedance)
-            for mode in ("car", "transit", "bike", "walk"):
-                self._validate(prob[mode])
-        pur.name = "oop"
-        model = ModeDestModel(zd, pur, resultdata)
-        prob = model.calc_prob(impedance)
-        for mode in ("car", "transit"):
-            self._validate(prob[mode])
-        for i in ("hwp", "hop"):
-            pur.name = i
-            model = ModeDestModel(zd, pur, resultdata)
-            prob = model.calc_prob(impedance)
-            for mode in ("car", "transit"):
-                self._validate(prob[mode])
+        pur.dist = mtx
+        parameters_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), "..", "..", "parameters", "demand")
+        for file_name in os.listdir(parameters_path):
+            with open(os.path.join(parameters_path, file_name), 'r') as file:
+                parameters = json.load(file)
+            pur.name = parameters["name"]
+            if "sec_dest" not in parameters and parameters["dest"] != "source":
+                model = ModeDestModel(pur, parameters, zd, resultdata)
+                prob = model.calc_prob(impedance)
+                if pur.name in ("hwp", "hop", "oop"):
+                    for mode in ("car", "transit"):
+                        self._validate(prob[mode])
+                else:
+                    for mode in ("car", "transit", "bike", "walk"):
+                        self._validate(prob[mode])
 
     def _validate(self, prob):
         self.assertIs(type(prob), numpy.ndarray)

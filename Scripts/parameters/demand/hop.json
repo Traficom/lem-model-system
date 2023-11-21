@@ -1,0 +1,118 @@
+{
+    "name": "hop",
+    "orig": "home",
+    "dest": "other",
+    "area": "peripheral",
+    "struct": "mode>dest",
+    "impedance_share": {
+        "car": {
+            "aht": [
+                0.223073,
+                0.032569
+            ],
+            "pt": [
+                0.532323,
+                0.708387
+            ],
+            "iht": [
+                0.244604,
+                0.259044
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        },
+        "transit": {
+            "aht": [
+                0.223073,
+                0.032569
+            ],
+            "pt": [
+                0.532323,
+                0.708387
+            ],
+            "iht": [
+                0.244604,
+                0.259044
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        }
+    },
+    "distance_boundaries": {
+        "car": [
+            0,
+            9999
+        ],
+        "transit": [
+            0,
+            9999
+        ]
+    },
+    "destination_choice": {
+        "car": {
+            "attraction": {
+                "car_density": 1.9008789576099998,
+                "own_zone_area": -0.00914703619822
+            },
+            "impedance": {
+                "time": -0.0207498305,
+                "cost": -0.231841682005
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "workplaces": 3.4223704732481517,
+                "service": 102.563902082003,
+                "shops": 222.29744155065126,
+                "comprehensive_schools": 10.892468037536473,
+                "population_own": 27.85603719152218,
+                "population_other": 1
+            }
+        },
+        "transit": {
+            "attraction": {},
+            "impedance": {
+                "time": -0.0050318434681,
+                "cost": -0.231841682005
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "workplaces": 3.4223704732481517,
+                "service": 102.563902082003,
+                "shops": 222.29744155065126,
+                "comprehensive_schools": 10.892468037536473,
+                "population_own": 27.85603719152218,
+                "population_other": 1
+            }
+        }
+    },
+    "mode_choice": {
+        "car": {
+            "constant": 0.075,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 1.0
+            },
+            "individual_dummy": {}
+        },
+        "transit": {
+            "constant": -1.10107987269,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 1.0
+            },
+            "individual_dummy": {}
+        }
+    }
+}

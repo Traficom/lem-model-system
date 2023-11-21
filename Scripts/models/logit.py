@@ -8,9 +8,7 @@ if TYPE_CHECKING:
     from datahandling.zonedata import ZoneData
     from datatypes.purpose import TourPurpose
 
-from parameters.destination_choice import destination_choice, distance_boundary
-from parameters.mode_choice import mode_choice
-import parameters.zone as zone_params
+import parameters.zone as param
 from utils.zone_interval import ZoneIntervals
 
 
@@ -19,32 +17,35 @@ class LogitModel:
 
     Parameters
     ----------
-    zone_data : ZoneData
-        Data used for all demand calculations
     purpose : TourPurpose
         Tour purpose (type of tour)
+    parameters : dict
+        See `datatypes.purpose.new_tour_purpose()`
+    zone_data : ZoneData
+        Data used for all demand calculations
     resultdata : ResultData
         Writer object to result directory
     """
 
     def __init__(self, 
-                 zone_data: ZoneData, 
-                 purpose: TourPurpose, 
+                 purpose: TourPurpose,
+                 parameters: dict,
+                 zone_data: ZoneData,
                  resultdata: ResultsData):
         self.resultdata = resultdata
         self.purpose = purpose
         self.bounds = purpose.bounds
         self.sub_bounds = purpose.sub_bounds
         self.zone_data = zone_data
-        self.dest_exps: Dict[str, numpy.array] = {}
+        self._dest_exps: Dict[str, numpy.array] = {}
         self.mode_exps: Dict[str, numpy.array] = {}
-        purpose.name = cast(str, purpose.name) #type checker help
-        self.dest_choice_param: Dict[str, Dict[str, Any]] = destination_choice[purpose.name]
-        self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = mode_choice[purpose.name]
+        self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
+        self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
+        self.distance_boundary = parameters["distance_boundaries"]
 
     def _calc_mode_util(self, impedance):
         expsum = numpy.zeros_like(
-            next(iter(impedance["car"].values())))
+            next(iter(next(iter(impedance.values())).values())))
         for mode in self.mode_choice_param:
             b = self.mode_choice_param[mode]
             utility = numpy.zeros_like(expsum)
@@ -64,24 +65,25 @@ class LogitModel:
         utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(utility, b["attraction"])
         self._add_impedance(utility, impedance, b["impedance"])
-        self.dest_exps[mode] = numpy.exp(utility)
+        self._dest_exps[mode] = numpy.exp(utility)
         size = numpy.zeros_like(utility)
-        self._add_zone_util(size, b["size"])
-        impedance["size"] = size
+        self._add_zone_util(size, b["attraction_size"])
+        impedance["attraction_size"] = size
         if "transform" in b:
             b_transf = b["transform"]
             transimp = numpy.zeros_like(utility)
             self._add_zone_util(transimp, b_transf["attraction"])
             self._add_impedance(transimp, impedance, b_transf["impedance"])
             impedance["transform"] = transimp
-        self._add_log_impedance(self.dest_exps[mode], impedance, b["log"])
+        self._add_log_impedance(self._dest_exps[mode], impedance, b["log"])
         if mode != "logsum":
-            threshold = distance_boundary[mode]
-            self.dest_exps[mode][impedance["dist"] > threshold] = 0
+            l, u = self.distance_boundary[mode]
+            dist = self.purpose.dist
+            self._dest_exps[mode][(dist < l) | (dist >= u)] = 0
         try:
-            return self.dest_exps[mode].sum(1)
+            return self._dest_exps[mode].sum(1)
         except ValueError:
-            return self.dest_exps[mode].sum()
+            return self._dest_exps[mode].sum()
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
         b = self.dest_choice_param[mode]
@@ -90,12 +92,12 @@ class LogitModel:
         self._add_impedance(utility, impedance, b["impedance"])
         dest_exps = numpy.exp(utility)
         size = numpy.zeros_like(utility)
-        self._add_sec_zone_util(size, b["size"])
-        impedance["size"] = size
+        self._add_sec_zone_util(size, b["attraction_size"])
+        impedance["attraction_size"] = size
         self._add_log_impedance(dest_exps, impedance, b["log"])
         if mode != "logsum":
-            threshold = distance_boundary[mode]
-            dest_exps[impedance["dist"] > threshold] = 0
+            l, u = self.distance_boundary[mode]
+            dest_exps[(impedance["dist"] < l) | (impedance["dist"] >= u)] = 0
         return dest_exps
 
     def _add_constant(self, utility, b):
@@ -257,14 +259,14 @@ class ModeDestModel(LogitModel):
 
     Parameters
     ----------
-    zone_data : ZoneData
-        Data used for all demand calculations
     purpose : TourPurpose
         Tour purpose (type of tour)
+    parameters : dict
+        See `datatypes.purpose.new_tour_purpose()`
+    zone_data : ZoneData
+        Data used for all demand calculations
     resultdata : ResultData
         Writer object to result directory
-    is_agent_model : bool (optional)
-        Whether the model is used for agent-based simulation
     """
 
     def calc_prob(self, impedance):
@@ -296,6 +298,7 @@ class ModeDestModel(LogitModel):
                     no_dummy = (1 - dummy_share) * prob[mode]
                     dummy = dummy_share * ind_prob[mode]
                     prob[mode] = no_dummy + dummy
+        self._dest_exps.clear()
         return prob
     
     def calc_basic_prob(self, impedance):
@@ -314,7 +317,7 @@ class ModeDestModel(LogitModel):
         self._calc_utils(impedance)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
-            cumsum = self.dest_exps[mode].T.cumsum(axis=0)
+            cumsum = self._dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
     
     def calc_individual_prob(self, mod_mode, dummy):
@@ -428,7 +431,7 @@ class ModeDestModel(LogitModel):
         prob = {}
         for mode in self.mode_choice_param:
             mode_prob = self.mode_exps[mode] / mode_expsum
-            dest_prob = (self.dest_exps[mode].T
+            dest_prob = (self._dest_exps[mode].T
                          / self.dest_expsums[mode]["logsum"])
             prob[mode] = mode_prob * dest_prob
         return prob
@@ -457,6 +460,7 @@ class AccessibilityModel(ModeDestModel):
                     Impedances
         """
         mode_expsum = self._calc_utils(impedance)
+        self._dest_exps.clear()
 
         # Calculate sustainable and car accessibility
         sustainable_sum = numpy.zeros_like(mode_expsum)
@@ -593,7 +597,7 @@ class AccessibilityModel(ModeDestModel):
         for i in b:
             try: # If only one parameter
                 # Remove area dummies from accessibility indicators
-                if i not in zone_params.areas:
+                if i not in param.areas:
                     utility += b[i] * zdata.get_data(
                         i, self.bounds, generation)
             except ValueError: # Separate params for cap region and surrounding
@@ -616,14 +620,14 @@ class DestModeModel(LogitModel):
 
     Parameters
     ----------
-    zone_data : ZoneData
-        Data used for all demand calculations
     purpose : TourPurpose
         Tour purpose (type of tour)
+    parameters : dict
+        See `datatypes.purpose.new_tour_purpose()`
+    zone_data : ZoneData
+        Data used for all demand calculations
     resultdata : ResultData
         Writer object to result directory
-    is_agent_model : bool (optional)
-        Whether the model is used for agent-based simulation
     """
 
     def calc_prob(self, impedance):
@@ -646,7 +650,7 @@ class DestModeModel(LogitModel):
         logsum = {"logsum": mode_expsum}
         dest_expsum = self._calc_dest_util("logsum", logsum)
         prob = {}
-        dest_prob = self.dest_exps["logsum"].T / dest_expsum
+        dest_prob = self._dest_exps["logsum"].T / dest_expsum
         for mode in self.mode_choice_param:
             mode_prob = (self.mode_exps[mode] / mode_expsum).T
             prob[mode] = mode_prob * dest_prob

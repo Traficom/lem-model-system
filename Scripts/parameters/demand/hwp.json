@@ -1,0 +1,112 @@
+{
+    "name": "hwp",
+    "orig": "home",
+    "dest": "work",
+    "area": "peripheral",
+    "struct": "mode>dest",
+    "impedance_share": {
+        "car": {
+            "aht": [
+                0.679006,
+                0.031175
+            ],
+            "pt": [
+                0.296493,
+                0.356524
+            ],
+            "iht": [
+                0.024502,
+                0.612301
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        },
+        "transit": {
+            "aht": [
+                0.679006,
+                0.031175
+            ],
+            "pt": [
+                0.296493,
+                0.356524
+            ],
+            "iht": [
+                0.024502,
+                0.612301
+            ],
+            "vrk": [
+                1,
+                1
+            ]
+        }
+    },
+    "distance_boundaries": {
+        "car": [
+            0,
+            9999
+        ],
+        "transit": [
+            0,
+            9999
+        ]
+    },
+    "destination_choice": {
+        "car": {
+            "attraction": {
+                "parking_cost_work": -0.15712387374,
+                "share_detached_houses": 0.580974879625,
+                "own_zone_area": -0.0405161484737
+            },
+            "impedance": {
+                "time": -0.0207403513,
+                "cost": -0.15712387374
+            },
+            "log": {
+                "attraction_size": 0.906942834933
+            },
+            "attraction_size": {
+                "workplaces": 1
+            }
+        },
+        "transit": {
+            "attraction": {
+                "cbd": 0.46008222517,
+                "own_zone_area": -0.11315324209
+            },
+            "impedance": {
+                "time": -0.00824400763002,
+                "cost": -0.15712387374
+            },
+            "log": {
+                "attraction_size": 0.906942834933
+            },
+            "attraction_size": {
+                "workplaces": 1
+            }
+        }
+    },
+    "mode_choice": {
+        "car": {
+            "constant": 0.024,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 1.0
+            },
+            "individual_dummy": {}
+        },
+        "transit": {
+            "constant": -2.0319384929799997,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 1.0
+            },
+            "individual_dummy": {}
+        }
+    }
+}

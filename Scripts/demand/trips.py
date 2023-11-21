@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, Tuple, Union, cast
+from typing import TYPE_CHECKING, Dict, Tuple, List, cast
 import numpy # type: ignore
 import pandas
 if TYPE_CHECKING:
@@ -10,7 +10,7 @@ from datatypes.person import Person
 
 import utils.log as log
 import parameters.zone as param
-from datatypes.purpose import TourPurpose, SecDestPurpose
+from datatypes.purpose import SecDestPurpose
 from models import car_use, linear, tour_combinations
 
 
@@ -24,32 +24,31 @@ class DemandModel:
         Data used for all demand calculations
     resultdata : ResultData
         Writer object to result directory
+    tour_purposes : list of TourPurpose and SecDestPurpose instances
+        Tour purposes
     is_agent_model : bool (optional)
         Whether the model is used for agent-based simulation
     """
     
     def __init__(self, 
                  zone_data: ZoneData, 
-                 resultdata: ResultsData, 
+                 resultdata: ResultsData,
+                 tour_purposes: List[Purpose],
                  is_agent_model: bool=False):
         self.resultdata = resultdata
         self.zone_data = zone_data
-        self.tour_purposes = []
-        self.purpose_dict: Dict[str,Purpose] = {}
-        for purpose_spec in param.tour_purposes:
-            args = (purpose_spec, zone_data, resultdata)
-            purpose = (SecDestPurpose(*args) if "sec_dest" in purpose_spec
-                else TourPurpose(*args))
-            self.tour_purposes.append(purpose)
-            self.purpose_dict[purpose_spec["name"]] = purpose
-        for purpose_spec in param.tour_purposes:
-            if "source" in purpose_spec:
-                purpose = self.purpose_dict[purpose_spec["name"]]
-                for source in purpose_spec["source"]:
-                    purpose.sources.append(self.purpose_dict[source])
-                    if "sec_dest" in purpose_spec:
-                        tour_purpose = cast(TourPurpose, self.purpose_dict[source]) #type checker hint
-                        tour_purpose.sec_dest_purpose = purpose
+        self.tour_purposes = tour_purposes
+        self.purpose_dict = {purpose.name: purpose for purpose in tour_purposes}
+        for purpose in tour_purposes:
+            try:
+                sources = purpose.sources
+            except AttributeError:
+                pass
+            else:
+                purpose.sources = [self.purpose_dict[source] for source in sources]
+                if isinstance(purpose, SecDestPurpose):
+                    for source in purpose.sources:
+                        source.sec_dest_purpose = purpose
         bounds = param.purpose_areas["metropolitan"]
         self.bounds = slice(*zone_data.all_zone_numbers.searchsorted(
             [bounds[0], bounds[-1]]))
