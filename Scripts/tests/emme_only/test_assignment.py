@@ -93,7 +93,6 @@ class EmmeAssignmentTest:
         self.test_transit_cost()
         for ap in self.ass_model.assignment_periods:
             travel_cost[ap.name] = ap.assign(demand, iteration="last")
-            travel_cost[ap.name]["time"]["transit_uncongested"] = travel_cost[ap.name]["time"]["transit_work"]
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..","test_data", "Results", "assignment"))
