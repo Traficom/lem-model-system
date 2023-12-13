@@ -51,7 +51,7 @@ class MockAssignmentModel(AssignmentModel):
     def prepare_network(self, car_dist_unit_cost: Optional[float]=None):
         pass
 
-    def init_assign(self, demand):
+    def init_assign(self):
         pass
 
 
@@ -68,7 +68,7 @@ class MockPeriod(Period):
         return zone_numbers
 
     def assign(self, 
-               matrices: Dict[str, numpy.ndarray], 
+               matrices: Dict[str, numpy.ndarray],
                iteration: Optional[Union[int,str]]=None) -> Dict[str,Dict[str,numpy.ndarray]]:
         """Assign cars, bikes and transit for one time period.
         Get travel impedance matrices for one time period from assignment.

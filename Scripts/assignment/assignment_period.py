@@ -120,6 +120,11 @@ class AssignmentPeriod(Period):
         self._calc_background_traffic()
         self._specify()
 
+    def init_assign(self):
+        self._assign_pedestrians()
+        self._set_bike_vdfs()
+        self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
+
     def assign(self, matrices: dict, iteration: Union[int,str]) -> Dict:
         """Assign cars, bikes and transit for one time period.
 
@@ -138,12 +143,9 @@ class AssignmentPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
-        self._set_emmebank_matrices(matrices, iteration=="last")
-        if iteration=="init":
-            self._assign_pedestrians()
-            self._set_bike_vdfs()
-            self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
-        elif iteration==0:
+        for mtx in matrices:
+            self._set_matrix(mtx, matrices[mtx])
+        if iteration==0:
             self._set_car_and_transit_vdfs()
             if not self._separate_emme_scenarios:
                 self._calc_background_traffic()
@@ -369,39 +371,6 @@ class AssignmentPeriod(Period):
                 link.modes -= {main_mode}
         self.emme_scenario.publish_network(network)
 
-    def _set_emmebank_matrices(self, 
-                               matrices: Dict[str,numpy.ndarray], 
-                               is_last_iteration: bool):
-        """Set matrices in emmebank.
-
-        Bike matrices are added together, so that only one matrix is to be
-        assigned. Similarly, transit matrices are added together if not last
-        iteration. However, they are placed in the matrix "transit_work" to
-        save space.
-
-        Parameters
-        ----------
-        matrices : dict
-            Assignment class (car_work/transit/...) : numpy 2-d matrix
-        is_last_iteration : bool
-            Whether this is the end (multiclass congested transit) assignment
-        """
-        tmp_mtx = {
-            "bike": 0,
-        }
-        if not is_last_iteration:
-            tmp_mtx["transit"] = 0
-        for mtx in matrices:
-            mode = mtx.split('_')[0]
-            if mode in tmp_mtx:
-                tmp_mtx[mode] += matrices[mtx]
-                if mode == "transit":
-                    self._set_matrix("transit_work", tmp_mtx[mode])
-                else:
-                    self._set_matrix(mode, tmp_mtx[mode])
-            else:
-                self._set_matrix(mtx, matrices[mtx])
-
     def _set_matrix(self,
                     ass_class: str,
                     matrix: numpy.ndarray,
@@ -435,7 +404,7 @@ class AssignmentPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        last_iter_classes = param.freight_classes + ("transit_leisure",)
+        last_iter_classes = param.freight_classes
         matrices = {}
         for ass_class, mtx_types in self.emme_matrices.items():
             if (mtx_type in mtx_types and
@@ -447,11 +416,9 @@ class AssignmentPeriod(Period):
                 else:
                     mtx = self._get_matrix(ass_class, mtx_type)
                 matrices[ass_class] = mtx
-        if not is_last_iteration:
-            matrices["transit_leisure"] = matrices["transit_work"]
         return matrices
 
-    def _get_matrix(self, 
+    def _get_matrix(self,
                     ass_class: str, 
                     matrix_type: str) -> numpy.ndarray:
         """Get matrix with type pair (e.g., demand, car_work).

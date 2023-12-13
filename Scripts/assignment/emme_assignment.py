@@ -122,11 +122,9 @@ class EmmeAssignmentModel(AssignmentModel):
             self.emme_project.modeller.emmebank.create_function(
                 idx, param.volume_delay_funcs[idx])
 
-    def init_assign(self, 
-                    demand: Dict[str,List[numpy.ndarray]]):
-        """??? types"""
+    def init_assign(self):
         ap0 = self.assignment_periods[0]
-        ap0.assign(demand, iteration="init")
+        ap0.init_assign()
         if self.save_matrices:
             for ap in self.assignment_periods[1:]:
                 self._copy_matrix("time", "bike", ap0, ap)

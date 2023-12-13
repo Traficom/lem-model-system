@@ -5,7 +5,7 @@
     "area": "metropolitan",
     "struct": "mode>dest",
     "impedance_share": {
-        "car": {
+        "car_work": {
             "aht": [
                 0.015065,
                 0.746026
@@ -23,7 +23,7 @@
                 1
             ]
         },
-        "transit": {
+        "transit_work": {
             "aht": [
                 0.015065,
                 0.746026
@@ -79,11 +79,11 @@
         }
     },
     "distance_boundaries": {
-        "car": [
+        "car_work": [
             0,
             9999
         ],
-        "transit": [
+        "transit_work": [
             0,
             9999
         ],
@@ -97,7 +97,7 @@
         ]
     },
     "destination_choice": {
-        "car": {
+        "car_work": {
             "attraction": {},
             "impedance": {
                 "time": [
@@ -117,7 +117,7 @@
                 "population_other": 1
             }
         },
-        "transit": {
+        "transit_work": {
             "attraction": {},
             "impedance": {
                 "time": -0.0101838292646,
@@ -168,7 +168,7 @@
         }
     },
     "mode_choice": {
-        "car": {
+        "car_work": {
             "constant": [
                 0.23100097186810603,
                 0.208565625679477
@@ -181,7 +181,7 @@
             },
             "individual_dummy": {}
         },
-        "transit": {
+        "transit_work": {
             "constant": [
                 2.6998874096268315,
                 2.3484376591912706
@@ -220,5 +220,6 @@
             },
             "individual_dummy": {}
         }
-    }
+    },
+    "demand_share": {}
 }

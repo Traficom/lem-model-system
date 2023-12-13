@@ -5,7 +5,7 @@
     "area": "peripheral",
     "struct": "dest>mode",
     "impedance_share": {
-        "car": {
+        "car_leisure": {
             "aht": [
                 0.538281,
                 0.031605
@@ -23,7 +23,7 @@
                 1
             ]
         },
-        "transit": {
+        "transit_leisure": {
             "aht": [
                 0.538281,
                 0.031605
@@ -43,11 +43,11 @@
         }
     },
     "distance_boundaries": {
-        "car": [
+        "car_leisure": [
             0,
             9999
         ],
-        "transit": [
+        "transit_leisure": [
             0,
             9999
         ]
@@ -70,7 +70,7 @@
         }
     },
     "mode_choice": {
-        "car": {
+        "car_leisure": {
             "constant": 0.0,
             "generation": {},
             "attraction": {
@@ -84,7 +84,7 @@
             "log": {},
             "individual_dummy": {}
         },
-        "transit": {
+        "transit_leisure": {
             "constant": -2.060141017,
             "generation": {},
             "attraction": {
@@ -97,5 +97,6 @@
             "log": {},
             "individual_dummy": {}
         }
-    }
+    },
+    "demand_share": {}
 }

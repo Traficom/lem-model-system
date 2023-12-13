@@ -405,7 +405,7 @@ class ModeDestModel(LogitModel):
             i = self.purpose.sub_intervals.searchsorted(zone, side="right")
             money_utility = 1 / b[i]
         self.mode_choice_param = cast(Dict[str, Dict[str, Any]], self.mode_choice_param) #type checker help
-        money_utility /= self.mode_choice_param["car"]["log"]["logsum"]
+        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         accessibility = -money_utility * logsum
         return probs, accessibility
 
@@ -438,7 +438,7 @@ class ModeDestModel(LogitModel):
 
     def _get_cost_util_coefficient(self):
         try:
-            b = self.dest_choice_param["car"]["impedance"]["cost"]
+            b = next(iter(self.dest_choice_param.values()))["impedance"]["cost"]
         except KeyError:
             # School tours do not have a constant cost parameter
             # Use value of time conversion from CBA guidelines instead
@@ -465,7 +465,7 @@ class AccessibilityModel(ModeDestModel):
         # Calculate sustainable and car accessibility
         sustainable_sum = numpy.zeros_like(mode_expsum)
         for mode in self.mode_choice_param:
-            if mode != "car":
+            if mode.split('_')[0] != "car":
                 sustainable_sum += self.mode_exps[mode]
         logsum = pandas.Series(
             numpy.log(sustainable_sum), self.purpose.zone_numbers)
@@ -476,7 +476,7 @@ class AccessibilityModel(ModeDestModel):
             money_utility = 1 / b
         except TypeError:  # Separate params for cap region and surrounding
             money_utility = 1 / b[0]
-        money_utility /= self.mode_choice_param["car"]["log"]["logsum"]
+        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         self.purpose.access = money_utility * self.zone_data[self.purpose.name]
         self.purpose.sustainable_access = money_utility * logsum
         self.purpose.car_access = (money_utility
@@ -489,7 +489,7 @@ class AccessibilityModel(ModeDestModel):
             normalization = 1 / sum([param[mode]["constant"][0]
                 for mode in param])
             workforce = ((normalization*mode_expsum)
-                            **(1/param["car"]["log"]["logsum"]))
+                            **(1/next(iter(param.values()))["log"]["logsum"]))
             workforce = pandas.Series(workforce, self.purpose.zone_numbers)
             self.resultdata.print_data(
                 workforce, "workplace_accessibility.txt", self.purpose.name)

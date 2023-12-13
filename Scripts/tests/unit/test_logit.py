@@ -28,12 +28,22 @@ class LogitModelTest(unittest.TestCase):
         mtx.shape = (9, 10)
         mtx[numpy.diag_indices(9)] = 0
         impedance = {
-            "car": {
+            "car_work": {
                 "time": mtx,
                 "cost": mtx,
                 "dist": mtx,
             },
-            "transit": {
+            "car_leisure": {
+                "time": mtx,
+                "cost": mtx,
+                "dist": mtx,
+            },
+            "transit_work": {
+                "time": mtx,
+                "cost": mtx,
+                "dist": mtx,
+            },
+            "transit_leisure": {
                 "time": mtx,
                 "cost": mtx,
                 "dist": mtx,
@@ -55,14 +65,17 @@ class LogitModelTest(unittest.TestCase):
             with open(os.path.join(parameters_path, file_name), 'r') as file:
                 parameters = json.load(file)
             pur.name = parameters["name"]
-            if "sec_dest" not in parameters and parameters["dest"] != "source":
+            if ("sec_dest" not in parameters
+                    and parameters["orig"] != "source"
+                    and parameters["dest"] not in ("home", "source")
+                    and parameters["area"] != "peripheral"):
                 model = ModeDestModel(pur, parameters, zd, resultdata)
                 prob = model.calc_prob(impedance)
-                if pur.name in ("hwp", "hop", "oop"):
-                    for mode in ("car", "transit"):
+                if parameters["dest"] in ("work", "comprehensive_school", "tertiary_education"):
+                    for mode in ("car_work", "transit_work", "bike", "walk"):
                         self._validate(prob[mode])
                 else:
-                    for mode in ("car", "transit", "bike", "walk"):
+                    for mode in ("car_leisure", "transit_leisure", "bike", "walk"):
                         self._validate(prob[mode])
 
     def _validate(self, prob):

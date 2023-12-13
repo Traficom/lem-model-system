@@ -63,7 +63,6 @@ class ModelSystem:
                  submodel: str):
         self.ass_model = cast(Union[MockAssignmentModel,EmmeAssignmentModel], assignment_model) #type checker hint
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
-        self.travel_modes: Dict[str, bool] = {}  # Dict instead of set, to preserve order
 
         # Input data
         self.zdata_base = BaseZoneData(
@@ -91,10 +90,10 @@ class ModelSystem:
                 other_tour_purposes.append(purpose)
         self.dm = self._init_demand_model(
             home_based_tour_purposes + other_tour_purposes)
+        self.travel_modes = {mode: True for purpose in self.dm.tour_purposes
+            for mode in purpose.modes}  # Dict instead of set, to preserve order
         self.em = ExternalModel(
             self.basematrices, self.zdata_forecast, self.zone_numbers)
-        self.dtm = dt.DepartureTimeModel(
-            self.ass_model.nr_zones, self.ass_model.time_periods)
         bounds = slice(0, self.zdata_forecast.nr_zones)
         self.cdm = CarDensityModel(
             self.zdata_base, self.zdata_forecast, bounds, self.resultdata)
@@ -154,14 +153,13 @@ class ModelSystem:
                             purpose, mode, purpose_impedance)
                 else:
                     self._distribute_sec_dests(
-                        purpose, "car", purpose_impedance)
+                        purpose, "car_leisure", purpose_impedance)
             else:
                 if purpose.name != "wh":
                     demand = purpose.calc_demand()
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
-                        self.travel_modes[mode] = True
         log.info("Demand calculation completed")
 
     # possibly merge with init
@@ -189,14 +187,11 @@ class ModelSystem:
 
         # create attributes and background variables to network
         self.ass_model.prepare_network(self.zdata_forecast.car_dist_cost)
+        self.dtm = dt.DepartureTimeModel(
+            self.ass_model.nr_zones, self.ass_model.time_periods)
 
-        # Calculate transit cost matrix, and save it to emmebank
-        time_periods = self.ass_model.time_periods
-        with self.basematrices.open(
-                "demand", time_periods[0], self.ass_model.zone_numbers) as mtx:
-            base_demand = {ass_class: mtx[ass_class]
-                for ass_class in param.transport_classes}
-        self.ass_model.init_assign(base_demand)
+        # Calculate transit segment cost, and save it to emmebank
+        self.ass_model.init_assign()
         self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
 
         # Perform traffic assignment and get result impedance, 
@@ -205,14 +200,13 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
-            self.dtm.demand = cast(Dict[str, Any], self.dtm.demand) #type check hint
             with demand.open("demand", tp, self.ass_model.zone_numbers) as mtx:
                 for ass_class in param.transport_classes:
                     self.dtm.demand[tp][ass_class] = mtx[ass_class]
             impedance[tp] = ap.assign(
                 self.dtm.demand[tp],
                 iteration=("last" if is_end_assignment else 0))
-            if tp == time_periods[0]:
+            if tp == self.ass_model.time_periods[0]:
                 self._update_ratios(impedance[tp], tp)
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
@@ -220,7 +214,7 @@ class ModelSystem:
             self.ass_model.aggregate_results(self.resultdata)
             self._calculate_noise_areas()
             self.resultdata.flush()
-        self.dtm.init_demand()
+        self.dtm.calc_gaps()
         Purpose.distance = next(iter(impedance.values()))["dist"]["car_work"]
         return impedance
 
@@ -255,6 +249,7 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
+        self.dtm.init_demand(self.travel_modes)
 
         # Update car density
         prediction = self.cdm.predict()
@@ -297,7 +292,8 @@ class ModelSystem:
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
             self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
-            if iteration=="last":
+            if (iteration=="last"
+                    and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap.name)
 
         # Calculate and return traffic impedance
@@ -321,7 +317,7 @@ class ModelSystem:
 
         # Reset time-period specific demand matrices (DTM),
         # and empty result buffer
-        gap = self.dtm.init_demand()
+        gap = self.dtm.calc_gaps()
         log.info("Demand model convergence in iteration {} is {:1.5f}".format(
             iteration, gap["rel_gap"]))
         self.convergence = self.convergence.append(gap, ignore_index=True)
@@ -421,7 +417,7 @@ class ModelSystem:
             origs = range(i, bounds.stop - bounds.start, nr_threads)
             # Results will be saved in a temp dtm, to avoid memory clashes
             dtm = dt.DepartureTimeModel(
-                self.ass_model.nr_zones, self.ass_model.time_periods)
+                self.ass_model.nr_zones, self.ass_model.time_periods, [mode])
             demand.append(dtm)
             thread = threading.Thread(
                 target=self._distribute_tours,
@@ -546,11 +542,8 @@ class AgentModelSystem(ModelSystem):
                     demand = purpose.calc_demand()
                     if purpose.dest != "source":
                         for mode in demand:
-                            self.travel_modes[mode] = True
                             self.dtm.add_demand(demand[mode])
                 else:
-                    for mode in purpose.modes:
-                        self.travel_modes[mode] = True
                     purpose.init_sums()
                     purpose.calc_basic_prob(
                         previous_iter_impedance, is_last_iteration)
@@ -560,6 +553,12 @@ class AgentModelSystem(ModelSystem):
         purpose = self.dm.purpose_dict["hoo"]
         sec_dest_tours = {mode: [defaultdict(list) for _ in purpose.zone_numbers]
             for mode in purpose.modes}
+        # Add keys for work-tour-related modes (e.g., "car_work"),
+        # which refer to the same demand containers as for leisure tours.
+        # They are all assigned as leisure trips.
+        work_tours = {mode.replace("leisure", "work"): sec_dest_tours[mode]
+                      for mode in sec_dest_tours}
+        sec_dest_tours.update(work_tours)
         car_users = pandas.Series(
             0, self.zdata_forecast.zone_numbers[self.dm.car_use_model.bounds])
         for person in self.dm.population:
@@ -586,7 +585,7 @@ class AgentModelSystem(ModelSystem):
         elif nr_threads <= 0:
             nr_threads = 1
         bounds = next(iter(purpose.sources)).bounds
-        modes = purpose.modes if is_last_iteration else ["car"]
+        modes = purpose.modes if is_last_iteration else ["car_leisure"]
         for mode in modes:
             threads = []
             for i in range(nr_threads):

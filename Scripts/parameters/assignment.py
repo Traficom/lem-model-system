@@ -415,8 +415,7 @@ transport_classes = (
     "car_leisure",
     "transit_work",
     "transit_leisure",
-    "bike_work",
-    "bike_leisure",
+    "bike",
     "trailer_truck",
     "truck",
     "van",
@@ -450,10 +449,6 @@ assignment_classes = {
     "oop": "leisure",
     "external": "leisure",
 }
-divided_classes = (
-    "car",
-    "transit",
-)
 main_mode = 'h'
 bike_mode = 'f'
 assignment_modes = {
@@ -499,8 +494,8 @@ aux_modes = [
 ]
 park_and_ride_mode = 'u'
 external_modes = [
-    "car",
-    "transit",
+    "car_leisure",
+    "transit_leisure",
     "truck",
     "trailer_truck",
 ]

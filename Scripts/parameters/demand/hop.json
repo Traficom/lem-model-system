@@ -5,7 +5,7 @@
     "area": "peripheral",
     "struct": "mode>dest",
     "impedance_share": {
-        "car": {
+        "car_leisure": {
             "aht": [
                 0.223073,
                 0.032569
@@ -23,7 +23,7 @@
                 1
             ]
         },
-        "transit": {
+        "transit_leisure": {
             "aht": [
                 0.223073,
                 0.032569
@@ -43,17 +43,17 @@
         }
     },
     "distance_boundaries": {
-        "car": [
+        "car_leisure": [
             0,
             9999
         ],
-        "transit": [
+        "transit_leisure": [
             0,
             9999
         ]
     },
     "destination_choice": {
-        "car": {
+        "car_leisure": {
             "attraction": {
                 "car_density": 1.9008789576099998,
                 "own_zone_area": -0.00914703619822
@@ -74,7 +74,7 @@
                 "population_other": 1
             }
         },
-        "transit": {
+        "transit_leisure": {
             "attraction": {},
             "impedance": {
                 "time": -0.0050318434681,
@@ -94,7 +94,7 @@
         }
     },
     "mode_choice": {
-        "car": {
+        "car_leisure": {
             "constant": 0.075,
             "generation": {},
             "attraction": {},
@@ -104,7 +104,7 @@
             },
             "individual_dummy": {}
         },
-        "transit": {
+        "transit_leisure": {
             "constant": -1.10107987269,
             "generation": {},
             "attraction": {},
@@ -113,6 +113,36 @@
                 "logsum": 1.0
             },
             "individual_dummy": {}
+        }
+    },
+    "demand_share": {
+        "car_leisure": {
+            "aht": [
+                0.0910767007840877,
+                0.0133245756008547
+            ],
+            "pt": [
+                0.0733228496135912,
+                0.0632392268306549
+            ],
+            "iht": [
+                0.0725521634967265,
+                0.0897368257624752
+            ]
+        },
+        "transit_leisure": {
+            "aht": [
+                0.330576470748095,
+                0
+            ],
+            "pt": [
+                0.0391056752731289,
+                0.0919882820859918
+            ],
+            "iht": [
+                0.0311972821960398,
+                0.0991336256168802
+            ]
         }
     }
 }

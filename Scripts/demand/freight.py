@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from datahandling.matrixdata import MatrixData
     from datahandling.zonedata import ZoneData
 
-import parameters.tour_generation as param
+from parameters.departure_time import demand_share
 from utils.freight import fratar, calibrate
 from datatypes.demand import Demand
 from datatypes.purpose import Purpose
@@ -38,6 +38,7 @@ class FreightModel:
             "dest": None,
             "area": "all",
             "impedance_share": None,
+            "demand_share": demand_share["freight"]
         }
         self.purpose = Purpose(spec, zone_data_base)
 

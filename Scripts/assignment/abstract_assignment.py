@@ -39,7 +39,7 @@ class AssignmentModel:
         pass
 
     @abstractmethod
-    def init_assign(self, demand):
+    def init_assign(self):
         pass
 
 class Period:
