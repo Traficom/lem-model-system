@@ -18,7 +18,7 @@ def read_from_file(
     Config
         Config object with parameters set from file
     """
-    with open(path, 'r') as file:
+    with open(path, 'r', encoding='utf-8') as file:
         config = json.load(file)
     return Config(config)
 

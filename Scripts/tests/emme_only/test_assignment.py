@@ -17,7 +17,9 @@ try:
     emme_available = True
 except ImportError:
     emme_available = False
-
+except RuntimeError as ex:
+    print(f'Unable to start Emme. Emme assignment tests disabled. ({ex})')
+    emme_available = False
 
 class EmmeAssignmentTest:
     """Create small EMME test network and test assignments.

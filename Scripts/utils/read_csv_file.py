@@ -70,8 +70,10 @@ class FileReader:
             raise NameError(msg)
         header = None if squeeze else "infer"
         data: pandas.DataFrame = pandas.read_csv(
-            path, delim_whitespace=True, squeeze=squeeze, keep_default_na=False,
+            path, delim_whitespace=True, keep_default_na=False,
             na_values="", comment='#', header=header)
+        if squeeze:
+            data = data.squeeze()
         if data.index.is_numeric() and data.index.hasnans:
             msg = "Row with only spaces or tabs in file {}".format(path)
             log.error(msg)

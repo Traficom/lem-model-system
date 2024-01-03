@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 import openmatrix as omx # type: ignore
 import numpy # type: ignore
@@ -12,7 +13,22 @@ import utils.log as log
 import parameters.assignment as param
 import parameters.zone as zone_param
 
+@contextmanager
+def temp_cd(path: Path):
+    """A contextmanager to temporarily change current working directory. 
+    Only used to bypass bug in old pytables that fails to load files from
+    paths containing unicode characters.
 
+    Args:
+        path (Path): New working directory
+    """
+    original_cwd = Path.cwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(original_cwd)
+        
 class MatrixData:
     def __init__(self, path: str):
         self.path = path
@@ -25,8 +41,12 @@ class MatrixData:
              time_period: str, 
              zone_numbers: Optional[numpy.ndarray] = None, 
              m: str = 'r'):
-        file_name = os.path.join(self.path, mtx_type+'_'+time_period+".omx")
-        mtxfile = MatrixFile(omx.open_file(file_name, m), zone_numbers)
+        file_name = mtx_type+'_'+time_period+".omx"
+        with temp_cd(Path(self.path)):
+            # Use context manager to temporarely change the cwd to bypass
+            # a bug in pytables version provided by Emme 
+            # (https://github.com/PyTables/PyTables/issues/757)
+            mtxfile = MatrixFile(omx.open_file(file_name, m), zone_numbers)
         yield mtxfile
         mtxfile.close()
 
@@ -45,7 +65,7 @@ class MatrixFile:
                     path)
                 log.error(msg)
                 raise IndexError(msg)
-            if mtx_numbers != zone_numbers:
+            if not numpy.array_equal(mtx_numbers, zone_numbers):
                 for i in mtx_numbers:
                     if i not in zone_numbers:
                         msg = "Zone number {} from file {} not found in network".format(
