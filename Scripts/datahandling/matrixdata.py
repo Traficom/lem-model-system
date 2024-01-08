@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Iterable
 import openmatrix as omx # type: ignore
 import numpy # type: ignore
 import pandas
@@ -36,23 +36,28 @@ class MatrixData:
             os.makedirs(self.path)
     
     @contextmanager
-    def open(self, 
-             mtx_type: str, 
-             time_period: str, 
-             zone_numbers: Optional[numpy.ndarray] = None, 
+    def open(self,
+             mtx_type: str,
+             time_period: str,
+             zone_numbers: Optional[numpy.ndarray] = None,
+             transport_classes: Iterable[str] = param.transport_classes,
              m: str = 'r'):
         file_name = mtx_type+'_'+time_period+".omx"
         with temp_cd(Path(self.path)):
             # Use context manager to temporarely change the cwd to bypass
             # a bug in pytables version provided by Emme 
             # (https://github.com/PyTables/PyTables/issues/757)
-            mtxfile = MatrixFile(omx.open_file(file_name, m), zone_numbers)
+            mtxfile = MatrixFile(
+                omx.open_file(file_name, m), zone_numbers, transport_classes)
         yield mtxfile
         mtxfile.close()
 
 
 class MatrixFile:
-    def __init__(self, omx_file: omx.File, zone_numbers: numpy.ndarray):
+    def __init__(self,
+                 omx_file: omx.File,
+                 zone_numbers: numpy.ndarray,
+                 transport_classes: Iterable[str] = param.transport_classes):
         self._file = omx_file
         self.missing_zones = []
         if zone_numbers is None:
@@ -80,9 +85,6 @@ class MatrixFile:
                              ", adding zero row(s) and column(s)"))
                 self.new_zone_numbers = zone_numbers
             ass_classes = self.matrix_list
-            transport_classes = (("truck", "trailer_truck") 
-                                 if "freight" in path
-                                 else param.transport_classes)
             for ass_class in transport_classes:
                 if ass_class not in ass_classes:
                     msg = "File {} does not contain {} matrix.".format(

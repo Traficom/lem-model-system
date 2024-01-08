@@ -119,6 +119,7 @@ class AssignmentPeriod(Period):
         self._calc_boarding_penalties()
         self._calc_background_traffic()
         self._specify()
+        self._long_distance_trips_assigned = False
 
     def init_assign(self):
         self._assign_pedestrians()
@@ -151,7 +152,11 @@ class AssignmentPeriod(Period):
                 self._calc_background_traffic()
             self._assign_cars(self.stopping_criteria["coarse"])
             self._calc_extra_wait_time()
-            self._assign_transit()
+            if self.use_free_flow_speeds:
+                self._assign_transit(param.long_distance_transit_classes)
+                self._long_distance_trips_assigned = True
+            else:
+                self._assign_transit()
         elif iteration==1:
             if not self._separate_emme_scenarios:
                 self._set_car_and_transit_vdfs()
@@ -165,19 +170,26 @@ class AssignmentPeriod(Period):
                 self._set_car_and_transit_vdfs()
                 self._calc_background_traffic(include_trucks=True)
             self._assign_cars(
-                self.stopping_criteria["coarse"],lightweight=True)
+                self.stopping_criteria["coarse"], lightweight=True)
             self._calc_extra_wait_time()
             self._assign_transit()
         elif iteration=="last":
-            self._set_bike_vdfs()
-            self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
+            if not self.use_free_flow_speeds:
+                self._set_bike_vdfs()
+                self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
             self._set_car_and_transit_vdfs()
             self._calc_background_traffic()
             self._assign_cars(self.stopping_criteria["fine"])
-            self._calc_boarding_penalties(is_last_iteration=True)
-            self._calc_extra_wait_time()
-            self._assign_transit()
-            self._calc_transit_network_results()
+            if self.use_free_flow_speeds:
+                if not self._long_distance_trips_assigned:
+                    self._assign_transit(param.long_distance_transit_classes)
+                self._calc_transit_network_results(
+                    param.long_distance_transit_classes)
+            else:
+                self._calc_boarding_penalties(is_last_iteration=True)
+                self._calc_extra_wait_time()
+                self._assign_transit(param.transit_classes)
+                self._calc_transit_network_results()
         else:
             raise ValueError("Iteration number not valid")
 
@@ -761,10 +773,10 @@ class AssignmentPeriod(Period):
                                              / (2.0*line[effective_headway_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self):
+    def _assign_transit(self, transit_classes=param.local_transit_classes):
         """Perform transit assignment for one scenario."""
         log.info("Transit assignment started...")
-        for i, transit_class in enumerate(param.transit_classes):
+        for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
@@ -772,16 +784,21 @@ class AssignmentPeriod(Period):
             self.emme_project.matrix_results(
                 spec.transit_result_spec, scenario=self.emme_scenario,
                 class_name=transit_class)
+            if transit_class in param.long_distance_transit_classes:
+                self.emme_project.matrix_results(
+                    spec.local_result_spec, scenario=self.emme_scenario,
+                    class_name=transit_class)
         log.info("Transit assignment performed for scenario {}".format(
             str(self.emme_scenario.id)))
 
-    def _calc_transit_network_results(self):
+    def _calc_transit_network_results(self,
+                                      transit_classes=param.transit_classes):
         """Calculate transit network results for one scenario."""
         log.info("Calculates transit network results")
-        specs = self._transit_specs
-        for tc in specs:
+        for tc in transit_classes:
             self.emme_project.network_results(
-                specs[tc].ntw_results_spec, scenario=self.emme_scenario,
+                self._transit_specs[tc].ntw_results_spec,
+                scenario=self.emme_scenario,
                 class_name=tc)
         volax_attr = self.extra("aux_transit")
         network = self.emme_scenario.get_network()

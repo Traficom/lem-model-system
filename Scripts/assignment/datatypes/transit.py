@@ -106,6 +106,7 @@ class TransitSpecification:
             for level in range(6)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
+            "analyzed_demand": emme_matrices["demand"],
             "on_segments": segment_results,
             }
         subset = "by_mode_subset"
@@ -116,6 +117,12 @@ class TransitSpecification:
                 "distance": emme_matrices["dist"],
             },
         }
+        self.local_result_spec = {
+                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+                subset: {
+                    "modes": param.local_transit_modes,
+                },
+            }
         if count_zone_boardings:
             bcost = "actual_total_boarding_costs"
             self.transit_result_spec[subset][bcost] = emme_matrices[bcost]
@@ -127,3 +134,5 @@ class TransitSpecification:
                 self.transit_result_spec[trip_part] = matrix_id
             for trip_part, matrix_id in emme_matrices[subset].items():
                 self.transit_result_spec[subset][trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices["local"].items():
+                self.local_result_spec[subset][trip_part] = matrix_id

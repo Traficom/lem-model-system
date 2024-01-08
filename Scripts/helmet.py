@@ -52,7 +52,9 @@ def main(args):
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
     # Choose and initialize the Traffic Assignment (supply)model
-    kwargs = {"time_periods": ["vrk"]} if args.free_flow_assignment else {}
+    kwargs = {"use_free_flow_speeds": args.free_flow_assignment}
+    if args.free_flow_assignment:
+        kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = os.path.join(
@@ -75,7 +77,6 @@ def main(args):
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id,
-            use_free_flow_speeds=args.free_flow_assignment,
             use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,
     # and providing demand calculations as Python modules)

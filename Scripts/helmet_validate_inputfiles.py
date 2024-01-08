@@ -91,11 +91,12 @@ def main(args):
     # Check base zonedata
     base_zonedata = ZoneData(base_zonedata_path, zone_numbers, f"{args.submodel}.zmp")
     # Check base matrices
-    matrixdata = MatrixData(base_matrices_path)
-    for tp in time_periods:
-        with matrixdata.open("demand", tp, zone_numbers) as mtx:
-            for ass_class in param.transport_classes:
-                a = mtx[ass_class]
+    if not args.free_flow_assignment:
+        matrixdata = MatrixData(base_matrices_path)
+        for tp in time_periods:
+            with matrixdata.open("demand", tp, zone_numbers) as mtx:
+                for ass_class in param.transport_classes:
+                    a = mtx[ass_class]
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")

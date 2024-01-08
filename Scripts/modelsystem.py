@@ -190,8 +190,8 @@ class ModelSystem:
         self.dtm = dt.DepartureTimeModel(
             self.ass_model.nr_zones, self.ass_model.time_periods)
 
-        # Calculate transit segment cost, and save it to emmebank
-        self.ass_model.init_assign()
+        if not self.ass_model.use_free_flow_speeds:
+            self.ass_model.init_assign()
         self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
 
         # Perform traffic assignment and get result impedance, 
@@ -200,9 +200,15 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
-            with demand.open("demand", tp, self.ass_model.zone_numbers) as mtx:
-                for ass_class in param.transport_classes:
-                    self.dtm.demand[tp][ass_class] = mtx[ass_class]
+            if is_end_assignment or not self.ass_model.use_free_flow_speeds:
+                transport_classes = (tc for tc in param.transport_classes
+                    if not (self.ass_model.use_free_flow_speeds
+                            and tc in param.local_transit_modes + ("bike",)))
+                with demand.open(
+                        "demand", tp, self.ass_model.zone_numbers,
+                        transport_classes) as mtx:
+                    for ass_class in transport_classes:
+                        self.dtm.demand[tp][ass_class] = mtx[ass_class]
             impedance[tp] = ap.assign(
                 self.dtm.demand[tp],
                 iteration=("last" if is_end_assignment else 0))
@@ -328,7 +334,7 @@ class ModelSystem:
     def _save_demand_to_omx(self, tp):
         zone_numbers = self.ass_model.zone_numbers
         demand_sum_string = tp
-        with self.resultmatrices.open("demand", tp, zone_numbers, 'w') as mtx:
+        with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
             for ass_class in param.transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
@@ -339,7 +345,7 @@ class ModelSystem:
     def _save_to_omx(self, impedance, tp):
         zone_numbers = self.ass_model.zone_numbers
         for mtx_type in impedance:
-            with self.resultmatrices.open(mtx_type, tp, zone_numbers, 'w') as mtx:
+            with self.resultmatrices.open(mtx_type, tp, zone_numbers, m='w') as mtx:
                 for ass_class in impedance[mtx_type]:
                     mtx[ass_class] = impedance[mtx_type][ass_class]
 
