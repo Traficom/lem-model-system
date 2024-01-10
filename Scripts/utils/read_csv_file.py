@@ -139,7 +139,7 @@ class FileReader:
         return data
 
 def avg (data, weights):
-    if data.name == weights.name:
+    if isinstance(data, pandas.Series) and data.name == weights.name:
         return sum(data)
     try:
         return numpy.average(data, weights=weights[data.index])

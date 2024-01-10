@@ -169,7 +169,7 @@ class LogitModel:
         """
         for i in b:
             try: # If only one parameter
-                exps *= numpy.power(impedance[i] + 1, b[i])
+                exps *= numpy.power(impedance[i], b[i]) # REMOVED +1 FROM FREIGHT
             except ValueError: # Separate sub-region parameters
                 for j, bounds in enumerate(self.sub_bounds):
                     exps[bounds, :] *= numpy.power(
@@ -571,7 +571,7 @@ class AccessibilityModel(ModeDestModel):
         """
         for i in b:
             try: # If only one parameter
-                exps *= numpy.power(impedance[i] + 1, b[i])
+                exps *= numpy.power(impedance[i], b[i]) # REMOVED +1 FROM FREIGHT
             except ValueError: # Separate params for cap region and surrounding
                 exps *= numpy.power(impedance[i] + 1, b[i][0])
         return exps

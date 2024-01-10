@@ -405,3 +405,37 @@ class SecDestPurpose(Purpose):
                 sum(self.attracted_tours.values()),
                 self.zone_data.zone_numbers),
             "attraction.txt", self.name)
+
+class FreightPurpose(Purpose):
+
+    def __init__(self, specification, zone_data, resultdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+        
+        if specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+
+    def calc_traffic(self, impedance: dict) -> List[Demand]:
+        """Calculate freight traffic matrix.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
+        Return
+        ------
+        datatypes.demand.Demand
+            Freight mode demand matrix for whole day
+        """
+        self.dist = impedance["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
+        probs = self.model.calc_prob(impedance)
+        self.model._dest_exps.clear()
+        nr_trips = numpy.ones((nr_zones, nr_zones)) # Insert generation model here
+        demand = {mode: (probs.pop(mode) * nr_trips).T for mode in self.modes}
+        return demand
