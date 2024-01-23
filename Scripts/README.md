@@ -1,7 +1,7 @@
 # Running the model system
 
-The main entry point is `helmet.py`.
-Run `python helmet.py --help` to see parameter syntax.
+The main entry point is `lem.py`.
+Run `python lem.py --help` to see parameter syntax.
 If you run `python helmet.py` without parameters,
 all parameters will be taken from `dev-config.json`,
 which can be used to setup the model run in advance.
@@ -35,7 +35,7 @@ result tables and matrices are written to.
 This data will be written over during the model run.
 
 If you are trying the test model, try
-`"C:\\FILL_YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Results"`.
+`"C:\\FILL_YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Results"`.
 If you are trying another model, fill in whatever the path is.
 
 When running the `SCENARIO_NAME` scenario, its results are written in `RESULT_PATH\\SCENARIO_NAME`.
@@ -67,12 +67,12 @@ This data will not be written over at any point - it is read-only.
 The location of this data is defined in `BASELINE_DATA_PATH` key.
 
 If you are trying the test model, try
-`"C:\\FILL_YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Base_input_data"`.
+`"C:\\FILL_YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Base_input_data"`.
 If you are trying another model, fill in whatever the path is.
 
-There should be two directiories under the path: `2016_zonedata` and `base_matrices`.
+There should be two directiories under the path: `2018_zonedata` and `base_matrices`.
 The names of these directories are hardcoded.
-There are 10 different input vector files in `2016_zonedata` from `.car` to `.wrk`.
+There are 10 different input vector files in `2018_zonedata` from `.car` to `.wrk`.
 `base_matrices` contains `.omx` and `.txt` files for costs, demand, external
 traffic and freight traffic.
 
@@ -83,11 +83,11 @@ This data will also not be written over at any point - it is read-only.
 The location of this data is defined in `FORECAST_DATA_PATH` key.
 
 If you are trying the test model, try
-`"C:\\FILL_YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Scenario_input_data\\2030_test"`.
+`"C:\\FILL_YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Scenario_input_data\\2030_test"`.
 If you are trying another model, fill in whatever the path is.
 
-There should be 9 or 10 different input vector files in your forefact data path.
-File extensions are similar to your `BASELINE_DATA_PATH\\2016_zonedata` files.
+There should be 9 or 10 different input vector files in your forecast data path.
+File extensions are similar to your `BASELINE_DATA_PATH\\2018_zonedata` files.
 The file `.car` is optional (?).
 
 In the .ext file there must be a value line for every external zone in use
@@ -113,7 +113,7 @@ Convergence criterion: Car work matrix relative change between iterations.
 ### `OPTIONAL_FLAGS`
 
 These should not be used when running model system from command line!
-Instead `helmet.py` flag parameters should be used.
+Instead `lem.py` flag parameters should be used.
 These can be set if model system is run from UI, to set parameters that cannot be set in UI.
 A flag is activated by putting its name inside the brackets,
 flags are separated by commas (e.g., `"OPTIONAL_FLAGS": ["RUN_AGENT_SIMULATION", "DO_NOT_USE_EMME"]`).

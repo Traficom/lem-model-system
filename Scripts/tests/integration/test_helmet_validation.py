@@ -2,7 +2,7 @@ import unittest
 import os
 
 
-from helmet_validate_inputfiles import main
+from lem_validate_inputfiles import main
 import utils.log as log
 
 
