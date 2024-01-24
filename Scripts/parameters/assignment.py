@@ -53,7 +53,7 @@ roadclasses = {
     41: RoadClass("local", "any", 5, 500, 20, 1.304),
 }
 connector_link_types = (84, 85, 86, 87, 88, 98, 99)
-connector = RoadClass("connector", "any", 99, 0, 0, 0)
+connector = RoadClass("connector", "any", 99, 0, 50, 0)
 roadclasses.update({linktype: connector for linktype in connector_link_types})
 custom_roadtypes = {
     91: "motorway",
@@ -125,7 +125,7 @@ volume_delay_funcs = {
     "fd10": vdf_temp.format(0.3, buslane, 0.810, 2.28, 0.0170),
     "fd90": "length*(60/ul2)",
     "fd91": "length*(60/ul2)",
-    "fd99": "length * 1.3",
+    "fd99": "length*(60/ul2)",
     # Bike functions
     "fd70": "length*(60/19)",
     "fd71": "length*(60/17)",
