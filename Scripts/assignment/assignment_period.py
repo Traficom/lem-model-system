@@ -116,7 +116,8 @@ class AssignmentPeriod(Period):
         self._segment_results = segment_results
         self._park_and_ride_results = park_and_ride_results
         self._calc_road_cost()
-        self._calc_boarding_penalties()
+        # TODO We should probably have only one set of penalties
+        self._calc_boarding_penalties(is_last_iteration=True)
         self._calc_background_traffic()
         self._specify()
         self._long_distance_trips_assigned = False
@@ -182,11 +183,11 @@ class AssignmentPeriod(Period):
             self._assign_cars(self.stopping_criteria["fine"])
             if self.use_free_flow_speeds:
                 if not self._long_distance_trips_assigned:
+                    self._calc_extra_wait_time()
                     self._assign_transit(param.long_distance_transit_classes)
                 self._calc_transit_network_results(
                     param.long_distance_transit_classes)
             else:
-                self._calc_boarding_penalties(is_last_iteration=True)
                 self._calc_extra_wait_time()
                 self._assign_transit(param.transit_classes)
                 self._calc_transit_network_results()
