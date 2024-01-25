@@ -206,9 +206,9 @@ class ModelSystem:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
             if is_end_assignment or not self.ass_model.use_free_flow_speeds:
-                transport_classes = (tc for tc in param.transport_classes
+                transport_classes = [tc for tc in param.transport_classes
                     if not (self.ass_model.use_free_flow_speeds
-                            and tc in param.local_transit_modes + ("bike",)))
+                            and tc in param.local_transit_classes + ("bike",))]
                 with demand.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes) as mtx:
