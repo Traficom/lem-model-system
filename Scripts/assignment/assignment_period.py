@@ -301,10 +301,13 @@ class AssignmentPeriod(Period):
                 # Link with no car traffic
                 link.volume_delay_func = 0
             if self.use_stored_speeds:
-                try:
-                    link.data2 = (link.length / link[car_time_attr]) * 60
-                except ZeroDivisionError:
-                    link.data2 = 0
+                car_time = link[car_time_attr]
+                if 0 < car_time < 1440:
+                    link.data2 = (link.length / car_time) * 60
+                else:
+                    msg = f"Car travel time on link {link.id} is {car_time}"
+                    log.error(msg)
+                    raise ValueError(msg)
 
             # Transit function definition
             for modeset in param.transit_delay_funcs:
