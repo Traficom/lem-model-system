@@ -122,7 +122,7 @@ def main(args):
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
-            link_attrs = ["@pyoratieluokka"]
+            link_attrs = []
             line_attrs = []
             for tp in time_periods:
                 link_attrs.append(f"@hinta_{tp}")

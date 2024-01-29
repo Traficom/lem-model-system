@@ -359,28 +359,7 @@ class AssignmentPeriod(Period):
         main_mode = network.mode(param.main_mode)
         bike_mode = network.mode(param.bike_mode)
         for link in network.links():
-            linktype = link.type % 100
-            if linktype in param.roadclasses:
-                roadtype = param.roadclasses[linktype].type
-            elif linktype in param.custom_roadtypes:
-                roadtype = param.custom_roadtypes[linktype]
-            else:
-                roadtype = None
-            if (roadtype == "motorway" and network.mode('f') in link.modes
-                    and link["@pyoratieluokka"] == 0):
-                # Force bikes on motorways onto separate bikepaths
-                link["@pyoratieluokka"] = 3
-            try:
-                pathclass = param.bikepath_vdfs[int(link["@pyoratieluokka"])]
-            except KeyError:
-                link.volume_delay_func = 98
-            else:
-                if link.volume_delay_func == 90:
-                    pass
-                elif roadtype in pathclass:
-                    link.volume_delay_func = pathclass[roadtype]
-                else:
-                    link.volume_delay_func = pathclass[None]
+            link.volume_delay_func = 98
             if bike_mode in link.modes:
                 link.modes |= {main_mode}
             elif main_mode in link.modes:
