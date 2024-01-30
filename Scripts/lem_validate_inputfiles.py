@@ -67,7 +67,7 @@ def main(args):
             log.error(msg)
             raise NameError(msg)
         assignment_model = MockAssignmentModel(
-            MatrixData(mock_result_path), time_periods)
+            MatrixData(mock_result_path), args.free_flow_assignment, time_periods)
         zone_numbers = assignment_model.zone_numbers
     else:
         emp_path = emme_paths[0]
