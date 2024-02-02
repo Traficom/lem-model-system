@@ -94,10 +94,10 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 3.917049099966604,
-                "service_other": 10.951929791923625,
-                "service_own": 28.503806033404565,
+                "population<outside_municipality": 1,
+                "population<within_municipality": 3.917049099966604,
+                "service<outside_municipality": 10.951929791923625,
+                "service<within_municipality": 28.503806033404565,
                 "shops": 22.242738614442906,
                 "cbd": [
                     2504.8700684462606,
@@ -118,10 +118,10 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 3.917049099966604,
-                "service_other": 10.951929791923625,
-                "service_own": 28.503806033404565,
+                "population<outside_municipality": 1,
+                "population<within_municipality": 3.917049099966604,
+                "service<outside_municipality": 10.951929791923625,
+                "service<within_municipality": 28.503806033404565,
                 "shops": 22.242738614442906,
                 "cbd": [
                     2504.8700684462606,
@@ -140,10 +140,10 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 3.917049099966604,
-                "service_other": 10.951929791923625,
-                "service_own": 28.503806033404565,
+                "population<outside_municipality": 1,
+                "population<within_municipality": 3.917049099966604,
+                "service<outside_municipality": 10.951929791923625,
+                "service<within_municipality": 28.503806033404565,
                 "shops": 22.242738614442906,
                 "cbd": [
                     2504.8700684462606,
@@ -165,10 +165,10 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 3.917049099966604,
-                "service_other": 10.951929791923625,
-                "service_own": 28.503806033404565,
+                "population<outside_municipality": 1,
+                "population<within_municipality": 3.917049099966604,
+                "service<outside_municipality": 10.951929791923625,
+                "service<within_municipality": 28.503806033404565,
                 "shops": 22.242738614442906,
                 "cbd": [
                     2504.8700684462606,

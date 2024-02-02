@@ -93,15 +93,15 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 4.683632587654055,
-                "shops_other": 571.573389012251,
-                "shops_own": [
+                "population<outside_municipality": 1,
+                "population<within_municipality": 4.683632587654055,
+                "shops<outside_municipality": 571.573389012251,
+                "shops<within_municipality": [
                     366.13541942947086,
                     1079.7956123126799
                 ],
-                "service_other": 44.79903372769062,
-                "service_own": [
+                "service<outside_municipality": 44.79903372769062,
+                "service<within_municipality": [
                     81.39077090214369,
                     158.26360899252816
                 ],
@@ -130,15 +130,15 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 4.683632587654055,
-                "shops_other": 571.573389012251,
-                "shops_own": [
+                "population<outside_municipality": 1,
+                "population<within_municipality": 4.683632587654055,
+                "shops<outside_municipality": 571.573389012251,
+                "shops<within_municipality": [
                     366.13541942947086,
                     1079.7956123126799
                 ],
-                "service_other": 44.79903372769062,
-                "service_own": [
+                "service<outside_municipality": 44.79903372769062,
+                "service<within_municipality": [
                     81.39077090214369,
                     158.26360899252816
                 ],
@@ -159,15 +159,15 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 4.683632587654055,
-                "shops_other": 571.573389012251,
-                "shops_own": [
+                "population<outside_municipality": 1,
+                "population<within_municipality": 4.683632587654055,
+                "shops<outside_municipality": 571.573389012251,
+                "shops<within_municipality": [
                     366.13541942947086,
                     1079.7956123126799
                 ],
-                "service_other": 44.79903372769062,
-                "service_own": [
+                "service<outside_municipality": 44.79903372769062,
+                "service<within_municipality": [
                     81.39077090214369,
                     158.26360899252816
                 ],
@@ -191,15 +191,15 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_other": 1,
-                "population_own": 4.683632587654055,
-                "shops_other": 571.573389012251,
-                "shops_own": [
+                "population<outside_municipality": 1,
+                "population<within_municipality": 4.683632587654055,
+                "shops<outside_municipality": 571.573389012251,
+                "shops<within_municipality": [
                     366.13541942947086,
                     1079.7956123126799
                 ],
-                "service_other": 44.79903372769062,
-                "service_own": [
+                "service<outside_municipality": 44.79903372769062,
+                "service<within_municipality": [
                     81.39077090214369,
                     158.26360899252816
                 ],

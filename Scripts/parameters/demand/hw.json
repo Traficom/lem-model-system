@@ -103,11 +103,11 @@
                     108.63648967990468,
                     230.0339820585097
                 ],
-                "workplaces_own": [
+                "workplaces<within_municipality": [
                     1.3693934320750605,
                     2.4767515567319744
                 ],
-                "workplaces_other": 1
+                "workplaces<outside_municipality": 1
             }
         },
         "transit_work": {
@@ -132,11 +132,11 @@
                     108.63648967990468,
                     230.0339820585097
                 ],
-                "workplaces_own": [
+                "workplaces<within_municipality": [
                     1.3693934320750605,
                     2.4767515567319744
                 ],
-                "workplaces_other": 1
+                "workplaces<outside_municipality": 1
             }
         },
         "bike": {
@@ -154,11 +154,11 @@
                     108.63648967990468,
                     230.0339820585097
                 ],
-                "workplaces_own": [
+                "workplaces<within_municipality": [
                     1.3693934320750605,
                     2.4767515567319744
                 ],
-                "workplaces_other": 1
+                "workplaces<outside_municipality": 1
             }
         },
         "walk": {
@@ -178,11 +178,11 @@
                     108.63648967990468,
                     230.0339820585097
                 ],
-                "workplaces_own": [
+                "workplaces<within_municipality": [
                     1.3693934320750605,
                     2.4767515567319744
                 ],
-                "workplaces_other": 1
+                "workplaces<outside_municipality": 1
             }
         }
     },

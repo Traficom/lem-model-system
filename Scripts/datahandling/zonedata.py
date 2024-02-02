@@ -103,13 +103,13 @@ class ZoneData:
         self["own_zone_area_sqrt"] = numpy.sqrt(self["own_zone_area"])
         # Create matrix where value is 1 if origin and destination is in
         # same municipality
-        own_municipality = pandas.DataFrame(
+        within_municipality = pandas.DataFrame(
             False, self.zone_numbers, self.zone_numbers)
         intervals = ZoneIntervals("municipalities")
         for i in intervals:
-            own_municipality.loc[intervals[i], intervals[i]] = True
-        self["own"] = own_municipality.values
-        self["other"] = ~own_municipality.values
+            within_municipality.loc[intervals[i], intervals[i]] = True
+        self["within_municipality"] = within_municipality.values
+        self["outside_municipality"] = ~within_municipality.values
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = pandas.Series(False, self.zone_numbers[bounds])
@@ -203,8 +203,8 @@ class ZoneData:
         try:
             val = self._values[key]
         except KeyError as err:
-            keyl: List[str] = key.split('_')
-            if keyl[1] in ("own", "other"):
+            keyl: List[str] = key.split('<')
+            if keyl[1] in ("within_municipality", "outside_municipality"):
                 # If parameter is only for own municipality or for all
                 # municipalities except own, array is multiplied by
                 # bool matrix

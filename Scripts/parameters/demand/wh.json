@@ -97,8 +97,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_own": 1.3693934320750605,
-                "population_other": 1
+                "population<within_municipality": 1.3693934320750605,
+                "population<outside_municipality": 1
             }
         },
         "transit_work": {
@@ -114,8 +114,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_own": 1.3693934320750605,
-                "population_other": 1
+                "population<within_municipality": 1.3693934320750605,
+                "population<outside_municipality": 1
             }
         },
         "bike": {
@@ -129,8 +129,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_own": 1.3693934320750605,
-                "population_other": 1
+                "population<within_municipality": 1.3693934320750605,
+                "population<outside_municipality": 1
             }
         },
         "walk": {
@@ -146,8 +146,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "population_own": 1.3693934320750605,
-                "population_other": 1
+                "population<within_municipality": 1.3693934320750605,
+                "population<outside_municipality": 1
             }
         }
     },

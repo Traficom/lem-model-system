@@ -56,8 +56,8 @@
             },
             "attraction_size": {
                 "workplaces": 51.10448102721859,
-                "population_own": 20.97622199539852,
-                "population_other": 1.0
+                "population<within_municipality": 20.97622199539852,
+                "population<outside_municipality": 1.0
             }
         }
     },

@@ -62,8 +62,8 @@
                 "service": 102.563902082003,
                 "shops": 222.29744155065126,
                 "comprehensive_schools": 10.892468037536473,
-                "population_own": 27.85603719152218,
-                "population_other": 1
+                "population<within_municipality": 27.85603719152218,
+                "population<outside_municipality": 1
             }
         },
         "transit_leisure": {
@@ -80,8 +80,8 @@
                 "service": 102.563902082003,
                 "shops": 222.29744155065126,
                 "comprehensive_schools": 10.892468037536473,
-                "population_own": 27.85603719152218,
-                "population_other": 1
+                "population<within_municipality": 27.85603719152218,
+                "population<outside_municipality": 1
             }
         }
     },
