@@ -6,12 +6,12 @@ import openmatrix as omx # type: ignore
 import numpy # type: ignore
 import pandas
 from contextlib import contextmanager
+from tables.exceptions import NodeError
+
 if TYPE_CHECKING:
     from datahandling.zonedata import BaseZoneData
-
 import utils.log as log
 import parameters.assignment as param
-import parameters.zone as zone_param
 
 @contextmanager
 def temp_cd(path: Path):
@@ -49,8 +49,10 @@ class MatrixData:
             # (https://github.com/PyTables/PyTables/issues/757)
             mtxfile = MatrixFile(
                 omx.open_file(file_name, m), zone_numbers, transport_classes)
-        yield mtxfile
-        mtxfile.close()
+        try:
+            yield mtxfile
+        finally:
+            mtxfile.close()
 
 
 class MatrixFile:
@@ -125,7 +127,11 @@ class MatrixFile:
         return mtx
 
     def __setitem__(self, mode, data):
-        self._file[mode] = data
+        try:
+            self._file[mode] = data
+        except NodeError:
+            del self._file[mode]
+            self._file[mode] = data
 
     @property
     def zone_numbers(self):
@@ -137,7 +143,7 @@ class MatrixFile:
 
     @mapping.setter
     def mapping(self, zone_numbers):
-        self._file.create_mapping("zone_number", zone_numbers)
+        self._file.create_mapping("zone_number", zone_numbers, overwrite=True)
 
     @property
     def matrix_list(self):

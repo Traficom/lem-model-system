@@ -75,7 +75,7 @@ def main(args):
             EmmeProject(emme_project_path),
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
-            save_matrices=args.save_matrices,
+            save_matrices=True,
             first_matrix_id=args.first_matrix_id,
             use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,
@@ -124,6 +124,14 @@ def main(args):
         i += 1
     
     if not log_extra["status"]["converged"]: log.warn("Model has not converged")
+
+    # delete emme matrices
+    if not args.save_matrices and not args.do_not_use_emme:
+        matrix_ids = [mtx.id for mtx
+                      in ass_model.emme_project.modeller.emmebank.matrices()]
+        for idx in matrix_ids:
+            ass_model.emme_project.modeller.emmebank.delete_matrix(idx)
+        log.info("EMME matrices deleted")
 
     # delete emme strategy files for scenarios
     if args.del_strat_files:

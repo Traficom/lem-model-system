@@ -127,15 +127,13 @@ class AssignmentPeriod(Period):
         self._set_bike_vdfs()
         self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
 
-    def assign(self, matrices: dict, iteration: Union[int,str]) -> Dict:
+    def assign(self, iteration: Union[int,str]) -> Dict:
         """Assign cars, bikes and transit for one time period.
 
         Get travel impedance matrices for one time period from assignment.
 
         Parameters
         ----------
-        matrices : dict
-            Assignment class (car_work/transit/...) : numpy 2-d matrix
         iteration : int or str
             Iteration number (0, 1, 2, ...) or "init" or "last"
 
@@ -145,8 +143,6 @@ class AssignmentPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
-        for mtx in matrices:
-            self._set_matrix(mtx, matrices[mtx])
         if iteration==0:
             self._set_car_and_transit_vdfs()
             if not self._separate_emme_scenarios:
@@ -366,7 +362,7 @@ class AssignmentPeriod(Period):
                 link.modes -= {main_mode}
         self.emme_scenario.publish_network(network)
 
-    def _set_matrix(self,
+    def set_matrix(self,
                     ass_class: str,
                     matrix: numpy.ndarray,
                     matrix_type: Optional[str] = "demand"):
@@ -409,11 +405,13 @@ class AssignmentPeriod(Period):
                 elif mtx_type == "time" and ass_class in param.transit_classes:
                     mtx = self._extract_transit_time_from_gcost(ass_class)
                 else:
-                    mtx = self._get_matrix(ass_class, mtx_type)
+                    mtx = self.get_matrix(ass_class, mtx_type)
                 matrices[ass_class] = mtx
+                if numpy.any(mtx > 1e10):
+                    log.warn(f"Matrix with infinite values: {mtx_type} : {ass_class}.")
         return matrices
 
-    def _get_matrix(self,
+    def get_matrix(self,
                     ass_class: str, 
                     matrix_type: str) -> numpy.ndarray:
         """Get matrix with type pair (e.g., demand, car_work).
@@ -441,15 +439,15 @@ class AssignmentPeriod(Period):
         To get travel time, monetary cost is removed from generalized cost.
         """
         vot_inv = param.vot_inv[param.vot_classes[ass_class]]
-        gcost = self._get_matrix(ass_class, "gen_cost")
-        cost = self._get_matrix(ass_class, "cost")
-        dist = self._get_matrix(ass_class, "dist")
+        gcost = self.get_matrix(ass_class, "gen_cost")
+        cost = self.get_matrix(ass_class, "cost")
+        dist = self.get_matrix(ass_class, "dist")
         if ass_class in ("trailer_truck", "truck"):
             # toll costs are not applied to freight
             time = gcost - vot_inv*param.freight_dist_unit_cost[ass_class]*dist
         else:
             time = gcost - vot_inv*(cost + self.dist_unit_cost*dist)
-        self._set_matrix(ass_class, time, "time")
+        self.set_matrix(ass_class, time, "time")
         return time
 
     def _extract_transit_time_from_gcost(self,
@@ -460,18 +458,18 @@ class AssignmentPeriod(Period):
         To get travel time, monetary cost is removed from generalized cost.
         """
         vot_inv = param.vot_inv[param.vot_classes[transit_class]]
-        boards = self._get_matrix(transit_class, "num_board") > 0
+        boards = self.get_matrix(transit_class, "num_board") > 0
         transfer_penalty = boards * param.transfer_penalty[transit_class]
-        gcost = self._get_matrix(transit_class, "gen_cost")
-        cost = (self._get_matrix(transit_class, "cost")
-                + self._get_matrix(transit_class, "board_cost"))
-        time = self._get_matrix(transit_class, "time")
+        gcost = self.get_matrix(transit_class, "gen_cost")
+        cost = (self.get_matrix(transit_class, "cost")
+                + self.get_matrix(transit_class, "board_cost"))
+        time = self.get_matrix(transit_class, "time")
         path_found = cost < 999999
         time[path_found] = (gcost[path_found]
                             - vot_inv*cost[path_found]
                             - transfer_penalty[path_found])
-        self._set_matrix(transit_class, time, "time")
-        self._set_matrix(transit_class, cost, "cost")
+        self.set_matrix(transit_class, time, "time")
+        self.set_matrix(transit_class, cost, "cost")
         return time
 
     def _calc_background_traffic(self, include_trucks: bool = False):

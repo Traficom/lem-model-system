@@ -5,6 +5,7 @@ import numpy # type: ignore
 from datatypes.demand import Demand
 from datatypes.tour import Tour
 import utils.log as log
+from assignment.abstract_assignment import AssignmentModel
 import parameters.departure_time as param
 from parameters.assignment import transport_classes
 
@@ -117,6 +118,7 @@ class DepartureTimeModel:
             large_mtx[c_0:c_n, r_0:r_n] += share[1] * mtx.T
             log.warn("{} {} matrix not matching {} demand shares. Resorted to backup demand shares.".format(
                 mtx.shape, ass_class, len(demand_share[0])))
+        self.demand[time_period][ass_class] = large_mtx
 
     def _add_3d_demand(self,
                        demand: Union[Demand, Tour],
@@ -152,3 +154,25 @@ class DepartureTimeModel:
         self._add_2d_demand(share, "van", time_period, car_demand, (0, 0))
         self._add_2d_demand(
             (1, 0), "van", time_period, mtx["truck"][0:n, 0:n], (0, 0))
+
+
+class DirectDepartureTimeModel (DepartureTimeModel):
+    def __init__(self, assignment_model: AssignmentModel):
+        self._ass_model = assignment_model
+        DepartureTimeModel.__init__(
+            self, assignment_model.nr_zones, assignment_model.time_periods)
+
+    def _create_container(self, *args):
+        self.demand = {ap.name: EmmeMatrixContainer(ap)
+            for ap in self._ass_model.assignment_periods}
+
+
+class EmmeMatrixContainer:
+    def __init__(self, assignment_period) -> None:
+        self._assignment_period = assignment_period
+
+    def __getitem__(self, key: str) -> numpy.ndarray:
+        return self._assignment_period.get_matrix(key, "demand")
+
+    def __setitem__(self, key: str, data: Any):
+        self._assignment_period.set_matrix(key, data)

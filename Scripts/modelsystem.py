@@ -146,11 +146,15 @@ class ModelSystem:
         # Tour generation
         self.dm.generate_tours()
         
-        # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
                 purpose_impedance = purpose.transform_impedance(
                     previous_iter_impedance)
+        previous_iter_impedance.clear()
+
+        # Assigning of tours to mode, destination and time period
+        for purpose in self.dm.tour_purposes:
+            if isinstance(purpose, SecDestPurpose):
                 purpose.generate_tours()
                 if is_last_iteration:
                     for mode in purpose.model.dest_choice_param:
@@ -192,8 +196,7 @@ class ModelSystem:
 
         # create attributes and background variables to network
         self.ass_model.prepare_network(self.zdata_forecast.car_dist_cost)
-        self.dtm = dt.DepartureTimeModel(
-            self.ass_model.nr_zones, self.ass_model.time_periods)
+        self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
         if not self.ass_model.use_free_flow_speeds:
             self.ass_model.init_assign()
@@ -215,7 +218,6 @@ class ModelSystem:
                     for ass_class in transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             impedance[tp] = ap.assign(
-                self.dtm.demand[tp],
                 iteration=("last" if is_end_assignment else 0))
             if tp == self.ass_model.time_periods[0]:
                 self._update_ratios(impedance[tp], tp)
@@ -311,7 +313,7 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period " + tp)
-            impedance[tp] = ap.assign(self.dtm.demand[tp], iteration)
+            impedance[tp] = ap.assign(iteration)
             if tp == "aht":
                 self._update_ratios(impedance[tp], tp)
             if iteration=="last":
@@ -612,9 +614,6 @@ class AgentModelSystem(ModelSystem):
                 thread.join()
         for purpose in self.dm.tour_purposes:
             purpose.print_data()
-        for person in self.dm.population:
-            for tour in person.tours:
-                self.dtm.add_demand(tour)
         if is_last_iteration:
             random.seed(zone_param.population_draw)
             self.dm.predict_income()
@@ -632,6 +631,16 @@ class AgentModelSystem(ModelSystem):
                     self.resultdata.print_line(str(tour), fname1)
             log.info("Results printed to files {} and {}".format(
                 fname0, fname1))
+        previous_iter_impedance.clear()
+        dtm = dt.DepartureTimeModel(
+            self.ass_model.nr_zones, self.ass_model.time_periods,
+            self.travel_modes)
+        for person in self.dm.population:
+            for tour in person.tours:
+                dtm.add_demand(tour)
+        for tp in dtm.demand:
+            for ass_class in dtm.demand[tp]:
+                self.dtm.demand[tp][ass_class] = dtm.demand[tp][ass_class]
         log.info("Demand calculation completed")
 
     def _distribute_tours(self, mode, origs, sec_dest_tours, impedance):

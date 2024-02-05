@@ -38,20 +38,23 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.calc_transit_cost(fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
-        demand = {
-            "car_work": car_matrix,
-            "car_leisure": car_matrix,
-            "transit_work": car_matrix,
-            "transit_leisure": car_matrix,
-            "car_first_mile": car_matrix,
-            "car_last_mile": car_matrix,
-            "bike": car_matrix,
-            "trailer_truck": car_matrix,
-            "truck": car_matrix,
-            "van": car_matrix,
-        }
+        demand = [
+            "car_work",
+            "car_leisure",
+            "transit_work",
+            "transit_leisure",
+            "car_first_mile",
+            "car_last_mile",
+            "bike",
+            "trailer_truck",
+            "truck",
+            "van",
+        ]
         ass_model.init_assign()
-        ass_model.assignment_periods[0].assign(demand, "last")
+        for ass_class in demand:
+            ass_model.assignment_periods[0].set_matrix(
+                ass_class, car_matrix)
+        ass_model.assignment_periods[0].assign("last")
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..", "test_data", "Results", "test"))

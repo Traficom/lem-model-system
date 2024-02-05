@@ -394,6 +394,9 @@ class EmmeBank:
         if idx in self._matrices:
             return self._matrices[idx]
 
+    def matrices(self):
+        return iter(self._matrices.values())
+
     def create_matrix(self, idx: int, default_value=0.0):
         if idx in self._matrices:
             raise ExistenceError("Matrix already exists: {}".format(idx))
@@ -402,6 +405,9 @@ class EmmeBank:
                 idx, len(next(self.scenarios()).zone_numbers), default_value)
             self._matrices[idx] = matrix
             return matrix
+
+    def delete_matrix(self, idx):
+        del self._matrices[idx]
 
     def function(self, idx: int):
         if idx in self._functions:

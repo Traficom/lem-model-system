@@ -71,15 +71,12 @@ class MockPeriod(Period):
         return zone_numbers
 
     def assign(self, 
-               matrices: Dict[str, numpy.ndarray],
                iteration: Optional[Union[int,str]]=None) -> Dict[str,Dict[str,numpy.ndarray]]:
         """Assign cars, bikes and transit for one time period.
         Get travel impedance matrices for one time period from assignment.
         
         Parameters
         ----------
-        matrices: dict
-            Assignment class (car_work/transit/...) : numpy 2-d matrix
         iteration: int or str
             Iteration number (0, 1, 2, ...) or "last"
 
@@ -89,11 +86,6 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        with self.matrices.open(
-                "demand", self.name, self.zone_numbers, m='w') as mtx:
-            for ass_class in matrices:
-                mtx[ass_class] = matrices[ass_class]
-        log.info("Saved demand matrices for " + str(self.name))
         mtxs = {mtx_type: self._get_matrices(mtx_type)
             for mtx_type in ("time", "cost", "dist")}
         if iteration != "last":
@@ -118,4 +110,20 @@ class MockPeriod(Period):
         """
         with self.matrices.open(mtx_type, self.name) as mtx:
             matrices = {mode: mtx[mode] for mode in mtx.matrix_list}
+        for mode in matrices:
+            if numpy.any(matrices[mode] > 1e10):
+                log.warn(f"Matrix with infinite values: {mtx_type} : {mode}.")
         return matrices
+
+    def get_matrix(self,
+                    ass_class: str,
+                    matrix_type: str) -> numpy.ndarray:
+        with self.matrices.open(matrix_type, self.name) as mtx:
+            matrix = mtx[ass_class]
+        return matrix
+
+    def set_matrix(self,
+                    ass_class: str,
+                    matrix: numpy.ndarray):
+        with self.matrices.open("demand", self.name, self.zone_numbers, m='a') as mtx:
+            mtx[ass_class] = matrix

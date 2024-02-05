@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, List, Union
+import numpy
 
 
 class AssignmentModel:
@@ -46,5 +47,17 @@ class Period:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def assign(self, matrices: Dict[Any, Any], iteration: Union[int, str]) -> Dict[Any, Any]:
+    def assign(self, iteration: Union[int, str]) -> Dict[Any, Any]:
+        pass
+
+    @abstractmethod
+    def get_matrix(self,
+                    ass_class: str,
+                    matrix_type: str) -> numpy.ndarray:
+        pass
+
+    @abstractmethod
+    def set_matrix(self,
+                    ass_class: str,
+                    matrix: numpy.ndarray):
         pass
