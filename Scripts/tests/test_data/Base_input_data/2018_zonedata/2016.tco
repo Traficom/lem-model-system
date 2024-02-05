@@ -9,7 +9,7 @@
 # start: Matkahuolto 44 trips start fare
 # dist: Matkahuolto 44 trips distance fare
 #
-	fare	exclusive
+node_label	fare	exclusive
 JD	46	Jarvenpaa
 AB	59.7
 BC	59.7

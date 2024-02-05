@@ -3,7 +3,7 @@
 # caruse: share of population that is car main user		
 # cardens: cars per inhabitants		
 #		
-	caruse	cardens
+data_id	caruse	cardens
 102	0	0.256
 103	0.3382	0.226
 244	0.3387	0.206

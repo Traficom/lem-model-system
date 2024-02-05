@@ -6,7 +6,7 @@
 # sh_logi: logistics workplaces as share of total number of workplaces					
 # sh_indu: industry workplaces as share of total number of workplaces					
 #					
-	total	sh_serv	sh_shop	sh_logi	sh_indu
+data_id	total	sh_serv	sh_shop	sh_logi	sh_indu
 102	4853	0.0805	0.0495	0.2724	0.0007
 103	5348	0.0904	0.001	0	0.1084
 244	229	0.7707	0.0166	0.0079	0.0096

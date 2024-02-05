@@ -72,6 +72,10 @@ class FileReader:
         data: pandas.DataFrame = pandas.read_csv(
             path, delim_whitespace=True, keep_default_na=False,
             na_values="", comment='#', header=header)
+        for index_column in ["data_id", "zone_id", "node_label"]:
+            if index_column in data.columns:
+                data = data.set_index(index_column)
+                break
         if squeeze:
             data = data.squeeze()
         if data.index.is_numeric() and data.index.hasnans:
@@ -98,16 +102,18 @@ class FileReader:
             if map_path is not None:
                 log_path = map_path
                 mapping = pandas.read_csv(map_path, delim_whitespace=True).squeeze()
+                mapping = mapping.set_index("data_id")
                 if "total" in data.columns:
                     # If file contains total and shares of total,
                     # shares are aggregated as averages with total as weight
-                    data = data.groupby(mapping).agg(avg, weights=data["total"])
-                elif "detach" in data.columns:
-                    funcs = dict.fromkeys(data.columns, "sum")
-                    funcs["detach"] = "mean"
-                    data = data.groupby(mapping).agg(funcs)
+                    data = data.groupby(mapping.zone_id).agg(avg, weights=data["total"])
                 else:
-                    data = data.groupby(mapping).sum()
+                    share_cols = [col for col in data.columns if "sh_" in col]
+                    avg_cols = [col for col in data.columns if "avg_" in col]
+                    funcs = dict.fromkeys(data.columns, "sum")
+                    for col in share_cols + avg_cols:
+                        funcs[col] = "mean"
+                    data = data.groupby(mapping.zone_id).agg(funcs)
                 data.index = data.index.astype(int)
             else:
                 log_path = path

@@ -4,7 +4,7 @@
 # secndry: Students in upper secondary education (gymnasium, vocational)
 # tertiary: Students in tertiary education (university, college, polytechnic)
 #
-	compreh	secndry	tertiary
+data_id	compreh	secndry	tertiary
 102	0	0	0
 103	0	0	0
 244	0	0	0

@@ -3,7 +3,7 @@
 # parcosw: parking cost at workplace		
 # parcose: parking cost during errand		
 #		
-	parcosw	parcose
+data_id	avg_parcosw	avg_parcose
 102	4	4
 103	4	4
 244	0	0
