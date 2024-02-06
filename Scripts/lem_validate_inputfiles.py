@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
 import os
 import sys
-from typing import List, Union
+import numpy
+from typing import List, Dict, Union
 
 import utils.config
 import utils.log as log
@@ -14,8 +15,6 @@ import parameters.assignment as param
 
 def main(args):
     base_zonedata_path = os.path.join(args.baseline_data_path, "2018_zonedata")
-    base_matrices_path = os.path.join(
-        args.baseline_data_path, "base_matrices", args.submodel)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -52,73 +51,36 @@ def main(args):
             base_zonedata_path)
         log.error(msg)
         raise ValueError(msg)
-    if not os.path.exists(base_matrices_path):
-        msg = "Baseline matrices' directory '{}' does not exist.".format(
-            base_matrices_path)
-        log.error(msg)
-        raise ValueError(msg)
+
+    zone_numbers: Dict[str, numpy.array] = {}
     time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
-    if args.do_not_use_emme:
-        mock_result_path = os.path.join(
-            args.results_path, args.scenario_name, args.submodel, "Matrices")
-        if not os.path.exists(mock_result_path):
-            msg = "Mock Results directory {} does not exist.".format(
-                mock_result_path)
-            log.error(msg)
-            raise NameError(msg)
-        assignment_model = MockAssignmentModel(
-            MatrixData(mock_result_path), args.free_flow_assignment, time_periods)
-        zone_numbers = assignment_model.zone_numbers
-    else:
-        emp_path = emme_paths[0]
-        if not os.path.isfile(emp_path):
-            msg = ".emp project file not found in given '{}' location.".format(
-                emp_path)
-            log.error(msg)
-            raise ValueError(msg)
-        import inro.emme.desktop.app as _app # type: ignore
-        app = _app.start_dedicated(
-            project=emp_path, visible=False, user_initials="HSL")
-        scen = app.data_explorer().active_database().core_emmebank.scenario(
-            first_scenario_ids[0])
-        if scen is None:
-            msg = "Project {} has no scenario {}".format(emp_path, first_scenario_ids[0])
-            log.error(msg)
-            raise ValueError(msg)
-        else:
-            zone_numbers = scen.zone_numbers
-        app.close()
-    # Check base zonedata
-    base_zonedata = ZoneData(base_zonedata_path, zone_numbers, f"{args.submodel}.zmp")
-    # Check base matrices
-    if not args.free_flow_assignment:
-        matrixdata = MatrixData(base_matrices_path)
-        for tp in time_periods:
-            with matrixdata.open("demand", tp, zone_numbers) as mtx:
-                for ass_class in param.transport_classes:
-                    a = mtx[ass_class]
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")
     for i, emp_path in enumerate(emme_paths):
         log.info("Checking input data for scenario #{} ...".format(i))
 
-        # Check forecasted zonedata
-        if not os.path.exists(forecast_zonedata_paths[i]):
-            msg = "Forecast data directory '{}' does not exist.".format(
-                forecast_zonedata_paths[i])
-            log.error(msg)
-            raise ValueError(msg)
-        forecast_zonedata = ZoneData(
-            forecast_zonedata_paths[i], zone_numbers, f"{args.submodel}.zmp")
-
         # Check network
-        if not args.do_not_use_emme:
+        if args.do_not_use_emme:
+            mock_result_path = os.path.join(
+                args.results_path, args.scenario_name, args.submodel[i],
+                "Matrices")
+            if not os.path.exists(mock_result_path):
+                msg = "Mock Results directory {} does not exist.".format(
+                    mock_result_path)
+                log.error(msg)
+                raise NameError(msg)
+            assignment_model = MockAssignmentModel(
+                MatrixData(mock_result_path), args.free_flow_assignment,
+                time_periods)
+            zone_numbers[args.submodel[i]] = assignment_model.zone_numbers
+        else:
             if not os.path.isfile(emp_path):
                 msg = ".emp project file not found in given '{}' location.".format(
                     emp_path)
                 log.error(msg)
                 raise ValueError(msg)
+            import inro.emme.desktop.app as _app # type: ignore
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
@@ -163,19 +125,16 @@ def main(args):
                     attr_space)
                 log.error(msg)
                 raise ValueError(msg)
-            for scen in emmebank.scenarios():
-                if scen.zone_numbers != zone_numbers:
-                    log.warn("Scenarios with different zones found in EMME bank!")
             scen = emmebank.scenario(first_scenario_ids[i])
+            zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
-                msg = "Project {} has no scenario {}".format(emp_path, first_scenario_ids[0])
+                msg = "Project {} has no scenario {}".format(
+                    emp_path, first_scenario_ids[0])
                 log.error(msg)
                 raise ValueError(msg)
-            elif scen.zone_numbers != zone_numbers:
-                msg = "Zone numbers do not match for EMME scenario {}".format(
-                    scen.id)
-                log.error(msg)
-                raise ValueError(msg)
+            for scenario in emmebank.scenarios():
+                if scenario.zone_numbers != scen.zone_numbers:
+                    log.warn("Scenarios with different zones found in EMME bank!")
             for attr in link_attrs + line_attrs:
                 if scen.extra_attribute(attr) is None:
                     msg = "Extra attribute {} missing from scenario {}".format(
@@ -184,6 +143,36 @@ def main(args):
                     raise ValueError(msg)
             validate(scen.get_network(), time_periods)
             app.close()
+
+        # Check forecasted zonedata
+        if not os.path.exists(forecast_zonedata_paths[i]):
+            msg = "Forecast data directory '{}' does not exist.".format(
+                forecast_zonedata_paths[i])
+            log.error(msg)
+            raise ValueError(msg)
+        forecast_zonedata = ZoneData(
+            forecast_zonedata_paths[i], zone_numbers[args.submodel[i]],
+            f"{args.submodel[i]}.zmp")
+
+    for submodel in zone_numbers:
+        # Check base matrices
+        base_matrices_path = os.path.join(
+            args.baseline_data_path, "base_matrices", submodel)
+        if not os.path.exists(base_matrices_path):
+            msg = "Baseline matrices' directory '{}' does not exist.".format(
+                base_matrices_path)
+            log.error(msg)
+            raise ValueError(msg)
+        if not args.free_flow_assignment:
+            matrixdata = MatrixData(base_matrices_path)
+            for tp in time_periods:
+                with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
+                    for ass_class in param.transport_classes:
+                        a = mtx[ass_class]
+
+        # Check base zonedata
+        base_zonedata = ZoneData(
+            base_zonedata_path, zone_numbers[submodel], f"{submodel}.zmp")
 
     log.info("Successfully validated all input files")
 
@@ -242,7 +231,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--submodel",
         type=str,
-        default=config.SUBMODEL,
+        nargs="+",
+        required=True,
         help="Name of submodel, used for choosing appropriate zone mapping"),
     parser.add_argument(
         "--emme-paths",

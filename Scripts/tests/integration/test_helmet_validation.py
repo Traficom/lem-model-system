@@ -26,7 +26,7 @@ class Args:
     scenario_name = "test"
     do_not_use_emme = True
     free_flow_assignment = False
-    submodel = "uusimaa"
+    submodel = ["uusimaa"]
 
 
 class ValdidationTest(unittest.TestCase):
