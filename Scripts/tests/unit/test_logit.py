@@ -82,5 +82,5 @@ class LogitModelTest(unittest.TestCase):
         self.assertIs(type(prob), numpy.ndarray)
         self.assertEquals(prob.ndim, 2)
         self.assertEquals(prob.shape[1], 9)
-        self.assertNotEquals(prob[0, 1], 0)
+        self.assertNotEquals(prob[5, 0], 0)
         assert numpy.isfinite(prob).all()

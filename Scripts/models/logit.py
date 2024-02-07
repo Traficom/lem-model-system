@@ -169,13 +169,16 @@ class LogitModel:
         """
         for i in b:
             try: # If only one parameter
-                exps *= numpy.power(impedance[i] + 1, b[i])
-            except ValueError: # Separate sub-region parameters
+                imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
+                exps *= numpy.power(imp, b[i])
+            except TypeError: # Separate sub-region parameters
                 for j, bounds in enumerate(self.sub_bounds):
-                    exps[bounds, :] *= numpy.power(
-                        impedance[i][bounds, :] + 1, b[i][j])
+                    imp = impedance[i][bounds, :]
+                    if b[i][j] < 0:
+                        imp += 1
+                    exps[bounds, :] *= numpy.power(imp, b[i][j])
         return exps
-    
+
     def _add_zone_util(self, utility, b, generation=False):
         """Adds simple linear zone terms to utility.
 
@@ -430,9 +433,15 @@ class ModeDestModel(LogitModel):
     def _calc_prob(self, mode_expsum):
         prob = {}
         for mode in self.mode_choice_param:
-            mode_prob = self.mode_exps[mode] / mode_expsum
-            dest_prob = (self._dest_exps[mode].T
-                         / self.dest_expsums[mode]["logsum"])
+            mode_exps = self.mode_exps[mode]
+            mode_prob = numpy.divide(
+                mode_exps, mode_expsum, out=numpy.zeros_like(mode_exps),
+                where=mode_expsum!=0)
+            dest_exps = self._dest_exps[mode].T
+            dest_expsum = self.dest_expsums[mode]["logsum"]
+            dest_prob = numpy.divide(
+                dest_exps, dest_expsum, out=numpy.zeros_like(dest_exps),
+                where=dest_expsum!=0)
             prob[mode] = mode_prob * dest_prob
         return prob
 
