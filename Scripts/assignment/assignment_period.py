@@ -355,7 +355,8 @@ class AssignmentPeriod(Period):
         main_mode = network.mode(param.main_mode)
         bike_mode = network.mode(param.bike_mode)
         for link in network.links():
-            link.volume_delay_func = 98
+            if link.volume_delay_func != 90:
+            	link.volume_delay_func = 98
             if bike_mode in link.modes:
                 link.modes |= {main_mode}
             elif main_mode in link.modes:
