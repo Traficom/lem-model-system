@@ -192,6 +192,15 @@ class AssignmentPeriod(Period):
 
         mtxs = {imp_type: self._get_matrices(imp_type, iteration=="last")
             for imp_type in ("time", "cost", "dist")}
+        for mode in mtxs["time"]:
+            try:
+                mtx = numpy.divide(mtxs["dist"][mode], mtxs["time"][mode]/60,
+                                   out=numpy.zeros_like(mtxs["time"][mode]), 
+                                   where=mtxs["time"][mode]>0)
+                v = [round(numpy.quantile(mtx, q)) for q in [0.00, 0.50, 1.00]]
+                log.debug(f"Min, median, max of OD speed: {mode} : {v[0]} - {v[1]} - {v[2]} km/h")
+            except KeyError:
+                pass
         # fix the emme path analysis results
         # (dist and cost are zero if path not found but we want it to
         # be the default value 999999)
