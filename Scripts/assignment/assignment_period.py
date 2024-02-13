@@ -306,13 +306,17 @@ class AssignmentPeriod(Period):
                 # Link with no car traffic
                 link.volume_delay_func = 0
             if self.use_stored_speeds:
-                car_time = link[car_time_attr]
-                if 0 < car_time < 1440:
-                    link.data2 = (link.length / car_time) * 60
-                else:
-                    msg = f"Car travel time on link {link.id} is {car_time}"
-                    log.error(msg)
-                    raise ValueError(msg)
+                if car_mode in link.modes:
+                    car_time = link[car_time_attr]
+                    if 0 < car_time < 1440:
+                        link.data2 = (link.length / car_time) * 60
+                    elif car_time == 0:
+                        msg = f"Car_time attribute on link {link.id} is zero. Free flow speed used on link."
+                        log.warn(msg)
+                    else:
+                        msg = f"Car travel time on link {link.id} is {car_time}"
+                        log.error(msg)
+                        raise ValueError(msg)
 
             # Transit function definition
             for modeset in param.transit_delay_funcs:
