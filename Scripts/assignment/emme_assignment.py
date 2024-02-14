@@ -282,8 +282,9 @@ class EmmeAssignmentModel(AssignmentModel):
         from_mtx = ass_period_1.emme_matrices[ass_class][mtx_type]
         to_mtx = ass_period_2.emme_matrices[ass_class][mtx_type]
         description = f"{mtx_type}_{ass_class}_{ass_period_2.name}"
+        scenario = self.mod_scenario
         self.emme_project.copy_matrix(
-            from_mtx, to_mtx, description, description)
+            from_mtx, to_mtx, description, description, scenario)
 
     def _extra(self, attr: str) -> str:
         """Add prefix "@" and suffix "_vrk".
