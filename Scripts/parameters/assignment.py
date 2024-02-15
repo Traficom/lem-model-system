@@ -87,7 +87,7 @@ bikepath_vdfs = (
 )
 # Transit delay function ids
 transit_delay_funcs = {
-    ("bus", "bgde"): {
+    ("bus", "bge"): {
         "no_buslane": 1,
         "buslane": 2,
     },
