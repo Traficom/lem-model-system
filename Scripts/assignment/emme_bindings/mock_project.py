@@ -63,6 +63,10 @@ class MockProject:
             if file_name.startswith("extra"):
                 self.import_extra_attributes(
                     os.path.join(scenario_dir, file_name), scenario=scenario)
+        for file_name in os.listdir(scenario_dir):
+            if file_name.startswith("netfield"):
+                self.import_network_fields(
+                    os.path.join(scenario_dir, file_name), scenario=scenario)
 
     def create_matrix(self, 
                       matrix_id: int, 
@@ -95,6 +99,23 @@ class MockProject:
             if overwrite:
                 scenario.extra_attribute(extra_attribute_name).initialize(
                     extra_attribute_default_value)
+                
+    def create_network_field(self, 
+                             network_field_type: str,
+                             network_field_name: str,
+                             network_field_description: str,
+                             network_field_atype: str,
+                             overwrite: bool = False,
+                             scenario: Optional[Scenario] = None):
+        if overwrite:
+            try:
+                scenario.delete_network_field(
+                    network_field_type, network_field_name)
+            except ArgumentError:
+                pass
+        scenario.create_network_field(
+            network_field_type, network_field_name,
+            network_field_atype)
 
     def copy_matrix(self, from_matrix, matrix_id, matrix_name,
                     matrix_description):
@@ -315,6 +336,47 @@ class MockProject:
                     for i, attr in enumerate(header[3:], 3):
                         segment[attr] = float(rec[i])
 
+    def import_network_fields(self, file_path, revert_on_error=True,
+                              scenario=None, import_definitions=False):
+        with open(file_path) as f:
+            f.readline()
+            while True:
+                rec = f.readline().split()
+                if rec[0] == "end":
+                    break
+                attr_type = rec[1]
+                self.create_network_field(
+                    attr_type, rec[0], "",
+                    network_field_atype=rec[2],
+                    overwrite=True, scenario=scenario)
+            header = f.readline().split()
+            network = scenario.get_network()
+            while True:
+                rec = f.readline().replace("'", " ").split()
+                if not rec:
+                    break
+                elif attr_type == "NODE":
+                    node = network.node(int(rec[0]))
+                    for i, attr in enumerate(header[1:], 1):
+                        node[attr] = rec[i]
+                elif attr_type == "LINK":
+                    link = network.link(int(rec[0]), int(rec[1]))
+                    for i, attr in enumerate(header[2:], 2):
+                        link[attr] = rec[i]
+                elif attr_type == "TRANSIT_LINE":
+                    line = network.transit_line(rec[0])
+                    for i, attr in enumerate(header[1:], 1):
+                        line[attr] = rec[i]
+                elif attr_type == "TRANSIT_SEGMENT":
+                    link = network.link(int(rec[1]), int(rec[2]))
+                    for segment in link.segments():
+                        if segment.line.id == rec[0]:
+                            break
+                    else:
+                        raise ExistenceError()
+                    for i, attr in enumerate(header[3:], 3):
+                        segment[attr] = rec[i]
+
     def network_calc(self, *args, **kwargs):
         pass
 
@@ -442,25 +504,54 @@ class Scenario:
     def zone_numbers(self):
         return sorted(self._network._centroids)
 
-    def extra_attribute(self, idx: int):
+    def extra_attribute(self, idx: str):
         network = self.get_network()
         for attr_type in network._extra_attr:
             if idx in network._extra_attr[attr_type]:
                 return network._extra_attr[attr_type][idx]
 
-    def create_extra_attribute(self, 
-                               attr_type, 
-                               idx: int, 
-                               default_value: float=0.0):
+    def network_field(self, idx: str):
         network = self.get_network()
-        if idx in network._extra_attr[attr_type]:
+        for attr_type in network._netfield:
+            if idx in network._netfield[attr_type]:
+                return network._netfield[attr_type][idx]
+
+    def create_extra_attribute(self,
+                               obj_type: str,
+                               idx: str,
+                               default_value: float = 0.0):
+        network = self.get_network()
+        if idx in network._extra_attr[obj_type]:
             raise ExistenceError("Extra attribute already exists: {}".format(
                 idx))
         else:
-            network._extra_attr[attr_type][idx] = ExtraAttribute(
-                idx, attr_type, default_value, self)
-            for obj in network._objects[attr_type]():
+            network._extra_attr[obj_type][idx] = ExtraAttribute(
+                idx, obj_type, default_value, self)
+            for obj in network._objects[obj_type]():
                 obj._extra_attr[idx] = default_value
+
+    def create_network_field(self,
+                             obj_type: str,
+                             idx: str,
+                             atype: str):
+        network = self.get_network()
+        if idx in network._netfield[obj_type]:
+            raise ExistenceError("Network field already exists: {}".format(
+                idx))
+        else:
+            network._netfield[obj_type][idx] = NetworkField(
+                idx, obj_type, atype, self)
+            for obj in network._objects[obj_type]():
+                obj._netfield[idx] = NetworkField.ATYPES[atype]()
+
+    def delete_network_field(self, obj_type: str, idx: str):
+        network = self.get_network()
+        try:
+            del network._netfield[obj_type][idx]
+            for obj in network._objects[obj_type]():
+                del obj._netfield[idx]
+        except KeyError:
+            raise ArgumentError(f"The network field '{idx}' doesn't exist")
 
     def get_network(self):
         return self._network
@@ -470,11 +561,11 @@ class Scenario:
 
 
 class ExtraAttribute:
-    def __init__(self, name, attr_type, default_value, scenario):
+    def __init__(self, name, obj_type, default_value, scenario):
         if len(name) > 20 or name[0] != '@':
             raise ArgumentError("Invalid extra attribute ID: {}".format(name))
         self.name = name
-        self.type = attr_type
+        self.type = obj_type
         self.default_value = default_value
         self.scenario = scenario
 
@@ -484,6 +575,23 @@ class ExtraAttribute:
         for obj in network._objects[self.type]():
             obj[self.name] = value
 
+
+class NetworkField:
+    ATYPES = {
+        "BOOLEAN": lambda *val: bool(int(*val)),
+        "INTEGER32": int,
+        "REAL": float,
+        "STRING": str,
+    }
+
+    def __init__(self, name, obj_type, atype, scenario):
+        self.name = name
+        self.type = obj_type
+        self.atype = atype
+        self.scenario = scenario
+
+    def cast(self, *value):
+        return self.ATYPES[self.atype](*value)
 
 class Matrix:
     def __init__(self, idx: int, dim: int, default_value: Union[int, float]):
@@ -546,6 +654,7 @@ class Network:
             "TRANSIT_SEGMENT": self.transit_segments,
         }
         self._extra_attr = {attr_type: {} for attr_type in self._objects}
+        self._netfield = {attr_type: {} for attr_type in self._objects}
 
     def mode(self, idx: int) -> 'Mode':
         if idx in self._modes:
@@ -664,11 +773,12 @@ class TransitVehicle:
 class NetworkObject:
     network: Network
 
-    def __init__(self, network: Network, 
-                 extra_attr: Dict[str, Dict[str, Union['Link', 'Node', 'TransitLine', 'TransitSegment']]]):
+    def __init__(self, network: Network):
         self.network = network
-        self._extra_attr = {idx: extra_attr[idx].default_value
-            for idx in extra_attr}
+        self._extra_attr = {idx: extra_attr.default_value
+            for idx, extra_attr in network._extra_attr[self._TYPE].items()}
+        self._netfield = {idx: netfield.cast()
+            for idx, netfield in network._netfield[self._TYPE].items()}
         self.data1 = 0.0
         self.data2 = 0.0
         self.data3 = 0.0
@@ -680,12 +790,17 @@ class NetworkObject:
     def __getitem__(self, key):
         if key in self._extra_attr:
             return self._extra_attr[key]
+        elif key in self._netfield:
+            return self._netfield[key]
         else:
             return self.__dict__[key]
 
     def __setitem__(self, key, value):
         if key in self._extra_attr:
             self._extra_attr[key] = value
+        elif key in self._netfield:
+            self._netfield[key] = self.network._netfield[self._TYPE][key].cast(
+                value)
         elif key in self.__dict__:
             self.__dict__[key] = value
         else:
@@ -696,11 +811,13 @@ class NetworkObject:
 
 
 class Node(NetworkObject):
+    _TYPE = "NODE"
+
     def __init__(self, 
                  network: Network, 
                  idx: int, 
                  is_centroid: bool = False):
-        NetworkObject.__init__(self, network, network._extra_attr["NODE"])
+        NetworkObject.__init__(self, network)
         self.is_centroid = is_centroid
         self.number = idx
         self.x = 0.0
@@ -716,12 +833,14 @@ class Node(NetworkObject):
             if s.i_node is self)
 
 class Link(NetworkObject):
+    _TYPE = "LINK"
+
     def __init__(self, 
                  network: Network, 
                  i_node: Node, 
                  j_node: Node, 
                  modes):
-        NetworkObject.__init__(self, network, network._extra_attr["LINK"])
+        NetworkObject.__init__(self, network)
         self.i_node = i_node
         self.j_node = j_node
         self.modes = frozenset(modes)
@@ -749,9 +868,10 @@ class Link(NetworkObject):
 
 
 class TransitLine(NetworkObject):
+    _TYPE = "TRANSIT_LINE"
+
     def __init__(self, network: Network, idx: str, vehicle: TransitVehicle):
-        NetworkObject.__init__(
-            self, network, network._extra_attr["TRANSIT_LINE"])
+        NetworkObject.__init__(self, network)
         self.id = idx
         self.vehicle = vehicle
         self.headway = 0.01
@@ -788,9 +908,10 @@ class TransitLine(NetworkObject):
 
 
 class TransitSegment(NetworkObject):
+    _TYPE = "TRANSIT_SEGMENT"
+
     def __init__(self, network: Network, line: TransitLine, link: Link):
-        NetworkObject.__init__(
-            self, network, network._extra_attr["TRANSIT_SEGMENT"])
+        NetworkObject.__init__(self, network)
         self.line = line
         self.link = link
         self.allow_alightings = False

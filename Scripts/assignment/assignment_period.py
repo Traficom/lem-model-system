@@ -89,6 +89,21 @@ class AssignmentPeriod(Period):
         """
         return "@{}_{}".format(attr, self.name)
 
+    def netfield(self, attr: str) -> str:
+        """Add prefix "#" and time-period suffix.
+
+        Parameters
+        ----------
+        attr : str
+            Attribute string to modify
+
+        Returns
+        -------
+        str
+            Modified string
+        """
+        return "#{}_{}".format(attr, self.name)
+
     def prepare(self, segment_results: Dict[str, Dict[str, str]],
                 park_and_ride_results: Dict[str, Union[str, bool]]):
         """Prepare network for assignment.
@@ -156,7 +171,6 @@ class AssignmentPeriod(Period):
                 self._assign_transit()
         elif iteration==1:
             if not self._separate_emme_scenarios:
-                self._set_car_and_transit_vdfs()
                 self._calc_background_traffic()
             self._assign_cars(self.stopping_criteria["coarse"])
             self._calc_extra_wait_time()
@@ -164,7 +178,6 @@ class AssignmentPeriod(Period):
             self._calc_background_traffic(include_trucks=True)
         elif isinstance(iteration, int) and iteration>1:
             if not self._separate_emme_scenarios:
-                self._set_car_and_transit_vdfs()
                 self._calc_background_traffic(include_trucks=True)
             self._assign_cars(
                 self.stopping_criteria["coarse"], lightweight=True)
@@ -174,7 +187,7 @@ class AssignmentPeriod(Period):
             if not self.use_free_flow_speeds:
                 self._set_bike_vdfs()
                 self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
-            self._set_car_and_transit_vdfs()
+                self._set_car_and_transit_vdfs()
             self._calc_background_traffic()
             self._assign_cars(self.stopping_criteria["fine"])
             if self.use_free_flow_speeds:
@@ -270,7 +283,7 @@ class AssignmentPeriod(Period):
             self.emme_scenario.id))
         network = self.emme_scenario.get_network()
         delay_attr = param.transit_delay_attr.replace("us", "data")
-        car_time_attr = self.extra("car_time")
+        car_time_attr = self.netfield("car_time")
         transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
             for modes in param.transit_delay_funcs}
         main_mode = network.mode(param.main_mode)
@@ -325,31 +338,15 @@ class AssignmentPeriod(Period):
                 if transit_modesets[modeset[0]] & link.modes:
                     funcs = param.transit_delay_funcs[modeset]
                     if modeset[0] == "bus":
-                        buslane_code = link.type // 100
-                        if buslane_code in param.bus_lane_link_codes[self.name]:
-                            # Bus lane
+                        if link["#buslane"]:
                             if (link.num_lanes == 3
                                     and roadclass.num_lanes == ">=3"):
                                 roadclass = param.roadclasses[linktype - 1]
                                 link.data1 = roadclass.lane_capacity
                             link.volume_delay_func += 5
                             func = funcs["buslane"]
-                            try:
-                                bus_delay = (param.buslane_delay
-                                             / max(roadclass.free_flow_speed, 30))
-                            except UnboundLocalError:
-                                log.warn("Bus mode on link {}, type {}".format(
-                                    link.id, link.type))
                         else:
-                            # No bus lane
                             func = funcs["no_buslane"]
-                            try:
-                                bus_delay = roadclass.bus_delay
-                            except UnboundLocalError:
-                                log.warn("Bus mode on link {}, type {}".format(
-                                    link.id, link.type))
-                        for segment in link.segments():
-                            segment[delay_attr] = bus_delay
                     else:
                         func = funcs[self.name]
                     break
@@ -369,7 +366,7 @@ class AssignmentPeriod(Period):
         bike_mode = network.mode(param.bike_mode)
         for link in network.links():
             if link.volume_delay_func != 90:
-            	link.volume_delay_func = 98
+                link.volume_delay_func = 98
             if bike_mode in link.modes:
                 link.modes |= {main_mode}
             elif main_mode in link.modes:
@@ -500,15 +497,11 @@ class AssignmentPeriod(Period):
             if link.type > 100: # If car or bus link
                 freq = 0
                 for segment in link.segments():
-                    segment_hdw = segment.line[self.extra("hdw")]
+                    segment_hdw = segment.line[self.netfield("hdw")]
                     if 0 < segment_hdw < 900:
                         freq += 60 / segment_hdw
                 link[self.extra("bus")] = freq
-                if link.type // 100 in param.bus_lane_link_codes[self.name]:
-                    # Bus lane
-                    link[background_traffic] = 0
-                else:
-                    link[background_traffic] = freq
+                link[background_traffic] = 0 if link["#buslane"] else freq
                 for direction in park_and_ride:
                     link[background_traffic] += link[direction]
                 if include_trucks:
@@ -521,7 +514,7 @@ class AssignmentPeriod(Period):
         log.info("Calculates road charges for time period {}...".format(self.name))
         network = self.emme_scenario.get_network()
         for link in network.links():
-            toll_cost = link.length * link[self.extra("hinta")]
+            toll_cost = link.length * link[self.netfield("hinta")]
             dist_cost = self.dist_unit_cost * link.length
             link[self.extra("toll_cost")] = toll_cost
             link[self.extra("total_cost")] = toll_cost + dist_cost
@@ -634,7 +627,7 @@ class AssignmentPeriod(Period):
         assign_report = self.emme_project.car_assignment(
             car_spec, self.emme_scenario)
         network = self.emme_scenario.get_network()
-        time_attr = self.extra("car_time")
+        time_attr = self.netfield("car_time")
         for link in network.links():
             link[time_attr] = link.auto_time
         self.emme_scenario.publish_network(network)
@@ -696,7 +689,7 @@ class AssignmentPeriod(Period):
         log.info("Calculates effective headways "
                  + "and cumulative travel times for scenario "
                  + str(self.emme_scenario.id))
-        headway_attr = self.extra("hdw")
+        headway_attr = self.netfield("hdw")
         effective_headway_attr = param.effective_headway_attr.replace(
             "ut", "data")
         delay_attr = param.transit_delay_attr.replace("us", "data")

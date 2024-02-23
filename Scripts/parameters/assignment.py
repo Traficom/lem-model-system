@@ -153,23 +153,13 @@ volume_delay_funcs = {
     ## Escape function, speed 40 km/h
     "ft7": "length/(40/60)",
 }
-# Code derived from three-digit link type xyz, where x is the bus lane code,
-# 2 means that bus lane is active during aht and iht periods, etc.
-bus_lane_link_codes = {
-    "aht": (2, 3, 4, 6),
-    "pt": (3, 6),
-    "iht": (2, 3, 5, 6),
-    "vrk": (2, 3, 6)
-}
-# Bus lane delay equivalent to 1.5 km per link
-buslane_delay = 60 * 1.5
-# Codes defining whether transit mode stops at node, stored in data2
+# Network fields defining whether transit mode stops at node
 stop_codes = {
-    't': (1, 8, 5),
-    'p': (8, 5),
-    'b': (2, 3, 5, 11),
-    'g': (3, 5, 11),
-    'e': (7, 5, 11),
+    't': '#tram_stop',
+    'p': '#tram_stop',
+    'b': '#b_stop',
+    'g': '#g_stop',
+    'e': '#e_stop',
 }
 # Default bus stop dwell time in minutes
 bus_dwell_time = {
@@ -578,8 +568,7 @@ dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
-node_type_attr = "ui2"
-keep_stops_attr = "@keep_stops"
+keep_stops_attr = "#keep_stops"
 railtypes = {
     2: "tram",
     3: "metro",

@@ -94,7 +94,9 @@ class EmmeAssignmentTest:
         self.ass_model.init_assign()
         self.test_transit_cost()
         for ap in self.ass_model.assignment_periods:
-            travel_cost[ap.name] = ap.assign(demand, iteration="last")
+            for ass_class in demand:
+                ap.set_matrix(ass_class, car_matrix)
+            travel_cost[ap.name] = ap.assign(iteration="last")
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..","test_data", "Results", "assignment"))
@@ -107,7 +109,7 @@ class EmmeAssignmentTest:
         for time_period in travel_cost:
             for mtx_type in travel_cost[time_period]:
                 zone_numbers = self.ass_model.zone_numbers
-                with costs_files.open(mtx_type, time_period, zone_numbers, 'w') as mtx:
+                with costs_files.open(mtx_type, time_period, zone_numbers, m='w') as mtx:
                     for ass_class in travel_cost[time_period][mtx_type]:
                         cost_data = travel_cost[time_period][mtx_type][ass_class]
                         mtx[ass_class] = cost_data

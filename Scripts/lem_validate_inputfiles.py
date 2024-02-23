@@ -84,21 +84,17 @@ def main(args):
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
-            link_attrs = []
-            line_attrs = []
-            for tp in time_periods:
-                link_attrs.append(f"@hinta_{tp}")
-                link_attrs.append(f"@car_time_{tp}")
-                line_attrs.append(f"@hdw_{tp}")
-            nr_attr = {
-                # Number of existing extra attributes
-                # TODO Count existing extra attributes which are NOT included
-                # in the set of attributes created during model run
-                "nodes": 0,
-                "links": len(link_attrs),
-                "transit_lines": len(line_attrs),
-                "transit_segments": 0,
+            attrs = {
+                "NODE": ["#b_stop", "#e_stop", "#g_stop", "#tram_stop"],
+                "LINK": ["#buslane"],
+                "TRANSIT_LINE": ["#keep_stops"],
             }
+            for tp in time_periods:
+                attrs["LINK"].append(f"#hinta_{tp}")
+                attrs["LINK"].append(f"#car_time_{tp}")
+                attrs["TRANSIT_LINE"].append(f"#hdw_{tp}")
+            # TODO Count existing extra attributes which are NOT included
+            # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
             nr_veh_classes = len(param.emme_matrices)
@@ -118,8 +114,8 @@ def main(args):
             dim = emmebank.dimensions
             dim["nodes"] = dim["centroids"] + dim["regular_nodes"]
             attr_space = 0
-            for key in nr_attr:
-                attr_space += dim[key] * (nr_attr[key]+nr_new_attr[key])
+            for key in nr_new_attr:
+                attr_space += dim[key] * nr_new_attr[key]
             if dim["extra_attribute_values"] < attr_space:
                 msg = "At least {} words required for extra attributes".format(
                     attr_space)
@@ -135,12 +131,13 @@ def main(args):
             for scenario in emmebank.scenarios():
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
-            for attr in link_attrs + line_attrs:
-                if scen.extra_attribute(attr) is None:
-                    msg = "Extra attribute {} missing from scenario {}".format(
-                        attr, scen.id)
-                    log.error(msg)
-                    raise ValueError(msg)
+            for obj_type in attrs:
+                for attr in attrs[obj_type]:
+                    if scen.network_field(obj_type, attr) is None:
+                        msg = "Network field {} missing from scenario {}".format(
+                            attr, scen.id)
+                        log.error(msg)
+                        raise ValueError(msg)
             validate(scen.get_network(), time_periods)
             app.close()
 

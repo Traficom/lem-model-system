@@ -76,7 +76,6 @@ class EmmeAssignmentModel(AssignmentModel):
         car_dist_unit_cost : float (optional)
             Car cost per km in euros
         """
-        self._set_stop_code()
         self._add_bus_stops()
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
@@ -250,7 +249,7 @@ class EmmeAssignmentModel(AssignmentModel):
             volume_factor = param.volume_factors["bus"][ap.name]
             for line in network.transit_lines():
                 mode = line.vehicle.description
-                headway = line[ap.extra("hdw")]
+                headway = line[ap.netfield("hdw")]
                 if 0 < headway < 990:
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
@@ -301,35 +300,14 @@ class EmmeAssignmentModel(AssignmentModel):
         """
         return "@{}_{}".format(attr, "vrk")
 
-    def _set_stop_code(self):
-        node_type_attr = param.node_type_attr.replace("ui", "data")
-        network = self.mod_scenario.get_network()
-        for node in network.nodes():
-            stops = []
-            for mode in param.stop_codes:
-                segments = [segment.allow_boardings or segment.allow_alightings
-                    for segment in node.outgoing_segments(include_hidden=True)
-                    if segment.line.mode.id == mode
-                    and segment.line[param.keep_stops_attr]]
-                stop_counts = sum(segments)
-                stop_ratio = 0.0 if stop_counts < 1 else stop_counts/len(segments)
-                is_stop = stop_ratio > 0.49 or stop_counts > 9
-                if is_stop:
-                    node[node_type_attr] = param.stop_codes[mode][0]
-                stops.append(is_stop)
-            if all(stops):
-                node[node_type_attr] = 5
-        self.mod_scenario.publish_network(network)
-
     def _add_bus_stops(self):
-        node_type_attr = param.node_type_attr.replace("ui", "data")
         network: Network = self.mod_scenario.get_network()
         for line in network.transit_lines():
             if line.mode.id in param.stop_codes:
                 if not line[param.keep_stops_attr]:
-                    stop_codes = param.stop_codes[line.mode.id]
+                    is_stop_field = param.stop_codes[line.mode.id]
                     for segment in line.segments():
-                        is_stop = segment.i_node[node_type_attr] in stop_codes
+                        is_stop = segment.i_node[is_stop_field]
                         segment.allow_alightings = is_stop
                         segment.allow_boardings = is_stop
             try:
@@ -532,12 +510,13 @@ class EmmeAssignmentModel(AssignmentModel):
 
             # Calculate speed
             link = morning_network.link(link.i_node, link.j_node)
+            car_time_attr = self.assignment_periods[0].netfield("car_time")
             rlink = link.reverse_link
             if reverse_traffic > 0:
                 speed = (60 * 2 * link.length
-                         / (link["@car_time_aht"]+rlink["@car_time_aht"]))
+                         / (link[car_time_attr]+rlink[car_time_attr]))
             else:
-                speed = (0.3*(60*link.length/link["@car_time_aht"])
+                speed = (0.3*(60*link.length/link[car_time_attr])
                          + 0.7*link.data2)
             speed = max(speed, 50.0)
 
