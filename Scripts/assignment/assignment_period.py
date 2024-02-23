@@ -338,7 +338,7 @@ class AssignmentPeriod(Period):
                 if transit_modesets[modeset[0]] & link.modes:
                     funcs = param.transit_delay_funcs[modeset]
                     if modeset[0] == "bus":
-                        if link["#buslane"]:
+                        if link["#buslane"] and link.volume_delay_func != 90:
                             if (link.num_lanes == 3
                                     and roadclass.num_lanes == ">=3"):
                                 roadclass = param.roadclasses[linktype - 1]
