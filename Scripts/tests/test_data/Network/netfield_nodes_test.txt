@@ -1,10 +1,11 @@
 t network_fields
-#b_stop NODE BOOLEAN ''
-#e_stop NODE BOOLEAN ''
-#g_stop NODE BOOLEAN ''
-#tram_stop NODE BOOLEAN ''
+#transit_stop_b NODE BOOLEAN ''
+#transit_stop_e NODE BOOLEAN ''
+#transit_stop_g NODE BOOLEAN ''
+#transit_stop_t NODE BOOLEAN ''
+#transit_stop_p NODE BOOLEAN ''
 end network_fields
-   inode   #b_stop   #e_stop   #g_stop #tram_stop
+   inode   #transit_stop_b   #transit_stop_e   #transit_stop_g #transit_stop_t
      102        0        0        0        0
      103        0        0        0        0
      244        0        0        0        0
