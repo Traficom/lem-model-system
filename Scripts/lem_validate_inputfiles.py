@@ -85,12 +85,12 @@ def main(args):
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
             attrs = {
-                "NODE": ["#b_stop", "#e_stop", "#g_stop", "#tram_stop"],
+                "NODE": ["#transit_stop_b", "#transit_stop_e", "#transit_stop_g",
+                         "#transit_stop_t", "#transit_stop_p"],
                 "LINK": ["#buslane"],
                 "TRANSIT_LINE": ["#keep_stops"],
             }
             for tp in time_periods:
-                attrs["LINK"].append(f"#hinta_{tp}")
                 attrs["LINK"].append(f"#car_time_{tp}")
                 attrs["TRANSIT_LINE"].append(f"#hdw_{tp}")
             # TODO Count existing extra attributes which are NOT included
