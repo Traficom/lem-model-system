@@ -262,7 +262,8 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
-        self.dtm.init_demand(self.travel_modes)
+        self.dtm.init_demand(
+            [mode for mode in self.travel_modes if mode != "walk"])
 
         # Update car density
         prediction = self.cdm.predict()
