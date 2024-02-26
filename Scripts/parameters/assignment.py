@@ -178,11 +178,10 @@ vot_inv = {
     "work": 7.576, # 1 / ((7.92 eur/h) / (60 min/h)) = 7.576 min/eur
     "business": 2.439, # 1 / ((24.60 eur/h) / (60 min/h)) = 2.439 min/eur
     "leisure": 11.173, # 1 / ((5.37 eur/h) / (60 min/h)) = 11.173 min/eur
+    "truck": 1.877, # 1 / ((31.96 eur/h) / (60 min/h)) = 1.877 min/eur
+    "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
+    "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
-# Default distance unit cost [eur/km]
-dist_unit_cost = 0.12
-# Default distance unit time for trucks and trailer trucks [min/km]
-freight_dist_unit_time = 0.2
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -373,6 +372,11 @@ volume_factors = {
         "pt": 1 / 0.1,
         "iht": 1 / 0.3,
     },
+    "semi_trailer": {
+        "aht": 1 / 0.3,
+        "pt": 1 / 0.1,
+        "iht": 1 / 0.3,
+    },
     "truck": {
          "aht": 1 / 0.3,
         "pt": 1 / 0.1,
@@ -418,11 +422,11 @@ noise_zone_width = {
 
 ### ASSIGNMENT REFERENCES ###
 time_periods: List[str] = ["aht", "pt", "iht"]
-private_classes = (
+car_classes = (
     "car_work",
     "car_leisure",
-    "bike",
 )
+private_classes = car_classes + ("bike",)
 park_and_ride_classes = (
     # "car_first_mile",
     # "car_last_mile",
@@ -437,11 +441,12 @@ local_transit_classes = (
     "transit_leisure",
 )
 transit_classes = local_transit_classes + long_distance_transit_classes
-freight_classes = (
-    "van",
+truck_classes = (
     "truck",
+    "semi_trailer",
     "trailer_truck",
 )
+freight_classes = truck_classes + ("van",)
 transport_classes = private_classes + transit_classes + freight_classes
 assignment_classes = {
     "hw": "work",
@@ -465,14 +470,16 @@ assignment_modes = {
     "car_work": 'c',
     "car_leisure": 'c',
     "trailer_truck": 'y',
+    "semi_trailer": 'y',
     "truck": 'k',
     "van": 'v',
 }
 vot_classes = {
     "car_work": "work",
     "car_leisure": "leisure",
-    "trailer_truck": "business",
-    "truck": "business",
+    "trailer_truck": "trailer_truck",
+    "semi_trailer": "semi_trailer",
+    "truck": "truck",
     "van": "business",
     "transit_work": "work",
     "transit_leisure": "leisure",
@@ -481,11 +488,6 @@ vot_classes = {
     "train": "work",
     "long_d_bus": "leisure",
     "airplane": "work",
-}
-# Distance unit cost for freight [eur/km]
-freight_dist_unit_cost = {
-    "truck": freight_dist_unit_time / vot_inv[vot_classes["truck"]],
-    "trailer_truck": freight_dist_unit_time / vot_inv[vot_classes["trailer_truck"]],
 }
 local_transit_modes = [
     'b',
@@ -536,6 +538,7 @@ emme_matrices = {
     "bike": ("demand", "time", "dist"),
     "walk": ("time", "dist"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "van": ("demand", "time", "dist", "cost", "gen_cost"),
 }

@@ -51,8 +51,9 @@ class MockAssignmentModel(AssignmentModel):
     def calc_noise(self):
         return pandas.Series(0, zone_param.area_aggregation)
 
-    def prepare_network(self, car_dist_unit_cost: Optional[float]=None):
-        pass
+    def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
+        for ap in self.assignment_periods:
+            ap.dist_unit_cost = car_dist_unit_cost
 
     def init_assign(self):
         pass
@@ -70,15 +71,11 @@ class MockPeriod(Period):
             zone_numbers = mtx.zone_numbers
         return zone_numbers
 
-    def assign(self, 
-               iteration: Optional[Union[int,str]]=None) -> Dict[str,Dict[str,numpy.ndarray]]:
-        """Assign cars, bikes and transit for one time period.
-        Get travel impedance matrices for one time period from assignment.
-        
-        Parameters
-        ----------
-        iteration: int or str
-            Iteration number (0, 1, 2, ...) or "last"
+    def assign_trucks_init(self):
+        pass
+
+    def assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """ Get travel impedance matrices for one time period from files.
 
         Returns
         -------
@@ -86,6 +83,24 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
+        mtxs = self._get_impedances()
+        for ass_cl in param.car_classes:
+            mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
+                                        * mtxs["dist"][ass_cl])
+        return mtxs
+
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """ Get travel impedance matrices for one time period from files.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
+        """
+        return self._get_impedances()
+
+    def _get_impedances(self):
         mtxs = {mtx_type: self._get_matrices(mtx_type)
             for mtx_type in ("time", "cost", "dist")}
         for mode in mtxs["time"]:
@@ -97,12 +112,8 @@ class MockPeriod(Period):
                 log.debug(f"Min, median, max of OD speed: {mode} : {v[0]} - {v[1]} - {v[2]} km/h")
             except KeyError:
                 pass
-        if iteration != "last":
-            for ass_cl in ("car_work", "car_leisure"):
-                mtxs["cost"][ass_cl] += (param.dist_unit_cost
-                                         * mtxs["dist"][ass_cl])
         return mtxs
-    
+
     def _get_matrices(self, mtx_type: str) -> Dict[str, numpy.ndarray]:
         """Get all matrices of specified type.
         

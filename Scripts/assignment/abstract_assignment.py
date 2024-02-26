@@ -47,7 +47,15 @@ class Period:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def assign(self, iteration: Union[int, str]) -> Dict[Any, Any]:
+    def assign_trucks_init(self):
+        pass
+
+    @abstractmethod
+    def assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        pass
+
+    @abstractmethod
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         pass
 
     @abstractmethod

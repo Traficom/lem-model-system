@@ -73,7 +73,15 @@ class EmmeAssignmentTest:
             os.path.join(project_dir, "..", "Network"), scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
-        self.ass_model.prepare_network()
+        dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
+        self.ass_model.prepare_network(dist_cost)
     
     def test_assignment(self):
         nr_zones = self.ass_model.nr_zones
@@ -87,6 +95,7 @@ class EmmeAssignmentTest:
             "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
+            "semi_trailer": car_matrix,
             "truck": car_matrix,
             "van": car_matrix,
         }

@@ -30,11 +30,19 @@ class EmmeAssignmentTest(unittest.TestCase):
                 1: 0.5,
             }
         })
+        dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
         validate(
             context.modeller.emmebank.scenario(scenario_id).get_network())
         ass_model = EmmeAssignmentModel(
-            context, scenario_id)
-        ass_model.prepare_network()
+            context, scenario_id, use_stored_speeds=True)
+        ass_model.prepare_network(dist_cost)
         ass_model.calc_transit_cost(fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
@@ -47,6 +55,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             "car_last_mile",
             "bike",
             "trailer_truck",
+            "semi_trailer",
             "truck",
             "van",
         ]
@@ -54,7 +63,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         for ass_class in demand:
             ass_model.assignment_periods[0].set_matrix(
                 ass_class, car_matrix)
-        ass_model.assignment_periods[0].assign("last")
+        ass_model.assignment_periods[0].end_assign()
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..", "test_data", "Results", "test"))

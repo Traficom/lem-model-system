@@ -49,7 +49,7 @@ class ZoneData:
         except (NameError, KeyError):
             self._values["parking_norm"] = None
         car_cost = files.read_csv_file(".cco", squeeze=False)
-        self.car_dist_cost = car_cost["dist_cost"][0]
+        self.car_dist_cost = car_cost["dist_cost"].to_dict()
         truckdata = files.read_csv_file(".trk", squeeze=True)
         files.zone_numbers = all_zone_numbers[all_zone_numbers.searchsorted(external[0]):]
         files.dtype = numpy.float32

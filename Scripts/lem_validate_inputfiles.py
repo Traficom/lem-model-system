@@ -84,6 +84,19 @@ def main(args):
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
+            for scen in emmebank.scenarios():
+                if scen.zone_numbers != zone_numbers:
+                    log.warn("Scenarios with different zones found in EMME bank!")
+            scen = emmebank.scenario(first_scenario_ids[i])
+            zone_numbers[args.submodel[i]] = scen.zone_numbers
+            if scen is None:
+                msg = "Project {} has no scenario {}".format(
+                    emp_path, first_scenario_ids[0])
+                log.error(msg)
+                raise ValueError(msg)
+            for scenario in emmebank.scenarios():
+                if scenario.zone_numbers != scen.zone_numbers:
+                    log.warn("Scenarios with different zones found in EMME bank!")
             attrs = {
                 "NODE": ["#transit_stop_b", "#transit_stop_e", "#transit_stop_g",
                          "#transit_stop_t", "#transit_stop_p"],
@@ -93,17 +106,31 @@ def main(args):
             for tp in time_periods:
                 attrs["LINK"].append(f"#car_time_{tp}")
                 attrs["TRANSIT_LINE"].append(f"#hdw_{tp}")
+            for obj_type in attrs:
+                for attr in attrs[obj_type]:
+                    if scen.network_field(obj_type, attr) is None:
+                        msg = "Network field {} missing from scenario {}".format(
+                            attr, scen.id)
+                        log.error(msg)
+                        raise ValueError(msg)
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
             nr_veh_classes = len(param.emme_matrices)
+            nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 3,
+                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
+            link_costs_defined = False
+            for tp in time_periods:
+                if scen.network_field("LINK", f"#hinta_{tp}") is not None:
+                    link_costs_defined = True
+            if link_costs_defined:
+                nr_new_attr["links"] += nr_assignment_modes + 1
             if not args.separate_emme_scenarios:
                 # If results from all time periods are stored in same
                 # EMME scenario
@@ -121,23 +148,6 @@ def main(args):
                     attr_space)
                 log.error(msg)
                 raise ValueError(msg)
-            scen = emmebank.scenario(first_scenario_ids[i])
-            zone_numbers[args.submodel[i]] = scen.zone_numbers
-            if scen is None:
-                msg = "Project {} has no scenario {}".format(
-                    emp_path, first_scenario_ids[0])
-                log.error(msg)
-                raise ValueError(msg)
-            for scenario in emmebank.scenarios():
-                if scenario.zone_numbers != scen.zone_numbers:
-                    log.warn("Scenarios with different zones found in EMME bank!")
-            for obj_type in attrs:
-                for attr in attrs[obj_type]:
-                    if scen.network_field(obj_type, attr) is None:
-                        msg = "Network field {} missing from scenario {}".format(
-                            attr, scen.id)
-                        log.error(msg)
-                        raise ValueError(msg)
             validate(scen.get_network(), time_periods)
             app.close()
 

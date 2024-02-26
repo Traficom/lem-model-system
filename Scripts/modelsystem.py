@@ -217,8 +217,8 @@ class ModelSystem:
                         transport_classes) as mtx:
                     for ass_class in transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
-            impedance[tp] = ap.assign(
-                iteration=("last" if is_end_assignment else 0))
+            ap.assign_trucks_init()
+            impedance[tp] = ap.end_assign() if is_end_assignment else ap.assign()
             if tp == self.ass_model.time_periods[0]:
                 self._update_ratios(impedance[tp], tp)
             if is_end_assignment:
@@ -314,7 +314,7 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period " + tp)
-            impedance[tp] = ap.assign(iteration)
+            impedance[tp] = ap.end_assign() if iteration=="last" else ap.assign()
             if tp == "aht":
                 self._update_ratios(impedance[tp], tp)
             if iteration=="last":
