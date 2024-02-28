@@ -155,11 +155,11 @@ volume_delay_funcs = {
 }
 # Network fields defining whether transit mode stops at node
 stop_codes = {
-    't': '#tram_stop',
-    'p': '#tram_stop',
-    'b': '#b_stop',
-    'g': '#g_stop',
-    'e': '#e_stop',
+    't': "#transit_stop_t",
+    'p': "#transit_stop_p",
+    'b': "#transit_stop_b",
+    'g': "#transit_stop_g",
+    'e': "#transit_stop_e",
 }
 # Default bus stop dwell time in minutes
 bus_dwell_time = {
@@ -511,6 +511,12 @@ aux_modes = [
     'a',
 ]
 park_and_ride_mode = 'u'
+freight_modes = {
+    "rail": 'd',
+    "ship4": 'W',
+    "ship7": 's',
+    "ship9": 'S',
+}
 external_modes = [
     "car_leisure",
     "transit_leisure",
@@ -560,6 +566,13 @@ transit_impedance_matrices = {
         "loc_ic": "actual_in_vehicle_costs",
         "loc_time": "actual_in_vehicle_times",
     },
+}
+freight_matrices = {
+    "truck": {"demand", "time", "dist", "aux_dist"},
+    "rail": {"demand", "dist", "aux_dist"},
+    "ship4": {"demand", "dist", "aux_dist"},
+    "ship7": {"demand", "dist", "aux_dist"},
+    "ship9": {"demand", "dist", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
