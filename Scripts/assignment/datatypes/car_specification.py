@@ -47,7 +47,7 @@ class CarSpecification:
 
     def light_spec(self) -> Dict[str, Any]:
         self._spec["classes"] = [self._modes[mode].spec
-            for mode in param.car_classes]
+            for mode in param.car_classes + ("van",)]
         return self._spec
 
     def truck_spec(self) -> Dict[str, Any]:

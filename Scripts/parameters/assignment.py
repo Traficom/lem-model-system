@@ -155,11 +155,11 @@ volume_delay_funcs = {
 }
 # Network fields defining whether transit mode stops at node
 stop_codes = {
-    't': '#tram_stop',
-    'p': '#tram_stop',
-    'b': '#b_stop',
-    'g': '#g_stop',
-    'e': '#e_stop',
+    't': "#transit_stop_t",
+    'p': "#transit_stop_p",
+    'b': "#transit_stop_b",
+    'g': "#transit_stop_g",
+    'e': "#transit_stop_e",
 }
 # Default bus stop dwell time in minutes
 bus_dwell_time = {

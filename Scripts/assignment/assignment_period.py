@@ -143,7 +143,8 @@ class AssignmentPeriod(Period):
         self._dist_unit_cost = dist_unit_cost
         self._segment_results = segment_results
         self._park_and_ride_results = park_and_ride_results
-        if self.emme_scenario.network_field(self.netfield("hinta")) is not None:
+        if self.emme_scenario.network_field(
+                "LINK", self.netfield("hinta")) is not None:
             self._calc_road_cost(link_costs)
         # TODO We should probably have only one set of penalties
         self._calc_boarding_penalties(is_last_iteration=True)
@@ -342,12 +343,13 @@ class AssignmentPeriod(Period):
                 if transit_modesets[modeset[0]] & link.modes:
                     funcs = param.transit_delay_funcs[modeset]
                     if modeset[0] == "bus":
-                        if link["#buslane"] and link.volume_delay_func != 90:
+                        if link["#buslane"]:
                             if (link.num_lanes == 3
                                     and roadclass.num_lanes == ">=3"):
                                 roadclass = param.roadclasses[linktype - 1]
                                 link.data1 = roadclass.lane_capacity
-                            link.volume_delay_func += 5
+                            if link.volume_delay_func not in (90, 91):
+                                link.volume_delay_func += 5
                             func = funcs["buslane"]
                         else:
                             func = funcs["no_buslane"]
@@ -682,9 +684,8 @@ class AssignmentPeriod(Period):
 
     def _assign_trucks(self):
         truck_spec = self._car_spec.truck_spec()
-        stopping_criteria = copy.deepcopy(param.stopping_criteria)
-        for criteria in stopping_criteria.values():
-            criteria["max_iterations"] = 0
+        stopping_criteria = copy.deepcopy(param.stopping_criteria["coarse"])
+        stopping_criteria["max_iterations"] = 0
         truck_spec["stopping_criteria"] = stopping_criteria
         self.emme_project.car_assignment(
             truck_spec, self.emme_scenario)
