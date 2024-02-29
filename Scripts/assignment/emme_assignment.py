@@ -445,11 +445,11 @@ class EmmeAssignmentModel(AssignmentModel):
         return emme_matrices
 
     def _create_attributes(self,
-                               scenario: Any,
-                               ass_classes,
-                               extra: Callable[[str], str],
-                               netfield: Callable[[str], str],
-                               link_costs: Dict[str, float]
+                           scenario: Any,
+                           ass_classes,
+                           extra: Callable[[str], str],
+                           netfield: Callable[[str], str],
+                           link_costs: Dict[str, float]
             ) -> Dict[str, Union[str, float]]:
         """Create extra attributes needed in assignment.
 
