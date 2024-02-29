@@ -185,7 +185,7 @@ class AssignmentPeriod(Period):
             self._assign_transit()
         mtxs = self._get_impedances()
         for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += self._dist_unit_cost * mtxs["dist"][ass_cl]
+            mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
