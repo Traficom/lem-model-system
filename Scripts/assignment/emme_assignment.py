@@ -147,7 +147,7 @@ class EmmeAssignmentModel(AssignmentModel):
         mtxs = {}
         for i, ass_class in enumerate(param.freight_matrices, start=1):
             mtxs[ass_class] = {}
-            for j, mtx_type in enumerate(param.emme_matrices[ass_class]):
+            for j, mtx_type in enumerate(param.freight_matrices[ass_class]):
                 mtxs[ass_class][mtx_type] = f"mf{i*10 + j}"
                 description = f"{mtx_type}_{ass_class}"
                 self.emme_project.create_matrix(

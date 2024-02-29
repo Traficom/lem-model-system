@@ -568,7 +568,9 @@ transit_impedance_matrices = {
     },
 }
 freight_matrices = {
-    "truck": {"demand", "time", "dist", "aux_dist"},
+    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
+    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "rail": {"demand", "dist", "aux_dist"},
     "ship4": {"demand", "dist", "aux_dist"},
     "ship7": {"demand", "dist", "aux_dist"},
@@ -585,6 +587,7 @@ board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
+terminal_cost_attr = "@freight_terminal_cost"
 railtypes = {
     2: "tram",
     3: "metro",

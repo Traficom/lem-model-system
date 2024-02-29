@@ -33,8 +33,9 @@ class CarSpecification:
                 Extra attribute where link cost is found (str) or length
                 multiplier to calculate link cost (float)
         """
+        modes = param.assignment_modes.keys() & emme_matrices.keys()
         self._modes = {m: Car(m, extra, emme_matrices[m], link_costs[m])
-                       for m in param.assignment_modes}
+                    for m in modes}
         self._spec = {
             "type": "SOLA_TRAFFIC_ASSIGNMENT",
             "background_traffic": {

@@ -162,10 +162,9 @@ class AssignmentPeriod(Period):
         self._long_distance_trips_assigned = False
 
     def prepare_freight(self):
-        self._freight_specs = [
-            FreightSpecification(
+        self._freight_specs = {ass_class: FreightSpecification(
                 param.freight_modes[ass_class], self.emme_matrices[ass_class])
-            for ass_class in param.freight_modes]
+            for ass_class in param.freight_modes}
 
     def init_assign(self):
         self._assign_pedestrians()
@@ -204,6 +203,8 @@ class AssignmentPeriod(Period):
             self.emme_project.matrix_results(
                 spec.local_result_spec, scenario=self.emme_scenario,
                 class_name=ass_class)
+        return {imp_type: self._get_matrices(imp_type, is_last_iteration=True)
+            for imp_type in ("time", "cost", "dist")}
 
     def assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign cars and transit for one time period.
@@ -473,7 +474,7 @@ class AssignmentPeriod(Period):
         for ass_class, mtx_types in self.emme_matrices.items():
             if (mtx_type in mtx_types and
                     (is_last_iteration or ass_class not in last_iter_classes)):
-                if mtx_type == "time" and ass_class in param.car_classes:
+                if mtx_type == "time" and ass_class in param.car_classes + ("van",):
                     mtx = self._extract_timecost_from_gcost(ass_class)
                 elif mtx_type == "time" and ass_class in param.transit_classes:
                     mtx = self._extract_transit_time_from_gcost(ass_class)
