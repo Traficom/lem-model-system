@@ -10,9 +10,9 @@ import parameters.assignment as param
 import parameters.zone as zone_param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
+from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.datatypes.transit_fare import TransitFareZoneSpecification
     from datahandling.resultdata import ResultsData
     from inro.emme.database.scenario import Scenario # type: ignore
     from inro.emme.network.Network import Network # type: ignore
@@ -154,16 +154,15 @@ class EmmeAssignmentModel(AssignmentModel):
                     matrix_id=mtxs[ass_class][mtx_type],
                     matrix_name=description, matrix_description=description,
                     overwrite=True)
-        self.assignment_period = AssignmentPeriod(
+        self.freight_network = FreightAssignmentPeriod(
             "vrk", self.mod_scenario.number, self.emme_project, mtxs,
             use_free_flow_speeds=True)
-        self.assignment_period.prepare(
+        self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
                 list(param.truck_classes) + list(param.freight_modes),
                 self._extra, self._netfield, car_dist_unit_cost),
             car_dist_unit_cost)
-        self.assignment_period.prepare_freight()
         for idx in param.volume_delay_funcs:
             try:
                 self.emme_project.modeller.emmebank.delete_function(idx)

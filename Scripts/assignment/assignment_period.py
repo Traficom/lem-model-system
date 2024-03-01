@@ -6,11 +6,8 @@ import copy
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 import utils.log as log
 import parameters.assignment as param
-import parameters.zone as zone_param
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
-from assignment.datatypes.freight_specification import FreightSpecification
-from assignment.datatypes.journey_level import BOARDED_LOCAL, BOARDED_LONG_D
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.abstract_assignment import Period
 if TYPE_CHECKING:
@@ -162,12 +159,6 @@ class AssignmentPeriod(Period):
         self._set_transit_vdfs()
         self._long_distance_trips_assigned = False
 
-    def prepare_freight(self):
-        self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class])
-            for ass_class in param.freight_modes}
-        self._set_freight_vdfs()
-
     def init_assign(self):
         self._assign_pedestrians()
         self._set_bike_vdfs()
@@ -180,33 +171,6 @@ class AssignmentPeriod(Period):
             self._assign_trucks()
             self._calc_background_traffic(include_trucks=True)
         self._set_car_vdfs(self.use_free_flow_speeds)
-
-    def assign_freight(self):
-        self._set_car_vdfs(use_free_flow_speeds=True)
-        self._init_truck_times()
-        self._assign_trucks()
-        network = self.emme_scenario.get_network()
-        truck_mode = network.mode(param.assignment_modes["truck"])
-        park_and_ride_mode = network.mode(param.park_and_ride_mode)
-        for link in network.links():
-            if truck_mode in link.modes:
-                link.modes |= {park_and_ride_mode}
-            else:
-                link.modes -= {park_and_ride_mode}
-        self.emme_scenario.publish_network(network)
-        for i, ass_class in enumerate(param.freight_modes):
-            spec = self._freight_specs[ass_class]
-            self.emme_project.transit_assignment(
-                specification=spec.spec, scenario=self.emme_scenario,
-                add_volumes=i, save_strategies=True, class_name=ass_class)
-            self.emme_project.matrix_results(
-                spec.result_spec, scenario=self.emme_scenario,
-                class_name=ass_class)
-            self.emme_project.matrix_results(
-                spec.local_result_spec, scenario=self.emme_scenario,
-                class_name=ass_class)
-        return {imp_type: self._get_matrices(imp_type, is_last_iteration=True)
-            for imp_type in ("time", "cost", "dist")}
 
     def assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign cars and transit for one time period.
@@ -411,12 +375,6 @@ class AssignmentPeriod(Period):
                     break
             for segment in link.segments():
                 segment.transit_time_func = func
-        self.emme_scenario.publish_network(network)
-
-    def _set_freight_vdfs(self):
-        network = self.emme_scenario.get_network()
-        for segment in network.transit_segments():
-            segment.transit_time_func = 7
         self.emme_scenario.publish_network(network)
 
     def _init_truck_times(self):
