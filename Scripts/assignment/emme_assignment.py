@@ -445,7 +445,7 @@ class EmmeAssignmentModel(AssignmentModel):
 
     def _create_attributes(self,
                            scenario: Any,
-                           ass_classes,
+                           assignment_classes: List[str],
                            extra: Callable[[str], str],
                            netfield: Callable[[str], str],
                            link_costs: Dict[str, float]
@@ -456,9 +456,14 @@ class EmmeAssignmentModel(AssignmentModel):
         ----------
         scenario : inro.modeller.emmebank.scenario
             Emme scenario to create attributes for
+        assignment_classes : list of str
+            Names of assignment classes to create volume attributes for
         extra : function
             Small helper function which modifies string
             (e.g., self._extra)
+        netfield : function
+            Small helper function which modifies string
+            (e.g., self._netfield)
         link_costs : dict
             key : str
                 Assignment class (car_work/truck/...)
@@ -475,7 +480,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 multiplier to calculate link cost (float)
         """
         if TYPE_CHECKING: scenario = cast(Scenario, scenario)
-        for ass_class in ass_classes:
+        for ass_class in assignment_classes:
             self.emme_project.create_extra_attribute(
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)

@@ -2,6 +2,7 @@ import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
 from assignment.datatypes.freight_specification import FreightSpecification
 
+
 class FreightAssignmentPeriod(AssignmentPeriod):
     def prepare(self, *args, **kwargs):
         AssignmentPeriod.prepare(self, *args, **kwargs)
