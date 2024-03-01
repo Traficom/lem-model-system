@@ -125,13 +125,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 car_dist_unit_cost)
             ap.prepare_transit(
                 *self._create_transit_attributes(ap.emme_scenario, ap.extra))
-        for idx in param.volume_delay_funcs:
-            try:
-                self.emme_project.modeller.emmebank.delete_function(idx)
-            except Exception:
-                pass
-            self.emme_project.modeller.emmebank.create_function(
-                idx, param.volume_delay_funcs[idx])
+        self._init_functions()
 
     def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float]):
         """Create matrices, extra attributes and calc background variables.
@@ -163,6 +157,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 list(param.truck_classes) + list(param.freight_modes),
                 self._extra, self._netfield, car_dist_unit_cost),
             car_dist_unit_cost)
+        self._init_functions()
+
+    def _init_functions(self):
         for idx in param.volume_delay_funcs:
             try:
                 self.emme_project.modeller.emmebank.delete_function(idx)
