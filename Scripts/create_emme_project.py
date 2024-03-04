@@ -19,9 +19,6 @@ def create_emme_project(args):
     db_dir = os.path.join(project_dir, project_name, "Database")
     project_path = _app.create_project(project_dir, project_name)
     os.makedirs(db_dir)
-    # except FileExistsError:
-    #     project_path = os.path.join(
-    #         project_dir, project_name, project_name + ".emp")
     default_dimensions = {
         "scalar_matrices": 100, 
         "origin_matrices": 100, 
@@ -80,12 +77,21 @@ def create_emme_project(args):
             "transit_lines": 8000,
             "transit_segments": 700000,
             "extra_attribute_values": 70000000,                  
+        },
+        "freight": {
+            "centroids": 320,
+            "regular_nodes": 20000,
+            "links": 55000,
+            "transit_lines": 7000,
+            "transit_segments": 500000,
+            "extra_attribute_values": 25000000,
         }
     }
     dim = {**default_dimensions, **submodel_dimensions[args.submodel]}
     scenario_num = args.first_scenario_id
     eb = _eb.create(os.path.join(db_dir, "emmebank"), dim)
     eb.text_encoding = 'utf-8'
+    eb.coord_unit_length = 0.001
     scen = eb.create_scenario(scenario_num)
     emmebank_path = eb.path
     eb.dispose()

@@ -25,7 +25,7 @@ def main(args):
     base_matrices_path: str = os.path.join(args.baseline_data_path, "base_matrices")
     forecast_zonedata_path: str = args.forecast_data_path
     results_path: str = args.results_path
-    emme_project_path: str = os.path.join(args.emme_path, args.submodel, args.submodel + ".emp")
+    emme_project_path: str = args.emme_path
     log_extra = {
         "status": {
             "name": args.scenario_name,
