@@ -110,10 +110,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds))
-        self._create_attributes(self.day_scenario, self._extra, car_dist_unit_cost)
+        self._create_attributes(
+            self.day_scenario, self._extra,  self._netfield,car_dist_unit_cost)
         for ap in self.assignment_periods:
             ap.prepare(*self._create_attributes(
-                    ap.emme_scenario, ap.extra, car_dist_unit_cost),
+                    ap.emme_scenario, ap.extra, ap.netfield, car_dist_unit_cost),
                 car_dist_unit_cost)
         for idx in param.volume_delay_funcs:
             try:
@@ -302,6 +303,21 @@ class EmmeAssignmentModel(AssignmentModel):
         """
         return "@{}_{}".format(attr, "vrk")
 
+    def _netfield(self, attr: str) -> str:
+        """Add prefix "#" and suffix "_vrk".
+
+        Parameters
+        ----------
+        attr : str
+            Attribute string to modify
+
+        Returns
+        -------
+        str
+            Modified string
+        """
+        return "#{}_{}".format(attr, "vrk")
+
     def _add_bus_stops(self):
         network: Network = self.mod_scenario.get_network()
         for line in network.transit_lines():
@@ -383,6 +399,7 @@ class EmmeAssignmentModel(AssignmentModel):
     def _create_attributes(self,
                            scenario: Any,
                            extra: Callable[[str], str],
+                           netfield: Callable[[str], str],
                            link_costs: Dict[str, float]
             ) -> Tuple[
                 Dict[str,Dict[str,str]],
@@ -397,6 +414,9 @@ class EmmeAssignmentModel(AssignmentModel):
         extra : function
             Small helper function which modifies string
             (e.g., self._extra)
+        netfield : function
+            Small helper function which modifies string
+            (e.g., self._netfield)
         link_costs : dict
             key : str
                 Assignment class (car_work/truck/...)
@@ -440,7 +460,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "LINK", extra("truck_time"), "truck time",
             overwrite=True, scenario=scenario)
-        if scenario.extra_attribute(extra("hinta")) is not None:
+        if scenario.network_field("LINK", netfield("hinta")) is not None:
             self.emme_project.create_extra_attribute(
                 "LINK", extra("toll_cost"), "toll cost",
                 overwrite=True, scenario=scenario)
