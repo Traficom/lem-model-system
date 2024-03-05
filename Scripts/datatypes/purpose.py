@@ -7,7 +7,6 @@ from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
 import parameters.zone as param
-from parameters.assignment import divided_classes, assignment_classes
 import models.logit as logit
 import models.generation as generation
 from datatypes.demand import Demand
@@ -49,6 +48,7 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
+        self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -106,16 +106,11 @@ class Purpose:
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
-            if mode in divided_classes:
-                ass_class = "{}_{}".format(
-                    mode, assignment_classes[self.name])
-            else:
-                ass_class = mode
             for time_period in impedance:
                 for mtx_type in impedance[time_period]:
-                    if ass_class in impedance[time_period][mtx_type]:
+                    if mode in impedance[time_period][mtx_type]:
                         share = self.impedance_share[mode][time_period]
-                        imp = impedance[time_period][mtx_type][ass_class]
+                        imp = impedance[time_period][mtx_type][mode]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
         return day_imp
@@ -185,6 +180,8 @@ class TourPurpose(Purpose):
         else:
             self.model = logit.ModeDestModel(*args)
             self.accessibility_model = logit.AccessibilityModel(*args)
+        for mode in self.demand_share:
+            self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
         self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
@@ -313,6 +310,8 @@ class SecDestPurpose(Purpose):
         self.gen_model = generation.SecDestGeneration(self, resultdata)
         self.model = logit.SecDestModel(*args)
         self.modes = list(self.model.dest_choice_param)
+        for mode in self.demand_share:
+            self.demand_share[mode]["vrk"] = [[0.5, 0.5], [0.5, 0.5]]
 
     @property
     def dest_interval(self):
@@ -321,8 +320,10 @@ class SecDestPurpose(Purpose):
     def init_sums(self):
         for mode in self.model.dest_choice_param:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
-            self.attracted_tours[mode] = numpy.zeros_like(
-                self.zone_data.zone_numbers, float)
+        for purpose in self.gen_model.param:
+            for mode in self.gen_model.param[purpose]:
+                self.attracted_tours[mode] = numpy.zeros_like(
+                    self.zone_data.zone_numbers, float)
 
     def generate_tours(self):
         """Generate the source tours without secondary destinations."""

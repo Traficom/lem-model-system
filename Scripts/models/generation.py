@@ -97,11 +97,12 @@ class SecDestGeneration(GenerationModel):
     
     def add_tours(self, demand, mode, purpose):
         """Generate matrix of tour numbers from attracted source tours."""
-        if mode in self.purpose.modes:
+        mod_mode = mode.replace("work", "leisure")
+        if mod_mode in self.purpose.modes:
             bounds = self.purpose.bounds
             metropolitan = next(iter(self.purpose.sources)).bounds
-            b = self.param
-            self.tours[mode] += b[purpose.name][mode] * demand[metropolitan, bounds]
+            self.tours[mod_mode] += (self.param[purpose.name][mode]
+                                     * demand[metropolitan, bounds])
     
     def get_tours(self, mode):
         """Get vector of tour numbers per od pair.

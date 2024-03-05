@@ -15,29 +15,84 @@ class DepartureTimeTest(unittest.TestCase):
         class Purpose:
             pass
         dem = Demand()
-        pur = Purpose()
-        dem.purpose = pur
+        pur1 = Purpose()
+        dem.purpose = pur1
         dem.is_car_passenger = False
 
         dem.purpose.name = "hoo"
-        dem.mode = "car"
+        dem.purpose.demand_share = {
+            "car_leisure": {
+                "aht":[
+                    [0.0113538534294527, 0.0483356330299955],
+                    [0.000783876140666748, 0.0782437896466509]
+                ],
+                "pt":[
+                    [0.0415688948149155, 0.0275008865700513],
+                    [0.0249338403352452, 0.0218610155562793]
+                ],
+                "iht": [
+                    [0.126631086164843, 0.0254942149131846],
+                    [0.103874241247952, 0.0253360698120264]
+                ]
+            },
+            "transit_leisure": {
+                "aht": [
+                    [0.007848433131924, 0.0318369625680414],
+                    [0.00148575955291745, 0.0800841531842564]
+                ],
+                "pt": [
+                    [0.0392336062771297, 0.0251341675086098],
+                    [0.0191847672424449, 0.0215475457292278]
+                ],
+                "iht": [
+                    [0.191259463404029, 0.0367695909665859],
+                    [0.0872373132287834, 0.0165925719765324]
+                ]
+            },
+        }
+        dem.mode = "car_leisure"
         dem.matrix = mtx
         dem.orig = 1
         dem.dest = None
         dem.position = (1, 0, 0)
         dtm.add_demand(dem)
 
+        dem.purpose = Purpose()
         dem.purpose.name = "hw"
+        dem.purpose.demand_share = {
+            "transit_work": {
+                "aht": [0.168710422485735, 0.0387468664988151],
+                "pt": [0.0716348116654068, 0.0679842570835241],
+                "iht": [0.0437554897467228, 0.108924099422715]
+                },
+            "bike": {
+                "aht": [0.0259945209673068, 0.0164613914375604],
+                "pt": [0.0692448058659033, 0.0449421010361262],
+                "iht": [0.0131611231013582, 0.0411710936086695]
+                },
+        }
         dem.mode = "bike"
         dem.dest = 2
         dem.matrix = numpy.array([[3]])
         dem.position = (1, 2)
         dtm.add_demand(dem)
 
+        dem.purpose = Purpose()
         dem.purpose.name = "ho"
-        dem.purpose.sec_dest_purpose = Purpose()
-        dem.purpose.sec_dest_purpose.name = "hoo"
-        dem.mode = "transit"
+        dem.purpose.demand_share = {
+            "transit_leisure": {
+                "aht": [0.168710422485735, 0.0387468664988151],
+                "pt": [0.0716348116654068, 0.0679842570835241],
+                "iht": [0.0437554897467228, 0.108924099422715]
+                },
+            "bike": {
+                "aht": [0.0259945209673068, 0.0164613914375604],
+                "pt": [0.0692448058659033, 0.0449421010361262],
+                "iht": [0.0131611231013582, 0.0411710936086695]
+                },
+        }
+        dem.purpose.sec_dest_purpose = pur1
+        dem.mode = "transit_leisure"
         dem.matrix = numpy.array([[3]])
         dem.position = (1, 2, 0)
         dtm.add_demand(dem)
@@ -45,5 +100,5 @@ class DepartureTimeTest(unittest.TestCase):
         self.assertIsNotNone(dtm.demand)
         self.assertIs(type(dtm.demand["iht"]["car_leisure"]), numpy.ndarray)
         self.assertEquals(dtm.demand["pt"]["car_leisure"].ndim, 2)
-        self.assertEquals(dtm.demand["aht"]["bike_work"].shape[1], 8)
+        self.assertEquals(dtm.demand["aht"]["bike"].shape[1], 8)
         self.assertNotEquals(dtm.demand["iht"]["car_leisure"][0, 1], 0)

@@ -16,17 +16,19 @@ METROPOLITAN_ZONES = numpy.loadtxt(
     os.path.join(TEST_DATA_PATH, "Scenario_input_data",
                  "2030_test", "freight_zones.csv"))
 MODEL_TYPE = "dest_mode"
+ESTIM_TYPE = "attr"
 
 class FreightModelTest(unittest.TestCase):
 
     def test_freight_model(self):
 
-        def get_cost_mtx(mtx_path: str) -> numpy.array:
+        def get_cost_mtx(mtx_path: str, purpose_key) -> numpy.array:
             mtx = pandas.read_csv(
                 os.path.join(TEST_DATA_PATH, "Scenario_input_data",
                              "2030_test", mtx_path))
-            mtx = mtx.query(f"from_id in {METROPOLITAN_ZONES.tolist()} \
-                            & to_id in {METROPOLITAN_ZONES.tolist()}")
+            mtx = mtx.query(f"commodity_id == {purpose_key} \
+                                & from_id in {METROPOLITAN_ZONES.tolist()} \
+                                & to_id in {METROPOLITAN_ZONES.tolist()}")
             mtx = numpy.array(mtx["cost"])
             mtx.shape = (len(METROPOLITAN_ZONES), len(METROPOLITAN_ZONES))
             return mtx
@@ -60,23 +62,24 @@ class FreightModelTest(unittest.TestCase):
                 "freight", MODEL_TYPE)
         purposes = {}
         for file_name in os.listdir(parameters_path):
-            with open(os.path.join(parameters_path, file_name), 'r') as file:
-                fname = file_name.split("_")[1]
-                purposes[fname] = FreightPurpose(json.load(file), zonedata,
-                                                 resultdata)
-        impedance = {
-            "truck": {
-                "cost": get_cost_mtx("road_costs.csv"),
-            },
-            "train": {
-                "cost": get_cost_mtx("rail_costs.csv"),
-            },
-            "ship": {
-                "cost": get_cost_mtx("ship_costs.csv"),
-            },
-        }
+            if file_name.endswith(".json"):
+                with open(os.path.join(parameters_path, file_name), 'r') as file:
+                    fname = file_name.split("_")[1]
+                    purposes[fname] = FreightPurpose(json.load(file), zonedata,
+                                                    resultdata)
         demand_list = {}
         for purpose_key, purpose_value in purposes.items():
+            impedance = {
+                "truck": {
+                    "cost": get_cost_mtx("road_costs.csv", int(purpose_key))
+                },
+                "train": {
+                    "cost": get_cost_mtx("rail_costs.csv", int(purpose_key))
+                },
+                "ship": {
+                    "cost": get_cost_mtx("ship_costs.csv", int(purpose_key))
+                }
+                }
             demand = purpose_value.calc_traffic(impedance)
             demand_list[purpose_key] = demand
 
@@ -85,12 +88,11 @@ class FreightModelTest(unittest.TestCase):
             df_truck = mtx_to_df(key, val["truck"], 1)
             df_train = mtx_to_df(key, val["train"], 2)
             df_ship = mtx_to_df(key, val["ship"], 3)
-            # Concats modes of one commodity id
             df = pandas.concat([df_truck, df_train, df_ship], axis=0)
             df_list.append(df)
         # Concats all commodity ids
         df = pandas.concat(df_list, axis=0)
         df.to_pickle(os.path.join(
             TEST_DATA_PATH, "Results", "test", "freight",
-            MODEL_TYPE, f"{MODEL_TYPE}_demand.pkl"),
+            MODEL_TYPE, f"{MODEL_TYPE}_demand_{ESTIM_TYPE}_new_shiptons.pkl"),
             compression="infer")

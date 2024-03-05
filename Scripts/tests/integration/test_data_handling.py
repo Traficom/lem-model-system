@@ -103,5 +103,6 @@ class ZoneDataTest(unittest.TestCase):
         industry = df["industry"] # Let's pick a column and validate it
         expected_industry = pandas.Series(
             [3.3971, 579.7232, 2.1984, 467.7852, 29.4101, 2.1424, 7.392, 0, 0, 0],
-            index=INTERNAL_ZONES, dtype=numpy.float32, name="industry")
+            index=pandas.Index(INTERNAL_ZONES, name="data_id"),
+            dtype=numpy.float32, name="industry")
         pandas.testing.assert_series_equal(industry, expected_industry)

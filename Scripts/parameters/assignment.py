@@ -53,7 +53,7 @@ roadclasses = {
     41: RoadClass("local", "any", 5, 500, 20, 1.304),
 }
 connector_link_types = (84, 85, 86, 87, 88, 98, 99)
-connector = RoadClass("connector", "any", 99, 0, 0, 0)
+connector = RoadClass("connector", "any", 99, 0, 50, 0)
 roadclasses.update({linktype: connector for linktype in connector_link_types})
 custom_roadtypes = {
     91: "motorway",
@@ -87,7 +87,7 @@ bikepath_vdfs = (
 )
 # Transit delay function ids
 transit_delay_funcs = {
-    ("bus", "bgde"): {
+    ("bus", "bge"): {
         "no_buslane": 1,
         "buslane": 2,
     },
@@ -125,7 +125,7 @@ volume_delay_funcs = {
     "fd10": vdf_temp.format(0.3, buslane, 0.810, 2.28, 0.0170),
     "fd90": "length*(60/ul2)",
     "fd91": "length*(60/ul2)",
-    "fd99": "length * 1.3",
+    "fd99": "length*(60/ul2)",
     # Bike functions
     "fd70": "length*(60/19)",
     "fd71": "length*(60/17)",
@@ -285,6 +285,9 @@ transfer_penalty = {
     "car_first_mile": 5,
     "car_last_mile": 5,
     "transit": 5,
+    "train": 10,
+    "long_d_bus": 10,
+    "airplane": 10,
 }
 extra_waiting_time = {
     "penalty": "@wait_time_dev",
@@ -341,6 +344,21 @@ volume_factors = {
         "iht": 1. / 0.405,
     },
     "car_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "train": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "long_d_bus": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "airplane": {
         "aht": 1. / 0.478,
         "pt": 1. / 0.109,
         "iht": 1. / 0.405,
@@ -410,30 +428,31 @@ noise_zone_width = {
 
 ### ASSIGNMENT REFERENCES ###
 time_periods: List[str] = ["aht", "pt", "iht"]
-transport_classes = (
+private_classes = (
     "car_work",
     "car_leisure",
-    "transit_work",
-    "transit_leisure",
-    "bike_work",
-    "bike_leisure",
-    "trailer_truck",
-    "truck",
-    "van",
+    "bike",
 )
 park_and_ride_classes = (
-    "car_first_mile",
-    "car_last_mile",
+    # "car_first_mile",
+    # "car_last_mile",
 )
-transit_classes = park_and_ride_classes + (
+long_distance_transit_classes = park_and_ride_classes + (
+    "train",
+    "long_d_bus",
+    "airplane",
+)
+local_transit_classes = (
     "transit_work",
     "transit_leisure",
 )
+transit_classes = local_transit_classes + long_distance_transit_classes
 freight_classes = (
     "van",
     "truck",
     "trailer_truck",
 )
+transport_classes = private_classes + transit_classes + freight_classes
 assignment_classes = {
     "hw": "work",
     "hc": "work",
@@ -450,10 +469,6 @@ assignment_classes = {
     "oop": "leisure",
     "external": "leisure",
 }
-divided_classes = (
-    "car",
-    "transit",
-)
 main_mode = 'h'
 bike_mode = 'f'
 assignment_modes = {
@@ -473,6 +488,9 @@ vot_classes = {
     "transit_leisure": "leisure",
     "car_first_mile": "work",
     "car_last_mile": "work",
+    "train": "work",
+    "long_d_bus": "leisure",
+    "airplane": "work",
 }
 # Distance unit cost for freight [eur/km]
 freight_dist_unit_cost = {
@@ -493,14 +511,17 @@ long_dist_transit_modes = {
     "transit_leisure": ['e', 'j', 'l'],
     "car_first_mile": ['e', 'j', 'l'],
     "car_last_mile": ['e', 'j', 'l'],
+    "train": ['j'],
+    "long_d_bus": ['e'],
+    "airplane": ['l'],
 }
 aux_modes = [
     'a',
 ]
 park_and_ride_mode = 'u'
 external_modes = [
-    "car",
-    "transit",
+    "car_leisure",
+    "transit_leisure",
     "truck",
     "trailer_truck",
 ]
@@ -519,6 +540,9 @@ emme_matrices = {
     "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
     "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
     "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "train": ("demand", "time", "dist", "cost", "gen_cost"),
+    "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
+    "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
     "bike": ("demand", "time", "dist"),
     "walk": ("time", "dist"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -537,6 +561,11 @@ transit_impedance_matrices = {
         "board_time": "actual_total_boarding_times",
         "num_board": "avg_boardings",
         "board_cost": "actual_total_boarding_costs",
+    },
+    "local": {
+        "loc_bc": "actual_total_boarding_costs",
+        "loc_ic": "actual_in_vehicle_costs",
+        "loc_time": "actual_in_vehicle_times",
     },
 }
 background_traffic_attr = "ul3"

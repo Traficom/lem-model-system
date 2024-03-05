@@ -9,7 +9,7 @@ from models.logit import ModeDestModel
 
 import parameters.car as param
 import parameters.zone as zone_param
-from parameters.assignment import assignment_classes, vot_inv, divided_classes
+from parameters.assignment import assignment_classes, vot_inv
 
 
 class Tour:
@@ -219,18 +219,16 @@ class Tour:
         """Get cost and time components from tour dest choice."""
         self.purpose.name = cast(str, self.purpose.name) #type checker help
         demand_type = assignment_classes[self.purpose.name]
-        ass_class = ("{}_{}".format(self.mode, demand_type)
-            if self.mode in divided_classes else self.mode)
         cost: float = 0.0
         try:
             if demand_type == "work":
-                departure_imp = impedance["aht"][mtx_type][ass_class]
-                sec_dest_imp = impedance["iht"][mtx_type][ass_class]
-                return_imp = impedance["iht"][mtx_type][ass_class]
+                departure_imp = impedance["aht"][mtx_type][self.mode]
+                sec_dest_imp = impedance["iht"][mtx_type][self.mode]
+                return_imp = impedance["iht"][mtx_type][self.mode]
             else:
-                departure_imp = impedance["pt"][mtx_type][ass_class]
-                sec_dest_imp = impedance["pt"][mtx_type][ass_class]
-                return_imp = impedance["pt"][mtx_type][ass_class]
+                departure_imp = impedance["pt"][mtx_type][self.mode]
+                sec_dest_imp = impedance["pt"][mtx_type][self.mode]
+                return_imp = impedance["pt"][mtx_type][self.mode]
             # first leg of tour
             cost += departure_imp[self.position[0], self.position[1]]
             # check if tour has secondary destination and add accordingly

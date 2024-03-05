@@ -42,6 +42,7 @@ class ZoneData:
         landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
         attrdata = files.read_csv_file(".att")
+        fr_workpl = files.read_csv_file(".wrkpl")
         files = FileReader(data_dir)
         self.transit_zone = files.read_csv_file(".tco")
         try:
@@ -59,8 +60,9 @@ class ZoneData:
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["total"]
         self["population"] = pop
-        for i in range(1, 14):
+        for i in range(1, 13):
             self[f"attraction{i}"] = attrdata[f"attraction{i}"]
+        self["freight_workplaces"] = fr_workpl["workplaces"]
         self.share["share_age_7-17"] = popdata["sh_7-17"]
         self.share["share_age_18-29"] = popdata["sh_1829"]
         self.share["share_age_30-49"] = popdata["sh_3049"]
@@ -83,14 +85,14 @@ class ZoneData:
         self["shops"] = workdata["sh_shop"] * wp
         self["logistics"] = workdata["sh_logi"] * wp
         self["industry"] = workdata["sh_indu"] * wp
-        self["parking_cost_work"] = parkdata["parcosw"]
-        self["parking_cost_errand"] = parkdata["parcose"]
+        self["parking_cost_work"] = parkdata["avg_parcosw"]
+        self["parking_cost_errand"] = parkdata["avg_parcose"]
         self["comprehensive_schools"] = schooldata["compreh"]
         self["secondary_schools"] = schooldata["secndry"]
         self["tertiary_education"] = schooldata["tertiary"]
         self["zone_area"] = landdata["builtar"]
-        self.share["share_detached_houses"] = landdata["detach"]
-        self["perc_detached_houses_sqrt"] = landdata["detach"] ** 0.5
+        self.share["share_detached_houses"] = landdata["sh_detach"]
+        self["perc_detached_houses_sqrt"] = landdata["sh_detach"] ** 0.5
         self["helsinki"] = self.dummy("municipalities", "Helsinki")
         self["cbd"] = self.dummy("areas", "helsinki_cbd")
         self["lauttasaari"] = self.dummy("areas", "lauttasaari")
@@ -106,13 +108,13 @@ class ZoneData:
         self["own_zone_area_sqrt"] = numpy.sqrt(self["own_zone_area"])
         # Create matrix where value is 1 if origin and destination is in
         # same municipality
-        own_municipality = pandas.DataFrame(
+        within_municipality = pandas.DataFrame(
             False, self.zone_numbers, self.zone_numbers)
         intervals = ZoneIntervals("municipalities")
         for i in intervals:
-            own_municipality.loc[intervals[i], intervals[i]] = True
-        self["own"] = own_municipality.values
-        self["other"] = ~own_municipality.values
+            within_municipality.loc[intervals[i], intervals[i]] = True
+        self["within_municipality"] = within_municipality.values
+        self["outside_municipality"] = ~within_municipality.values
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = pandas.Series(False, self.zone_numbers[bounds])
@@ -206,8 +208,8 @@ class ZoneData:
         try:
             val = self._values[key]
         except KeyError as err:
-            keyl: List[str] = key.split('_')
-            if keyl[1] in ("own", "other"):
+            keyl: List[str] = key.split('<')
+            if keyl[1] in ("within_municipality", "outside_municipality"):
                 # If parameter is only for own municipality or for all
                 # municipalities except own, array is multiplied by
                 # bool matrix

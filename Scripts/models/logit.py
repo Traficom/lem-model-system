@@ -169,13 +169,16 @@ class LogitModel:
         """
         for i in b:
             try: # If only one parameter
-                exps *= numpy.power(impedance[i], b[i]) # REMOVED +1 FROM FREIGHT
-            except ValueError: # Separate sub-region parameters
+                imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
+                exps *= numpy.power(imp, b[i])
+            except TypeError: # Separate sub-region parameters
                 for j, bounds in enumerate(self.sub_bounds):
-                    exps[bounds, :] *= numpy.power(
-                        impedance[i][bounds, :] + 1, b[i][j])
+                    imp = impedance[i][bounds, :]
+                    if b[i][j] < 0:
+                        imp += 1
+                    exps[bounds, :] *= numpy.power(imp, b[i][j])
         return exps
-    
+
     def _add_zone_util(self, utility, b, generation=False):
         """Adds simple linear zone terms to utility.
 
@@ -405,7 +408,7 @@ class ModeDestModel(LogitModel):
             i = self.purpose.sub_intervals.searchsorted(zone, side="right")
             money_utility = 1 / b[i]
         self.mode_choice_param = cast(Dict[str, Dict[str, Any]], self.mode_choice_param) #type checker help
-        money_utility /= self.mode_choice_param["car"]["log"]["logsum"]
+        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         accessibility = -money_utility * logsum
         return probs, accessibility
 
@@ -430,15 +433,21 @@ class ModeDestModel(LogitModel):
     def _calc_prob(self, mode_expsum):
         prob = {}
         for mode in self.mode_choice_param:
-            mode_prob = self.mode_exps[mode] / mode_expsum
-            dest_prob = (self._dest_exps[mode].T
-                         / self.dest_expsums[mode]["logsum"])
+            mode_exps = self.mode_exps[mode]
+            mode_prob = numpy.divide(
+                mode_exps, mode_expsum, out=numpy.zeros_like(mode_exps),
+                where=mode_expsum!=0)
+            dest_exps = self._dest_exps[mode].T
+            dest_expsum = self.dest_expsums[mode]["logsum"]
+            dest_prob = numpy.divide(
+                dest_exps, dest_expsum, out=numpy.zeros_like(dest_exps),
+                where=dest_expsum!=0)
             prob[mode] = mode_prob * dest_prob
         return prob
 
     def _get_cost_util_coefficient(self):
         try:
-            b = self.dest_choice_param["car"]["impedance"]["cost"]
+            b = next(iter(self.dest_choice_param.values()))["impedance"]["cost"]
         except KeyError:
             # School tours do not have a constant cost parameter
             # Use value of time conversion from CBA guidelines instead
@@ -465,7 +474,7 @@ class AccessibilityModel(ModeDestModel):
         # Calculate sustainable and car accessibility
         sustainable_sum = numpy.zeros_like(mode_expsum)
         for mode in self.mode_choice_param:
-            if mode != "car":
+            if mode.split('_')[0] != "car":
                 sustainable_sum += self.mode_exps[mode]
         logsum = pandas.Series(
             numpy.log(sustainable_sum), self.purpose.zone_numbers)
@@ -476,7 +485,7 @@ class AccessibilityModel(ModeDestModel):
             money_utility = 1 / b
         except TypeError:  # Separate params for cap region and surrounding
             money_utility = 1 / b[0]
-        money_utility /= self.mode_choice_param["car"]["log"]["logsum"]
+        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         self.purpose.access = money_utility * self.zone_data[self.purpose.name]
         self.purpose.sustainable_access = money_utility * logsum
         self.purpose.car_access = (money_utility
@@ -489,7 +498,7 @@ class AccessibilityModel(ModeDestModel):
             normalization = 1 / sum([param[mode]["constant"][0]
                 for mode in param])
             workforce = ((normalization*mode_expsum)
-                            **(1/param["car"]["log"]["logsum"]))
+                            **(1/next(iter(param.values()))["log"]["logsum"]))
             workforce = pandas.Series(workforce, self.purpose.zone_numbers)
             self.resultdata.print_data(
                 workforce, "workplace_accessibility.txt", self.purpose.name)

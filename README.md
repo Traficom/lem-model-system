@@ -4,7 +4,7 @@ This repository contains python files for LEM model system. Source codes can be 
 
 ## Usage
 
-You can run LEM from the command line or by using [helmet-ui](https://github.com/HSLdevcom/helmet-ui).
+You can run LEM from the command line or by using [LEM UI](https://swd.int.traficom.fi/stash/projects/VLE/repos/lem-ui/browse).
 In this chapter, we will guide you how to install LEM to work with Inro EMME software from the command line.
 The user is not expected to install any new software apart from model-system and EMME.
 
@@ -49,11 +49,11 @@ Instructions on the configuration settings are found [here](Scripts#running-the-
 Then, open command line to your local Scripts folder:
 
 ```
-python helmet.py
+python lem.py
 ```
 
 Run parameters can be added to the command line call.
-Run `python helmet.py --help` to see parameter syntax.
+Run `python lem.py --help` to see parameter syntax.
 
 ## Development
 
@@ -101,7 +101,7 @@ Use `pipenv` when executing scripts. For example:
 
 ```
 cd Scripts
-pipenv run python helmet.py
+pipenv run python lem.py
 ```
 
 
@@ -120,8 +120,8 @@ Refer to this manual: [https://hsldevcom.github.io/helmet-docs/kaytto-ohje.html#
     - Python from previous virtual environment, for example `C:\Users\xxx\.virtualenvs\Scripts-AJXyDTuP\Scripts\python.exe`
     - helmet-model-system was set previously
     - Projektin kansiopolku: your choice
-    - Lähtödata: `helmet-model-system\tests\test_data\Base_input_data`
-    - Tulokset: your choice (copy Matrices folder from to the location) or `helmet-model-system\tests\test_data\Results`
+    - Lähtödata: `model-system\tests\test_data\Base_input_data`
+    - Tulokset: your choice (copy Matrices folder from to the location) or `model-system\tests\test_data\Results`
 2. "Uusi Helmet-skenaario" button
     - Skenaarion nimi: your choice
     - Emme-projekti: create an empty (dummy) text file and save it with file extension `.emp`
@@ -131,7 +131,7 @@ Refer to this manual: [https://hsldevcom.github.io/helmet-docs/kaytto-ohje.html#
     - The rest can have default values (edited) 
 	
 #### Run your first demo model run
-1. In case your scenario name is not `test`, copy the `helmet-model-system\tests\test_data\Results\test\Matrices` folder to `[your-result-folder]\[your-scenario-name]\Matrices`.
+1. In case your scenario name is not `test`, copy the `model-system\tests\test_data\Results\test\Matrices` folder to `[your-result-folder]\[your-scenario-name]\Matrices`.
 2. Select scenario with checkbox and click `Käynnistä (1) skenaariota`. When running the first model run again and again, just do #2. When you create more scenarios, always copy matrices (#1) first to a new location. (This is a demo model thing that needs to be done because we are independent of Emme.)
 	
 #### Running mock assignment in command line
@@ -139,11 +139,11 @@ Alternatively, you can run the mock assignment with the help of command line
 1. Make sure your virtual environment is activated (As described in Environment and Dependencies)
 2. Adjust the following variables in `dev-config.json` (while replacing the YOUR_PATH variable with absolute path to the helmet-model-system folder)
     - `"SCENARIO_NAME": "test"`,
-    - `"RESULTS_PATH": "YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Results"`,
-    - `"BASELINE_DATA_PATH": "YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Base_input_data"`,
-    - `"FORECAST_DATA_PATH": "YOUR_PATH\\helmet-model-system\\Scripts\\tests\\test_data\\Scenario_input_data\\2030_test"`,
+    - `"RESULTS_PATH": "YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Results"`,
+    - `"BASELINE_DATA_PATH": "YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Base_input_data"`,
+    - `"FORECAST_DATA_PATH": "YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Scenario_input_data\\2030_test"`,
     - `"OPTIONAL_FLAGS": ["DO_NOT_USE_EMME"]`
-3. Type the following to the command line: `pipenv run python helmet.py`
+3. Type the following to the command line: `pipenv run python lem.py`
 
 
 ### Visual Studio Code
