@@ -7,7 +7,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
     def prepare(self, *args, **kwargs):
         AssignmentPeriod.prepare(self, *args, **kwargs)
         self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class])
+                param.freight_modes[ass_class], self.emme_matrices[ass_class],
+                self.extra(ass_class))
             for ass_class in param.freight_modes}
 
     def assign(self):

@@ -16,10 +16,13 @@ class FreightSpecification:
             Impedance type (time/cost/dist/...)
         value : str
             Emme matrix id
+    aux_result : str
+        Name of extra attribute, where aux volume is to be stored
     """
     def __init__(self,
                  mode: str,
-                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
+                 emme_matrices: Dict[str, Union[str, Dict[str, str]]],
+                 aux_result: str):
         journey_levels = [{
             "description": name,
             "destinations_reachable": True,
@@ -78,14 +81,11 @@ class FreightSpecification:
             "flow_distribution_between_lines": {
                 "consider_total_impedance": False
             },
-            "od_results": {
-                "total_impedance": None
-            },
             "results": {
                 "aux_transit_volumes_by_mode": [
                     {
                         "mode": param.park_and_ride_mode,
-                        "volume": None,
+                        "volume": aux_result,
                     }
                 ]
             },
