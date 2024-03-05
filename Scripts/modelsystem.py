@@ -13,6 +13,7 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
+from utils.divide_matrices import divide_matrices
 from utils.zone_interval import ArrayAggregator
 import assignment.departure_time as dt
 from datahandling.resultdata import ResultsData
@@ -201,6 +202,10 @@ class ModelSystem:
         if not self.ass_model.use_free_flow_speeds:
             self.ass_model.init_assign()
         self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
+        Purpose.distance = self.ass_model.beeline_dist
+        with self.resultmatrices.open(
+                "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
+            mtx["all"] = Purpose.distance
 
         # Perform traffic assignment and get result impedance, 
         # for each time period
@@ -220,6 +225,9 @@ class ModelSystem:
             ap.assign_trucks_init()
             impedance[tp] = ap.end_assign() if is_end_assignment else ap.assign()
             if tp == self.ass_model.time_periods[0]:
+                for mode, mtx in impedance[tp]["dist"].items():
+                    divide_matrices(
+                        mtx, Purpose.distance, f"Network/beeline dist {mode}")
                 self._update_ratios(impedance[tp], tp)
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
@@ -228,7 +236,6 @@ class ModelSystem:
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.calc_gaps()
-        Purpose.distance = next(iter(impedance.values()))["dist"]["car_work"]
         return impedance
 
     def run_iteration(self, previous_iter_impedance, iteration=None):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast
+import numpy
 import pandas
 from math import log10
 
@@ -151,6 +152,19 @@ class EmmeAssignmentModel(AssignmentModel):
     def nr_zones(self) -> int:
         """int: Number of zones in assignment model."""
         return len(self.zone_numbers)
+
+    @property
+    def beeline_dist(self):
+        log.info("Get beeline distances from network centroids")
+        network = self.mod_scenario.get_network()
+        centroids = [numpy.array([0.001 * node.x, 0.001 * node.y])
+                              for node in network.centroids()]
+        centr_array = numpy.array(centroids)
+        mtx = numpy.zeros(
+            shape=(len(centroids), len(centroids)), dtype=numpy.float32)
+        for i, centr in enumerate(centroids):
+            mtx[i, :] = numpy.sqrt(numpy.sum((centr_array - centr) ** 2, axis=1))
+        return mtx
 
     def aggregate_results(self, resultdata: ResultsData):
         """Aggregate results to 24h and print vehicle kms.

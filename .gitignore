@@ -60,5 +60,6 @@ Scripts/tests/test_data/Results/*
 !Scripts/tests/test_data/Results/test/uusimaa/Matrices/cost*
 !Scripts/tests/test_data/Results/test/uusimaa/Matrices/dist*
 !Scripts/tests/test_data/Results/test/uusimaa/Matrices/time*
+!Scripts/tests/test_data/Results/test/uusimaa/Matrices/beeline*
 project.mtbx-shm
 project.mtbx-wal

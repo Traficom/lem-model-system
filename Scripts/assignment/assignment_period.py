@@ -5,11 +5,10 @@ import copy
 
 from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 import utils.log as log
+from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
-import parameters.zone as zone_param
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
-from assignment.datatypes.journey_level import BOARDED_LOCAL, BOARDED_LONG_D
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.abstract_assignment import Period
 if TYPE_CHECKING:
@@ -223,11 +222,9 @@ class AssignmentPeriod(Period):
             for imp_type in ("time", "cost", "dist")}
         for mode in mtxs["time"]:
             try:
-                mtx = numpy.divide(mtxs["dist"][mode], mtxs["time"][mode]/60,
-                                   out=numpy.zeros_like(mtxs["time"][mode]),
-                                   where=mtxs["time"][mode]>0)
-                v = [round(numpy.quantile(mtx, q)) for q in [0.00, 0.50, 1.00]]
-                log.debug(f"Min, median, max of OD speed: {mode} : {v[0]} - {v[1]} - {v[2]} km/h")
+                divide_matrices(
+                    mtxs["dist"][mode], mtxs["time"][mode]/60,
+                    f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
         # fix the emme path analysis results

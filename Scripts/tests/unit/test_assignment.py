@@ -60,6 +60,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             "van",
         ]
         ass_model.init_assign()
+        ass_model.beeline_dist
         for ass_class in demand:
             ass_model.assignment_periods[0].set_matrix(
                 ass_class, car_matrix)
