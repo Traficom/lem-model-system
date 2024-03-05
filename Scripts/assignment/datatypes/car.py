@@ -5,40 +5,46 @@ from collections.abc import Callable
 from typing import Any, Dict, Optional, Union
 
 
-class Car:
-    """Car assignment class definition.
+LENGTH_ATTR = "length"
 
-    Parameters
-    ----------
-    ass_class : str
-        Assignment class (car_work/car_leisure/van/truck/trailer_truck)
-    extra : assignment_period.AssignmentPeriod.extra()
-        Function for generating extra attribute name
-        for specific assignment period
-    emme_matrices : dict
-        key : str
-            Impedance type (time/cost/dist/...)
-        value : str
-            Emme matrix id
-    link_costs : str
-        Link attribute where link cost is found
-    value_of_time_inv : float (optional)
-        Inversed value of time [min/eur], default is param.vot_inv
-    """
+
+class Car:
     def __init__(self,
                  ass_class: str,
                  extra: Callable,
                  emme_matrices: Dict[str, Union[str, Dict[str, str]]],
-                 link_costs: str,
-                 value_of_time_inv: Optional[float]=None):
-        if value_of_time_inv is None:
-            value_of_time_inv = param.vot_inv[param.vot_classes[ass_class]]
+                 link_costs: Union[str, float]):
+        """Car assignment class definition.
+
+        Parameters
+        ----------
+        ass_class : str
+            Assignment class (car_work/car_leisure/van/truck/trailer_truck)
+        extra : assignment_period.AssignmentPeriod.extra()
+            Function for generating extra attribute name
+            for specific assignment period
+        emme_matrices : dict
+            key : str
+                Impedance type (time/cost/dist/...)
+            value : str
+                Emme matrix id
+        link_costs : str or float
+            Extra attribute where link cost is found (str) or length
+            multiplier to calculate link cost (float)
+        """
+        perception_factor = param.vot_inv[param.vot_classes[ass_class]]
+        try:
+            perception_factor *= link_costs
+        except TypeError:
+            pass
+        else:
+            link_costs = LENGTH_ATTR
         self.spec: Dict[str, Any] = {
             "mode": param.assignment_modes[ass_class],
             "demand": emme_matrices["demand"],
             "generalized_cost": {
                 "link_costs": link_costs,
-                "perception_factor": value_of_time_inv,
+                "perception_factor": perception_factor,
             },
             "results": {
                 "link_volumes": extra(ass_class),
@@ -48,9 +54,11 @@ class Car:
             },
             "path_analyses": []
         }
-        self.add_analysis("length", emme_matrices["dist"])
-        if ass_class not in ("trailer_truck", "truck"):
+        self.add_analysis(LENGTH_ATTR, emme_matrices["dist"])
+        if link_costs != LENGTH_ATTR:
             self.add_analysis(extra("toll_cost"), emme_matrices["cost"])
+        if ass_class in param.truck_classes:
+            self.add_analysis(extra("truck_time"), emme_matrices["time"])
     
     def add_analysis (self, 
                       link_component: str, 

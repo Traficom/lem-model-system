@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast
+import numpy
 import pandas
 from math import log10
 
@@ -9,9 +10,9 @@ import parameters.assignment as param
 import parameters.zone as zone_param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
+from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.datatypes.transit_fare import TransitFareZoneSpecification
     from datahandling.resultdata import ResultsData
     from inro.emme.database.scenario import Scenario # type: ignore
     from inro.emme.network.Network import Network # type: ignore
@@ -67,16 +68,17 @@ class EmmeAssignmentModel(AssignmentModel):
         self.mod_scenario = self.emme_project.modeller.emmebank.scenario(
             first_scenario_id)
 
-    def prepare_network(self, 
-                        car_dist_unit_cost: Optional[float]=None):
+    def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
         ----------
-        car_dist_unit_cost : float (optional)
-            Car cost per km in euros
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Car cost per km in euros
         """
-        self._set_stop_code()
         self._add_bus_stops()
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
@@ -109,11 +111,55 @@ class EmmeAssignmentModel(AssignmentModel):
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds))
-        self._create_attributes(self.day_scenario, self._extra)
+        ass_classes = list(param.emme_matrices) + ["bus"]
+        ass_classes.remove("walk")
+        self._create_attributes(
+            self.day_scenario, ass_classes, self._extra, self._netfield,
+            car_dist_unit_cost)
+        self._create_transit_attributes(self.day_scenario, self._extra)
         for ap in self.assignment_periods:
-            if car_dist_unit_cost is not None:
-                ap.dist_unit_cost = car_dist_unit_cost
-            ap.prepare(*self._create_attributes(ap.emme_scenario, ap.extra))
+            ap.prepare(
+                self._create_attributes(
+                    ap.emme_scenario, ass_classes, ap.extra, ap.netfield,
+                    car_dist_unit_cost),
+                car_dist_unit_cost)
+            ap.prepare_transit(
+                *self._create_transit_attributes(ap.emme_scenario, ap.extra))
+        self._init_functions()
+
+    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float]):
+        """Create matrices, extra attributes and calc background variables.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Car cost per km in euros
+        """
+        mtxs = {}
+        for i, ass_class in enumerate(param.freight_matrices, start=1):
+            mtxs[ass_class] = {}
+            for j, mtx_type in enumerate(param.freight_matrices[ass_class]):
+                mtxs[ass_class][mtx_type] = f"mf{i*10 + j}"
+                description = f"{mtx_type}_{ass_class}"
+                self.emme_project.create_matrix(
+                    matrix_id=mtxs[ass_class][mtx_type],
+                    matrix_name=description, matrix_description=description,
+                    overwrite=True)
+        self.freight_network = FreightAssignmentPeriod(
+            "vrk", self.mod_scenario.number, self.emme_project, mtxs,
+            use_free_flow_speeds=True)
+        self.freight_network.prepare(
+            self._create_attributes(
+                self.mod_scenario,
+                list(param.truck_classes) + list(param.freight_modes),
+                self._extra, self._netfield, car_dist_unit_cost),
+            car_dist_unit_cost)
+        self._init_functions()
+
+    def _init_functions(self):
         for idx in param.volume_delay_funcs:
             try:
                 self.emme_project.modeller.emmebank.delete_function(idx)
@@ -250,7 +296,7 @@ class EmmeAssignmentModel(AssignmentModel):
             volume_factor = param.volume_factors["bus"][ap.name]
             for line in network.transit_lines():
                 mode = line.vehicle.description
-                headway = line[ap.extra("hdw")]
+                headway = line[ap.netfield("hdw")]
                 if 0 < headway < 990:
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
@@ -301,35 +347,29 @@ class EmmeAssignmentModel(AssignmentModel):
         """
         return "@{}_{}".format(attr, "vrk")
 
-    def _set_stop_code(self):
-        node_type_attr = param.node_type_attr.replace("ui", "data")
-        network = self.mod_scenario.get_network()
-        for node in network.nodes():
-            stops = []
-            for mode in param.stop_codes:
-                segments = [segment.allow_boardings or segment.allow_alightings
-                    for segment in node.outgoing_segments(include_hidden=True)
-                    if segment.line.mode.id == mode
-                    and segment.line[param.keep_stops_attr]]
-                stop_counts = sum(segments)
-                stop_ratio = 0.0 if stop_counts < 1 else stop_counts/len(segments)
-                is_stop = stop_ratio > 0.49 or stop_counts > 9
-                if is_stop:
-                    node[node_type_attr] = param.stop_codes[mode][0]
-                stops.append(is_stop)
-            if all(stops):
-                node[node_type_attr] = 5
-        self.mod_scenario.publish_network(network)
+    def _netfield(self, attr: str) -> str:
+        """Add prefix "#" and suffix "_vrk".
+
+        Parameters
+        ----------
+        attr : str
+            Attribute string to modify
+
+        Returns
+        -------
+        str
+            Modified string
+        """
+        return "#{}_{}".format(attr, "vrk")
 
     def _add_bus_stops(self):
-        node_type_attr = param.node_type_attr.replace("ui", "data")
         network: Network = self.mod_scenario.get_network()
         for line in network.transit_lines():
             if line.mode.id in param.stop_codes:
                 if not line[param.keep_stops_attr]:
-                    stop_codes = param.stop_codes[line.mode.id]
+                    is_stop_field = param.stop_codes[line.mode.id]
                     for segment in line.segments():
-                        is_stop = segment.i_node[node_type_attr] in stop_codes
+                        is_stop = segment.i_node[is_stop_field]
                         segment.allow_alightings = is_stop
                         segment.allow_boardings = is_stop
             try:
@@ -379,11 +419,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 matrix_ids[mtx_type] = "mf{}".format(
                     id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
-                default_value = 0 if mtx_type == "demand" else 999999
                 self.emme_project.create_matrix(
                     matrix_id=matrix_ids[mtx_type],
                     matrix_name=description, matrix_description=description,
-                    default_value=default_value, overwrite=True)
+                    overwrite=True)
             if ass_class in param.transit_classes:
                 j = 0
                 for subset, parts in param.transit_impedance_matrices.items():
@@ -401,9 +440,69 @@ class EmmeAssignmentModel(AssignmentModel):
             emme_matrices[ass_class] = matrix_ids
         return emme_matrices
 
-    def _create_attributes(self, 
-                           scenario: Any, 
-                           extra: Callable[[str], str]) -> Dict[str,Dict[str,str]]:
+    def _create_attributes(self,
+                           scenario: Any,
+                           assignment_classes: List[str],
+                           extra: Callable[[str], str],
+                           netfield: Callable[[str], str],
+                           link_costs: Dict[str, float]
+            ) -> Dict[str, Union[str, float]]:
+        """Create extra attributes needed in assignment.
+
+        Parameters
+        ----------
+        scenario : inro.modeller.emmebank.scenario
+            Emme scenario to create attributes for
+        assignment_classes : list of str
+            Names of assignment classes to create volume attributes for
+        extra : function
+            Small helper function which modifies string
+            (e.g., self._extra)
+        netfield : function
+            Small helper function which modifies string
+            (e.g., self._netfield)
+        link_costs : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Car cost per km in euros
+
+        Returns
+        -------
+        dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : str or float
+                Extra attribute where link cost is found (str) or length
+                multiplier to calculate link cost (float)
+        """
+        if TYPE_CHECKING: scenario = cast(Scenario, scenario)
+        for ass_class in assignment_classes:
+            self.emme_project.create_extra_attribute(
+                "LINK", extra(ass_class), ass_class + " volume",
+                overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", extra("truck_time"), "truck time",
+            overwrite=True, scenario=scenario)
+        if scenario.network_field("LINK", netfield("hinta")) is not None:
+            self.emme_project.create_extra_attribute(
+                "LINK", extra("toll_cost"), "toll cost",
+                overwrite=True, scenario=scenario)
+            link_costs: Dict[str, str] = {}
+            for ass_class in param.assignment_modes:
+                attr_name = extra(f"cost_{ass_class[:10]}")
+                link_costs[ass_class] = attr_name
+                self.emme_project.create_extra_attribute(
+                    "LINK", attr_name, "total cost",
+                    overwrite=True, scenario=scenario)
+        log.debug("Created extra attributes for scenario {}".format(
+            scenario))
+        return link_costs
+
+    def _create_transit_attributes(self,
+                                   scenario: Any,
+                                   extra: Callable[[str], str],
+            ) -> Tuple[Dict[str,Dict[str,str]], Dict[str, str]]:
         """Create extra attributes needed in assignment.
 
         Parameters
@@ -432,17 +531,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 this is park-and-ride assignment, else False
         """
         # Create link attributes
-        ass_classes = list(param.emme_matrices) + ["bus"]
-        ass_classes.remove("walk")
-        if TYPE_CHECKING: scenario = cast(Scenario, scenario)
-        for ass_class in ass_classes:
-            self.emme_project.create_extra_attribute(
-                "LINK", extra(ass_class), ass_class + " volume",
-                overwrite=True, scenario=scenario)
-        for attr_s in ("total_cost", "toll_cost", "aux_transit"):
-            self.emme_project.create_extra_attribute(
-                "LINK", extra(attr_s), attr_s,
-                overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", extra("aux_transit"), "aux transit volume",
+            overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.dist_fare_attr,
@@ -532,12 +623,13 @@ class EmmeAssignmentModel(AssignmentModel):
 
             # Calculate speed
             link = morning_network.link(link.i_node, link.j_node)
+            car_time_attr = self.assignment_periods[0].netfield("car_time")
             rlink = link.reverse_link
             if reverse_traffic > 0:
                 speed = (60 * 2 * link.length
-                         / (link["@car_time_aht"]+rlink["@car_time_aht"]))
+                         / (link[car_time_attr]+rlink[car_time_attr]))
             else:
-                speed = (0.3*(60*link.length/link["@car_time_aht"])
+                speed = (0.3*(60*link.length/link[car_time_attr])
                          + 0.7*link.data2)
             speed = max(speed, 50.0)
 

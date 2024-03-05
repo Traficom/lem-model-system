@@ -73,7 +73,15 @@ class EmmeAssignmentTest:
             os.path.join(project_dir, "..", "Network"), scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
-        self.ass_model.prepare_network()
+        dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
+        self.ass_model.prepare_network(dist_cost)
     
     def test_assignment(self):
         nr_zones = self.ass_model.nr_zones
@@ -87,6 +95,7 @@ class EmmeAssignmentTest:
             "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
+            "semi_trailer": car_matrix,
             "truck": car_matrix,
             "van": car_matrix,
         }
@@ -94,7 +103,9 @@ class EmmeAssignmentTest:
         self.ass_model.init_assign()
         self.test_transit_cost()
         for ap in self.ass_model.assignment_periods:
-            travel_cost[ap.name] = ap.assign(demand, iteration="last")
+            for ass_class in demand:
+                ap.set_matrix(ass_class, car_matrix)
+            travel_cost[ap.name] = ap.assign(iteration="last")
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..","test_data", "Results", "assignment"))
@@ -107,7 +118,7 @@ class EmmeAssignmentTest:
         for time_period in travel_cost:
             for mtx_type in travel_cost[time_period]:
                 zone_numbers = self.ass_model.zone_numbers
-                with costs_files.open(mtx_type, time_period, zone_numbers, 'w') as mtx:
+                with costs_files.open(mtx_type, time_period, zone_numbers, m='w') as mtx:
                     for ass_class in travel_cost[time_period][mtx_type]:
                         cost_data = travel_cost[time_period][mtx_type][ass_class]
                         mtx[ass_class] = cost_data

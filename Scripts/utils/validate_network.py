@@ -89,7 +89,7 @@ def validate(network, time_periods=param.time_periods, fares=None):
                 msg = "Link type missing for link {}".format(link.id)
                 log.error(msg)
                 raise ValueError(msg)
-    hdw_attrs = [f"@hdw_{tp}" for tp in time_periods]
+    hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
     for line in network.transit_lines():
         for hdwy in hdw_attrs:
             if line[hdwy] < 0.02:

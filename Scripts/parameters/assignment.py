@@ -153,23 +153,13 @@ volume_delay_funcs = {
     ## Escape function, speed 40 km/h
     "ft7": "length/(40/60)",
 }
-# Code derived from three-digit link type xyz, where x is the bus lane code,
-# 2 means that bus lane is active during aht and iht periods, etc.
-bus_lane_link_codes = {
-    "aht": (2, 3, 4, 6),
-    "pt": (3, 6),
-    "iht": (2, 3, 5, 6),
-    "vrk": (2, 3, 6)
-}
-# Bus lane delay equivalent to 1.5 km per link
-buslane_delay = 60 * 1.5
-# Codes defining whether transit mode stops at node, stored in data2
+# Network fields defining whether transit mode stops at node
 stop_codes = {
-    't': (1, 8, 5),
-    'p': (8, 5),
-    'b': (2, 3, 5, 11),
-    'g': (3, 5, 11),
-    'e': (7, 5, 11),
+    't': "#transit_stop_t",
+    'p': "#transit_stop_p",
+    'b': "#transit_stop_b",
+    'g': "#transit_stop_g",
+    'e': "#transit_stop_e",
 }
 # Default bus stop dwell time in minutes
 bus_dwell_time = {
@@ -188,11 +178,10 @@ vot_inv = {
     "work": 7.576, # 1 / ((7.92 eur/h) / (60 min/h)) = 7.576 min/eur
     "business": 2.439, # 1 / ((24.60 eur/h) / (60 min/h)) = 2.439 min/eur
     "leisure": 11.173, # 1 / ((5.37 eur/h) / (60 min/h)) = 11.173 min/eur
+    "truck": 1.877, # 1 / ((31.96 eur/h) / (60 min/h)) = 1.877 min/eur
+    "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
+    "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
-# Default distance unit cost [eur/km]
-dist_unit_cost = 0.12
-# Default distance unit time for trucks and trailer trucks [min/km]
-freight_dist_unit_time = 0.2
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -383,6 +372,11 @@ volume_factors = {
         "pt": 1 / 0.1,
         "iht": 1 / 0.3,
     },
+    "semi_trailer": {
+        "aht": 1 / 0.3,
+        "pt": 1 / 0.1,
+        "iht": 1 / 0.3,
+    },
     "truck": {
          "aht": 1 / 0.3,
         "pt": 1 / 0.1,
@@ -428,11 +422,11 @@ noise_zone_width = {
 
 ### ASSIGNMENT REFERENCES ###
 time_periods: List[str] = ["aht", "pt", "iht"]
-private_classes = (
+car_classes = (
     "car_work",
     "car_leisure",
-    "bike",
 )
+private_classes = car_classes + ("bike",)
 park_and_ride_classes = (
     # "car_first_mile",
     # "car_last_mile",
@@ -447,11 +441,12 @@ local_transit_classes = (
     "transit_leisure",
 )
 transit_classes = local_transit_classes + long_distance_transit_classes
-freight_classes = (
-    "van",
+truck_classes = (
     "truck",
+    "semi_trailer",
     "trailer_truck",
 )
+freight_classes = truck_classes + ("van",)
 transport_classes = private_classes + transit_classes + freight_classes
 assignment_classes = {
     "hw": "work",
@@ -475,14 +470,16 @@ assignment_modes = {
     "car_work": 'c',
     "car_leisure": 'c',
     "trailer_truck": 'y',
+    "semi_trailer": 'y',
     "truck": 'k',
     "van": 'v',
 }
 vot_classes = {
     "car_work": "work",
     "car_leisure": "leisure",
-    "trailer_truck": "business",
-    "truck": "business",
+    "trailer_truck": "trailer_truck",
+    "semi_trailer": "semi_trailer",
+    "truck": "truck",
     "van": "business",
     "transit_work": "work",
     "transit_leisure": "leisure",
@@ -491,11 +488,6 @@ vot_classes = {
     "train": "work",
     "long_d_bus": "leisure",
     "airplane": "work",
-}
-# Distance unit cost for freight [eur/km]
-freight_dist_unit_cost = {
-    "truck": freight_dist_unit_time / vot_inv[vot_classes["truck"]],
-    "trailer_truck": freight_dist_unit_time / vot_inv[vot_classes["trailer_truck"]],
 }
 local_transit_modes = [
     'b',
@@ -519,6 +511,12 @@ aux_modes = [
     'a',
 ]
 park_and_ride_mode = 'u'
+freight_modes = {
+    "rail": 'd',
+    "ship4": 'W',
+    "ship7": 's',
+    "ship9": 'S',
+}
 external_modes = [
     "car_leisure",
     "transit_leisure",
@@ -546,6 +544,7 @@ emme_matrices = {
     "bike": ("demand", "time", "dist"),
     "walk": ("time", "dist"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "van": ("demand", "time", "dist", "cost", "gen_cost"),
 }
@@ -568,6 +567,15 @@ transit_impedance_matrices = {
         "loc_time": "actual_in_vehicle_times",
     },
 }
+freight_matrices = {
+    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
+    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "rail": {"demand", "dist", "aux_dist"},
+    "ship4": {"demand", "dist", "aux_dist"},
+    "ship7": {"demand", "dist", "aux_dist"},
+    "ship9": {"demand", "dist", "aux_dist"},
+}
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
 line_penalty_attr = "us2"
@@ -578,8 +586,8 @@ dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
-node_type_attr = "ui2"
-keep_stops_attr = "@keep_stops"
+keep_stops_attr = "#keep_stops"
+terminal_cost_attr = "@freight_terminal_cost"
 railtypes = {
     2: "tram",
     3: "metro",
