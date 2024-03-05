@@ -438,5 +438,6 @@ class FreightPurpose(Purpose):
         probs = self.model.calc_prob(impedance)
         self.model._dest_exps.clear()
         nr_trips = numpy.ones((nr_zones, nr_zones)) # Insert generation model here
-        demand = {mode: (probs.pop(mode) * nr_trips).T for mode in self.modes}
+        demand = {mode: Demand((probs.pop(mode) * nr_trips).T, mode)
+                  for mode in self.modes}
         return demand

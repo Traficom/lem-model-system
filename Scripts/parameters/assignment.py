@@ -571,10 +571,10 @@ freight_matrices = {
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "rail": {"demand", "dist", "aux_dist"},
-    "ship4": {"demand", "dist", "aux_dist"},
-    "ship7": {"demand", "dist", "aux_dist"},
-    "ship9": {"demand", "dist", "aux_dist"},
+    "rail": {"demand", "dist", "aux_time", "aux_dist"},
+    "ship4": {"demand", "dist", "aux_time", "aux_dist"},
+    "ship7": {"demand", "dist", "aux_time", "aux_dist"},
+    "ship9": {"demand", "dist", "aux_time", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"

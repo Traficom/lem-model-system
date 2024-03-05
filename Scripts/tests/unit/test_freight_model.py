@@ -9,6 +9,10 @@ import unittest
 from datatypes.purpose import FreightPurpose
 from datahandling.zonedata import ZoneData
 from datahandling.resultdata import ResultsData
+from assignment.emme_bindings.emme_project import EmmeProject
+from assignment.emme_assignment import EmmeAssignmentModel
+from assignment.departure_time import DirectDepartureTimeModel
+
 
 TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "..", "test_data")
@@ -67,21 +71,34 @@ class FreightModelTest(unittest.TestCase):
                     fname = file_name.split("_")[1]
                     purposes[fname] = FreightPurpose(json.load(file), zonedata,
                                                     resultdata)
+        ass_model = EmmeAssignmentModel(
+            EmmeProject("emme_project_path"), first_scenario_id=1)
+        ass_model.prepare_freight_network(zonedata.car_dist_cost)
+        temp_impedance = ass_model.freight_network.assign()
+        dtm = DirectDepartureTimeModel(self.ass_model)
         demand_list = {}
         for purpose_key, purpose_value in purposes.items():
             impedance = {
                 "truck": {
-                    "cost": get_cost_mtx("road_costs.csv", int(purpose_key))
+                    "cost": (a*temp_impedance["time"]["truck"]
+                             + b*temp_impedance["dist"]["truck"]),
                 },
                 "train": {
-                    "cost": get_cost_mtx("rail_costs.csv", int(purpose_key))
+                    "cost": (c*temp_impedance["dist"]["rail"]
+                             + d*temp_impedance["aux_dist"]["rail"]
+                             + e*temp_impedance["aux_time"]["rail"]),
                 },
                 "ship": {
-                    "cost": get_cost_mtx("ship_costs.csv", int(purpose_key))
-                }
-                }
+                    "cost": (f*temp_impedance["dist"]["ship4"]
+                             + g*temp_impedance["aux_dist"]["ship4"]
+                             + h*temp_impedance["aux_time"]["ship4"]),
+                },
+            }
             demand = purpose_value.calc_traffic(impedance)
+            for mode in demand:
+                dtm.add_demand(demand[mode])
             demand_list[purpose_key] = demand
+        ass_model.freight_network.assign()
 
         df_list = []
         for key, val in demand_list.items():
