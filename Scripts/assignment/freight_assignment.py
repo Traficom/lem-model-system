@@ -18,7 +18,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         self._set_freight_vdfs()
         self._assign_freight()
         return {imp_type: self._get_matrices(imp_type, is_last_iteration=True)
-            for imp_type in ("time", "cost", "dist")}
+            for imp_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
 
     def _set_freight_vdfs(self):
         network = self.emme_scenario.get_network()
