@@ -1,0 +1,104 @@
+{
+    "rail_vars": {
+        "locomotive_traction": 1500,
+        "speed": 0.833,
+        "other_time": 240,
+        "driver_h_cost": 1.083,
+        "wagon_h_cost": 0.037,
+        "wagon_capacity": 60,
+        "addon_cost_multiplier": 0.15
+    },
+    "train_spec": {
+        "electric_train": {
+            "locomotive_h_cost": 1.917,
+            "locomotive_km_cost": 1.24,
+            "wagon_km_cost": 0.08,
+            "locomotive_tax": 0.11,
+            "wagon_tax": 0.07
+        },
+        "diesel_train": {
+            "locomotive_h_cost": 1.517,
+            "locomotive_km_cost": 2.38,
+            "wagon_km_cost": 0.07,
+            "locomotive_tax": 0.59,
+            "wagon_tax": 0.08
+        }
+    },
+    "commodity_spec": {
+        "1": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "2": {
+            "roundtrip_number": 1,
+            "wagon_loading_time": 48,
+            "batch_size": 1400,
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "3": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "4": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "5": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "6": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "7": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "8": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "9": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "10": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "11": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        },
+        "12": {
+            "distribution": {
+                "electric_train": 0.5,
+                "diesel_train": 0.5
+            }
+        }
+    }
+}

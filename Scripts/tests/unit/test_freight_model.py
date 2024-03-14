@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-import pandas
 import numpy
 import unittest
 
@@ -11,7 +10,6 @@ from datahandling.zonedata import ZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_bindings.emme_project import EmmeProject
 from assignment.emme_assignment import EmmeAssignmentModel
-from assignment.departure_time import DirectDepartureTimeModel
 
 
 TEST_DATA_PATH = os.path.join(
@@ -26,33 +24,59 @@ class FreightModelTest(unittest.TestCase):
 
     def test_freight_model(self):
 
-        def get_cost_mtx(mtx_path: str, purpose_key) -> numpy.array:
-            mtx = pandas.read_csv(
-                os.path.join(TEST_DATA_PATH, "Scenario_input_data",
-                             "2030_test", mtx_path))
-            mtx = mtx.query(f"commodity_id == {purpose_key} \
-                                & from_id in {METROPOLITAN_ZONES.tolist()} \
-                                & to_id in {METROPOLITAN_ZONES.tolist()}")
-            mtx = numpy.array(mtx["cost"])
-            mtx.shape = (len(METROPOLITAN_ZONES), len(METROPOLITAN_ZONES))
-            return mtx
+        def read_freight_costdata():
+            path = os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test")
+            freight_costdata = {
+                "truck": "freight_truck_costs.json",
+                "freight_train": "freight_train_costs.json",
+                "ship": "freight_ship_costs.json"}
+            for k,v in freight_costdata.items():
+                with open(path + "\\" + v) as f:
+                   freight_costdata[k] = json.load(f)
+            return freight_costdata
 
-        def mtx_to_df(commodity_id: str, mode_mtx: numpy.ndarray, mode_id: int):
-            df = pandas.DataFrame(data=mode_mtx,
-                                  index=METROPOLITAN_ZONES,
-                                  columns=METROPOLITAN_ZONES)\
-                                .reset_index()
-            df = df.melt(id_vars="index",
-                         value_vars=METROPOLITAN_ZONES)
-            df = df.rename(columns={"index": "from_id",
-                                    "variable": "to_id",
-                                    "value": "demand"})
-            df.loc[:, "commodity_id"] = commodity_id
-            df.loc[:, "mode_id"] = mode_id
-            df = df.astype({"from_id": "int32", "to_id": "int32",
-                            "demand": "float64", "commodity_id": "int32",
-                            "mode_id": "int32"})
-            return df
+        def calc_road_cost(purpose_key, road_json, distance, time) -> numpy.array:
+            comm_info = road_json["commodity_spec"][str(purpose_key)]
+            mode_cost = {}
+            for mode in comm_info["veh_info"]:
+                mdata = road_json["vehicle_spec"][mode]
+                vdata = comm_info["veh_info"][mode]
+                # Pituus kustannukset
+                distance_cost = vdata["distribution"] * distance \
+                    * (mdata["fuel_cost"] + mdata["other_cost"]) \
+                    * (1 + comm_info["empty_share"])
+                # Ajoajan kustannukset
+                drive_time_cost = time * (mdata["capital_cost"] + mdata["work_cost"]) \
+                    * (1 + comm_info["empty_share"])
+                # Kuormaus ja purkuajan kustannukset
+                loading_cost = comm_info["loading_time"] \
+                    * (mdata["capital_cost"] + mdata["work_cost"])
+                # Eräkoko
+                batch_size = mdata["capacity"] * vdata["fill_rate"]
+                mode_cost[mode] = (distance_cost + drive_time_cost + loading_cost) / batch_size
+            road_total_cost = sum(mode_cost.values())
+            return road_total_cost
+
+        def calc_rail_cost(purpose_key, road_json, distance, aux_distance, aux_time) -> numpy.array:
+            if purpose_key == "2":
+                rail_cost = (0.0166 * distance) + 7.994
+            elif purpose_key in ("4", "8"):
+                rail_cost = (-0.000005 * distance ** 2) + (0.0174 * distance) + 3.282
+            elif purpose_key in ("7", "9", "10", "11"):
+                rail_cost = (-0.00001 * distance ** 2) + (0.0293 * distance) + 6.5205
+            else:
+                rail_cost = (-0.00003 * distance ** 2) + (0.058238 * distance) + 14.618045
+            rail_aux_cost = calc_road_cost(purpose_key, road_json,
+                                           aux_distance, aux_time)
+            rail_total_cost = rail_cost + rail_aux_cost
+            return rail_total_cost
+
+        def calc_ship_cost(purpose_key, road_json, distance, aux_distance, aux_time) -> numpy.array:
+            ship_cost = 0.00811 * distance + 11.04274
+            ship_aux_cost = calc_road_cost(purpose_key, road_json,
+                                           aux_distance, aux_time)
+            ship_total_cost = ship_cost + ship_aux_cost
+            return ship_total_cost
 
         resultdata = ResultsData(os.path.join(TEST_DATA_PATH, "Results",
                                               "test", "freight", MODEL_TYPE))
@@ -72,44 +96,39 @@ class FreightModelTest(unittest.TestCase):
                     purposes[fname] = FreightPurpose(json.load(file), zonedata,
                                                     resultdata)
         ass_model = EmmeAssignmentModel(
-            EmmeProject("emme_project_path"), first_scenario_id=1)
+            EmmeProject("C:\\emmeproj\\freight_testing\\freight_testing.emp"), first_scenario_id=11)
         ass_model.prepare_freight_network(zonedata.car_dist_cost)
         temp_impedance = ass_model.freight_network.assign()
-        dtm = DirectDepartureTimeModel(self.ass_model)
+        freight_costdata = read_freight_costdata()
         demand_list = {}
         for purpose_key, purpose_value in purposes.items():
             impedance = {
                 "truck": {
-                    "cost": (a*temp_impedance["time"]["truck"]
-                             + b*temp_impedance["dist"]["truck"]),
+                    "cost": calc_road_cost(purpose_key,
+                                           freight_costdata["truck"],
+                                           temp_impedance["time"]["truck"],
+                                           temp_impedance["dist"]["truck"])
                 },
-                "train": {
-                    "cost": (c*temp_impedance["dist"]["rail"]
-                             + d*temp_impedance["aux_dist"]["rail"]
-                             + e*temp_impedance["aux_time"]["rail"]),
+                "freight_train": {
+                    "cost": calc_rail_cost(purpose_key,
+                                           freight_costdata["truck"],
+                                           temp_impedance["dist"]["freight_train"],
+                                           temp_impedance["aux_dist"]["freight_train"],
+                                           temp_impedance["aux_time"]["freight_train"])
                 },
                 "ship": {
-                    "cost": (f*temp_impedance["dist"]["ship4"]
-                             + g*temp_impedance["aux_dist"]["ship4"]
-                             + h*temp_impedance["aux_time"]["ship4"]),
+                    "cost": calc_ship_cost(purpose_key,
+                                           freight_costdata["truck"],
+                                           temp_impedance["dist"]["ship"],
+                                           temp_impedance["aux_dist"]["ship"],
+                                           temp_impedance["aux_time"]["ship"])
                 },
             }
             demand = purpose_value.calc_traffic(impedance)
             for mode in demand:
-                dtm.add_demand(demand[mode])
+                ass_model.freight_network.set_matrix(mode, demand[mode])
             demand_list[purpose_key] = demand
         ass_model.freight_network.assign()
 
-        df_list = []
-        for key, val in demand_list.items():
-            df_truck = mtx_to_df(key, val["truck"], 1)
-            df_train = mtx_to_df(key, val["train"], 2)
-            df_ship = mtx_to_df(key, val["ship"], 3)
-            df = pandas.concat([df_truck, df_train, df_ship], axis=0)
-            df_list.append(df)
-        # Concats all commodity ids
-        df = pandas.concat(df_list, axis=0)
-        df.to_pickle(os.path.join(
-            TEST_DATA_PATH, "Results", "test", "freight",
-            MODEL_TYPE, f"{MODEL_TYPE}_demand_{ESTIM_TYPE}_new_shiptons.pkl"),
-            compression="infer")
+test = FreightModelTest()
+test.test_freight_model()

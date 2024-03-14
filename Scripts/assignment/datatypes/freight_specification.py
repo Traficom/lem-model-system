@@ -95,14 +95,14 @@ class FreightSpecification:
         self.result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
-                "modes": mode,
+                "modes": [mode],
                 "distance": emme_matrices["dist"],
             },
         }
         self.local_result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
-                "modes": param.park_and_ride_mode,
+                "modes": [param.park_and_ride_mode],
                 "distance": emme_matrices["aux_dist"],
                 "actual_aux_transit_times": emme_matrices["aux_time"],
             },

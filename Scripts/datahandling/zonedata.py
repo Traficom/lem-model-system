@@ -42,7 +42,6 @@ class ZoneData:
         landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
         attrdata = files.read_csv_file(".att")
-        fr_workpl = files.read_csv_file(".wrkpl")
         files = FileReader(data_dir)
         self.transit_zone = files.read_csv_file(".tco")
         try:
@@ -62,7 +61,6 @@ class ZoneData:
         self["population"] = pop
         for i in range(1, 13):
             self[f"attraction{i}"] = attrdata[f"attraction{i}"]
-        self["freight_workplaces"] = fr_workpl["workplaces"]
         self.share["share_age_7-17"] = popdata["sh_7-17"]
         self.share["share_age_18-29"] = popdata["sh_1829"]
         self.share["share_age_30-49"] = popdata["sh_3049"]

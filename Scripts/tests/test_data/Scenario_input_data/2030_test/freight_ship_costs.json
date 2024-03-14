@@ -1,0 +1,313 @@
+{
+    "teu_to_tons": 25, 
+    "ship_spec": {
+        "container": {
+            "draught_info": {
+                "7m": {
+                    "sea_cost": 31.71,
+                    "port_cost": 18.24,
+                    "batch_size": 400,
+                    "speed": 17.9
+                },
+                "9m": {
+                    "sea_cost": 24.05,
+                    "port_cost": 10.79,
+                    "batch_size": 1222,
+                    "speed": 20.8
+                }
+            },
+            "processing_speed": 36,
+            "fill_rate": {
+                "5": 0.7,
+                "6": 0.70,
+                "7": 0.50,
+                "8": 1.00,
+                "9": 1.00,
+                "11": 0.90,
+                "12": 0.90
+            }
+        },
+        "other_dry_cargo": {
+            "draught_info": {
+                "4m": {
+                    "sea_cost": 6.00,
+                    "port_cost": 5.33,
+                    "batch_size": 1876,
+                    "speed": 14.1
+                },
+                "7m": {
+                    "sea_cost": 2.30,
+                    "port_cost": 1.65,
+                    "batch_size": 7890,
+                    "speed": 18.7
+                },
+                "9m": {
+                    "sea_cost": 1.78,
+                    "port_cost": 1.15,
+                    "batch_size": 14200,
+                    "speed": 21.7
+                }
+            }
+        },
+        "bulk_cargo": {
+            "draught_info": {
+                "4m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                },
+                "7m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                },
+                "9m": {
+                    "sea_cost": 0.93,
+                    "port_cost": 0.53,
+                    "batch_size": 20613,
+                    "speed": 20.8
+                }
+            }
+        },
+        "tanker": {
+            "draught_info": {
+                "7m": {
+                    "sea_cost": 3.15,
+                    "port_cost": 2.33,
+                    "batch_size": 6366,
+                    "speed": 18.8
+                },
+                "9m": {
+                    "sea_cost": 1.47,
+                    "port_cost": 0.98,
+                    "batch_size": 16752,
+                    "speed": 23.2
+                }
+            }
+        },
+        "roro_cargo": {
+            "draught_info": {
+                "7m": {
+                    "sea_cost": 5.02,
+                    "port_cost": 2.63,
+                    "batch_size": 7364,
+                    "speed": 25.9
+                },
+                "9m": {
+                    "sea_cost": 3.54,
+                    "port_cost": 1.66,
+                    "batch_size": 15520,
+                    "speed": 26.7
+                }
+            }
+        },
+        "roro_pas": {
+            "draught_info": {
+                "7m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                },
+                "9m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                }
+            }
+        },
+        "barge": {
+            "draught_info": {
+                "4m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                }
+            }
+        },
+        "saimaa": {
+            "draught_info": {
+                "4m": {
+                    "sea_cost": 999,
+                    "port_cost": 999,
+                    "batch_size": 999,
+                    "speed": 999
+                }
+            }
+        }
+    },
+    "commodity_spec": {
+        "1": {
+            "other_dry_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            },
+            "bulk_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            },
+            "barge": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            }
+        },
+        "2": {
+            "other_dry_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 260
+            },
+            "bulk_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            },
+            "barge": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            }
+        },
+        "3": {
+            "other_dry_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 360
+            },
+            "bulk_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            },
+            "tanker": {
+                "distribution": 0.33,
+                "processing_speed": 400
+            }
+        },
+        "4": {
+            "bulk_cargo": {
+                "distribution": 0.50,
+                "processing_speed": 9
+            },
+            "barge": {
+                "distribution": 0.50,
+                "processing_speed": 9
+            }
+        },
+        "5": {
+            "container": {
+                "distribution": 0.33,
+                "processing_speed": 36
+            },
+            "roro_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 450
+            },
+            "roro_pas": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            }
+        },
+        "6": {
+            "container": {
+                "distribution": 0.33,
+                "processing_speed": 36
+            },
+            "roro_cargo": {
+                "distribution": 0.33,
+                "processing_speed": 450
+            },
+            "roro_pas": {
+                "distribution": 0.33,
+                "processing_speed": 9
+            }
+        },
+        "7": {
+            "container": {
+                "distribution": 0.25,
+                "processing_speed": 36
+            },
+            "other_dry_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 113
+            },
+            "roro_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 450
+            },
+            "roro_pas": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            }
+        },
+        "8": {
+            "container": {
+                "distribution": 0.25,
+                "processing_speed": 36
+            },
+            "other_dry_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            },
+            "roro_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 450
+            },
+            "roro_pas": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            }
+        },
+        "9": {
+            "tanker": {
+                "distribution": 1,
+                "processing_speed": 400
+            }
+        },
+        "10": {
+            "container": {
+                "distribution": 0.25,
+                "processing_speed": 36
+            },
+            "other_dry_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 113
+            },
+            "bulk_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            },
+            "tanker": {
+                "distribution": 0.25,
+                "processing_speed": 250
+            }
+        },
+        "11": {
+            "container": {
+                "distribution": 0.25,
+                "processing_speed": 36
+            },
+            "other_dry_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            },
+            "roro_cargo": {
+                "distribution": 0.25,
+                "processing_speed": 450
+            },
+            "roro_pas": {
+                "distribution": 0.25,
+                "processing_speed": 9
+            }
+        },
+        "12": {
+            "container": {
+                "distribution": 0.50,
+                "processing_speed": 36
+            },
+            "bulk_cargo": {
+                "distribution": 0.50,
+                "processing_speed": 9
+            }
+        }
+    }
+}

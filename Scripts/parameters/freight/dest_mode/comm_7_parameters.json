@@ -25,7 +25,7 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.5972
+                "logsum": 0.6619
             },
             "attraction_size": {
                 "attraction7": 1.0
@@ -38,30 +38,30 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.1044
+                "cost": -0.1571
             },
             "log": {},
             "individual_dummy": {}
         },
-        "train": {
+        "freight_train": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.06046
+                "cost": -0.1113
             },
             "log": {},
             "individual_dummy": {},
-            "constant": -2.389
+            "constant": -3.245
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.06855
+                "cost": -0.1093
             },
             "log": {},
             "individual_dummy": {},
-            "constant": -2.519
+            "constant": -5.385
         }
     },
     "demand_share": {}

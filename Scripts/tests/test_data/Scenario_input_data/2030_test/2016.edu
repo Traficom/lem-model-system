@@ -1,8 +1,8 @@
 # Schools 2016			
 #			
 # compreh: Students in comprehensive school (1-9)			
-# secndry: Students in upper secondary education (gymnasium, vocational)
-# tertiary: Students in tertiary education (university, college, polytechnic)
+# secndry: Students in upper secondary education (gymnasium, vocational)"			
+# tertiary: Students in tertiary education (university, college, polytechnic)"			
 #			
 data_id	compreh	secndry	tertiary
 202	0	0	0
@@ -37,6 +37,22 @@ data_id	compreh	secndry	tertiary
 4607	0	0	0
 4711	0	0	0
 4804	0	0	0
+4904	0	0	0
+5004	0	0	0
+5102	0	0	0
+5201	0	0	0
+5303	0	0	0
+5400	0	0	0
+5500	0	0	0
+5600	0	0	0
+5700	0	0	0
+5800	0	0	0
+5900	0	0	0
+6001	0	0	0
+6101	0	0	0
+6200	0	0	0
+6300	0	0	0
+6401	0	0	0
 6514	0	0	0
 6608	0	0	0
 6702	0	0	0
@@ -67,6 +83,7 @@ data_id	compreh	secndry	tertiary
 9607	0	0	0
 9708	0	0	0
 9801	0	0	0
+9907	0	0	0
 9923	0	0	0
 10003	0	0	0
 10100	0	0	0
@@ -94,6 +111,7 @@ data_id	compreh	secndry	tertiary
 12614	0	0	0
 12915	0	0	0
 13015	0	0	0
+13113	0	0	0
 13123	0	0	0
 13209	0	0	0
 13308	0	0	0

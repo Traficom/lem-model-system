@@ -512,10 +512,10 @@ aux_modes = [
 ]
 park_and_ride_mode = 'u'
 freight_modes = {
-    "rail": 'd',
-    "ship4": 'W',
-    "ship7": 's',
-    "ship9": 'S',
+    "freight_train": 'd',
+    "ship": 'W'
+    #"ship7": 's',
+    #"ship9": 'S',
 }
 external_modes = [
     "car_leisure",
@@ -571,10 +571,10 @@ freight_matrices = {
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "rail": {"demand", "dist", "aux_time", "aux_dist"},
-    "ship4": {"demand", "dist", "aux_time", "aux_dist"},
-    "ship7": {"demand", "dist", "aux_time", "aux_dist"},
-    "ship9": {"demand", "dist", "aux_time", "aux_dist"},
+    "freight_train": {"demand", "dist", "aux_time", "aux_dist"},
+    "ship": {"demand", "dist", "aux_time", "aux_dist"}
+    #"ship7": {"demand", "dist", "aux_time", "aux_dist"},
+    #"ship9": {"demand", "dist", "aux_time", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
@@ -587,7 +587,7 @@ board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
-terminal_cost_attr = "@freight_terminal_cost"
+terminal_cost_attr = "@freight_terminal_co"
 railtypes = {
     2: "tram",
     3: "metro",

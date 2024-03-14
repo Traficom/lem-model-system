@@ -151,6 +151,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.freight_network = FreightAssignmentPeriod(
             "vrk", self.mod_scenario.number, self.emme_project, mtxs,
             use_free_flow_speeds=True)
+        self.assignment_periods = [self.freight_network]
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
