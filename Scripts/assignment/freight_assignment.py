@@ -4,8 +4,17 @@ from assignment.datatypes.freight_specification import FreightSpecification
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
-    def prepare(self, *args, **kwargs):
-        AssignmentPeriod.prepare(self, *args, **kwargs)
+    def prepare(self, link_costs,
+                dist_unit_cost,
+                terminal_cost_attributes):
+        AssignmentPeriod.prepare(self, link_costs, dist_unit_cost)
+        network = self.emme_scenario.get_network()
+        modes = zip(*param.freight_modes.values())
+        for segment in network.transit_segments():
+            for i, attr in enumerate(terminal_cost_attributes):
+                if segment.line.mode.id in modes[i]:
+                    segment[attr] = segment.i_node[param.terminal_cost_attr]
+                    break
         self._freight_specs = {ass_class: FreightSpecification(
                 param.freight_modes[ass_class], self.emme_matrices[ass_class],
                 self.extra(ass_class))
