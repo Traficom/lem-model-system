@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, Sequence, Union
+
 import parameters.assignment as param
 
 
@@ -33,10 +34,6 @@ class FreightSpecification:
             "destinations_reachable": True,
             "transition_rules": [
                 {
-                    "mode": param.park_and_ride_mode,
-                    "next_journey_level": 0,
-                },
-                {
                     "mode": modes[0],
                     "next_journey_level": 1,
                 },
@@ -44,16 +41,27 @@ class FreightSpecification:
                     "mode": modes[1],
                     "next_journey_level": 2,
                 },
+                {
+                    "mode": param.park_and_ride_mode,
+                    "next_journey_level": 3,
+                },
             ],
             "boarding_time": None,
             "boarding_cost": no_penalty.copy(),
             "waiting_time": None,
         } for name in (
-            "truck transport",
+            "truck access",
             "train/ship transport",
-            "electric/9m transport")
+            "electric/9m transport",
+            "truck egress")
         ]
+        journey_levels[0]["transition_rules"][2]["next_journey_level"] = 0
+        journey_levels[0]["destinations_reachable"] = False
         journey_levels[0]["boarding_cost"]["at_nodes"] = {
+            "penalty": param.terminal_cost_attr,
+            "perception_factor": 1,
+        }
+        journey_levels[3]["boarding_cost"]["at_nodes"] = {
             "penalty": param.terminal_cost_attr,
             "perception_factor": 1,
         }

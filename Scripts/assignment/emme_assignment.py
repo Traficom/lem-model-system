@@ -154,7 +154,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.assignment_periods = [self.freight_network]
         for attr in param.freight_mode_cost_attrs:
             self.emme_project.create_extra_attribute(
-                "SEGMENT", self._extra(attr),
+                "TRANSIT_SEGMENT", self._extra(attr),
                 param.freight_mode_cost_attrs[attr],
                 overwrite=True, scenario=self.mod_scenario)
         self.freight_network.prepare(
