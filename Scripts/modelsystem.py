@@ -223,7 +223,8 @@ class ModelSystem:
                     for ass_class in transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             ap.assign_trucks_init()
-            impedance[tp] = ap.end_assign() if is_end_assignment else ap.assign()
+            impedance[tp] = (ap.end_assign() if is_end_assignment
+                             else ap.assign(self.travel_modes))
             if tp == self.ass_model.time_periods[0]:
                 for mode, mtx in impedance[tp]["dist"].items():
                     divide_matrices(
@@ -321,7 +322,8 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period " + tp)
-            impedance[tp] = ap.end_assign() if iteration=="last" else ap.assign()
+            impedance[tp] = (ap.end_assign() if iteration=="last"
+                             else ap.assign(self.travel_modes))
             if tp == "aht":
                 self._update_ratios(impedance[tp], tp)
             if iteration=="last":

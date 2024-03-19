@@ -42,6 +42,9 @@ class EmmeAssignmentModel(AssignmentModel):
         Whether traffic assignment is all-or-nothing with speeds stored
         in `@car_time_xxx`. Overrides `use_free_flow_speeds` if this is
         also set to `True`.
+    delete_extra_matrices : bool (optional)
+        If True, only matrices needed for demand calculation will be
+        returned from end assignment.
     time_periods : list of str (optional)
             Time period names, default is aht, pt, iht
     first_matrix_id : int (optional)
@@ -56,12 +59,14 @@ class EmmeAssignmentModel(AssignmentModel):
                  save_matrices: bool = False,
                  use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
+                 delete_extra_matrices: bool = False,
                  time_periods: List[str] = param.time_periods, 
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
         self.use_free_flow_speeds = use_free_flow_speeds
         self.use_stored_speeds = use_stored_speeds
+        self.delete_extra_matrices = delete_extra_matrices
         self.time_periods = time_periods
         self.first_matrix_id = first_matrix_id if save_matrices else 0
         self.emme_project = emme_context
@@ -110,9 +115,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 tp, scen_id, self.emme_project, emme_matrices,
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
-                use_stored_speeds=self.use_stored_speeds))
+                use_stored_speeds=self.use_stored_speeds,
+                delete_extra_matrices=self.delete_extra_matrices))
         self._create_attributes(
-            self.day_scenario, self._extra,  self._netfield,car_dist_unit_cost)
+            self.day_scenario, self._extra, self._netfield, car_dist_unit_cost)
         for ap in self.assignment_periods:
             ap.prepare(*self._create_attributes(
                     ap.emme_scenario, ap.extra, ap.netfield, car_dist_unit_cost),
