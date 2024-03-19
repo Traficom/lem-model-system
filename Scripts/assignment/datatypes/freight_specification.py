@@ -34,16 +34,16 @@ class FreightSpecification:
             "destinations_reachable": True,
             "transition_rules": [
                 {
+                    "mode": param.park_and_ride_mode,
+                    "next_journey_level": 0,
+                },
+                {
                     "mode": modes[0],
                     "next_journey_level": 1,
                 },
                 {
                     "mode": modes[1],
                     "next_journey_level": 2,
-                },
-                {
-                    "mode": param.park_and_ride_mode,
-                    "next_journey_level": 3,
                 },
             ],
             "boarding_time": None,
@@ -52,16 +52,9 @@ class FreightSpecification:
         } for name in (
             "truck access",
             "train/ship transport",
-            "electric/9m transport",
-            "truck egress")
+            "electric/9m transport")
         ]
-        journey_levels[0]["transition_rules"][2]["next_journey_level"] = 0
-        journey_levels[0]["destinations_reachable"] = False
         journey_levels[0]["boarding_cost"]["at_nodes"] = {
-            "penalty": param.terminal_cost_attr,
-            "perception_factor": 1,
-        }
-        journey_levels[3]["boarding_cost"]["at_nodes"] = {
             "penalty": param.terminal_cost_attr,
             "perception_factor": 1,
         }
