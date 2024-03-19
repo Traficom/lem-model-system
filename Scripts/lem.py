@@ -52,7 +52,10 @@ def main(args):
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
     # Choose and initialize the Traffic Assignment (supply)model
-    kwargs = {"use_free_flow_speeds": args.free_flow_assignment}
+    kwargs = {
+        "use_free_flow_speeds": args.free_flow_assignment,
+        "delete_extra_matrices": args.delete_extra_matrices,
+    }
     if args.free_flow_assignment:
         kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
@@ -282,6 +285,11 @@ if __name__ == "__main__":
         action="store_true",
         default=config.USE_FIXED_TRANSIT_COST,
         help="Using this flag activates use of pre-calculated (fixed) transit costs."),
+    parser.add_argument(
+        "--delete-extra-matrices",
+        action="store_true",
+        default=config.DELETE_EXTRA_MATRICES,
+        help="Using this flag means that only matrices needed in demand calculation will be stored.")
     args = parser.parse_args()
 
     log.initialize(args)

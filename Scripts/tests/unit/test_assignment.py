@@ -62,10 +62,11 @@ class EmmeAssignmentTest(unittest.TestCase):
             "van",
         ]
         ass_model.init_assign()
+        ass_model.beeline_dist
         for ass_class in demand:
             ass_model.assignment_periods[0].set_matrix(
                 ass_class, car_matrix)
-        ass_model.assignment_periods[0].assign()
+        ass_model.assignment_periods[0].assign(demand)
         ass_model.assignment_periods[0].end_assign()
         resultdata = ResultsData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
