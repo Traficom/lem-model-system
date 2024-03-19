@@ -66,15 +66,21 @@ class FreightModelTest(unittest.TestCase):
                 rail_cost = (-0.00001 * distance ** 2) + (0.0293 * distance) + 6.5205
             else:
                 rail_cost = (-0.00003 * distance ** 2) + (0.058238 * distance) + 14.618045
-            rail_aux_cost = calc_road_cost(purpose_key, road_json,
-                                           aux_distance, aux_time)
+            rail_aux_cost = numpy.where((distance > (distance + aux_distance))\
+                                        | (aux_distance == (distance + aux_distance)),
+                                        calc_road_cost(purpose_key, road_json,
+                                                       aux_distance, aux_time),
+                                        numpy.inf)
             rail_total_cost = rail_cost + rail_aux_cost
             return rail_total_cost
 
         def calc_ship_cost(purpose_key, road_json, distance, aux_distance, aux_time) -> numpy.array:
             ship_cost = 0.00811 * distance + 11.04274
-            ship_aux_cost = calc_road_cost(purpose_key, road_json,
-                                           aux_distance, aux_time)
+            ship_aux_cost = numpy.where((distance > (distance + aux_distance))\
+                                        | (aux_distance == (distance + aux_distance)),
+                                        calc_road_cost(purpose_key, road_json,
+                                                       aux_distance, aux_time),
+                                        numpy.inf)
             ship_total_cost = ship_cost + ship_aux_cost
             return ship_total_cost
 
