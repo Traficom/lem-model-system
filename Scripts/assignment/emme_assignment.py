@@ -158,17 +158,20 @@ class EmmeAssignmentModel(AssignmentModel):
             "vrk", self.mod_scenario.number, self.emme_project, mtxs,
             use_free_flow_speeds=True)
         self.assignment_periods = [self.freight_network]
-        for attr in param.freight_mode_cost_attrs:
-            self.emme_project.create_extra_attribute(
-                "TRANSIT_SEGMENT", self._extra(attr),
-                param.freight_mode_cost_attrs[attr],
-                overwrite=True, scenario=self.mod_scenario)
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
+            overwrite=True, scenario=self.mod_scenario)
+        for ass_class in param.freight_modes.values():
+            for attr in ass_class.values():
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_LINE", '@' + attr, "terminal cost",
+                    overwrite=True, scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
                 list(param.truck_classes) + list(param.freight_modes),
                 self._extra, self._netfield, car_dist_unit_cost),
-            car_dist_unit_cost, list(param.freight_mode_cost_attrs))
+            car_dist_unit_cost)
         self._init_functions()
 
     def _init_functions(self):

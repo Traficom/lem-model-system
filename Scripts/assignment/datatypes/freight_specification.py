@@ -10,10 +10,11 @@ class FreightSpecification:
 
     Parameters
     ----------
-    modes : list of str
-        One-letter mode IDs
-    terminal_cost_attributes : list of str
-        Segment extra attribute names for terminal costs
+    modes : dict
+        key : str
+            One-letter mode ID
+        value : str
+            Terminal cost attribute name
     emme_matrices : dict
         key : str
             Impedance type (time/cost/dist/...)
@@ -23,44 +24,37 @@ class FreightSpecification:
         Name of extra attribute, where aux volume is to be stored
     """
     def __init__(self,
-                 modes: Sequence[str],
-                 terminal_cost_attributes: Sequence[str],
+                 modes: Dict[str, str],
                  emme_matrices: Dict[str, Union[str, Dict[str, str]]],
                  aux_result: str):
         no_penalty = dict.fromkeys(
             ["global", "at_nodes", "on_lines", "on_segments"])
+        transitions = [{
+            "mode": param.park_and_ride_mode,
+            "next_journey_level": 0,
+        }]
+        for i, mode in enumerate(modes, 1):
+            transitions.append({
+                "mode": mode,
+                "next_journey_level": i,
+            })
+        all_modes = {param.park_and_ride_mode: "truck access"}
+        all_modes.update(modes)
         journey_levels = [{
-            "description": name,
+            "description": all_modes[mode],
             "destinations_reachable": True,
-            "transition_rules": [
-                {
-                    "mode": param.park_and_ride_mode,
-                    "next_journey_level": 0,
-                },
-                {
-                    "mode": modes[0],
-                    "next_journey_level": 1,
-                },
-                {
-                    "mode": modes[1],
-                    "next_journey_level": 2,
-                },
-            ],
+            "transition_rules": transitions,
             "boarding_time": None,
             "boarding_cost": no_penalty.copy(),
             "waiting_time": None,
-        } for name in (
-            "truck access",
-            "train/ship transport",
-            "electric/9m transport")
-        ]
-        journey_levels[0]["boarding_cost"]["at_nodes"] = {
+        } for mode in all_modes]
+        journey_levels[0]["boarding_cost"]["on_lines"] = {
             "penalty": param.terminal_cost_attr,
             "perception_factor": 1,
         }
-        for i, attr in enumerate(terminal_cost_attributes, 1):
-            journey_levels[i]["boarding_cost"]["on_segments"] = {
-                "penalty": attr,
+        for i, attr in enumerate(modes.values()):
+            journey_levels[2 - i]["boarding_cost"]["on_lines"] = {
+                "penalty": '@' + attr,
                 "perception_factor": 1,
             }
         no_penalty["global"] = {
@@ -69,7 +63,7 @@ class FreightSpecification:
         }
         self.spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
-            "modes": modes + [param.park_and_ride_mode],
+            "modes": list(all_modes),
             "demand": emme_matrices["demand"],
             "waiting_time": {
                 "headway_fraction": 0.1,
@@ -108,7 +102,7 @@ class FreightSpecification:
         self.result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
-                "modes": modes,
+                "modes": list(modes),
                 "distance": emme_matrices["dist"],
             },
         }

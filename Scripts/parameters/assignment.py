@@ -182,6 +182,12 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
+freight_terminal_cost = {
+    'd': 0,
+    'J': 0,
+    'W': 0,
+    's': 0,
+}
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -512,8 +518,14 @@ aux_modes = [
 ]
 park_and_ride_mode = 'u'
 freight_modes = {
-    "freight_train": ['d', 'J'],
-    "ship": ['W', 's'],
+    "freight_train": {
+        'd': "diesel_train",
+        'J': "electric_train",
+    },
+    "ship": {
+        'W': "4m_ship",
+        's': "9m_ship",
+    },
 }
 external_modes = [
     "car_leisure",
@@ -584,10 +596,6 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
-freight_mode_cost_attrs = {
-    "e_train_cost": "electric train terminal cost",
-    "term_cost": "diesel train terminal cost",
-}
 railtypes = {
     2: "tram",
     3: "metro",

@@ -7,47 +7,23 @@ from assignment.datatypes.freight_specification import FreightSpecification
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
-    def prepare(self, link_costs: Dict[str, Union[str, float]],
-                dist_unit_cost: Dict[str, float],
-                terminal_cost_attributes: Sequence[str]):
-        """Prepare network for freight assignment.
-
-        Calculate road toll cost and specify car and freight assignment.
-        Set segment-wise terminal costs.
-
-        Parameters
-        ----------
-        link_costs : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : str or float
-                Extra attribute where link cost is found (str) or length
-                multiplier to calculate link cost (float)
-        dist_unit_cost : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : float
-                Length multiplier to calculate link cost
-        terminal_cost_attributes : list of str
-            Segment extra attribute names for terminal costs
-        """
-        AssignmentPeriod.prepare(self, link_costs, dist_unit_cost)
+    def prepare(self, *args, **kwargs):
+        AssignmentPeriod.prepare(self, *args, **kwargs)
         network = self.emme_scenario.get_network()
         for line in network.transit_lines():
-            modes = zip(*param.freight_modes.values())
-            for attr in terminal_cost_attributes:
-                if line.mode.id in next(modes):
-                    # If it is a diesel train "line", terminal cost for
-                    # switching to electric train is imposed.
-                    # If it is an electric train "line", terminal cost for
-                    # switching to diesel train is imposed.
-                    for segment in line.segments():
-                        segment[attr] = segment.i_node[param.terminal_cost_attr]
+            mode = line.mode.id
+            for modes in param.freight_modes.values():
+                if line.mode.id in modes:
+                    cost = param.freight_terminal_cost[mode]
+                    line[param.terminal_cost_attr] = cost
+                    line['@' + modes[mode]] = cost
+                    # for segment in line.segments():
+                    #     segment[attr] = segment.i_node[terminal_cost_attr]
                     break
         self.emme_scenario.publish_network(network)
         self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], terminal_cost_attributes,
-                self.emme_matrices[ass_class], self.extra(ass_class))
+                param.freight_modes[ass_class], self.emme_matrices[ass_class],
+                self.extra(ass_class))
             for ass_class in param.freight_modes}
 
     def assign(self):
