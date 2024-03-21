@@ -164,7 +164,7 @@ class EmmeAssignmentModel(AssignmentModel):
         for ass_class in param.freight_modes.values():
             for attr in ass_class.values():
                 self.emme_project.create_extra_attribute(
-                    "TRANSIT_LINE", '@' + attr, "terminal cost",
+                    "TRANSIT_LINE", attr, "terminal cost",
                     overwrite=True, scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(

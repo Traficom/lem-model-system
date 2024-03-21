@@ -1,6 +1,3 @@
-from __future__ import annotations
-from typing import Dict, Union, Sequence
-
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
 from assignment.datatypes.freight_specification import FreightSpecification
@@ -12,11 +9,11 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         network = self.emme_scenario.get_network()
         for line in network.transit_lines():
             mode = line.mode.id
-            for modes in param.freight_modes.values():
-                if line.mode.id in modes:
+            for cost_attrs in param.freight_modes.values():
+                if mode in cost_attrs:
                     cost = param.freight_terminal_cost[mode]
                     line[param.terminal_cost_attr] = cost
-                    line['@' + modes[mode]] = cost
+                    line[cost_attrs[mode]] = cost
                     # for segment in line.segments():
                     #     segment[attr] = segment.i_node[terminal_cost_attr]
                     break

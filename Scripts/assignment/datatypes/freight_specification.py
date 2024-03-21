@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Dict, Sequence, Union
+from typing import Any, Dict, Union
 
 import parameters.assignment as param
 
@@ -29,17 +29,12 @@ class FreightSpecification:
                  aux_result: str):
         no_penalty = dict.fromkeys(
             ["global", "at_nodes", "on_lines", "on_segments"])
-        transitions = [{
-            "mode": param.park_and_ride_mode,
-            "next_journey_level": 0,
-        }]
-        for i, mode in enumerate(modes, 1):
-            transitions.append({
-                "mode": mode,
-                "next_journey_level": i,
-            })
         all_modes = {param.park_and_ride_mode: "truck access"}
         all_modes.update(modes)
+        transitions = [{
+            "mode": mode,
+            "next_journey_level": i,
+        } for i, mode in enumerate(all_modes)]
         journey_levels = [{
             "description": all_modes[mode],
             "destinations_reachable": True,
@@ -48,13 +43,13 @@ class FreightSpecification:
             "boarding_cost": no_penalty.copy(),
             "waiting_time": None,
         } for mode in all_modes]
-        journey_levels[0]["boarding_cost"]["on_lines"] = {
-            "penalty": param.terminal_cost_attr,
-            "perception_factor": 1,
-        }
-        for i, attr in enumerate(modes.values()):
-            journey_levels[2 - i]["boarding_cost"]["on_lines"] = {
-                "penalty": '@' + attr,
+        # Terminal cost is related to mode that changes the journey level,
+        # hence "the other" mode
+        terminal_cost_attrs = ([param.terminal_cost_attr]
+                               + list(reversed(list(modes.values()))))
+        for jl, attr in zip(journey_levels, terminal_cost_attrs):
+            jl["boarding_cost"]["on_lines"] = {
+                "penalty": attr,
                 "perception_factor": 1,
             }
         no_penalty["global"] = {

@@ -519,12 +519,12 @@ aux_modes = [
 park_and_ride_mode = 'u'
 freight_modes = {
     "freight_train": {
-        'd': "diesel_train",
-        'J': "electric_train",
+        'd': "@diesel_train",
+        'J': "@electric_train",
     },
     "ship": {
-        'W': "4m_ship",
-        's': "9m_ship",
+        'W': "@4m_ship",
+        's': "@9m_ship",
     },
 }
 external_modes = [
