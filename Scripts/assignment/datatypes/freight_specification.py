@@ -109,3 +109,8 @@ class FreightSpecification:
                 "actual_aux_transit_times": emme_matrices["aux_time"],
             },
         }
+        self.ntw_results_spec = {
+            "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
+            "analyzed_demand": emme_matrices["demand"],
+            "on_segments": {},
+        }

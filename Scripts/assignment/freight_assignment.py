@@ -33,6 +33,20 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                 imp_type, list(param.freight_matrices))
             for imp_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
 
+    def save_network_volumes(self, commodity_class: str):
+        """Save commodity-specific volumes in segment attribute.
+
+        Parameters
+        ----------
+        commodity_class : str
+            Commodity class name
+        """
+        for ass_class in param.freight_modes:
+            spec = self._freight_specs[ass_class].ntw_results_spec
+            spec["on_segments"]["transit_volumes"] = '@' + commodity_class + ass_class
+            self.emme_project.network_results(
+                spec, self.emme_scenario, ass_class)
+
     def _set_freight_vdfs(self):
         network = self.emme_scenario.get_network()
         for segment in network.transit_segments():

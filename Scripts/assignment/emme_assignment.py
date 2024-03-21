@@ -133,7 +133,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 *self._create_transit_attributes(ap.emme_scenario, ap.extra))
         self._init_functions()
 
-    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float]):
+    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float],
+                                commodity_classes: List[str]):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
@@ -143,6 +144,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 Assignment class (car_work/truck/...)
             value : float
                 Car cost per km in euros
+        commodity_classes : list of str
+            Class names for which we want extra attributes
         """
         mtxs = {}
         for i, ass_class in enumerate(param.freight_matrices, start=1):
@@ -166,6 +169,12 @@ class EmmeAssignmentModel(AssignmentModel):
                 self.emme_project.create_extra_attribute(
                     "TRANSIT_LINE", attr, "terminal cost",
                     overwrite=True, scenario=self.mod_scenario)
+        for comm_class in commodity_classes:
+            for ass_class in param.freight_modes:
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_SEGMENT", '@' + comm_class + ass_class,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
