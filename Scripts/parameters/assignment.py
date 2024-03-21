@@ -581,8 +581,8 @@ freight_matrices = {
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "freight_train": {"demand", "dist", "aux_dist"},
-    "ship": {"demand", "dist", "aux_dist"},
+    "freight_train": {"demand", "dist", "aux_time", "aux_dist"},
+    "ship": {"demand", "dist", "aux_time", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"

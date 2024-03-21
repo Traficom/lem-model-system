@@ -111,5 +111,6 @@ class FreightSpecification:
             "by_mode_subset": {
                 "modes": [param.park_and_ride_mode],
                 "distance": emme_matrices["aux_dist"],
+                "actual_aux_transit_times": emme_matrices["aux_time"],
             },
         }
