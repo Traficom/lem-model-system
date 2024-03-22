@@ -175,6 +175,10 @@ class EmmeAssignmentModel(AssignmentModel):
                     "TRANSIT_SEGMENT", '@' + comm_class + ass_class,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
+                self.emme_project.create_extra_attribute(
+                    "LINK", '@a_' + comm_class + ass_class,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,

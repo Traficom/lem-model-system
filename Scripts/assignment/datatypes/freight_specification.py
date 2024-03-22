@@ -20,13 +20,10 @@ class FreightSpecification:
             Impedance type (time/cost/dist/...)
         value : str
             Emme matrix id
-    aux_result : str
-        Name of extra attribute, where aux volume is to be stored
     """
     def __init__(self,
                  modes: Dict[str, str],
-                 emme_matrices: Dict[str, Union[str, Dict[str, str]]],
-                 aux_result: str):
+                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
         no_penalty = dict.fromkeys(
             ["global", "at_nodes", "on_lines", "on_segments"])
         all_modes = {param.park_and_ride_mode: "truck access"}
@@ -83,14 +80,6 @@ class FreightSpecification:
             "flow_distribution_between_lines": {
                 "consider_total_impedance": False
             },
-            "results": {
-                "aux_transit_volumes_by_mode": [
-                    {
-                        "mode": param.park_and_ride_mode,
-                        "volume": aux_result,
-                    }
-                ]
-            },
             "journey_levels": journey_levels,
             "performance_settings": param.performance_settings,
         }
@@ -112,5 +101,6 @@ class FreightSpecification:
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": emme_matrices["demand"],
+            "on_links": {},
             "on_segments": {},
         }

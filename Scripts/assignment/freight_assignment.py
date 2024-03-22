@@ -1,3 +1,4 @@
+import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
 from assignment.datatypes.freight_specification import FreightSpecification
@@ -19,8 +20,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     break
         self.emme_scenario.publish_network(network)
         self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class],
-                self.extra(ass_class))
+                param.freight_modes[ass_class], self.emme_matrices[ass_class])
             for ass_class in param.freight_modes}
 
     def assign(self):
@@ -43,7 +43,9 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         """
         for ass_class in param.freight_modes:
             spec = self._freight_specs[ass_class].ntw_results_spec
-            spec["on_segments"]["transit_volumes"] = '@' + commodity_class + ass_class
+            attr_name = commodity_class + ass_class
+            spec["on_segments"]["transit_volumes"] = '@' + attr_name
+            spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
 
@@ -74,3 +76,5 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             self.emme_project.matrix_results(
                 spec.local_result_spec, scenario=self.emme_scenario,
                 class_name=ass_class)
+        log.info("Freight assignment performed for scenario {}".format(
+            self.emme_scenario.id))

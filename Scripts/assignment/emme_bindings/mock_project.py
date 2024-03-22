@@ -604,7 +604,11 @@ class Scenario:
 
 class ExtraAttribute:
     def __init__(self, name, obj_type, default_value, scenario):
-        if len(name) > 20 or name[0] != '@':
+        if (len(name) > 20
+                or name[0] != '@'
+                or not name[1].isalpha()
+                or not name.islower()
+                or not name[1:].replace('_', '').isalnum()):
             raise ArgumentError("Invalid extra attribute ID: {}".format(name))
         self.name = name
         self.type = obj_type

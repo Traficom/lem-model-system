@@ -77,6 +77,6 @@ class EmmeAssignmentTest(unittest.TestCase):
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
-        ass_model.prepare_freight_network(self.dist_cost, ["1", "2"])
+        ass_model.prepare_freight_network(self.dist_cost, ["c1", "c2"])
         ass_model.freight_network.assign()
-        ass_model.freight_network.save_network_volumes("1")
+        ass_model.freight_network.save_network_volumes("c1")

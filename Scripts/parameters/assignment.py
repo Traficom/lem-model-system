@@ -523,8 +523,8 @@ freight_modes = {
         'J': "@electric_train",
     },
     "ship": {
-        'W': "@4m_ship",
-        's': "@9m_ship",
+        'W': "@ship_4m",
+        's': "@ship_9m",
     },
 }
 external_modes = [
