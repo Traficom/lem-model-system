@@ -158,7 +158,7 @@ class MockPeriod(Period):
                 Matrix of the specified type
         """
         matrix_list = [ass_class for ass_class in assignment_classes
-            if mtx_type in param.emme_matrices[ass_class]]
+            if mtx_type in param.emme_matrices.get(ass_class, [])]
         with self.matrices.open(
                 mtx_type, self.name, transport_classes=matrix_list) as mtx:
             matrices = {mode: mtx[mode] for mode in matrix_list}

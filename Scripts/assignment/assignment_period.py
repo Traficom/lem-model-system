@@ -445,7 +445,7 @@ class AssignmentPeriod(Period):
         """
         matrices = {}
         for ass_class in assignment_classes:
-            if mtx_type in self.emme_matrices[ass_class]:
+            if mtx_type in self.emme_matrices.get(ass_class, []):
                 if mtx_type == "time" and ass_class in param.car_classes:
                     mtx = self._extract_timecost_from_gcost(ass_class)
                 elif mtx_type == "time" and ass_class in param.transit_classes:
