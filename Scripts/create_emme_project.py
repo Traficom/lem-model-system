@@ -9,13 +9,14 @@ import assignment.emme_assignment as ass
 from assignment.emme_bindings.emme_project import EmmeProject
 import inro.emme.desktop.app as _app
 import inro.emme.database.emmebank as _eb
+import parameters.assignment as param
 
 def create_emme_project(args):
     logging.basicConfig(format='%(asctime)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.INFO)
     project_dir = args.emme_path
-    project_name = args.submodel
+    project_name = args.project_name
     db_dir = os.path.join(project_dir, project_name, "Database")
     project_path = _app.create_project(project_dir, project_name)
     os.makedirs(db_dir)
@@ -25,14 +26,8 @@ def create_emme_project(args):
         "destination_matrices": 100, 
         "full_matrices": 600, 
         "scenarios": args.number_of_emme_scenarios, 
-        "centroids": 10000, 
-        "regular_nodes": 989999,
-        "links": 2000000, 
         "turn_entries": 1, 
         "transit_vehicles": 40, 
-        "transit_lines": 40000, 
-        "transit_segments": 2000000, 
-        "extra_attribute_values": 24120015,
         "functions": 99, 
         "operators": 5000, 
         "sola_analyses": 240,
@@ -44,55 +39,75 @@ def create_emme_project(args):
             "links": 150000,
             "transit_lines": 3000,
             "transit_segments": 250000,
-            "extra_attribute_values": 30000000,
         },
         "lounais_suomi": {
             "centroids": 3000, 
             "regular_nodes": 45000, 
             "links": 150000,
             "transit_lines": 3000,
-            "transit_segments": 250000,
-            "extra_attribute_values": 30000000,            
+            "transit_segments": 250000,            
         },
         "ita_suomi": {
             "centroids": 3300, 
             "regular_nodes": 45000, 
             "links": 150000,
             "transit_lines": 3300,
-            "transit_segments": 300000,
-            "extra_attribute_values": 30000000,            
+            "transit_segments": 300000,           
         },
         "pohjois_suomi": {
             "centroids": 3000, 
             "regular_nodes": 40000, 
             "links": 150000,
             "transit_lines": 2500,
-            "transit_segments": 200000,
-            "extra_attribute_values": 30000000,                  
+            "transit_segments": 200000,                 
         },
         "koko_suomi": {
             "centroids": 10000, 
             "regular_nodes": 120000, 
             "links": 350000,
             "transit_lines": 8000,
-            "transit_segments": 700000,
-            "extra_attribute_values": 70000000,                  
+            "transit_segments": 700000,                
         },
         "freight": {
             "centroids": 320,
-            "regular_nodes": 20000,
-            "links": 55000,
-            "transit_lines": 7000,
+            "regular_nodes": 50000,
+            "links": 130000,
+            "transit_lines": 8000,
             "transit_segments": 500000,
-            "extra_attribute_values": 25000000,
         }
     }
+
+    nr_transit_classes = len(param.transit_classes)
+    nr_segment_results = len(param.segment_results)
+    nr_veh_classes = len(param.emme_matrices)
+    nr_new_attr = {
+        "nodes": nr_transit_classes * (nr_segment_results-1),
+        "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+        "transit_lines": nr_transit_classes + 2,
+        "transit_segments": nr_transit_classes*nr_segment_results + 2,
+    }
+    
+    time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
+    if not args.separate_emme_scenarios:
+    # If results from all time periods are stored in same
+    # EMME scenario
+        for key in nr_new_attr:
+            nr_new_attr[key] *= len(time_periods) + 1
+
+    # calculate extra attribute dimensions:
+    for i in submodel_dimensions:
+        submodel_dimensions[i]["extra_attribute_values"] = (submodel_dimensions[i]["links"] * 9 * nr_new_attr["links"]
+                                                            + (submodel_dimensions[i]["regular_nodes"] + submodel_dimensions[i]["centroids"]) * 5 * nr_new_attr["nodes"]
+                                                            + submodel_dimensions[i]["transit_lines"] * nr_new_attr["transit_lines"]
+                                                            + submodel_dimensions[i]["transit_segments"] * nr_new_attr["transit_segments"])
+
     dim = {**default_dimensions, **submodel_dimensions[args.submodel]}
     scenario_num = args.first_scenario_id
     eb = _eb.create(os.path.join(db_dir, "emmebank"), dim)
     eb.text_encoding = 'utf-8'
+    eb.title = project_name
     eb.coord_unit_length = 0.001
-    scen = eb.create_scenario(scenario_num)
+    eb.create_scenario(scenario_num)
     emmebank_path = eb.path
     eb.dispose()
     EmmeProject(project_path, emmebank_path)
@@ -113,7 +128,16 @@ if __name__ == "__main__":
         choices={"TEXT", "JSON"},
         default=config.LOG_FORMAT,
     )
-    # HELMET scenario input data
+    parser.add_argument(
+        "-f", "--free-flow-assignment",
+        action="store_true",
+        default=config.FREE_FLOW_ASSIGNMENT,
+        help="Using this flag runs assigment with free flow speed."),
+    parser.add_argument(
+        "--project-name",
+        type=str,
+        default=config.PROJECT_NAME,
+        help="Name of LEM project. Influences name of database directory"),
     parser.add_argument(
         "--submodel",
         type=str,
@@ -129,6 +153,11 @@ if __name__ == "__main__":
         type=int,
         default=config.NUMBER_OF_EMME_SCENARIOS,
         help="Number of scenarios in the emmebank"),
+    parser.add_argument(
+        "-s", "--separate-emme-scenarios",
+        action="store_true",
+        default=config.SEPARATE_EMME_SCENARIOS,
+        help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them."),
     parser.add_argument(
         "--first-scenario-id",
         type=int,

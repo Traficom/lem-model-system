@@ -214,13 +214,13 @@ class TourPurpose(Purpose):
         for mode in self.histograms:
             self.resultdata.print_data(
                 self.histograms[mode].histogram, "trip_lengths.txt",
-                "{}_{}".format(self.name, mode[0]))
+                "{}_{}".format(self.name, mode))
             self.resultdata.print_matrix(
                 self.aggregates[mode].matrix, "aggregated_demand",
                 "{}_{}".format(self.name, mode))
             self.resultdata.print_data(
                 self.own_zone_aggregates[mode].array,
-                "own_zone_demand.txt", "{}_{}".format(self.name, mode[0]))
+                "own_zone_demand.txt", "{}_{}".format(self.name, mode))
 
     def init_sums(self):
         for mode in self.modes:
