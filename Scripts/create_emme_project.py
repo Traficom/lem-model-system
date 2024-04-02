@@ -87,12 +87,11 @@ def create_emme_project(args):
         "transit_segments": nr_transit_classes*nr_segment_results + 2,
     }
     
-    time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
     if not args.separate_emme_scenarios:
     # If results from all time periods are stored in same
     # EMME scenario
         for key in nr_new_attr:
-            nr_new_attr[key] *= len(time_periods) + 1
+            nr_new_attr[key] *= len(param.time_periods) + 1
 
     # calculate extra attribute dimensions:
     for i in submodel_dimensions:
@@ -129,11 +128,6 @@ if __name__ == "__main__":
         default=config.LOG_FORMAT,
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."),
-    parser.add_argument(
         "--project-name",
         type=str,
         default=config.PROJECT_NAME,
@@ -157,7 +151,7 @@ if __name__ == "__main__":
         "-s", "--separate-emme-scenarios",
         action="store_true",
         default=config.SEPARATE_EMME_SCENARIOS,
-        help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them."),
+        help="Using this flag enables saving network time-period specific results in separate EMME scenarios."),
     parser.add_argument(
         "--first-scenario-id",
         type=int,
