@@ -12,11 +12,11 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             mode = line.mode.id
             for cost_attrs in param.freight_modes.values():
                 if mode in cost_attrs:
-                    cost = param.freight_terminal_cost[mode]
+                    cost = (param.freight_terminal_cost[mode]
+                        if next(line.itinerary())[param.is_freight_term_attr]
+                        else 9999)
                     line[param.terminal_cost_attr] = cost
                     line[cost_attrs[mode]] = cost
-                    # for segment in line.segments():
-                    #     segment[attr] = segment.i_node[terminal_cost_attr]
                     break
         self.emme_scenario.publish_network(network)
         self._freight_specs = {ass_class: FreightSpecification(

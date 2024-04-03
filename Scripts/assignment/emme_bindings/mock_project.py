@@ -943,6 +943,10 @@ class TransitLine(NetworkObject):
     def mode(self) -> Mode:
         return self.vehicle.mode
 
+    def itinerary(self) -> Iterable['Node']:
+        for segment in self._segments:
+            yield segment.i_node
+
     def segment(self, idx) -> 'TransitSegment':
         return self._segments[idx]
 

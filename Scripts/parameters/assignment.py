@@ -596,6 +596,7 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
+is_freight_term_attr = "#is_freight_terminal"
 railtypes = {
     2: "tram",
     3: "metro",
