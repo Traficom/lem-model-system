@@ -3,8 +3,9 @@ import numpy # type: ignore
 import pandas # type: ignore
 import copy
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Iterable
 import utils.log as log
+from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
@@ -50,13 +51,17 @@ class AssignmentPeriod(Period):
         Whether traffic assignment is all-or-nothing with speeds stored
         in `#car_time_xxx`. Overrides `use_free_flow_speeds` if this is
         also set to `True`.
+    delete_extra_matrices : bool (optional)
+        If True, only matrices needed for demand calculation will be
+        returned from end assignment.
     """
     def __init__(self, name: str, emme_scenario: int,
                  emme_context: EmmeProject,
                  emme_matrices: Dict[str, Dict[str, Any]],
                  separate_emme_scenarios: bool = False,
                  use_free_flow_speeds: bool = False,
-                 use_stored_speeds: bool = False):
+                 use_stored_speeds: bool = False,
+                 delete_extra_matrices: bool = False):
         self.name = name
         self.emme_scenario: Scenario = emme_context.modeller.emmebank.scenario(
             emme_scenario)
@@ -70,6 +75,15 @@ class AssignmentPeriod(Period):
         if use_free_flow_speeds or use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
+        self._end_assignment_classes = set(self.emme_matrices)
+        if delete_extra_matrices:
+            self._end_assignment_classes -= set(param.freight_classes)
+            if use_free_flow_speeds:
+                self._end_assignment_classes -= set(
+                    param.local_transit_classes)
+            else:
+                self._end_assignment_classes -= set(
+                    param.long_distance_transit_classes)
 
     def extra(self, attr: str) -> str:
         """Add prefix "@" and time-period suffix.
@@ -172,10 +186,16 @@ class AssignmentPeriod(Period):
             self._calc_background_traffic(include_trucks=True)
         self._set_car_vdfs(self.use_free_flow_speeds)
 
-    def assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+    def assign(self, modes: Iterable[str]
+            ) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign cars and transit for one time period.
 
         Get travel impedance matrices for one time period from assignment.
+
+        Parameters
+        ----------
+        modes : Set of str
+            The assignment classes for which impedance matrices will be returned
 
         Returns
         -------
@@ -191,7 +211,7 @@ class AssignmentPeriod(Period):
             self._long_distance_trips_assigned = True
         else:
             self._assign_transit()
-        mtxs = self._get_impedances()
+        mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         return mtxs
@@ -224,18 +244,16 @@ class AssignmentPeriod(Period):
         else:
             self._assign_transit(param.transit_classes)
             self._calc_transit_network_results()
-        return self._get_impedances(is_last_iteration=True)
+        return self._get_impedances(self._end_assignment_classes)
 
-    def _get_impedances(self, is_last_iteration=False):
-        mtxs = {imp_type: self._get_matrices(imp_type, is_last_iteration)
+    def _get_impedances(self, assignment_classes: Iterable[str]):
+        mtxs = {imp_type: self._get_matrices(imp_type, assignment_classes)
             for imp_type in ("time", "cost", "dist")}
         for mode in mtxs["time"]:
             try:
-                mtx = numpy.divide(mtxs["dist"][mode], mtxs["time"][mode]/60,
-                                   out=numpy.zeros_like(mtxs["time"][mode]),
-                                   where=mtxs["time"][mode]>0)
-                v = [round(numpy.quantile(mtx, q)) for q in [0.00, 0.50, 1.00]]
-                log.debug(f"Min, median, max of OD speed: {mode} : {v[0]} - {v[1]} - {v[2]} km/h")
+                divide_matrices(
+                    mtxs["dist"][mode], mtxs["time"][mode]/60,
+                    f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
         # fix the emme path analysis results
@@ -423,16 +441,16 @@ class AssignmentPeriod(Period):
 
     def _get_matrices(self, 
                       mtx_type: str, 
-                      is_last_iteration: bool=False) -> Dict[str,numpy.ndarray]:
+                      assignment_classes: Iterable[str]
+            ) -> Dict[str,numpy.ndarray]:
         """Get all matrices of specified type.
 
         Parameters
         ----------
         mtx_type : str
             Type (demand/time/transit/...)
-        is_last_iteration : bool (optional)
-            If this is the last iteration, all matrices are returned,
-            otherwise freight impedance matrices are skipped
+        assignment_classes : Set of str
+            The assignment classes for which impedance matrices will be returned
 
         Return
         ------
@@ -440,11 +458,9 @@ class AssignmentPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        last_iter_classes = param.freight_classes
         matrices = {}
-        for ass_class, mtx_types in self.emme_matrices.items():
-            if (mtx_type in mtx_types and
-                    (is_last_iteration or ass_class not in last_iter_classes)):
+        for ass_class in assignment_classes:
+            if mtx_type in self.emme_matrices.get(ass_class, []):
                 if mtx_type == "time" and ass_class in param.car_classes + ("van",):
                     mtx = self._extract_timecost_from_gcost(ass_class)
                 elif mtx_type == "time" and ass_class in param.transit_classes:
