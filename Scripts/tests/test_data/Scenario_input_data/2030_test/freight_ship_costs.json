@@ -1,0 +1,147 @@
+{
+    "empty_share": 1.9,
+    "1": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.69,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "2": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 7.54,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        },
+        "saimaa": {
+            "4m": {
+                "terminal_cost": 7.63,
+                "time_based_cost": 0.002694,
+                "other_costs": 1.36,
+                "speed": 0.25
+            }
+        }
+    },
+    "3": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.06,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        },
+        "saimaa": {
+            "4m": {
+                "terminal_cost": 11.13,
+                "time_based_cost": 0.002694,
+                "other_costs": 1.36,
+                "speed": 0.25
+            }
+        }
+    },
+    "4": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.06,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        },
+        "saimaa": {
+            "4m": {
+                "terminal_cost": 11.13,
+                "time_based_cost": 0.002694,
+                "other_costs": 1.36,
+                "speed": 0.25
+            }
+        }
+    },
+    "5": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 15.33,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "6": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 15.33,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "7": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 14.65,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "8": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.69,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "9": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.69,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "10": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 14.65,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "11": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.69,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    },
+    "12": {
+        "other_dry_cargo": {
+            "4m": {
+                "terminal_cost": 11.06,
+                "time_based_cost": 0.003271,
+                "other_costs": 1.36,
+                "speed": 0.24
+            }
+        }
+    }
+}

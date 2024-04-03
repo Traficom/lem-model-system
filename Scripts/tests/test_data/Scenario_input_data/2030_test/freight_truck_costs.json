@@ -1,0 +1,314 @@
+{
+    "1": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.053
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.1
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.847
+        }
+    },
+    "2": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 2.0,
+            "distribution": 0.008
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 2.0,
+            "distribution": 0.023
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 2.0,
+            "distribution": 0.969
+        }
+    },
+    "3": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 2.0,
+            "distribution": 0.038
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 2.0,
+            "distribution": 0.101
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 2.0,
+            "distribution": 0.862
+        }
+    },
+    "4": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 2.0,
+            "distribution": 0.209
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 2.0,
+            "distribution": 0.133
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 2.0,
+            "distribution": 0.658
+        }
+    },
+    "5": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.107
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.14
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.753
+        }
+    },
+    "6": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.258
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.409
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.333
+        }
+    },
+    "7": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.027
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.139
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.834
+        }
+    },
+    "8": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.049
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.267
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.683
+        }
+    },
+    "9": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.023
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.06,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.05
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.928
+        }
+    },
+    "10": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 2.0,
+            "distribution": 0.017
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 2.0,
+            "distribution": 0.409
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 2.0,
+            "distribution": 0.574
+        }
+    },
+    "11": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 2.0,
+            "distribution": 0.152
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 2.0,
+            "distribution": 0.43
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 2.0,
+            "distribution": 0.418
+        }
+    },
+    "12": {
+        "truck": {
+            "terminal_cost": 4.43,
+            "time_based_cost": 0.66,
+            "distance_based_cost": 0.23,
+            "average_load": 9.0,
+            "empty_share": 1.5,
+            "distribution": 0.362
+        },
+        "semi_trailer_truck": {
+            "terminal_cost": 1.71,
+            "time_based_cost": 0.74,
+            "distance_based_cost": 0.55,
+            "average_load": 26.0,
+            "empty_share": 1.5,
+            "distribution": 0.049
+        },
+        "trailer_truck": {
+            "terminal_cost": 1.07,
+            "time_based_cost": 0.75,
+            "distance_based_cost": 0.68,
+            "average_load": 42.0,
+            "empty_share": 1.5,
+            "distribution": 0.589
+        }
+    }
+}

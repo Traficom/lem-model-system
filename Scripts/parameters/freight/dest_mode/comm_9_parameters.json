@@ -1,0 +1,68 @@
+{
+    "name": "freight",
+    "orig": "null",
+    "dest": "null",
+    "area": "all",
+    "struct": "dest>mode",
+    "impedance_share": {},
+    "distance_boundaries": {
+        "truck": [
+            0,
+            9999
+        ],
+        "train": [
+            0,
+            9999
+        ],
+        "ship": [
+            0,
+            9999
+        ]
+    },
+    "destination_choice": {
+        "logsum": {
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "attraction_size": 1.0,
+                "logsum": 0.6027
+            },
+            "attraction_size": {
+                "attraction9": 1.0
+            }
+        }
+    },
+    "mode_choice": {
+        "truck": {
+            "constant": 0.0,
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.1765
+            },
+            "log": {},
+            "individual_dummy": {}
+        },
+        "freight_train": {
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.03491
+            },
+            "log": {},
+            "individual_dummy": {},
+            "constant": -5.789
+        },
+        "ship": {
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.03393
+            },
+            "log": {},
+            "individual_dummy": {},
+            "constant": -2.326
+        }
+    },
+    "demand_share": {}
+}
