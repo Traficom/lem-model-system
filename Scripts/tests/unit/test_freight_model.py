@@ -11,6 +11,7 @@ from datahandling.resultdata import ResultsData
 from assignment.emme_bindings.emme_project import EmmeProject
 from assignment.emme_assignment import EmmeAssignmentModel
 
+from typing import Dict
 
 TEST_DATA_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "..", "test_data")
@@ -35,54 +36,65 @@ class FreightModelTest(unittest.TestCase):
                    freight_costdata[k] = json.load(f)
             return freight_costdata
 
-        def calc_road_cost(purpose_key, road_json, distance, time) -> numpy.array:
-            comm_info = road_json["commodity_spec"][str(purpose_key)]
+        def calc_road_cost(purpose_key: str, road_json: Dict[str, Dict],
+                           distance: numpy.ndarray, time: numpy.ndarray,
+                           toll_cost: numpy.ndarray = 0) -> numpy.ndarray:
+            road_json = road_json[purpose_key]
             mode_cost = {}
-            for mode in comm_info["veh_info"]:
-                mdata = road_json["vehicle_spec"][mode]
-                vdata = comm_info["veh_info"][mode]
-                # Pituus kustannukset
-                distance_cost = vdata["distribution"] * distance \
-                    * (mdata["fuel_cost"] + mdata["other_cost"]) \
-                    * (1 + comm_info["empty_share"])
-                # Ajoajan kustannukset
-                drive_time_cost = time * (mdata["capital_cost"] + mdata["work_cost"]) \
-                    * (1 + comm_info["empty_share"])
-                # Kuormaus ja purkuajan kustannukset
-                loading_cost = comm_info["loading_time"] \
-                    * (mdata["capital_cost"] + mdata["work_cost"])
-                # Eräkoko
-                batch_size = mdata["capacity"] * vdata["fill_rate"]
-                mode_cost[mode] = (distance_cost + drive_time_cost + loading_cost) / batch_size
+            for mode in road_json.keys():
+                mdata = road_json[mode]
+                time_cost = time * mdata["time_based_cost"]
+                dist_cost = distance * mdata["distance_based_cost"]
+                road_cost = (time_cost + dist_cost + toll_cost) / mdata["average_load"]
+                mode_cost[mode] = (road_cost + (mdata["terminal_cost"] * 2)\
+                    + (road_cost * mdata["empty_share"])) * mdata["distribution"]
             road_total_cost = sum(mode_cost.values())
             return road_total_cost
 
-        def calc_rail_cost(purpose_key, road_json, distance, aux_distance, aux_time) -> numpy.array:
-            if purpose_key == "2":
-                rail_cost = (0.0166 * distance) + 7.994
-            elif purpose_key in ("4", "8"):
-                rail_cost = (-0.000005 * distance ** 2) + (0.0174 * distance) + 3.282
-            elif purpose_key in ("7", "9", "10", "11"):
-                rail_cost = (-0.00001 * distance ** 2) + (0.0293 * distance) + 6.5205
-            else:
-                rail_cost = (-0.00003 * distance ** 2) + (0.058238 * distance) + 14.618045
-            rail_aux_cost = numpy.where((distance > (distance + aux_distance))\
-                                        | (aux_distance == (distance + aux_distance)),
-                                        calc_road_cost(purpose_key, road_json,
-                                                       aux_distance, aux_time),
-                                        numpy.inf)
-            rail_total_cost = rail_cost + rail_aux_cost
-            return rail_total_cost
+        def calc_rail_cost(purpose_key: str, cost_json: Dict[str, Dict],
+                           distance: numpy.ndarray, aux_distance: numpy.ndarray,
+                           aux_time: numpy.ndarray, toll_cost: numpy.ndarray = 0) -> numpy.ndarray:
+            rail_json = cost_json["freight_train"][purpose_key]
+            speed = cost_json["freight_train"]["speed"]
+            empty_share = cost_json["freight_train"]["empty_share"]
+            mode_cost = {}
+            for mode in rail_json.keys():
+                mdata = rail_json[mode]
+                time_cost =  mdata["time_based_cost"] * distance / speed[mode] * empty_share
+                dist_cost = distance * mdata["distance_based_cost"] * empty_share
+                rail_cost = ((time_cost + dist_cost + toll_cost) / mdata["average_load"]\
+                    + mdata["wagon_yearly_cost"])
+                mode_cost[mode] = rail_cost + (mdata["terminal_cost"] * 2)
+            rail_cost = mode_cost["diesel_train"]
+            rail_aux_cost = numpy.where((aux_distance > (distance + aux_distance) / 2)\
+                | (aux_distance == (distance + aux_distance)),
+                numpy.inf,
+                calc_road_cost(purpose_key, cost_json["truck"],
+                               aux_distance, aux_time))
+            return rail_cost + rail_aux_cost
 
-        def calc_ship_cost(purpose_key, road_json, distance, aux_distance, aux_time) -> numpy.array:
-            ship_cost = 0.00811 * distance + 11.04274
-            ship_aux_cost = numpy.where((distance > (distance + aux_distance))\
-                                        | (aux_distance == (distance + aux_distance)),
-                                        calc_road_cost(purpose_key, road_json,
-                                                       aux_distance, aux_time),
-                                        numpy.inf)
-            ship_total_cost = ship_cost + ship_aux_cost
-            return ship_total_cost
+        def calc_ship_cost(purpose_key: str, cost_json: Dict[str, Dict],
+                           distance: numpy.ndarray, aux_distance: numpy.ndarray,
+                           aux_time: numpy.ndarray, channel_cost: numpy.ndarray = 0) -> numpy.ndarray:
+            ship_json = cost_json["ship"][purpose_key]
+            empty_share = cost_json["ship"]["empty_share"]
+            mode_cost = {}
+            for mode in ship_json.keys():
+                for draught in ship_json[mode]:
+                    mdata = ship_json[mode][draught]
+                    time_cost = mdata["time_based_cost"] * (distance / (mdata["speed"]))
+                    channel_cost = mdata["other_costs"]
+                    ship_cost = time_cost + channel_cost + (mdata["terminal_cost"] * 2)
+                    ship_cost += time_cost * empty_share
+                    drdict = {draught: ship_cost}
+                mode_cost[mode] = drdict
+            ship_cost = mode_cost["other_dry_cargo"]["4m"]
+            ship_aux_cost = numpy.where((aux_distance > (distance + aux_distance) / 2)\
+                | (aux_distance == (distance + aux_distance)),
+                numpy.inf,
+                calc_road_cost(purpose_key, cost_json["truck"],
+                               aux_distance, aux_time))
+            return ship_cost + ship_aux_cost
 
         resultdata = ResultsData(os.path.join(TEST_DATA_PATH, "Results",
                                               "test", "freight", MODEL_TYPE))
@@ -117,14 +129,14 @@ class FreightModelTest(unittest.TestCase):
                 },
                 "freight_train": {
                     "cost": calc_rail_cost(purpose_key,
-                                           freight_costdata["truck"],
+                                           freight_costdata,
                                            temp_impedance["dist"]["freight_train"],
                                            temp_impedance["aux_dist"]["freight_train"],
                                            temp_impedance["aux_time"]["freight_train"])
                 },
                 "ship": {
                     "cost": calc_ship_cost(purpose_key,
-                                           freight_costdata["truck"],
+                                           freight_costdata,
                                            temp_impedance["dist"]["ship"],
                                            temp_impedance["aux_dist"]["ship"],
                                            temp_impedance["aux_time"]["ship"])

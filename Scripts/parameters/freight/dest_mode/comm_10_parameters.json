@@ -46,9 +46,7 @@
         "freight_train": {
             "generation": {},
             "attraction": {},
-            "impedance": {
-                "cost": 0.00725
-            },
+            "impedance": {},
             "log": {},
             "individual_dummy": {},
             "constant": -5.518

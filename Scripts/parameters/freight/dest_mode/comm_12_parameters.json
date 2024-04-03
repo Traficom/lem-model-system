@@ -56,9 +56,7 @@
         "ship": {
             "generation": {},
             "attraction": {},
-            "impedance": {
-                "cost": 0.6507
-            },
+            "impedance": {},
             "log": {},
             "individual_dummy": {},
             "constant": -209.7

@@ -1,104 +1,199 @@
 {
-    "rail_vars": {
-        "locomotive_traction": 1500,
-        "speed": 0.833,
-        "other_time": 240,
-        "driver_h_cost": 1.083,
-        "wagon_h_cost": 0.037,
-        "wagon_capacity": 60,
-        "addon_cost_multiplier": 0.15
+    "speed": {
+        "electric_train": 0.83,
+        "diesel_train": 0.83
     },
-    "train_spec": {
+    "empty_share": 2.0,
+    "1": {
         "electric_train": {
-            "locomotive_h_cost": 1.917,
-            "locomotive_km_cost": 1.24,
-            "wagon_km_cost": 0.08,
-            "locomotive_tax": 0.11,
-            "wagon_tax": 0.07
+            "terminal_cost": 3.05,
+            "time_based_cost": 3.7,
+            "distance_based_cost": 2.16,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         },
         "diesel_train": {
-            "locomotive_h_cost": 1.517,
-            "locomotive_km_cost": 2.38,
-            "wagon_km_cost": 0.07,
-            "locomotive_tax": 0.59,
-            "wagon_tax": 0.08
+            "terminal_cost": 2.89,
+            "time_based_cost": 3.24,
+            "distance_based_cost": 3.89,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         }
     },
-    "commodity_spec": {
-        "1": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+    "2": {
+        "electric_train": {
+            "terminal_cost": 3.86,
+            "time_based_cost": 4.43,
+            "distance_based_cost": 3.75,
+            "wagon_yearly_cost": 0,
+            "average_load": 1400
         },
-        "2": {
-            "roundtrip_number": 1,
-            "wagon_loading_time": 48,
-            "batch_size": 1400,
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 3.82,
+            "time_based_cost": 3.97,
+            "distance_based_cost": 5.29,
+            "wagon_yearly_cost": 0,
+            "average_load": 1400
+        }
+    },
+    "3": {
+        "electric_train": {
+            "terminal_cost": 2.36,
+            "time_based_cost": 4.04,
+            "distance_based_cost": 2.89,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
         },
-        "3": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 2.3,
+            "time_based_cost": 3.58,
+            "distance_based_cost": 4.53,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
+        }
+    },
+    "4": {
+        "electric_train": {
+            "terminal_cost": 2.11,
+            "time_based_cost": 4.64,
+            "distance_based_cost": 4.18,
+            "wagon_yearly_cost": 2.42,
+            "average_load": 1400
         },
-        "4": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 2.07,
+            "time_based_cost": 4.18,
+            "distance_based_cost": 5.66,
+            "wagon_yearly_cost": 2.42,
+            "average_load": 1400
+        }
+    },
+    "5": {
+        "electric_train": {
+            "terminal_cost": 7.2,
+            "time_based_cost": 3.7,
+            "distance_based_cost": 2.16,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         },
-        "5": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 7.04,
+            "time_based_cost": 3.24,
+            "distance_based_cost": 3.89,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
+        }
+    },
+    "6": {
+        "electric_train": {
+            "terminal_cost": 7.2,
+            "time_based_cost": 3.7,
+            "distance_based_cost": 2.16,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         },
-        "6": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 7.04,
+            "time_based_cost": 3.24,
+            "distance_based_cost": 3.89,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
+        }
+    },
+    "7": {
+        "electric_train": {
+            "terminal_cost": 4.51,
+            "time_based_cost": 4.04,
+            "distance_based_cost": 2.89,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
         },
-        "7": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 4.45,
+            "time_based_cost": 3.58,
+            "distance_based_cost": 4.53,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
+        }
+    },
+    "8": {
+        "electric_train": {
+            "terminal_cost": 4.26,
+            "time_based_cost": 4.43,
+            "distance_based_cost": 3.75,
+            "wagon_yearly_cost": 1.98,
+            "average_load": 1400
         },
-        "8": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 4.22,
+            "time_based_cost": 3.97,
+            "distance_based_cost": 5.29,
+            "wagon_yearly_cost": 1.98,
+            "average_load": 1400
+        }
+    },
+    "9": {
+        "electric_train": {
+            "terminal_cost": 6.51,
+            "time_based_cost": 4.04,
+            "distance_based_cost": 2.89,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
         },
-        "9": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 6.45,
+            "time_based_cost": 3.58,
+            "distance_based_cost": 4.53,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
+        }
+    },
+    "10": {
+        "electric_train": {
+            "terminal_cost": 6.51,
+            "time_based_cost": 4.04,
+            "distance_based_cost": 2.89,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
         },
-        "10": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 6.45,
+            "time_based_cost": 3.58,
+            "distance_based_cost": 4.53,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
+        }
+    },
+    "11": {
+        "electric_train": {
+            "terminal_cost": 4.51,
+            "time_based_cost": 4.04,
+            "distance_based_cost": 2.89,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
         },
-        "11": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 4.45,
+            "time_based_cost": 3.58,
+            "distance_based_cost": 4.53,
+            "wagon_yearly_cost": 4.83,
+            "average_load": 700
+        }
+    },
+    "12": {
+        "electric_train": {
+            "terminal_cost": 3.05,
+            "time_based_cost": 3.7,
+            "distance_based_cost": 2.16,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         },
-        "12": {
-            "distribution": {
-                "electric_train": 0.5,
-                "diesel_train": 0.5
-            }
+        "diesel_train": {
+            "terminal_cost": 2.89,
+            "time_based_cost": 3.24,
+            "distance_based_cost": 3.89,
+            "wagon_yearly_cost": 10.35,
+            "average_load": 300
         }
     }
 }
