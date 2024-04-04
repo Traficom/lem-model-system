@@ -70,14 +70,16 @@ class FreightModelTest(unittest.TestCase):
                 "freight_train": {
                     "cost": calc_rail_cost(freight_costdata["freight_train"][purpose_key],
                                            freight_costdata["truck"][purpose_key],
+                                           freight_costdata["truck"]["empty_share"],
                                            temp_impedance["dist"]["freight_train"],
                                            temp_impedance["time"]["freight_train"],
                                            temp_impedance["aux_dist"]["freight_train"],
                                            temp_impedance["aux_time"]["freight_train"])
                 },
                 "ship": {
-                    "cost": calc_ship_cost(purpose_key,
-                                           freight_costdata,
+                    "cost": calc_ship_cost(freight_costdata["ship"][purpose_key],
+                                           freight_costdata["truck"][purpose_key],
+                                           freight_costdata["ship"]["empty_share"],
                                            temp_impedance["dist"]["ship"],
                                            temp_impedance["aux_dist"]["ship"],
                                            temp_impedance["aux_time"]["ship"])
