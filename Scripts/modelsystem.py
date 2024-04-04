@@ -100,9 +100,6 @@ class ModelSystem:
             for mode in purpose.modes}  # Dict instead of set, to preserve order
         self.em = ExternalModel(
             self.basematrices, self.zdata_forecast, self.zone_numbers)
-        bounds = slice(0, self.zdata_forecast.nr_zones)
-        self.cdm = CarDensityModel(
-            self.zdata_base, self.zdata_forecast, bounds, self.resultdata)
         self.mode_share: List[Dict[str,Any]] = []
         self.convergence = pandas.DataFrame()
 
@@ -229,7 +226,6 @@ class ModelSystem:
                 for mode, mtx in impedance[tp]["dist"].items():
                     divide_matrices(
                         mtx, Purpose.distance, f"Network/beeline dist {mode}")
-                self._update_ratios(impedance[tp], tp)
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
         if is_end_assignment:
@@ -274,7 +270,8 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         # Update car density
-        prediction = self.cdm.predict()
+        prediction = (self.zdata_base["car_density"][:self.zdata_base.nr_zones]
+                      .clip(upper=1.0))
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
@@ -324,8 +321,6 @@ class ModelSystem:
             log.info("Assigning period " + tp)
             impedance[tp] = (ap.end_assign() if iteration=="last"
                              else ap.assign(self.travel_modes))
-            if tp == "aht":
-                self._update_ratios(impedance[tp], tp)
             if iteration=="last":
                 self._save_to_omx(impedance[tp], tp)
         if iteration=="last":

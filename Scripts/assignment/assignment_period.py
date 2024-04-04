@@ -253,8 +253,6 @@ class AssignmentPeriod(Period):
             for mtx_class in mtxs[mtx_type]:
                 path_not_found = mtxs["time"][mtx_class] > 999999
                 mtxs[mtx_type][mtx_class][path_not_found] = 999999
-        # adjust impedance
-        mtxs["time"]["bike"] = mtxs["time"]["bike"].clip(None, 9999.)
         return mtxs
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
