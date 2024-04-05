@@ -412,7 +412,7 @@ class FreightPurpose(Purpose):
     def __init__(self, specification, zone_data, resultdata):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
-        
+
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
         else:
