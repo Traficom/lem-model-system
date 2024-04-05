@@ -56,7 +56,7 @@ class FreightModelTest(unittest.TestCase):
                                                     resultdata)
         ass_model = EmmeAssignmentModel(
             EmmeProject("C:\\emmeproj\\freight_testing\\freight_testing.emp"), first_scenario_id=11)
-        ass_model.prepare_freight_network(zonedata.car_dist_cost)
+        ass_model.prepare_freight_network(zonedata.car_dist_cost, list(purposes))
         temp_impedance = ass_model.freight_network.assign()
         freight_costdata = read_freight_costdata()
         demand_list = {}
@@ -70,7 +70,7 @@ class FreightModelTest(unittest.TestCase):
                 "freight_train": {
                     "cost": calc_rail_cost(freight_costdata["freight_train"][purpose_key],
                                            freight_costdata["truck"][purpose_key],
-                                           freight_costdata["truck"]["empty_share"],
+                                           freight_costdata["freight_train"]["empty_share"],
                                            temp_impedance["dist"]["freight_train"],
                                            temp_impedance["time"]["freight_train"],
                                            temp_impedance["aux_dist"]["freight_train"],
@@ -89,7 +89,7 @@ class FreightModelTest(unittest.TestCase):
             for mode in demand:
                 ass_model.freight_network.set_matrix(mode, demand[mode])
             demand_list[purpose_key] = demand
-        ass_model.freight_network.assign()
+            ass_model.freight_network.save_network_volumes(purpose_key)
 
 test = FreightModelTest()
 test.test_freight_model()
