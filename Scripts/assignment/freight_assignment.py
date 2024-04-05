@@ -41,7 +41,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         """
         for ass_class in param.freight_modes:
             spec = self._freight_specs[ass_class].ntw_results_spec
-            attr_name = commodity_class + ass_class
+            attr_name = (commodity_class + ass_class)[:17]
             spec["on_segments"]["transit_volumes"] = '@' + attr_name
             spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
             self.emme_project.network_results(
