@@ -171,12 +171,13 @@ class EmmeAssignmentModel(AssignmentModel):
                     overwrite=True, scenario=self.mod_scenario)
         for comm_class in commodity_classes:
             for ass_class in param.freight_modes:
+                attr_name = (comm_class + ass_class)[:17]
                 self.emme_project.create_extra_attribute(
-                    "TRANSIT_SEGMENT", '@' + comm_class + ass_class,
+                    "TRANSIT_SEGMENT", '@' + attr_name,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
                 self.emme_project.create_extra_attribute(
-                    "LINK", '@a_' + comm_class + ass_class,
+                    "LINK", '@a_' + attr_name,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
         self.freight_network.prepare(
