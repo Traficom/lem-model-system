@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, Union
+
 import parameters.assignment as param
 
 
@@ -9,54 +10,52 @@ class FreightSpecification:
 
     Parameters
     ----------
-    mode : str
-        One-letter mode ID
+    modes : dict
+        key : str
+            One-letter mode ID
+        value : str
+            Terminal cost attribute name
     emme_matrices : dict
         key : str
             Impedance type (time/cost/dist/...)
         value : str
             Emme matrix id
-    aux_result : str
-        Name of extra attribute, where aux volume is to be stored
     """
     def __init__(self,
-                 mode: str,
-                 emme_matrices: Dict[str, Union[str, Dict[str, str]]],
-                 aux_result: str):
+                 modes: Dict[str, str],
+                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
+        no_penalty = dict.fromkeys(
+            ["global", "at_nodes", "on_lines", "on_segments"])
+        all_modes = {param.park_and_ride_mode: "truck access"}
+        all_modes.update(modes)
+        transitions = [{
+            "mode": mode,
+            "next_journey_level": i,
+        } for i, mode in enumerate(all_modes)]
         journey_levels = [{
-            "description": name,
+            "description": all_modes[mode],
             "destinations_reachable": True,
-            "transition_rules": [
-                {
-                    "mode": param.park_and_ride_mode,
-                    "next_journey_level": 0,
-                },
-                {
-                    "mode": mode,
-                    "next_journey_level": 1,
-                },
-            ],
+            "transition_rules": transitions,
             "boarding_time": None,
-            "boarding_cost": None,
+            "boarding_cost": no_penalty.copy(),
             "waiting_time": None,
-        } for name in ("truck transport", "train/ship transport")]
-        journey_levels[0]["boarding_cost"] = {
-            "global": None,
-            "at_nodes": {
-                "penalty": param.terminal_cost_attr,
+        } for mode in all_modes]
+        # Terminal cost is related to mode that changes the journey level,
+        # hence "the other" mode
+        terminal_cost_attrs = ([param.terminal_cost_attr]
+                               + list(reversed(list(modes.values()))))
+        for jl, attr in zip(journey_levels, terminal_cost_attrs):
+            jl["boarding_cost"]["on_lines"] = {
+                "penalty": attr,
                 "perception_factor": 1,
-            },
-            "on_lines": None,
-            "on_segments": None,
-        }
-        no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
+            }
         no_penalty["global"] = {
             "penalty": 0,
             "perception_factor": 1,
         }
         self.spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
-            "modes": [mode, param.park_and_ride_mode],
+            "modes": list(all_modes),
             "demand": emme_matrices["demand"],
             "waiting_time": {
                 "headway_fraction": 0.1,
@@ -81,22 +80,15 @@ class FreightSpecification:
             "flow_distribution_between_lines": {
                 "consider_total_impedance": False
             },
-            "results": {
-                "aux_transit_volumes_by_mode": [
-                    {
-                        "mode": param.park_and_ride_mode,
-                        "volume": aux_result,
-                    }
-                ]
-            },
             "journey_levels": journey_levels,
             "performance_settings": param.performance_settings,
         }
         self.result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
-                "modes": [mode],
+                "modes": list(modes),
                 "distance": emme_matrices["dist"],
+                "actual_in_vehicle_times": emme_matrices["time"],
             },
         }
         self.local_result_spec = {
@@ -106,4 +98,10 @@ class FreightSpecification:
                 "distance": emme_matrices["aux_dist"],
                 "actual_aux_transit_times": emme_matrices["aux_time"],
             },
+        }
+        self.ntw_results_spec = {
+            "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
+            "analyzed_demand": emme_matrices["demand"],
+            "on_links": {},
+            "on_segments": {},
         }

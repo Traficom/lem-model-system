@@ -1,3 +1,4 @@
+import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
 from assignment.datatypes.freight_specification import FreightSpecification
@@ -6,9 +7,18 @@ from assignment.datatypes.freight_specification import FreightSpecification
 class FreightAssignmentPeriod(AssignmentPeriod):
     def prepare(self, *args, **kwargs):
         AssignmentPeriod.prepare(self, *args, **kwargs)
+        network = self.emme_scenario.get_network()
+        for line in network.transit_lines():
+            mode = line.mode.id
+            for cost_attrs in param.freight_modes.values():
+                if mode in cost_attrs:
+                    cost = param.freight_terminal_cost[mode]
+                    line[param.terminal_cost_attr] = cost
+                    line[cost_attrs[mode]] = cost
+                    break
+        self.emme_scenario.publish_network(network)
         self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class],
-                self.extra(ass_class))
+                param.freight_modes[ass_class], self.emme_matrices[ass_class])
             for ass_class in param.freight_modes}
 
     def assign(self):
@@ -17,8 +27,25 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         self._assign_trucks()
         self._set_freight_vdfs()
         self._assign_freight()
-        return {imp_type: self._get_matrices(imp_type, is_last_iteration=True)
+        return {imp_type: self._get_matrices(
+                imp_type, list(param.freight_matrices))
             for imp_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+
+    def save_network_volumes(self, commodity_class: str):
+        """Save commodity-specific volumes in segment attribute.
+
+        Parameters
+        ----------
+        commodity_class : str
+            Commodity class name
+        """
+        for ass_class in param.freight_modes:
+            spec = self._freight_specs[ass_class].ntw_results_spec
+            attr_name = (commodity_class + ass_class)[:17]
+            spec["on_segments"]["transit_volumes"] = '@' + attr_name
+            spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
+            self.emme_project.network_results(
+                spec, self.emme_scenario, ass_class)
 
     def _set_freight_vdfs(self):
         network = self.emme_scenario.get_network()
@@ -47,3 +74,5 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             self.emme_project.matrix_results(
                 spec.local_result_spec, scenario=self.emme_scenario,
                 class_name=ass_class)
+        log.info("Freight assignment performed for scenario {}".format(
+            self.emme_scenario.id))

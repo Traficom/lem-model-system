@@ -316,7 +316,10 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         car_time_attr = self.netfield("car_time")
         main_mode = network.mode(param.main_mode)
-        car_mode = network.mode(param.assignment_modes["car_work"])
+        car_modes = {
+            network.mode(param.assignment_modes["car_work"]),
+            network.mode(param.assignment_modes["truck"])
+        }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
         for link in network.links():
             linktype = link.type % 100
@@ -354,7 +357,7 @@ class AssignmentPeriod(Period):
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
             if self.use_stored_speeds:
-                if car_mode in link.modes:
+                if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
@@ -365,7 +368,7 @@ class AssignmentPeriod(Period):
                         msg = f"Car travel time on link {link.id} is {car_time}"
                         log.error(msg)
                         raise ValueError(msg)
-            if car_mode in link.modes:
+            if car_modes & link.modes:
                 link.modes |= {main_mode, park_and_ride_mode}
             else:
                 link.modes -= {main_mode, park_and_ride_mode}

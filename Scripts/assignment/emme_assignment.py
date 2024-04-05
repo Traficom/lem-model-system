@@ -133,7 +133,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 *self._create_transit_attributes(ap.emme_scenario, ap.extra))
         self._init_functions()
 
-    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float]):
+    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float],
+                                commodity_classes: List[str]):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
@@ -143,6 +144,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 Assignment class (car_work/truck/...)
             value : float
                 Car cost per km in euros
+        commodity_classes : list of str
+            Class names for which we want extra attributes
         """
         mtxs = {}
         for i, ass_class in enumerate(param.freight_matrices, start=1):
@@ -158,6 +161,25 @@ class EmmeAssignmentModel(AssignmentModel):
             "vrk", self.mod_scenario.number, self.emme_project, mtxs,
             use_free_flow_speeds=True)
         self.assignment_periods = [self.freight_network]
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
+            overwrite=True, scenario=self.mod_scenario)
+        for ass_class in param.freight_modes.values():
+            for attr in ass_class.values():
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_LINE", attr, "terminal cost",
+                    overwrite=True, scenario=self.mod_scenario)
+        for comm_class in commodity_classes:
+            for ass_class in param.freight_modes:
+                attr_name = (comm_class + ass_class)[:17]
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_SEGMENT", '@' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
+                self.emme_project.create_extra_attribute(
+                    "LINK", '@a_' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,

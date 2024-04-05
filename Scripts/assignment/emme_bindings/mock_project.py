@@ -393,12 +393,33 @@ class MockProject:
     def pedestrian_assignment(self, *args, **kwargs):
         pass
 
-    def transit_assignment(self, *args, **kwargs):
-        pass
+    _transit_classes = set()
 
-    def congested_assignment(self, transit_assignment_spec, class_names,
+    def transit_assignment(self, specification, scenario=None,
+                           add_volumes=False, strict=True,
+                           save_strategies=True, class_name=""):
+        self._transit_classes.add(class_name)
+        network = scenario.get_network()
+        for mode in specification["modes"]:
+            if network.mode(mode) is None:
+                raise AttributeError(f"No mode {mode} in network")
+        mtx_id = specification["demand"]
+        if self.modeller.emmebank.matrix(mtx_id) is None:
+            raise AttributeError(f"Matrix {mtx_id} does not exist")
+        nr_levels = len(specification["journey_levels"])
+        for jl in specification["journey_levels"]:
+            for transition in jl["transition_rules"]:
+                mode = transition["mode"]
+                if network.mode(mode) is None:
+                    raise AttributeError(f"No mode {mode} in network")
+                next_level = transition["next_journey_level"]
+                if not 0 <= next_level < nr_levels:
+                    raise AttributeError(f"No journey level {next_level}")
+
+    def congested_assignment(self, transit_assignment_spec,
                              congestion_function, stopping_criteria,
-                             log_worksheets, scenario, save_strategies):
+                             log_worksheets, scenario, class_names,
+                             save_strategies):
         self.create_extra_attribute(
             "TRANSIT_SEGMENT", "@base_timtr", "", 1.0,
             overwrite=True, scenario=scenario)
@@ -408,11 +429,33 @@ class MockProject:
         }
         return report
 
-    def matrix_results(self, *args, **kwargs):
-        pass
+    def matrix_results(self, specification, scenario=None, class_name="",
+                       num_processors="max", last_n_iterations=None):
+        if class_name not in self._transit_classes:
+            raise AttributeError(f"No strategies for class {class_name}")
+        network = scenario.get_network()
+        for mode in specification["by_mode_subset"]["modes"]:
+            if network.mode(mode) is None:
+                 raise AttributeError(f"No mode {mode} in network")
+        for key in specification["by_mode_subset"]:
+            if key != "modes":
+                mtx_id = specification["by_mode_subset"][key]
+                if self.modeller.emmebank.matrix(mtx_id) is None:
+                    raise AttributeError(f"Matrix {mtx_id} does not exist")
 
-    def network_results(self, *args, **kwargs):
-        pass
+    def network_results(self, specification, scenario=None, class_name="",
+                        num_processors="max", last_n_iterations=None):
+        if class_name not in self._transit_classes:
+            raise AttributeError(f"No strategies for class {class_name}")
+        if "analyzed_demand" in specification:
+            mtx_id = specification["analyzed_demand"]
+            if self.modeller.emmebank.matrix(mtx_id) is None:
+                raise AttributeError(f"Matrix {mtx_id} does not exist")
+        for category in ["on_links","on_segments","at_nodes"]:
+            if category in specification:
+                for attr in specification[category].values():
+                    if scenario.extra_attribute(attr) is None:
+                        raise AttributeError(f"Attribute {attr} does not exist")
 
 
 Modeller = namedtuple("Modeller", "emmebank")
@@ -561,7 +604,11 @@ class Scenario:
 
 class ExtraAttribute:
     def __init__(self, name, obj_type, default_value, scenario):
-        if len(name) > 20 or name[0] != '@':
+        if (len(name) > 20
+                or name[0] != '@'
+                or not name[1].isalpha()
+                or not name.islower()
+                or not name[1:].replace('_', '').isalnum()):
             raise ArgumentError("Invalid extra attribute ID: {}".format(name))
         self.name = name
         self.type = obj_type
@@ -895,6 +942,10 @@ class TransitLine(NetworkObject):
     @property
     def mode(self) -> Mode:
         return self.vehicle.mode
+
+    def itinerary(self) -> Iterable['Node']:
+        for segment in self._segments:
+            yield segment.i_node
 
     def segment(self, idx) -> 'TransitSegment':
         return self._segments[idx]
