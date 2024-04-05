@@ -12,9 +12,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             mode = line.mode.id
             for cost_attrs in param.freight_modes.values():
                 if mode in cost_attrs:
-                    cost = (param.freight_terminal_cost[mode]
-                        if next(line.itinerary())[param.is_freight_term_attr]
-                        else 9999)
+                    cost = param.freight_terminal_cost[mode]
                     line[param.terminal_cost_attr] = cost
                     line[cost_attrs[mode]] = cost
                     break

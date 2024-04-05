@@ -88,6 +88,7 @@ class FreightSpecification:
             "by_mode_subset": {
                 "modes": list(modes),
                 "distance": emme_matrices["dist"],
+                "actual_in_vehicle_times": emme_matrices["time"],
             },
         }
         self.local_result_spec = {

@@ -581,8 +581,8 @@ freight_matrices = {
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "freight_train": {"demand", "dist", "aux_time", "aux_dist"},
-    "ship": {"demand", "dist", "aux_time", "aux_dist"},
+    "freight_train": {"demand", "time", "dist", "aux_time", "aux_dist"},
+    "ship": {"demand", "time", "dist", "aux_time", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
@@ -596,7 +596,6 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
-is_freight_term_attr = "#is_freight_terminal"
 railtypes = {
     2: "tram",
     3: "metro",
