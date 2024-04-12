@@ -108,11 +108,14 @@ class FileReader:
                     # shares are aggregated as averages with total as weight
                     data = data.groupby(mapping.zone_id).agg(avg, weights=data["total"])
                 else:
-                    share_cols = [col for col in data.columns if "sh_" in col]
-                    avg_cols = [col for col in data.columns if "avg_" in col]
+                    share_cols = [col for col in data.columns
+                        if ("sh_" in col or "avg_" in col or "dummy" in col)]
+                    text_cols = data.columns[data.dtypes == object]
                     funcs = dict.fromkeys(data.columns, "sum")
-                    for col in share_cols + avg_cols:
+                    for col in share_cols:
                         funcs[col] = "mean"
+                    for col in text_cols:
+                        funcs[col] = "first"
                     data = data.groupby(mapping.zone_id).agg(funcs)
                 data.index = data.index.astype(int)
             else:

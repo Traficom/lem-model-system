@@ -57,15 +57,12 @@ class DemandModel:
         self.tour_generation_model = tour_combinations.TourCombinationModel(
             self.zone_data)
         # Income models used only in agent modelling
-        first_not_helsinki = zone_data.zone_numbers.searchsorted(
-            param.municipalities["Espoo"][0])
-        bounds = (self.bounds.start, first_not_helsinki, self.bounds.stop)
         self._income_models = [
             linear.IncomeModel(
-                self.zone_data, slice(*bounds[-2:]),
+                self.zone_data, self.bounds,
                 self.resultdata, param.age_groups, is_helsinki=False),
             linear.IncomeModel(
-                self.zone_data, slice(*bounds[:2]),
+                self.zone_data, self.bounds,
                 self.resultdata, param.age_groups, is_helsinki=True),
         ]
         if is_agent_model:

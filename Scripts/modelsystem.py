@@ -14,7 +14,6 @@ from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
 from utils.divide_matrices import divide_matrices
-from utils.zone_interval import ArrayAggregator
 import assignment.departure_time as dt
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData, BaseZoneData
@@ -71,7 +70,8 @@ class ModelSystem:
         self.basematrices = MatrixData(
             os.path.join(base_matrices_path, submodel))
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, f"{submodel}.zmp")
+            zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
+            f"{submodel}.zmp")
 
         # Output data
         results_path = os.path.join(results_path, name, submodel)
@@ -289,12 +289,14 @@ class ModelSystem:
             for mode in self.travel_modes}
         sum_all = sum(tour_sum.values())
         mode_shares = {}
-        ar = ArrayAggregator(sum_all.index)
+        agg = self.zdata_base.aggregations
         for mode in tour_sum:
             self.resultdata.print_data(
                 tour_sum[mode], "origins_demand.txt", mode)
-            self.resultdata.print_data(
-                ar.aggregate(tour_sum[mode]), "origins_demand_areas.txt", mode)
+            for area_type in agg.mappings:
+                self.resultdata.print_data(
+                    agg.aggregate_array(tour_sum[mode], area_type),
+                    f"origins_demand_{area_type}.txt", mode)
             self.resultdata.print_data(
                 tour_sum[mode] / sum_all, "origins_shares.txt", mode)
             mode_shares[mode] = tour_sum[mode].sum() / sum_all.sum()
@@ -302,8 +304,10 @@ class ModelSystem:
         trip_sum = {mode: self._sum_trips_per_zone(mode)
             for mode in self.travel_modes}
         for mode in tour_sum:
-            self.resultdata.print_data(
-                ar.aggregate(trip_sum[mode]), "trips_areas.txt", mode)
+            for area_type in agg.mappings:
+                self.resultdata.print_data(
+                    agg.aggregate_array(trip_sum[mode], area_type),
+                    f"trips_{area_type}.txt", mode)
         self.resultdata.print_line("\nAssigned demand", "result_summary")
         self.resultdata.print_line(
             "\t" + "\t".join(param.transport_classes), "result_summary")
@@ -324,7 +328,9 @@ class ModelSystem:
             if iteration=="last":
                 self._save_to_omx(impedance[tp], tp)
         if iteration=="last":
-            self.ass_model.aggregate_results(self.resultdata)
+            self.ass_model.aggregate_results(
+                self.resultdata,
+                self.zdata_base.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self._calculate_accessibility_and_savu_zones()
             self.resultdata.print_line("\nMode shares", "result_summary")
@@ -362,10 +368,11 @@ class ModelSystem:
                     mtx[ass_class] = impedance[mtx_type][ass_class]
 
     def _calculate_noise_areas(self):
-        noise_areas = self.ass_model.calc_noise()
+        noise_areas = self.ass_model.calc_noise(
+            self.zdata_base.aggregations.municipality_mapping)
         self.resultdata.print_data(noise_areas, "noise_areas.txt", "area")
-        ar = ArrayAggregator(self.zdata_forecast.zone_numbers)
-        pop = ar.aggregate(self.zdata_forecast["population"])
+        pop = self.zdata_base.aggregations.aggregate_array(
+            self.zdata_forecast["population"], "area")
         conversion = pandas.Series(zone_param.pop_share_per_noise_area)
         noise_pop = conversion * noise_areas * pop
         self.resultdata.print_data(noise_pop, "noise_areas.txt", "population")

@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     from datatypes.purpose import TourPurpose
 
 import parameters.zone as param
-from utils.zone_interval import ZoneIntervals
 
 
 class LogitModel:
@@ -502,19 +501,6 @@ class AccessibilityModel(ModeDestModel):
             workforce = pandas.Series(workforce, self.purpose.zone_numbers)
             self.resultdata.print_data(
                 workforce, "workplace_accessibility.txt", self.purpose.name)
-            workplaces = self.zone_data["workplaces"][self.bounds]
-            aggregate = ZoneIntervals("areas").averages(workforce, workplaces)
-            self.resultdata.print_data(
-                aggregate, "workplace_accessibility_areas.txt",
-                self.purpose.name)
-            names = {
-                "hw": "Workplace effective density",
-                "wh": "Workforce accessibility",
-            }
-            self.resultdata.print_line(
-                "{}:\t{:1.0f}".format(
-                    names[self.purpose.name], aggregate["all"]),
-                "result_summary")
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.
@@ -606,9 +592,9 @@ class AccessibilityModel(ModeDestModel):
         for i in b:
             try: # If only one parameter
                 # Remove area dummies from accessibility indicators
-                if i not in param.areas:
-                    utility += b[i] * zdata.get_data(
-                        i, self.bounds, generation)
+                data = zdata.get_data(i, self.bounds, generation)
+                if data.dtype != bool:
+                    utility += b[i] * data
             except ValueError: # Separate params for cap region and surrounding
                 utility += b[i][0] * zdata.get_data(i, self.bounds, generation)
         return utility

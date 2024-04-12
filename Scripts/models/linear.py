@@ -4,7 +4,6 @@ import math
 
 import parameters.car
 import parameters.income
-from utils.zone_interval import ZoneIntervals
 
 
 class LinearModel(object):
@@ -119,11 +118,11 @@ class CarDensityModel(LinearModel):
         # population from ages 0 to 999.
         population = self.zone_data["population"][self.bounds]
         # print car density by municipality and area
-        for area_type in ("municipalities", "areas"):
-            aggregation = ZoneIntervals(area_type).averages(prediction, population)
+        for area_type in self.zone_data.aggregations.mappings:
+            aggregation = self.zone_data_base.aggregations.averages(
+                prediction, population, area_type)
             self.resultdata.print_data(
-                aggregation, "car_density_{}.txt".format(area_type),
-                "car_density")
+                aggregation, f"car_density_{area_type}.txt", "car_density")
 
 
 class IncomeModel(LinearModel):
@@ -162,6 +161,6 @@ class IncomeModel(LinearModel):
         prediction = self._add_zone_terms(prediction, self.param["zone"], True)
         for municipality in self.param["municipality_dummies"]:
             dummy = self.zone_data.dummy(
-                "municipalities", municipality, self.bounds)
+                "municipality", municipality, self.bounds)
             prediction += self.param["municipality_dummies"][municipality] * dummy
         self.log_income = prediction

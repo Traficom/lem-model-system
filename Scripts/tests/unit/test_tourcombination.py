@@ -3,7 +3,7 @@
 import numpy
 import pandas
 import unittest
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import BaseZoneData
 from models.tour_combinations import TourCombinationModel
 import os
 
@@ -16,7 +16,7 @@ EXTERNAL_ZONES = [36102, 36500]
 class TourCombinationModelTest(unittest.TestCase):
     def test_generation(self):
         zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
-        zd = ZoneData(
+        zd = BaseZoneData(
             os.path.join(TEST_DATA_PATH, "Base_input_data", "2018_zonedata"), zi)
         zd._values["hu_t"] = pandas.Series(0.0, METROPOLITAN_ZONES)
         zd._values["ho_w"] = pandas.Series(0.0, METROPOLITAN_ZONES)

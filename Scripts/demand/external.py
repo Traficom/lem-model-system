@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 from datatypes.demand import Demand
 from datatypes.purpose import Purpose
-from utils.zone_interval import ZoneIntervals
 from parameters.departure_time import demand_share
 
 

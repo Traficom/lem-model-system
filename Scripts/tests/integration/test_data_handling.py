@@ -4,7 +4,7 @@ import os
 import numpy
 
 import utils.log as log
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import ZoneData, BaseZoneData
 from datahandling.matrixdata import MatrixData
 import parameters.assignment as param
 
@@ -58,7 +58,7 @@ class MatrixDataTest(unittest.TestCase):
 class ZoneDataTest(unittest.TestCase):
 
     def _get_freight_data_2016(self):
-        zdata = ZoneData(
+        zdata = BaseZoneData(
             os.path.join(TEST_DATA_PATH, "Base_input_data", "2018_zonedata"),
             ZONE_INDEXES)
         df = zdata.get_freight_data()
@@ -66,15 +66,15 @@ class ZoneDataTest(unittest.TestCase):
         return df
 
     def test_csv_file_read(self):
-        zdata2016 = ZoneData(
+        zdata2016 = BaseZoneData(
             os.path.join(TEST_DATA_PATH, "Base_input_data", "2018_zonedata"),
-            ZONE_INDEXES)
+            ZONE_INDEXES, "uusimaa.zmp")
         self.assertIsNotNone(zdata2016["population"])
         self.assertIsNotNone(zdata2016["workplaces"])
 
         zdata2030 = ZoneData(
             os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test"),
-            ZONE_INDEXES, "uusimaa.zmp")
+            ZONE_INDEXES, zdata2016.aggregations, "uusimaa.zmp")
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 

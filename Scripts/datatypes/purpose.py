@@ -10,7 +10,6 @@ import parameters.zone as param
 import models.logit as logit
 import models.generation as generation
 from datatypes.demand import Demand
-from utils.zone_interval import MatrixAggregator, ArrayAggregator
 from datatypes.histogram import TourLengthHistogram
 
 
@@ -185,8 +184,9 @@ class TourPurpose(Purpose):
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
-        self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
-            for mode in self.modes}
+        self.mapping = self.zone_data.aggregations.mappings[
+            param.purpose_matrix_aggregation_level]
+        self.aggregates = {}
         self.own_zone_demand = {}
         self.sec_dest_purpose = None
 
@@ -220,18 +220,19 @@ class TourPurpose(Purpose):
             "trip_lengths.txt")
         for mode in self.aggregates:
             self.resultdata.print_matrix(
-                self.aggregates[mode].matrix, "aggregated_demand",
+                self.aggregates[mode], "aggregated_demand",
                 "{}_{}".format(self.name, mode))
             self.resultdata.print_data(
                 self.own_zone_demand[mode],
                 "own_zone_demand.txt", "{}_{}".format(self.name, mode))
 
     def init_sums(self):
+        agg = self.mapping.drop_duplicates()
         for mode in self.modes:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
-            self.aggregates[mode].init_matrix()
+            self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
             self.own_zone_demand[mode] = pandas.Series(0, self.zone_numbers)
 
     def calc_prob(self, impedance, is_last_iteration):
@@ -277,6 +278,7 @@ class TourPurpose(Purpose):
         """
         tours = self.gen_model.get_tours()
         demand = {}
+        agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
             try:
@@ -287,8 +289,10 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
-            self.aggregates[mode].aggregate(pandas.DataFrame(
-                mtx, self.zone_numbers, self.zone_data.zone_numbers))
+            self.aggregates[mode] = agg.aggregate_mtx(
+                pandas.DataFrame(
+                    mtx, self.zone_numbers, self.zone_data.zone_numbers),
+                self.mapping.name)
             self.own_zone_demand[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers)
         self.print_data()

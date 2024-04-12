@@ -5,9 +5,8 @@ import pandas
 
 import parameters.zone as param
 from utils.read_csv_file import FileReader
-from utils.zone_interval import ZoneIntervals, zone_interval
 import utils.log as log
-from datatypes.zone import Zone
+from datatypes.zone import Zone, ZoneAggregations
 
 
 class ZoneData:
@@ -19,11 +18,15 @@ class ZoneData:
         Directory where scenario input data files are found
     zone_numbers : list
         Zone numbers to compare with for validation
+    aggregations : datatypes.zone.ZoneAggregations
+        Container for zone aggregations read from input file
     zone_mapping_file : str (optional)
         Name of zone mapping file
     """
     def __init__(self, data_dir: str, zone_numbers: Sequence,
+                 aggregations: ZoneAggregations,
                  zone_mapping_file: Optional[str] = None):
+        self.aggregations = aggregations
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
@@ -34,7 +37,7 @@ class ZoneData:
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
             name="zone_id")
         Zone.counter = 0
-        self.zones = {number: Zone(number) for number in self.zone_numbers}
+        self.zones = {number: Zone(number, aggregations) for number in self.zone_numbers}
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
         popdata = files.read_csv_file(".pop")
@@ -89,12 +92,12 @@ class ZoneData:
         self["zone_area"] = landdata["builtar"]
         self.share["share_detached_houses"] = landdata["sh_detach"]
         self["perc_detached_houses_sqrt"] = landdata["sh_detach"] ** 0.5
-        self["helsinki"] = self.dummy("municipalities", "Helsinki")
-        self["cbd"] = self.dummy("areas", "helsinki_cbd")
-        self["lauttasaari"] = self.dummy("areas", "lauttasaari")
-        self["helsinki_other"] = self.dummy("areas", "helsinki_other")
-        self["espoo_vant_kau"] = self.dummy("areas", "espoo_vantaa")
-        self["surrounding"] = self.dummy("areas", "surrounding")
+        self["helsinki"] = self.dummy("municipality", "Helsinki")
+        self["cbd"] = self.dummy("area", "helsinki_cbd")
+        self["lauttasaari"] = self.aggregations.dummies["lauttasaari_dummy"]
+        self["helsinki_other"] = self.dummy("area", "helsinki_other")
+        self["espoo_vant_kau"] = self.dummy("area", "espoo_vant_kau")
+        self["surrounding"] = self.dummy("area", "surrounding")
         self["shops_cbd"] = self["cbd"] * self["shops"]
         self["shops_elsewhere"] = (1-self["cbd"]) * self["shops"]
         # Create diagonal matrix with zone area
@@ -102,19 +105,15 @@ class ZoneData:
         self["own_zone"][numpy.diag_indices(self.nr_zones)] = True
         self["own_zone_area"] = self["own_zone"] * self["zone_area"].values
         self["own_zone_area_sqrt"] = numpy.sqrt(self["own_zone_area"])
-        # Create matrix where value is 1 if origin and destination is in
+        # Create matrix where value is True if origin and destination is in
         # same municipality
-        within_municipality = pandas.DataFrame(
-            False, self.zone_numbers, self.zone_numbers)
-        intervals = ZoneIntervals("municipalities")
-        for i in intervals:
-            within_municipality.loc[intervals[i], intervals[i]] = True
-        self["within_municipality"] = within_municipality.values
-        self["outside_municipality"] = ~within_municipality.values
+        municipalities = self.aggregations.mappings["municipality"].values
+        within_municipality = municipalities[:, numpy.newaxis] == municipalities
+        self["within_municipality"] = within_municipality
+        self["outside_municipality"] = ~within_municipality
 
     def dummy(self, division_type, name, bounds=slice(None)):
-        dummy = pandas.Series(False, self.zone_numbers[bounds])
-        dummy.loc[zone_interval(division_type, name)] = True
+        dummy = self.aggregations.mappings[division_type][bounds] == name
         return dummy
 
     def __getitem__(self, key):
@@ -224,7 +223,15 @@ class ZoneData:
 class BaseZoneData(ZoneData):
     def __init__(self, data_dir: str, zone_numbers: Sequence,
                  zone_mapping_file: Optional[str] = None):
-        ZoneData.__init__(self, data_dir, zone_numbers, zone_mapping_file)
+        all_zone_numbers = numpy.array(zone_numbers)
+        peripheral = param.purpose_areas["peripheral"]
+        self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
+            peripheral[1])]
+        files = FileReader(
+            data_dir, self.zone_numbers, zone_mapping_file=zone_mapping_file)
+        aggregations = ZoneAggregations(files.read_csv_file(".agg"))
+        ZoneData.__init__(
+            self, data_dir, zone_numbers, aggregations, zone_mapping_file)
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
         self["car_density"] = files.read_csv_file(".car")["cardens"]
