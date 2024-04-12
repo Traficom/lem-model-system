@@ -200,8 +200,10 @@ class EmmeAssignmentModel(AssignmentModel):
         vdfs = {param.roadclasses[linktype].volume_delay_func
             for linktype in param.roadclasses}
         vdfs.add(0) # Links with car traffic prohibited
-        vdf_kms = {ass_class: pandas.Series(0.0, vdfs)
-            for ass_class in ass_classes}
+        vdf_kms = pandas.concat(
+            {ass_class: pandas.Series(0.0, vdfs, name="veh_km")
+                for ass_class in ass_classes},
+            names=["class", "v/d-func"])
         areas = zone_param.area_aggregation
         area_kms = {ass_class: pandas.Series(0.0, areas)
             for ass_class in ass_classes}
@@ -240,12 +242,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 faulty_kela_code_nodes)
             log.warn(s)
         resultdata.print_line("\nVehicle kilometres", "result_summary")
+        resultdata.print_concat(vdf_kms, "vehicle_kms_vdfs.txt")
         for ass_class in ass_classes:
             resultdata.print_line(
                 "{}:\t{:1.0f}".format(ass_class, kms[ass_class]),
                 "result_summary")
-            resultdata.print_data(
-                vdf_kms[ass_class], "vehicle_kms_vdfs.txt", ass_class)
             resultdata.print_data(
                 area_kms[ass_class], "vehicle_kms_areas.txt", ass_class)
         for vdf in vdf_area_kms:

@@ -183,11 +183,11 @@ class TourPurpose(Purpose):
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
-        self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
+        self.histograms = {mode: TourLengthHistogram(self.name)
+            for mode in self.modes}
         self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
             for mode in self.modes}
-        self.own_zone_aggregates = {mode: ArrayAggregator(zone_data.zone_numbers)
-            for mode in self.modes}
+        self.own_zone_demand = {}
         self.sec_dest_purpose = None
 
     @property
@@ -207,28 +207,32 @@ class TourPurpose(Purpose):
         demsums = {mode: self.generated_tours[mode].sum()
             for mode in self.modes}
         demand_all = float(sum(demsums.values()))
-        mode_shares = {mode: demsums[mode] / demand_all for mode in demsums}
-        self.resultdata.print_data(
-            pandas.Series(mode_shares),
-            "mode_share.txt", self.name)
-        for mode in self.histograms:
-            self.resultdata.print_data(
-                self.histograms[mode].histogram, "trip_lengths.txt",
-                "{}_{}".format(self.name, mode))
+        mode_shares = pandas.concat(
+            {self.name: pandas.Series(
+                {mode: demsums[mode] / demand_all for mode in demsums},
+                name="mode_share")},
+            names=["purpose", "mode"])
+        self.resultdata.print_concat(mode_shares, "mode_share.txt")
+        self.resultdata.print_concat(
+            pandas.concat(
+                {m: self.histograms[m].histogram for m in self.histograms},
+                names=["mode", "purpose", "interval"]),
+            "trip_lengths.txt")
+        for mode in self.aggregates:
             self.resultdata.print_matrix(
                 self.aggregates[mode].matrix, "aggregated_demand",
                 "{}_{}".format(self.name, mode))
             self.resultdata.print_data(
-                self.own_zone_aggregates[mode].array,
+                self.own_zone_demand[mode],
                 "own_zone_demand.txt", "{}_{}".format(self.name, mode))
 
     def init_sums(self):
         for mode in self.modes:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
-            self.histograms[mode].__init__()
+            self.histograms[mode].__init__(self.name)
             self.aggregates[mode].init_matrix()
-            self.own_zone_aggregates[mode].init_array()
+            self.own_zone_demand[mode] = pandas.Series(0, self.zone_numbers)
 
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -285,8 +289,8 @@ class TourPurpose(Purpose):
             self.histograms[mode].count_tour_dists(mtx, self.dist)
             self.aggregates[mode].aggregate(pandas.DataFrame(
                 mtx, self.zone_numbers, self.zone_data.zone_numbers))
-            self.own_zone_aggregates[mode].aggregate(pandas.Series(
-                numpy.diag(mtx), self.zone_numbers))
+            self.own_zone_demand[mode] = pandas.Series(
+                numpy.diag(mtx), self.zone_numbers)
         self.print_data()
         return demand
 

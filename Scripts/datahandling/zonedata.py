@@ -30,8 +30,9 @@ class ZoneData:
         self.all_zone_numbers = all_zone_numbers
         peripheral = param.purpose_areas["peripheral"]
         external = param.purpose_areas["external"]
-        self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
-            peripheral[1])]
+        self.zone_numbers = pandas.Index(
+            all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
+            name="zone_id")
         Zone.counter = 0
         self.zones = {number: Zone(number) for number in self.zone_numbers}
         files = FileReader(

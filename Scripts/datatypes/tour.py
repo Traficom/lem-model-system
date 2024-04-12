@@ -168,7 +168,7 @@ class Tour:
             self.purpose.dist[orig_rel_idx, dest_idx])
         self.purpose.aggregates[self.mode].add(self.orig, self.dest)
         if orig_idx == dest_idx:
-            self.purpose.own_zone_aggregates[self.mode].add(self.orig)
+            self.purpose.own_zone_demand[self.mode].iat[orig_rel_idx] += 1
         bounds = self.purpose.sec_dest_purpose.bounds
         try:
             if (bounds.start <= orig_idx < bounds.stop

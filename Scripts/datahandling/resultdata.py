@@ -29,7 +29,7 @@ class ResultsData:
         for filename in self._df_buffer:
             self._df_buffer[filename].to_csv(
                 os.path.join(self.path, filename),
-                sep='\t', float_format="%1.5f")
+                sep='\t', float_format="%1.5f", header=True)
         self._df_buffer = {}
         for filename in self._xlsx_buffer:
             self._xlsx_buffer[filename].save(
@@ -55,6 +55,22 @@ class ResultsData:
             self._df_buffer[filename] = df.reindex(
                 df.index.union(data.index), copy=False)
             self._df_buffer[filename][colname] = data
+
+    def print_concat(self, data: pandas.Series, filename: str):
+        """Save data to Series buffer (printed to text file when flushing).
+
+        Parameters
+        ----------
+        data : pandas.Series
+            Data with multi index to add to Series
+        filename : str
+            Name of file where data is pushed (can contain other data)
+        """
+        if filename not in self._df_buffer:
+            self._df_buffer[filename] = data
+        else:
+            self._df_buffer[filename] = pandas.concat(
+                [self._df_buffer[filename], data])
 
     def print_line(self, line: str, filename: str):
         """Write text to line in file (closed when flushing).
