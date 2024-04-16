@@ -182,6 +182,12 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
+freight_terminal_cost = {
+    'd': 0,
+    'J': 0,
+    'W': 0,
+    's': 0,
+}
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -511,6 +517,16 @@ aux_modes = [
     'a',
 ]
 park_and_ride_mode = 'u'
+freight_modes = {
+    "freight_train": {
+        'd': "@diesel_train",
+        'J': "@electric_train",
+    },
+    "ship": {
+        'W': "@ship_4m",
+        's': "@ship_9m",
+    },
+}
 external_modes = [
     "car_leisure",
     "transit_leisure",
@@ -561,6 +577,13 @@ transit_impedance_matrices = {
         "loc_time": "actual_in_vehicle_times",
     },
 }
+freight_matrices = {
+    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
+    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
+    "freight_train": {"demand", "time", "dist", "aux_time", "aux_dist"},
+    "ship": {"demand", "time", "dist", "aux_time", "aux_dist"},
+}
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
 line_penalty_attr = "us2"
@@ -572,6 +595,7 @@ board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
+terminal_cost_attr = "@freight_term_cost"
 railtypes = {
     2: "tram",
     3: "metro",

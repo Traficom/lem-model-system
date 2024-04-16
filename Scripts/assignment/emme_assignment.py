@@ -8,9 +8,9 @@ import utils.log as log
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
+from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.datatypes.transit_fare import TransitFareZoneSpecification
     from datahandling.resultdata import ResultsData
     from inro.emme.database.scenario import Scenario # type: ignore
     from inro.emme.network.Network import Network # type: ignore
@@ -115,12 +115,78 @@ class EmmeAssignmentModel(AssignmentModel):
                 use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds,
                 delete_extra_matrices=self.delete_extra_matrices))
+        ass_classes = list(param.emme_matrices) + ["bus"]
+        ass_classes.remove("walk")
         self._create_attributes(
-            self.day_scenario, self._extra, self._netfield, car_dist_unit_cost)
+            self.day_scenario, ass_classes, self._extra, self._netfield,
+            car_dist_unit_cost)
+        self._create_transit_attributes(self.day_scenario, self._extra)
         for ap in self.assignment_periods:
-            ap.prepare(*self._create_attributes(
-                    ap.emme_scenario, ap.extra, ap.netfield, car_dist_unit_cost),
+            ap.prepare(
+                self._create_attributes(
+                    ap.emme_scenario, ass_classes, ap.extra, ap.netfield,
+                    car_dist_unit_cost),
                 car_dist_unit_cost)
+            ap.prepare_transit(
+                *self._create_transit_attributes(ap.emme_scenario, ap.extra))
+        self._init_functions()
+
+    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float],
+                                commodity_classes: List[str]):
+        """Create matrices, extra attributes and calc background variables.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Car cost per km in euros
+        commodity_classes : list of str
+            Class names for which we want extra attributes
+        """
+        mtxs = {}
+        for i, ass_class in enumerate(param.freight_matrices, start=1):
+            mtxs[ass_class] = {}
+            for j, mtx_type in enumerate(param.freight_matrices[ass_class]):
+                mtxs[ass_class][mtx_type] = f"mf{i*10 + j}"
+                description = f"{mtx_type}_{ass_class}"
+                self.emme_project.create_matrix(
+                    matrix_id=mtxs[ass_class][mtx_type],
+                    matrix_name=description, matrix_description=description,
+                    overwrite=True)
+        self.freight_network = FreightAssignmentPeriod(
+            "vrk", self.mod_scenario.number, self.emme_project, mtxs,
+            use_free_flow_speeds=True)
+        self.assignment_periods = [self.freight_network]
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
+            overwrite=True, scenario=self.mod_scenario)
+        for ass_class in param.freight_modes.values():
+            for attr in ass_class.values():
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_LINE", attr, "terminal cost",
+                    overwrite=True, scenario=self.mod_scenario)
+        for comm_class in commodity_classes:
+            for ass_class in param.freight_modes:
+                attr_name = (comm_class + ass_class)[:17]
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_SEGMENT", '@' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
+                self.emme_project.create_extra_attribute(
+                    "LINK", '@a_' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
+        self.freight_network.prepare(
+            self._create_attributes(
+                self.mod_scenario,
+                list(param.truck_classes) + list(param.freight_modes),
+                self._extra, self._netfield, car_dist_unit_cost),
+            car_dist_unit_cost)
+        self._init_functions()
+
+    def _init_functions(self):
         for idx in param.volume_delay_funcs:
             try:
                 self.emme_project.modeller.emmebank.delete_function(idx)
@@ -426,19 +492,19 @@ class EmmeAssignmentModel(AssignmentModel):
 
     def _create_attributes(self,
                            scenario: Any,
+                           assignment_classes: List[str],
                            extra: Callable[[str], str],
                            netfield: Callable[[str], str],
                            link_costs: Dict[str, float]
-            ) -> Tuple[
-                Dict[str,Dict[str,str]],
-                Dict[str, str],
-                Dict[str, Union[str, float]]]:
+            ) -> Dict[str, Union[str, float]]:
         """Create extra attributes needed in assignment.
 
         Parameters
         ----------
         scenario : inro.modeller.emmebank.scenario
             Emme scenario to create attributes for
+        assignment_classes : list of str
+            Names of assignment classes to create volume attributes for
         extra : function
             Small helper function which modifies string
             (e.g., self._extra)
@@ -450,6 +516,52 @@ class EmmeAssignmentModel(AssignmentModel):
                 Assignment class (car_work/truck/...)
             value : float
                 Car cost per km in euros
+
+        Returns
+        -------
+        dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : str or float
+                Extra attribute where link cost is found (str) or length
+                multiplier to calculate link cost (float)
+        """
+        if TYPE_CHECKING: scenario = cast(Scenario, scenario)
+        for ass_class in assignment_classes:
+            self.emme_project.create_extra_attribute(
+                "LINK", extra(ass_class), ass_class + " volume",
+                overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", extra("truck_time"), "truck time",
+            overwrite=True, scenario=scenario)
+        if scenario.network_field("LINK", netfield("hinta")) is not None:
+            self.emme_project.create_extra_attribute(
+                "LINK", extra("toll_cost"), "toll cost",
+                overwrite=True, scenario=scenario)
+            link_costs: Dict[str, str] = {}
+            for ass_class in param.assignment_modes:
+                attr_name = extra(f"cost_{ass_class[:10]}")
+                link_costs[ass_class] = attr_name
+                self.emme_project.create_extra_attribute(
+                    "LINK", attr_name, "total cost",
+                    overwrite=True, scenario=scenario)
+        log.debug("Created extra attributes for scenario {}".format(
+            scenario))
+        return link_costs
+
+    def _create_transit_attributes(self,
+                                   scenario: Any,
+                                   extra: Callable[[str], str],
+            ) -> Tuple[Dict[str,Dict[str,str]], Dict[str, str]]:
+        """Create extra attributes needed in assignment.
+
+        Parameters
+        ----------
+        scenario : inro.modeller.emmebank.scenario
+            Emme scenario to create attributes for
+        extra : function
+            Small helper function which modifies string
+            (e.g., self._extra)
 
         Returns
         -------
@@ -467,38 +579,11 @@ class EmmeAssignmentModel(AssignmentModel):
             value : str or False
                 Extra attribute name for park-and-ride aux volume if
                 this is park-and-ride assignment, else False
-        dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : str or float
-                Extra attribute where link cost is found (str) or length
-                multiplier to calculate link cost (float)
         """
         # Create link attributes
-        ass_classes = list(param.emme_matrices) + ["bus"]
-        ass_classes.remove("walk")
-        if TYPE_CHECKING: scenario = cast(Scenario, scenario)
-        for ass_class in ass_classes:
-            self.emme_project.create_extra_attribute(
-                "LINK", extra(ass_class), ass_class + " volume",
-                overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "LINK", extra("aux_transit"), "aux transit volume",
             overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
-            "LINK", extra("truck_time"), "truck time",
-            overwrite=True, scenario=scenario)
-        if scenario.network_field("LINK", netfield("hinta")) is not None:
-            self.emme_project.create_extra_attribute(
-                "LINK", extra("toll_cost"), "toll cost",
-                overwrite=True, scenario=scenario)
-            link_costs: Dict[str, str] = {}
-            for ass_class in param.assignment_modes:
-                attr_name = extra(f"cost_{ass_class[:10]}")
-                link_costs[ass_class] = attr_name
-                self.emme_project.create_extra_attribute(
-                    "LINK", attr_name, "total cost",
-                    overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.dist_fare_attr,
@@ -552,7 +637,7 @@ class EmmeAssignmentModel(AssignmentModel):
             "uncongested transit time", overwrite=True, scenario=scenario)
         log.debug("Created extra attributes for scenario {}".format(
             scenario))
-        return segment_results, park_and_ride_results, link_costs
+        return segment_results, park_and_ride_results
 
     def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.

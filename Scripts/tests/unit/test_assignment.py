@@ -9,17 +9,26 @@ from utils.validate_network import validate
 from assignment.emme_bindings.mock_project import MockProject
 from assignment.emme_assignment import EmmeAssignmentModel
 from datahandling.resultdata import ResultsData
-from assignment.datatypes.transit_fare import TransitFareZoneSpecification
 
 
 class EmmeAssignmentTest(unittest.TestCase):
-    def test_assignment(self):
-        context = MockProject()
+    def setUp(self):
+        self.context = MockProject()
         scenario_dir = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
             "..", "test_data", "Network")
-        scenario_id = 19
-        context.import_scenario(scenario_dir, scenario_id, "test")
+        self.scenario_id = 19
+        self.context.import_scenario(scenario_dir, self.scenario_id, "test")
+        self.dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
+
+    def test_assignment(self):
         fares = pandas.DataFrame({
             "firstb": {
                 0: 60,
@@ -30,19 +39,12 @@ class EmmeAssignmentTest(unittest.TestCase):
                 1: 0.5,
             }
         })
-        dist_cost = {
-            "car_work": 0.12,
-            "car_leisure": 0.12,
-            "trailer_truck": 0.5,
-            "semi_trailer": 0.4,
-            "truck": 0.3,
-            "van": 0.2,
-        }
         validate(
-            context.modeller.emmebank.scenario(scenario_id).get_network())
+            self.context.modeller.emmebank.scenario(
+                self.scenario_id).get_network())
         ass_model = EmmeAssignmentModel(
-            context, scenario_id, use_stored_speeds=True)
-        ass_model.prepare_network(dist_cost)
+            self.context, self.scenario_id, use_stored_speeds=True)
+        ass_model.prepare_network(self.dist_cost)
         ass_model.calc_transit_cost(fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
@@ -78,3 +80,9 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.aggregate_results(resultdata, mapping)
         ass_model.calc_noise(mapping)
         resultdata.flush()
+
+    def test_freight_assignment(self):
+        ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
+        ass_model.prepare_freight_network(self.dist_cost, ["c1", "c2"])
+        ass_model.freight_network.assign()
+        ass_model.freight_network.save_network_volumes("c1")

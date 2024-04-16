@@ -115,14 +115,38 @@ class AssignmentPeriod(Period):
         """
         return "#{}_{}".format(attr, self.name)
 
-    def prepare(self, segment_results: Dict[str, Dict[str, str]],
-                park_and_ride_results: Dict[str, Union[str, bool]],
-                link_costs: Dict[str, Union[str, float]],
+    def prepare(self, link_costs: Dict[str, Union[str, float]],
                 dist_unit_cost: Dict[str, float]):
         """Prepare network for assignment.
 
-        Calculate road toll cost, set boarding penalties,
-        and add buses to background traffic.
+        Calculate road toll cost and specify car assignment.
+
+        Parameters
+        ----------
+        link_costs : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : str or float
+                Extra attribute where link cost is found (str) or length
+                multiplier to calculate link cost (float)
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Length multiplier to calculate link cost
+        """
+        self._dist_unit_cost = dist_unit_cost
+        if self.emme_scenario.network_field(
+                "LINK", self.netfield("hinta")) is not None:
+            self._calc_road_cost(link_costs)
+        self._car_spec = CarSpecification(
+            self.extra, self.emme_matrices, link_costs)
+
+    def prepare_transit(self, segment_results: Dict[str, Dict[str, str]],
+                        park_and_ride_results: Dict[str, Union[str, bool]]):
+        """Prepare network for transit assignment.
+
+        Set boarding penalties and attribute names.
 
         Parameters
         ----------
@@ -140,27 +164,13 @@ class AssignmentPeriod(Period):
             value : str or False
                 Extra attribute name for park-and-ride aux volume if
                 this is park-and-ride assignment, else False
-        link_costs : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : str or float
-                Extra attribute where link cost is found (str) or length
-                multiplier to calculate link cost (float)
-        dist_unit_cost : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : float
-                Length multiplier to calculate link cost
         """
-        self._dist_unit_cost = dist_unit_cost
         self._segment_results = segment_results
         self._park_and_ride_results = park_and_ride_results
-        if self.emme_scenario.network_field(
-                "LINK", self.netfield("hinta")) is not None:
-            self._calc_road_cost(link_costs)
         # TODO We should probably have only one set of penalties
         self._calc_boarding_penalties(is_last_iteration=True)
-        self._specify(link_costs)
+        self._specify()
+        self._set_transit_vdfs()
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
@@ -170,11 +180,11 @@ class AssignmentPeriod(Period):
 
     def assign_trucks_init(self):
         if not self.use_free_flow_speeds:
-            self._set_car_and_transit_vdfs(use_free_flow_speeds=True)
+            self._set_car_vdfs(use_free_flow_speeds=True)
             self._init_truck_times()
             self._assign_trucks()
             self._calc_background_traffic(include_trucks=True)
-        self._set_car_and_transit_vdfs(self.use_free_flow_speeds)
+        self._set_car_vdfs(self.use_free_flow_speeds)
 
     def assign(self, modes: Iterable[str]
             ) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -220,11 +230,11 @@ class AssignmentPeriod(Period):
         if not self.use_free_flow_speeds:
             self._set_bike_vdfs()
             self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
-            self._set_car_and_transit_vdfs(self.use_free_flow_speeds)
+            self._set_car_vdfs(self.use_free_flow_speeds)
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["fine"])
-        self._set_car_and_transit_vdfs(use_free_flow_speeds=True)
+        self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
         if self.use_free_flow_speeds:
             if not self._long_distance_trips_assigned:
@@ -298,18 +308,18 @@ class AssignmentPeriod(Period):
                         segment.i_node[nodeattr] += segment[segres[tc][res]]
         self.emme_scenario.publish_network(network)
 
-    def _set_car_and_transit_vdfs(self, use_free_flow_speeds: bool = False):
-        log.info("Sets car and transit functions for scenario {}".format(
+    def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
+        log.info("Sets car functions for scenario {}".format(
             self.emme_scenario.id))
         network = self.emme_scenario.get_network()
         car_time_attr = self.netfield("car_time")
-        transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
-            for modes in param.transit_delay_funcs}
         main_mode = network.mode(param.main_mode)
-        car_mode = network.mode(param.assignment_modes["car_work"])
+        car_modes = {
+            network.mode(param.assignment_modes["car_work"]),
+            network.mode(param.assignment_modes["truck"])
+        }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
         for link in network.links():
-            # Car volume delay function definition
             linktype = link.type % 100
             if link.type > 80 and linktype in param.roadclasses:
                 # Car link with standard attributes
@@ -337,8 +347,15 @@ class AssignmentPeriod(Period):
             else:
                 # Link with no car traffic
                 link.volume_delay_func = 0
+            if link["#buslane"]:
+                if (link.num_lanes == 3
+                        and roadclass.num_lanes == ">=3"):
+                    roadclass = param.roadclasses[linktype - 1]
+                    link.data1 = roadclass.lane_capacity
+                if link.volume_delay_func not in (90, 91):
+                    link.volume_delay_func += 5
             if self.use_stored_speeds:
-                if car_mode in link.modes:
+                if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
@@ -349,8 +366,19 @@ class AssignmentPeriod(Period):
                         msg = f"Car travel time on link {link.id} is {car_time}"
                         log.error(msg)
                         raise ValueError(msg)
+            if car_modes & link.modes:
+                link.modes |= {main_mode, park_and_ride_mode}
+            else:
+                link.modes -= {main_mode, park_and_ride_mode}
+        self.emme_scenario.publish_network(network)
 
-            # Transit function definition
+    def _set_transit_vdfs(self):
+        log.info("Sets transit functions for scenario {}".format(
+            self.emme_scenario.id))
+        network = self.emme_scenario.get_network()
+        transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
+            for modes in param.transit_delay_funcs}
+        for link in network.links():
             for modeset in param.transit_delay_funcs:
                 # Check that intersection is not empty,
                 # hence that mode is active on link
@@ -358,12 +386,6 @@ class AssignmentPeriod(Period):
                     funcs = param.transit_delay_funcs[modeset]
                     if modeset[0] == "bus":
                         if link["#buslane"]:
-                            if (link.num_lanes == 3
-                                    and roadclass.num_lanes == ">=3"):
-                                roadclass = param.roadclasses[linktype - 1]
-                                link.data1 = roadclass.lane_capacity
-                            if link.volume_delay_func not in (90, 91):
-                                link.volume_delay_func += 5
                             func = funcs["buslane"]
                         else:
                             func = funcs["no_buslane"]
@@ -372,10 +394,6 @@ class AssignmentPeriod(Period):
                     break
             for segment in link.segments():
                 segment.transit_time_func = func
-            if car_mode in link.modes:
-                link.modes |= {main_mode, park_and_ride_mode}
-            else:
-                link.modes -= {main_mode, park_and_ride_mode}
         self.emme_scenario.publish_network(network)
 
     def _init_truck_times(self):
@@ -444,7 +462,7 @@ class AssignmentPeriod(Period):
         matrices = {}
         for ass_class in assignment_classes:
             if mtx_type in self.emme_matrices.get(ass_class, []):
-                if mtx_type == "time" and ass_class in param.car_classes:
+                if mtx_type == "time" and ass_class in param.car_classes + ("van",):
                     mtx = self._extract_timecost_from_gcost(ass_class)
                 elif mtx_type == "time" and ass_class in param.transit_classes:
                     mtx = self._extract_transit_time_from_gcost(ass_class)
@@ -584,20 +602,8 @@ class AssignmentPeriod(Period):
             log.warn("No boarding penalty found for transit modes " + missing_penalties_str)
         self.emme_scenario.publish_network(network)
 
-    def _specify(self, link_costs: Dict[str, Union[str, float]]):
-        """Create assignment specifications.
-
-        Parameters
-        ----------
-        link_costs : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : str or float
-                Extra attribute where link cost is found (str) or length
-                multiplier to calculate link cost (float)
-        """
-        self._car_spec = CarSpecification(
-            self.extra, self.emme_matrices, link_costs)
+    def _specify(self):
+        """Create assignment specifications."""
         self._transit_specs = {tc: TransitSpecification(
                 tc, self._segment_results[tc], self._park_and_ride_results[tc],
                 param.effective_headway_attr, self.emme_matrices[tc])
