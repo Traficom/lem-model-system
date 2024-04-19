@@ -3,16 +3,33 @@ from typing import Any, Dict, Union
 import parameters.assignment as param
 
 
-NOT_BOARDED, PARKED, BOARDED_LOCAL, BOARDED_LONG_D, LEFT, FORBIDDEN = range(6)
+(
+    NOT_BOARDED,
+    PARKED,
+    BOARDED_LOCAL,
+    BOARDED_LONG_D,
+    BOARDED_DEST,
+    LEFT,
+    FORBIDDEN,
+) = range(7)
 DESCRIPTION = [
     "Not boarded yet",
     "Parked",
     "Boarded local service",
     "Boarded long-distance service",
+    "Boarded local service at destination",
     "Left transit system",
     "Forbidden",
 ]
-DESTINATIONS_REACHABLE = [False, False, True, True, True, False]
+DESTINATIONS_REACHABLE = {
+    NOT_BOARDED: False,
+    PARKED: False,
+    BOARDED_LOCAL: True,
+    BOARDED_LONG_D: True,
+    BOARDED_DEST: True,
+    LEFT: True,
+    FORBIDDEN: False,
+}
 
 
 class JourneyLevel:
@@ -24,27 +41,28 @@ class JourneyLevel:
     level : int
         Journey level: 0 - not boarded yet, 1 - parked,
         2 - boarded local service, 3 - boarded long-distance service,
-        3 - left transit system, 4 - forbidden (virtual level)
+        4 - boarded local service at destination,
+        5 - left transit system, 6 - forbidden (virtual level)
     transit_class : str
         Name of transit class (transit_work/transit_leisure/...)
-    headway_attribute : str
-        Line attribute where headway is stored
     park_and_ride : str or False (optional)
         Extra attribute name for park-and-ride aux volume if
         this is park-and-ride assignment, else False
-    count_zone_boardings : bool (optional)
-        Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, level: int, transit_class: str, headway_attribute: str,
-            park_and_ride: Union[str, bool] = False,
-            count_zone_boardings: bool = False):
-        # Boarding transit modes allowed only on levels 0-3
-        next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
+    def __init__(self, level: int, transit_class: str,
+            park_and_ride: Union[str, bool] = False):
+        # Boarding transit modes allowed only on levels 0-4
+        if level <= BOARDED_LOCAL:
+            next = BOARDED_LOCAL
+        elif level <= BOARDED_DEST:
+            next = BOARDED_DEST
+        else:
+            next = FORBIDDEN
         transitions = [{
                 "mode": mode,
                 "next_journey_level": next,
             } for mode in param.local_transit_modes]
-        next = BOARDED_LONG_D if level <= BOARDED_LONG_D else FORBIDDEN
+        next = BOARDED_LONG_D if level <= BOARDED_DEST else FORBIDDEN
         transitions += [{
                 "mode": mode,
                 "next_journey_level": next,
@@ -64,7 +82,7 @@ class JourneyLevel:
                 # links, we should specify an own mode for these links.
                 # For now, parking is allowed on all links where walking
                 # from a stop is possible.
-                car = FORBIDDEN if level in (NOT_BOARDED, FORBIDDEN) else LEFT
+                car = LEFT if BOARDED_LOCAL < level < FORBIDDEN else FORBIDDEN
                 walk = FORBIDDEN if level == LEFT else level
             transitions.append({
                 "mode": param.park_and_ride_mode,
@@ -94,13 +112,10 @@ class JourneyLevel:
             },
             "waiting_time": None,
         }
-        if level == BOARDED_LOCAL:
+        if level in (BOARDED_LOCAL, BOARDED_DEST):
             # Free transfers within local transit
             (self.spec["boarding_cost"]
                       ["on_lines"]["penalty"]) =  param.board_long_dist_attr
-        if count_zone_boardings:
-            self.spec["boarding_cost"]["at_nodes"] = {
-                "penalty": param.is_in_transit_zone_attr,
-                "perception_factor": 0,
-            }
-
+        if (transit_class in param.long_distance_transit_classes
+                and level == BOARDED_LOCAL):
+            self.spec["destinations_reachable"] = False
