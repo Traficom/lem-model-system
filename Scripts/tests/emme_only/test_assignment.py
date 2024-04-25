@@ -68,7 +68,7 @@ class EmmeAssignmentTest:
             eb.dispose()
         except RuntimeError:
             emmebank_path = None
-        emme_context = EmmeProject(project_path, emmebank_path)
+        emme_context = EmmeProject(project_path, emmebank_path, "test")
         emme_context.import_scenario(
             os.path.join(project_dir, "..", "Network"), scenario_num, "test",
             overwrite=True)
