@@ -70,6 +70,8 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project = emme_context
         self.mod_scenario = self.emme_project.modeller.emmebank.scenario(
             first_scenario_id)
+        if self.mod_scenario is None:
+            raise ValueError(f"EMME project has no scenario {first_scenario_id}")
 
     def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
         """Create matrices, extra attributes and calc background variables.
