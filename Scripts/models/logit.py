@@ -417,16 +417,15 @@ class ModeDestModel(LogitModel):
             expsum = self._calc_dest_util(mode, impedance[mode])
             self.dest_expsums[mode] = {}
             self.dest_expsums[mode]["logsum"] = expsum
-            logsum = pandas.Series(numpy.log(expsum), self.purpose.zone_numbers)
             label = self.purpose.name + "_" + mode[0]
+            logsum = pandas.Series(
+                numpy.log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
-            self.resultdata.print_data(logsum, "accessibility.txt", label)
         mode_expsum = self._calc_mode_util(self.dest_expsums)
         logsum = pandas.Series(
-            numpy.log(mode_expsum), self.purpose.zone_numbers)
+            numpy.log(mode_expsum), self.purpose.zone_numbers,
+            name=self.purpose.name)
         self.zone_data._values[self.purpose.name] = logsum
-        self.resultdata.print_data(
-            logsum, "accessibility.txt", self.purpose.name)
         return mode_expsum
 
     def _calc_prob(self, mode_expsum):
@@ -469,26 +468,30 @@ class AccessibilityModel(ModeDestModel):
         """
         mode_expsum = self._calc_utils(impedance)
         self._dest_exps.clear()
-
-        # Calculate sustainable and car accessibility
-        sustainable_sum = numpy.zeros_like(mode_expsum)
-        for mode in self.mode_choice_param:
-            if mode.split('_')[0] != "car":
-                sustainable_sum += self.mode_exps[mode]
-        logsum = pandas.Series(
-            numpy.log(sustainable_sum), self.purpose.zone_numbers)
-        self.resultdata.print_data(
-            logsum, "sustainable_accessibility.txt", self.purpose.name)
         b = self._get_cost_util_coefficient()
         try:
             money_utility = 1 / b
         except TypeError:  # Separate params for cap region and surrounding
             money_utility = 1 / b[0]
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-        self.purpose.access = money_utility * self.zone_data[self.purpose.name]
-        self.purpose.sustainable_access = money_utility * logsum
-        self.purpose.car_access = (money_utility
-                                   * self.zone_data[self.purpose.name + "_c"])
+
+        logsum = self.zone_data[self.purpose.name]
+        self.resultdata.print_data(logsum, "accessibility.txt")
+        self.access = {}
+        self.access["total"] = money_utility * logsum
+        sustainable_sum = numpy.zeros_like(mode_expsum)
+        for mode in self.mode_choice_param:
+            logsum = self.zone_data[f"{self.purpose.name}_{mode[0]}"]
+            self.resultdata.print_data(logsum, "accessibility.txt")
+            if mode.split('_')[0] == "car":
+                self.access["car"] = money_utility * logsum
+            else:
+                sustainable_sum += self.mode_exps[mode]
+        logsum = pandas.Series(
+            numpy.log(sustainable_sum), self.purpose.zone_numbers,
+            name=self.purpose.name)
+        self.resultdata.print_data(logsum, "sustainable_accessibility.txt")
+        self.access["sustainable"] = money_utility * logsum
 
         # Calculate workplace-based accessibility
         if self.purpose.name in ("hw", "wh"):
@@ -498,9 +501,9 @@ class AccessibilityModel(ModeDestModel):
                 for mode in param])
             workforce = ((normalization*mode_expsum)
                             **(1/next(iter(param.values()))["log"]["logsum"]))
-            workforce = pandas.Series(workforce, self.purpose.zone_numbers)
-            self.resultdata.print_data(
-                workforce, "workplace_accessibility.txt", self.purpose.name)
+            workforce = pandas.Series(
+                workforce, self.purpose.zone_numbers, name=self.purpose.name)
+            self.resultdata.print_data(workforce, "workplace_accessibility.txt")
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.

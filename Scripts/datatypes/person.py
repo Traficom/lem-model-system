@@ -72,7 +72,7 @@ class Person:
             if self.age_group in param["age_dummies"]:
                 log_income += param["age_dummies"][self.age_group]
             log_income += random.gauss(0, param["standard_deviation"])
-            self.income = numpy.exp(log_income)
+            self.income = int(numpy.exp(log_income))
 
     @property
     def gender(self) -> str:

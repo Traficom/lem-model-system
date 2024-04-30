@@ -147,13 +147,13 @@ class DemandModel:
             purpose.gen_model.init_tours()
             if purpose.area == "peripheral" or purpose.dest == "source":
                 purpose.gen_model.add_tours()
-        result_data = pandas.DataFrame()  # For printing of results
+        result_data = {}  # For printing of results
         gm = self.tour_generation_model
         for age in self._age_strings():
             segments = self.segments[age]
             prob_c = gm.calc_prob(age, is_car_user=True, zones=self.bounds)
             prob_n = gm.calc_prob(age, is_car_user=False, zones=self.bounds)
-            nr_tours_sums = pandas.Series()
+            nr_tours_sums = pandas.Series(name="nr_tours")
             for combination in prob_c:
                 # Each combination is a tuple of tours performed during a day
                 nr_tours = ( prob_c[combination] * segments["car_users"]
@@ -162,8 +162,9 @@ class DemandModel:
                     self.purpose_dict[purpose].gen_model.tours += nr_tours
                 nr_tours_sums["-".join(combination)] = nr_tours.sum()
             result_data[age] = nr_tours_sums.sort_index()
-        self.resultdata.print_matrix(
-            result_data, "tour_combinations", "tour_combinations")
+        self.resultdata.print_concat(
+            pandas.concat(result_data, names=["age_group", "combination"]),
+            "tour_combinations.txt")
 
     def generate_tour_probs(self) -> Dict[Tuple[int,int], numpy.ndarray]:
         """Generate matrices of cumulative tour combination probabilities.

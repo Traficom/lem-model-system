@@ -197,13 +197,14 @@ class TourPurpose(Purpose):
     def print_data(self):
         self.resultdata.print_data(
             pandas.Series(
-                sum(self.generated_tours.values()), self.zone_numbers),
-            "generation.txt", self.name)
+                sum(self.generated_tours.values()), self.zone_numbers,
+                name=self.name),
+            "generation.txt")
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")
         demsums = {mode: self.generated_tours[mode].sum()
             for mode in self.modes}
         demand_all = float(sum(demsums.values()))
@@ -218,13 +219,11 @@ class TourPurpose(Purpose):
                 {m: self.histograms[m].histogram for m in self.histograms},
                 names=["mode", "purpose", "interval"]),
             "trip_lengths.txt")
+        self.resultdata.print_matrices(
+            self.aggregates, "aggregated_demand", self.name)
         for mode in self.aggregates:
-            self.resultdata.print_matrix(
-                self.aggregates[mode], "aggregated_demand",
-                "{}_{}".format(self.name, mode))
             self.resultdata.print_data(
-                self.own_zone_demand[mode],
-                "own_zone_demand.txt", "{}_{}".format(self.name, mode))
+                self.own_zone_demand[mode], "own_zone_demand.txt")
 
     def init_sums(self):
         agg = self.mapping.drop_duplicates()
@@ -233,7 +232,8 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
             self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
-            self.own_zone_demand[mode] = pandas.Series(0, self.zone_numbers)
+            self.own_zone_demand[mode] = pandas.Series(
+                0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -294,8 +294,8 @@ class TourPurpose(Purpose):
                     mtx, self.zone_numbers, self.zone_data.zone_numbers),
                 self.mapping.name)
             self.own_zone_demand[mode] = pandas.Series(
-                numpy.diag(mtx), self.zone_numbers)
-        self.print_data()
+                numpy.diag(mtx), self.zone_numbers,
+                name="{}_{}".format(self.name, mode))
         return demand
 
 
@@ -412,5 +412,5 @@ class SecDestPurpose(Purpose):
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")

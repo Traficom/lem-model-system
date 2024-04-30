@@ -281,7 +281,7 @@ class EmmeAssignmentModel(AssignmentModel):
         #The following line only works well in Python 3.7+
         linktypes = (list(dict.fromkeys(param.roadtypes.values()))
                      + list(dict.fromkeys(param.railtypes.values())))
-        linklengths = pandas.Series(0.0, linktypes)
+        linklengths = pandas.Series(0.0, linktypes, name="length")
         soft_modes = param.transit_classes + ("bike",)
         network = self.day_scenario.get_network()
         faulty_kela_code_nodes = set()
@@ -322,27 +322,24 @@ class EmmeAssignmentModel(AssignmentModel):
             resultdata.print_line(
                 "{}:\t{:1.0f}".format(ass_class, kms[ass_class]),
                 "result_summary")
-            resultdata.print_data(
-                area_kms[ass_class], "vehicle_kms_areas.txt", ass_class)
-        for vdf in vdf_area_kms:
-            resultdata.print_data(
-                vdf_area_kms[vdf], "vehicle_kms_vdfs_areas.txt", vdf)
-        resultdata.print_data(linklengths, "link_lengths.txt", "length")
+        resultdata.print_data(area_kms, "vehicle_kms_areas.txt")
+        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_areas.txt")
+        resultdata.print_data(linklengths, "link_lengths.txt")
 
         # Aggregate and print numbers of stations
-        stations = pandas.Series(0, param.station_ids)
+        stations = pandas.Series(0, param.station_ids, name="number")
         for node in network.regular_nodes():
             for mode in param.station_ids:
                 if (node.data2 == param.station_ids[mode]
                         and node[self._extra("transit_won_boa")] > 0):
                     stations[mode] += 1
                     break
-        resultdata.print_data(stations, "transit_stations.txt", "number")
+        resultdata.print_data(stations, "transit_stations.txt")
 
         # Aggregate and print transit vehicle kms
         transit_modes = [veh.description for veh in network.transit_vehicles()]
-        dists = pandas.Series(0.0, transit_modes)
-        times = pandas.Series(0.0, transit_modes)
+        miles = {miletype: pandas.Series(0.0, transit_modes)
+            for miletype in ("dist", "time")}
         for ap in self.assignment_periods:
             network = ap.emme_scenario.get_network()
             volume_factor = param.volume_factors["bus"][ap.name]
@@ -352,11 +349,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 if 0 < headway < 990:
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
-                        dists[mode] += departures * segment.link.length
-                        times[mode] += (departures
-                                        * segment[ap.extra("base_timtr")])
-        resultdata.print_data(dists, "transit_kms.txt", "dist")
-        resultdata.print_data(times, "transit_kms.txt", "time")
+                        miles["dist"][mode] += departures * segment.link.length
+                        miles["time"][mode] += (departures
+                                                * segment[ap.extra("base_timtr")])
+        resultdata.print_data(miles, "transit_kms.txt")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
@@ -654,7 +650,8 @@ class EmmeAssignmentModel(AssignmentModel):
         pandas.Series
             Area (km2) of noise polluted zone, aggregated to area level
         """
-        noise_areas = pandas.Series(0.0, mapping.drop_duplicates())
+        noise_areas = pandas.Series(
+            0.0, mapping.drop_duplicates(), name="county")
         network = self.day_scenario.get_network()
         morning_network = self.assignment_periods[0].emme_scenario.get_network()
         for link in network.links():
