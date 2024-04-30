@@ -1,11 +1,9 @@
 from argparse import ArgumentParser
-import sys
-import os
+from pathlib import Path
 import logging
 
 import utils.config
 import utils.log as log
-import assignment.emme_assignment as ass
 from assignment.emme_bindings.emme_project import EmmeProject
 import inro.emme.desktop.app as _app
 import inro.emme.database.emmebank as _eb
@@ -17,9 +15,9 @@ def create_emme_project(args):
                             level=logging.INFO)
     project_dir = args.emme_path
     project_name = args.project_name
-    db_dir = os.path.join(project_dir, project_name, "Database")
+    db_dir = Path(project_dir, project_name, "Database")
     project_path = _app.create_project(project_dir, project_name)
-    os.makedirs(db_dir)
+    db_dir.mkdir(parents=True, exist_ok=True)
     default_dimensions = {
         "scalar_matrices": 100, 
         "origin_matrices": 100, 
@@ -102,7 +100,7 @@ def create_emme_project(args):
 
     dim = {**default_dimensions, **submodel_dimensions[args.submodel]}
     scenario_num = args.first_scenario_id
-    eb = _eb.create(os.path.join(db_dir, "emmebank"), dim)
+    eb = _eb.create(db_dir / "emmebank", dim)
     eb.text_encoding = 'utf-8'
     eb.title = project_name
     eb.coord_unit_length = 0.001
