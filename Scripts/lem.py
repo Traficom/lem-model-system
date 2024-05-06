@@ -54,6 +54,13 @@ def main(args):
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
+    shutil.copytree(
+        base_zonedata_path, results_path / BASE_ZONEDATA_DIR,
+        dirs_exist_ok=True)
+    shutil.copytree(
+        forecast_zonedata_path, results_path / forecast_zonedata_path.name,
+        dirs_exist_ok=True)
+
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {
         "use_free_flow_speeds": args.free_flow_assignment,

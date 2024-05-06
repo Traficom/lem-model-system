@@ -65,6 +65,7 @@ class ModelSystem:
         self.zdata_base = BaseZoneData(
             base_zone_data_path, self.zone_numbers, f"{submodel}.zmp")
         self.basematrices = MatrixData(base_matrices_path / submodel)
+        self.long_dist_matrices = MatrixData(base_matrices_path / "koko_suomi")
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
             f"{submodel}.zmp")
@@ -200,18 +201,42 @@ class ModelSystem:
 
         # Perform traffic assignment and get result impedance, 
         # for each time period
-        demand = self.resultmatrices if is_end_assignment else self.basematrices
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
-            if is_end_assignment or not self.ass_model.use_free_flow_speeds:
-                transport_classes = [tc for tc in param.transport_classes
-                    if not (self.ass_model.use_free_flow_speeds
-                            and tc in param.local_transit_classes + ("bike",))]
-                with demand.open(
+            if not self.ass_model.use_free_flow_speeds:
+                # If we want to assign all trips with traffic congestion
+                long_dist_classes = (param.car_classes
+                                     + param.long_distance_transit_classes
+                                     + param.freight_classes)
+                try:
+                    # Try getting long-distance trips from separate files
+                    mtx = self.long_dist_matrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes) as mtx:
-                    for ass_class in transport_classes:
+                        long_dist_classes)
+                except IOError:
+                    # Otherwise long-distance trips must be in base matrices
+                    mtx = self.basematrices.open(
+                        "demand", tp, self.ass_model.zone_numbers,
+                        long_dist_classes)
+                for ass_class in long_dist_classes:
+                    self.dtm.demand[tp][ass_class] = mtx[ass_class]
+                mtx.close()
+                short_dist_classes = (param.private_classes
+                                      + param.local_transit_classes)
+                with self.basematrices.open(
+                        "demand", tp, self.ass_model.zone_numbers,
+                        short_dist_classes) as mtx:
+                    for ass_class in short_dist_classes:
+                        self.dtm.demand[tp][ass_class] += mtx[ass_class]
+            elif is_end_assignment:
+                # If we only assign long-distance trip matrices
+                long_dist_classes = (param.car_classes
+                                     + param.long_distance_transit_classes)
+                with self.basematrices.open(
+                        "demand", tp, self.ass_model.zone_numbers,
+                        long_dist_classes) as mtx:
+                    for ass_class in long_dist_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
