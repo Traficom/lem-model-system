@@ -295,7 +295,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = 0
             try:
                 area = mapping[link.i_node["#municipality"]]
-            except AttributeError:
+            except KeyError:
                 faulty_kela_code_nodes.add(link.i_node.id)
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
@@ -709,7 +709,7 @@ class EmmeAssignmentModel(AssignmentModel):
             # Calculate noise zone area and aggregate to area level
             try:
                 area = mapping[link.i_node["#municipality"]]
-            except AttributeError:
+            except KeyError:
                 area = None
             if area in noise_areas:
                 noise_areas[area] += 0.001 * zone_width * link.length
