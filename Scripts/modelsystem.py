@@ -231,7 +231,9 @@ class ModelSystem:
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
         if is_end_assignment:
-            self.ass_model.aggregate_results(self.resultdata)
+            self.ass_model.aggregate_results(
+                self.resultdata,
+                self.zdata_base.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.calc_gaps()

@@ -250,6 +250,12 @@ class EmmeAssignmentModel(AssignmentModel):
         mapping : pandas.Series
             Mapping between municipality and county
         """
+        car_times = pandas.DataFrame(
+            {ap.netfield("car_time"): ap.get_car_times()
+                for ap in self.assignment_periods})
+        car_times.index.name = "i_node\tj_node"
+        resultdata.print_data(car_times, "netfield_links.txt")
+
         # Aggregate results to 24h
         for ap in self.assignment_periods:
             ap.transit_results_links_nodes()
