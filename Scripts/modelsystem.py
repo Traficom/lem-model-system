@@ -211,17 +211,19 @@ class ModelSystem:
                                      + param.freight_classes)
                 try:
                     # Try getting long-distance trips from separate files
-                    mtx = self.long_dist_matrices.open(
+                    cm = self.long_dist_matrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         long_dist_classes)
+                    mtx = cm.__enter__()
                 except IOError:
                     # Otherwise long-distance trips must be in base matrices
-                    mtx = self.basematrices.open(
+                    cm = self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         long_dist_classes)
+                    mtx = cm.__enter__()
                 for ass_class in long_dist_classes:
                     self.dtm.demand[tp][ass_class] = mtx[ass_class]
-                mtx.close()
+                cm.__exit__(None, None, None)
                 short_dist_classes = (param.private_classes
                                       + param.local_transit_classes)
                 with self.basematrices.open(
