@@ -10,6 +10,7 @@ from datatypes.person import Person
 
 import utils.log as log
 import parameters.zone as param
+from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
 from models import car_use, linear, tour_combinations
 
@@ -49,7 +50,7 @@ class DemandModel:
                 if isinstance(purpose, SecDestPurpose):
                     for source in purpose.sources:
                         source.sec_dest_purpose = purpose
-        bounds = param.purpose_areas["metropolitan"]
+        bounds = param.purpose_areas[tour_combination_area]
         self.bounds = slice(*zone_data.all_zone_numbers.searchsorted(
             [bounds[0], bounds[-1]]))
         self.car_use_model = car_use.CarUseModel(

@@ -22,7 +22,7 @@ class TourCombinationModelTest(unittest.TestCase):
         zd._values["ho_w"] = pandas.Series(0.0, METROPOLITAN_ZONES)
         model = TourCombinationModel(zd)
         prob = model.calc_prob("age_50-64", False, 102)
-        self.assertIs(type(prob[("hw",)]), numpy.float64)
+        self.assertIs(type(prob[("hw",)]), numpy.ndarray)
         self.assertAlmostEquals(sum(prob.values()), 1)
         prob = model.calc_prob("age_7-17", True, slice(0, 9))
         self.assertIs(type(prob[()]), pandas.core.series.Series)

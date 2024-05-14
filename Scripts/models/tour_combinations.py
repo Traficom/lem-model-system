@@ -79,16 +79,13 @@ class TourCombinationModel:
                         util += dummies["car_users"]
                     combination_exps[tour_combination] = numpy.exp(util)
                 else:
-                    combination_exps[tour_combination] = 0
+                    combination_exps[tour_combination] = 0.0
                 combination_expsum += combination_exps[tour_combination]
             for tour_combination in self.param[nr_tours]:
-                try:
-                    prob[tour_combination] = ( combination_exps[tour_combination]
-                                             / combination_expsum)
-                except ZeroDivisionError:
-                    # Specifically, no 4-tour patterns are allowed for
-                    # 7-17-year-olds, so sum will be zero in this case
-                    prob[tour_combination] = 0
+                prob[tour_combination] = numpy.divide(
+                    combination_exps[tour_combination], combination_expsum,
+                    out=numpy.zeros_like(combination_expsum),
+                    where=combination_expsum!=0)
             util = 0
             nr_tours_exps[nr_tours] = numpy.exp(util)
             scale_param = param.tour_number_scale
