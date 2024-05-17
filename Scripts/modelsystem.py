@@ -65,6 +65,9 @@ class ModelSystem:
         self.zdata_base = BaseZoneData(
             base_zone_data_path, self.zone_numbers, f"{submodel}.zmp")
         self.basematrices = MatrixData(base_matrices_path / submodel)
+        self.mapping = pandas.read_csv(
+            base_zone_data_path / f"{submodel}.zmp", delim_whitespace=True,
+            index_col="data_id").squeeze()
         self.long_dist_matrices = MatrixData(base_matrices_path / "koko_suomi")
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
@@ -213,13 +216,13 @@ class ModelSystem:
                     # Try getting long-distance trips from separate files
                     cm = self.long_dist_matrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        long_dist_classes)
+                        self.mapping, long_dist_classes)
                     mtx = cm.__enter__()
                 except IOError:
                     # Otherwise long-distance trips must be in base matrices
                     cm = self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        long_dist_classes)
+                        transport_classes=long_dist_classes)
                     mtx = cm.__enter__()
                 for ass_class in long_dist_classes:
                     self.dtm.demand[tp][ass_class] = mtx[ass_class]
@@ -228,7 +231,7 @@ class ModelSystem:
                                       + param.local_transit_classes)
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        short_dist_classes) as mtx:
+                        transport_classes=short_dist_classes) as mtx:
                     for ass_class in short_dist_classes:
                         self.dtm.demand[tp][ass_class] += mtx[ass_class]
             elif is_end_assignment:
