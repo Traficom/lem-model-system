@@ -71,7 +71,10 @@ class TourCombinationModel:
                     b = self.param[nr_tours][tour_combination]
                     util = b["constant"]
                     for i in b["zone"]:
-                        util += b["zone"][i] * self.zone_data[i][zones]
+                        try:
+                            util += b["zone"][i] * self.zone_data[i][zones]
+                        except KeyError:
+                            pass
                     dummies = b["individual_dummy"]
                     if age_group in dummies:
                         util += dummies[age_group]

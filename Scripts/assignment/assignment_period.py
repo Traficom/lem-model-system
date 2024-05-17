@@ -484,9 +484,9 @@ class AssignmentPeriod(Period):
                     mtx = self._extract_transit_time_from_gcost(ass_class)
                 else:
                     mtx = self.get_matrix(ass_class, mtx_type)
-                matrices[ass_class] = mtx
                 if numpy.any(mtx > 1e10):
                     log.warn(f"Matrix with infinite values: {mtx_type} : {ass_class}.")
+                matrices[ass_class] = mtx
         return matrices
 
     def get_matrix(self,

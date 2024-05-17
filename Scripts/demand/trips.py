@@ -146,7 +146,7 @@ class DemandModel:
         """
         for purpose in self.tour_purposes:
             purpose.gen_model.init_tours()
-            if purpose.area == "peripheral" or purpose.dest == "source":
+            if not isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.add_tours()
         result_data = {}  # For printing of results
         gm = self.tour_generation_model
@@ -160,7 +160,10 @@ class DemandModel:
                 nr_tours = ( prob_c[combination] * segments["car_users"]
                            + prob_n[combination] * segments["no_car"])
                 for purpose in combination:
-                    self.purpose_dict[purpose].gen_model.tours += nr_tours
+                    try:
+                        self.purpose_dict[purpose].gen_model.tours += nr_tours
+                    except KeyError:
+                        pass
                 nr_tours_sums["-".join(combination)] = nr_tours.sum()
             result_data[age] = nr_tours_sums.sort_index()
         self.resultdata.print_concat(

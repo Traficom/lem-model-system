@@ -6,8 +6,10 @@ import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
+import utils.log as log
 import parameters.zone as param
 import models.logit as logit
+from parameters.assignment import assignment_classes
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -48,6 +50,7 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
+        self.impedance_transform = specification["impedance_transform"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -102,16 +105,38 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
+        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
-            for time_period in impedance:
+            ass_class = mode.replace("pax", assignment_classes[self.name])
+            for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
-                    if mode in impedance[time_period][mtx_type]:
+                    if ass_class in impedance[time_period][mtx_type]:
                         share = self.impedance_share[mode][time_period]
-                        imp = impedance[time_period][mtx_type][mode]
+                        imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
+            if "vrk" in impedance:
+                for mtx_type in day_imp[mode]:
+                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
+        # Apply cost change to validate model elasticities
+        if self.zone_data.mtx_adjustment is not None:
+            for idx, row in self.zone_data.mtx_adjustment.iterrows():
+                try:
+                    t = row["mtx_type"]
+                    m = row["mode"]
+                    p = row["cost_change"]
+                    day_imp[m][t] = p * day_imp[m][t]
+                    msg = (f"Demand calculation {self.name}: " 
+                           + f"Added {round(100*(p-1))} % to {t} : {m}.")
+                    log.warn(msg)
+                except KeyError:
+                    pass
+        for mode in self.impedance_transform:
+            for mtx_type in self.impedance_transform[mode]:
+                p = self.impedance_transform[mode][mtx_type]
+                day_imp[mode][mtx_type] *= p
         return day_imp
 
 
@@ -133,6 +158,8 @@ def new_tour_purpose(specification, zone_data, resultdata):
             Model structure (dest>mode/mode>dest)
         "impedance_share" : dict
             Impedance shares
+        "impedance_transform" : dict
+            Impedance transformations
         "destination_choice" : dict
             Destionation choice parameters
         "mode_choice" dict

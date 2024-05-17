@@ -1,6 +1,6 @@
 import numpy
 import pandas
-from typing import Union
+from typing import Union, Dict
 
 
 class ZoneAggregations:
@@ -8,18 +8,23 @@ class ZoneAggregations:
 	aggregating data.
     """
 
-    def __init__(self, mappings: pandas.DataFrame):
+    def __init__(self, mappings: pandas.DataFrame,
+                 municipality_centres: pandas.Series):
         """Initialize mappings.
 
         Parameters
         ----------
         mapping : pandas.Dataframe
             Zone numbers as index and different zone mappings as columns
+        municipality_centres : pandas.Series
+            Mapping between municipality name and zone index
         """
         self.mappings = mappings[mappings.columns[mappings.dtypes == object]]
         self.dummies = mappings[mappings.columns[mappings.dtypes != object]]
         self.municipality_mapping = mappings.groupby(
             "municipality").agg("first")["county"]
+        self.municipality_centre_mapping = mappings["municipality"].map(
+            municipality_centres)
 
     def averages(self,
                  array: pandas.Series,

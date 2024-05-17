@@ -162,10 +162,9 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                if purpose.name != "wh":
-                    demand = purpose.calc_demand()
-                    if is_last_iteration:
-                        purpose.print_data()
+                demand = purpose.calc_demand()
+                if is_last_iteration:
+                    purpose.print_data()
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
@@ -386,12 +385,10 @@ class ModelSystem:
         access = {modes: pandas.Series(0, zone_numbers, name="all")
             for modes in ("total", "car", "sustainable")}
         for purpose in self.dm.tour_purposes:
-            if (purpose.area == "metropolitan" and purpose.orig == "home"
-                    and purpose.dest != "source"
-                    and not isinstance(purpose, SecDestPurpose)):
+            if purpose.name in gen_param.tour_weights:
                 zone_numbers = purpose.zone_numbers
                 bounds = purpose.bounds
-                weight = gen_param.tour_generation[purpose.name]["population"]
+                weight = gen_param.tour_weights[purpose.name]
                 for modes in access:
                     mode_access = purpose.accessibility_model.access[modes]
                     access[modes][bounds] += weight * mode_access

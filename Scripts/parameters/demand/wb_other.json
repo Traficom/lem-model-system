@@ -1,0 +1,313 @@
+{
+    "name": "wb_other",
+    "orig": "source",
+    "dest": "other",
+    "source": [
+        "hb_work"
+    ],
+    "area": "all",
+    "struct": "mode>dest",
+    "impedance_transform": {},
+    "impedance_share": {
+        "car_leisure": {
+            "aht": [
+                0.0262,
+                0.0127
+              ],
+              "pt": [
+                0.8842,
+                0.9207
+              ],
+              "iht": [
+                0.0896,
+                0.0666
+              ]
+        },
+        "car_pax": {
+            "aht": [
+                0.0262,
+                0.0127
+              ],
+              "pt": [
+                0.8842,
+                0.9207
+              ],
+              "iht": [
+                0.0896,
+                0.0666
+              ]
+        },
+        "transit_leisure": {
+            "aht": [
+                0.0262,
+                0.0127
+              ],
+              "pt": [
+                0.8842,
+                0.9207
+              ],
+              "iht": [
+                0.0896,
+                0.0666
+              ]
+        },
+        "bike": {
+            "aht": [
+                0.0262,
+                0.0127
+              ],
+              "pt": [
+                0.8842,
+                0.9207
+              ],
+              "iht": [
+                0.0896,
+                0.0666
+              ]
+        },
+        "walk": {
+            "aht": [
+                0.0262,
+                0.0127
+              ],
+              "pt": [
+                0.8842,
+                0.9207
+              ],
+              "iht": [
+                0.0896,
+                0.0666
+              ]
+        }
+    },
+    "distance_boundaries": {
+        "car_leisure": [
+            0,
+            100
+        ],
+        "car_pax": [
+            0,
+            100
+        ],
+        "transit_leisure": [
+            0,
+            100
+        ],
+        "bike": [
+            0,
+            100
+        ],
+        "walk": [
+            0,
+            100
+        ]
+    },
+    "destination_choice": {
+        "car_leisure": {
+            "attraction": {
+                "park_time": -0.12811,
+                "within_zone_time": -0.12811
+            },
+            "impedance": {
+                "time": -0.12811
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "shop": 1,
+                "recreation": 1.96134,
+                "hospitality": 4.04127
+            }
+        },
+        "car_pax": {
+            "attraction": {
+                "park_time": -0.1365,
+                "within_zone_time": -0.1365
+            },
+            "impedance": {
+                "time": -0.1365
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "shop": 1,
+                "recreation": 1.96134,
+                "hospitality": 4.04127
+            }
+        },
+        "transit_leisure": {
+            "attraction": {
+                "within_zone_inf": -1
+            },
+            "impedance": {
+                "time": -0.02476
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "shop": 1,
+                "recreation": 1.96134,
+                "hospitality": 4.04127
+            }
+        },
+        "bike": {
+            "attraction": {
+                "within_zone_dist": -0.21269
+            },
+            "impedance": {
+                "dist": -0.21269
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "shop": 1,
+                "recreation": 1.96134,
+                "hospitality": 4.04127
+            }
+        },
+        "walk": {
+            "attraction": {
+                "within_zone_dist": -1.24659
+            },
+            "impedance": {
+                "dist": -1.24659
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "shop": 1,
+                "recreation": 1.96134,
+                "hospitality": 4.04127
+            }
+        }
+    },
+    "mode_choice": {
+        "car_leisure": {
+            "constant": -1.74099,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.59656
+            },
+            "individual_dummy": {}
+        },
+        "car_pax": {
+            "constant": -3.63309,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.59656
+            },
+            "individual_dummy": {}
+        },
+        "transit_leisure": {
+            "constant": -7.77564,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.59656
+            },
+            "individual_dummy": {}
+        },
+        "bike": {
+            "constant": -7.94427,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.59656
+            },
+            "individual_dummy": {}
+        },
+        "walk": {
+            "constant": 0,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.59656
+            },
+            "individual_dummy": {}
+        }
+    },
+    "demand_share": {
+        "car_leisure": {
+            "aht": [
+                0.0098,
+                0
+              ],
+              "pt": [
+                0.1457,
+                0.1424
+              ],
+              "iht": [
+                0.0416,
+                0.0339
+              ]
+        },
+        "car_pax": {
+            "aht": [
+                0.0098,
+                0
+              ],
+              "pt": [
+                0.1457,
+                0.1424
+              ],
+              "iht": [
+                0.0416,
+                0.0339
+              ]
+        },
+        "transit_leisure": {
+            "aht": [
+                0.0098,
+                0
+              ],
+              "pt": [
+                0.1457,
+                0.1424
+              ],
+              "iht": [
+                0.0416,
+                0.0339
+              ]
+        },
+        "bike": {
+            "aht": [
+                0.0098,
+                0
+              ],
+              "pt": [
+                0.1457,
+                0.1424
+              ],
+              "iht": [
+                0.0416,
+                0.0339
+              ]
+        },
+        "walk": {
+            "aht": [
+                0.0098,
+                0
+              ],
+              "pt": [
+                0.1457,
+                0.1424
+              ],
+              "iht": [
+                0.0416,
+                0.0339
+              ]
+        }
+    }
+}
