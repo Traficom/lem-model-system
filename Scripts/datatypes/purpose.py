@@ -6,8 +6,10 @@ import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
+import utils.log as log
 import parameters.zone as param
 import models.logit as logit
+from parameters.assignment import assignment_classes
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -48,6 +50,7 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
+        self.impedance_transform = specification["impedance_transform"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -102,16 +105,38 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
+        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
-            for time_period in impedance:
+            ass_class = mode.replace("pax", assignment_classes[self.name])
+            for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
-                    if mode in impedance[time_period][mtx_type]:
+                    if ass_class in impedance[time_period][mtx_type]:
                         share = self.impedance_share[mode][time_period]
-                        imp = impedance[time_period][mtx_type][mode]
+                        imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
+            if "vrk" in impedance:
+                for mtx_type in day_imp[mode]:
+                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
+        # Apply cost change to validate model elasticities
+        if self.zone_data.mtx_adjustment is not None:
+            for idx, row in self.zone_data.mtx_adjustment.iterrows():
+                try:
+                    t = row["mtx_type"]
+                    m = row["mode"]
+                    p = row["cost_change"]
+                    day_imp[m][t] = p * day_imp[m][t]
+                    msg = (f"Demand calculation {self.name}: " 
+                           + f"Added {round(100*(p-1))} % to {t} : {m}.")
+                    log.warn(msg)
+                except KeyError:
+                    pass
+        for mode in self.impedance_transform:
+            for mtx_type in self.impedance_transform[mode]:
+                p = self.impedance_transform[mode][mtx_type]
+                day_imp[mode][mtx_type] *= p
         return day_imp
 
 
@@ -133,6 +158,8 @@ def new_tour_purpose(specification, zone_data, resultdata):
             Model structure (dest>mode/mode>dest)
         "impedance_share" : dict
             Impedance shares
+        "impedance_transform" : dict
+            Impedance transformations
         "destination_choice" : dict
             Destionation choice parameters
         "mode_choice" dict
@@ -197,13 +224,14 @@ class TourPurpose(Purpose):
     def print_data(self):
         self.resultdata.print_data(
             pandas.Series(
-                sum(self.generated_tours.values()), self.zone_numbers),
-            "generation.txt", self.name)
+                sum(self.generated_tours.values()), self.zone_numbers,
+                name=self.name),
+            "generation.txt")
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")
         demsums = {mode: self.generated_tours[mode].sum()
             for mode in self.modes}
         demand_all = float(sum(demsums.values()))
@@ -218,13 +246,11 @@ class TourPurpose(Purpose):
                 {m: self.histograms[m].histogram for m in self.histograms},
                 names=["mode", "purpose", "interval"]),
             "trip_lengths.txt")
+        self.resultdata.print_matrices(
+            self.aggregates, "aggregated_demand", self.name)
         for mode in self.aggregates:
-            self.resultdata.print_matrix(
-                self.aggregates[mode], "aggregated_demand",
-                "{}_{}".format(self.name, mode))
             self.resultdata.print_data(
-                self.own_zone_demand[mode],
-                "own_zone_demand.txt", "{}_{}".format(self.name, mode))
+                self.own_zone_demand[mode], "own_zone_demand.txt")
 
     def init_sums(self):
         agg = self.mapping.drop_duplicates()
@@ -233,7 +259,8 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
             self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
-            self.own_zone_demand[mode] = pandas.Series(0, self.zone_numbers)
+            self.own_zone_demand[mode] = pandas.Series(
+                0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -294,8 +321,8 @@ class TourPurpose(Purpose):
                     mtx, self.zone_numbers, self.zone_data.zone_numbers),
                 self.mapping.name)
             self.own_zone_demand[mode] = pandas.Series(
-                numpy.diag(mtx), self.zone_numbers)
-        self.print_data()
+                numpy.diag(mtx), self.zone_numbers,
+                name="{}_{}".format(self.name, mode))
         return demand
 
 
@@ -412,5 +439,5 @@ class SecDestPurpose(Purpose):
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")

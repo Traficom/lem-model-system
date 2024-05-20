@@ -308,6 +308,22 @@ class AssignmentPeriod(Period):
                         segment.i_node[nodeattr] += segment[segres[tc][res]]
         self.emme_scenario.publish_network(network)
 
+    def get_car_times(self) -> Dict[str, float]:
+        """Get dict of link car travel times for links within sub-model.
+
+        Returns
+        -------
+        dict
+            key : str
+                Link id
+            value : float
+                Link car travel time
+        """
+        time_attr = self.netfield("car_time")
+        network = self.emme_scenario.get_network()
+        return {link.id.replace('-', '\t'): link[time_attr]
+            for link in network.links() if link.i_node["#subarea"] == 2}
+
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
             self.emme_scenario.id))
@@ -468,9 +484,9 @@ class AssignmentPeriod(Period):
                     mtx = self._extract_transit_time_from_gcost(ass_class)
                 else:
                     mtx = self.get_matrix(ass_class, mtx_type)
-                matrices[ass_class] = mtx
                 if numpy.any(mtx > 1e10):
                     log.warn(f"Matrix with infinite values: {mtx_type} : {ass_class}.")
+                matrices[ass_class] = mtx
         return matrices
 
     def get_matrix(self,

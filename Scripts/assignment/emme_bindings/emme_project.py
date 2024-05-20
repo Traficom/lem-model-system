@@ -22,10 +22,13 @@ class EmmeProject:
         Path to EMME project (.emp) file
     emmebank_path : str (optional)
         Path to emmebank file (if EMME project is not initialized)
+    project_name : str (optional)
+        For naming project
     """
-    def __init__(self, 
-                 project_path: str, 
-                 emmebank_path: Optional[str] = None):
+    def __init__(self,
+                 project_path: str,
+                 emmebank_path: Optional[str] = None,
+                 project_name: Optional[str] = None):
         log.info("Starting Emme...")
         if TYPE_CHECKING: self.cm: Optional[ContentManager] = None #type checker hint
         emme_desktop = _app.start_dedicated(
@@ -33,6 +36,9 @@ class EmmeProject:
         if emmebank_path is not None:
             db = emme_desktop.data_explorer().add_database(emmebank_path)
             db.open()
+            emme_desktop.project.save()
+        if project_name is not None:
+            emme_desktop.project.name = project_name
             emme_desktop.project.save()
         # Add logging to EMME
         sh = logging.StreamHandler(stream=self)
