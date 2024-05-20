@@ -42,8 +42,7 @@ class FreightModelTest(unittest.TestCase):
         zonedata = ZoneData(
             os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test"),
             numpy.array(METROPOLITAN_ZONES),
-            "freight_zones.zmp"
-            )
+            "freight_zones.zmp")
         parameters_path = os.path.join(os.path.dirname(
                 os.path.realpath(__file__)), "..", "..", "parameters",
                 "freight", MODEL_TYPE)
@@ -51,7 +50,7 @@ class FreightModelTest(unittest.TestCase):
         for file_name in os.listdir(parameters_path):
             if file_name.endswith(".json"):
                 with open(os.path.join(parameters_path, file_name), 'r') as file:
-                    fname = file_name.split("_")[1]
+                    fname = file_name.split("_")[0]
                     purposes[fname] = FreightPurpose(json.load(file), zonedata,
                                                     resultdata)
         ass_model = EmmeAssignmentModel(
@@ -64,13 +63,12 @@ class FreightModelTest(unittest.TestCase):
             impedance = {
                 "truck": {
                     "cost": calc_road_cost(freight_costdata["truck"][purpose_key],
-                                           temp_impedance["time"]["truck"],
-                                           temp_impedance["dist"]["truck"])
+                                           temp_impedance["dist"]["truck"],
+                                           temp_impedance["time"]["truck"])
                 },
                 "freight_train": {
                     "cost": calc_rail_cost(freight_costdata["freight_train"][purpose_key],
                                            freight_costdata["truck"][purpose_key],
-                                           freight_costdata["freight_train"]["empty_share"],
                                            temp_impedance["dist"]["freight_train"],
                                            temp_impedance["time"]["freight_train"],
                                            temp_impedance["aux_dist"]["freight_train"],
@@ -79,13 +77,12 @@ class FreightModelTest(unittest.TestCase):
                 "ship": {
                     "cost": calc_ship_cost(freight_costdata["ship"][purpose_key],
                                            freight_costdata["truck"][purpose_key],
-                                           freight_costdata["ship"]["empty_share"],
                                            temp_impedance["dist"]["ship"],
                                            temp_impedance["aux_dist"]["ship"],
                                            temp_impedance["aux_time"]["ship"])
                 },
             }
-            demand = purpose_value.calc_traffic(impedance)
+            demand = purpose_value.calc_traffic(impedance, purpose_key)
             for mode in demand:
                 ass_model.freight_network.set_matrix(mode, demand[mode])
             demand_list[purpose_key] = demand

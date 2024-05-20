@@ -1,146 +1,160 @@
 {
-    "empty_share": 1.9,
-    "1": {
+    "mameka": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.69,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.54,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "2": {
+    "metsat": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 7.54,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 5.39,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         },
         "saimaa": {
             "4m": {
-                "terminal_cost": 7.63,
-                "time_based_cost": 0.002694,
-                "other_costs": 1.36,
+                "terminal_cost": 5.39,
+                "time_based_cost": 0.002881,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
                 "speed": 0.25
             }
         }
     },
-    "3": {
+    "energy": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.06,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.22,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         },
         "saimaa": {
             "4m": {
-                "terminal_cost": 11.13,
-                "time_based_cost": 0.002694,
-                "other_costs": 1.36,
+                "terminal_cost": 9.22,
+                "time_based_cost": 0.002881,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
                 "speed": 0.25
             }
         }
     },
-    "4": {
+    "kaivan": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.06,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.22,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         },
         "saimaa": {
             "4m": {
-                "terminal_cost": 11.13,
-                "time_based_cost": 0.002694,
-                "other_costs": 1.36,
+                "terminal_cost": 9.22,
+                "time_based_cost": 0.002881,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
                 "speed": 0.25
             }
         }
     },
-    "5": {
+    "elint": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 15.33,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 11.41,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "6": {
+    "tekst": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 15.33,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 11.41,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "7": {
+    "puukor": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 14.65,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 11.07,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "8": {
+    "papsel": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.69,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.54,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "9": {
+    "oljytu": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.69,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.54,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "10": {
+    "kemiat": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 14.65,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 11.07,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "11": {
+    "metkot": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.69,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.54,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     },
-    "12": {
+    "jate": {
         "other_dry_cargo": {
             "4m": {
-                "terminal_cost": 11.06,
-                "time_based_cost": 0.003271,
-                "other_costs": 1.36,
-                "speed": 0.24
+                "terminal_cost": 9.22,
+                "time_based_cost": 0.002004,
+                "other_costs": 0.2,
+                "empty_share": 0.9,
+                "speed": 0.28
             }
         }
     }

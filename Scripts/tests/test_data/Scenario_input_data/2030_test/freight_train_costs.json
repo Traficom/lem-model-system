@@ -1,197 +1,192 @@
 {
-    "speed": {
-        "electric_train": 0.83,
-        "diesel_train": 0.83
-    },
-    "empty_share": 2.0,
-    "1": {
+    "mameka": {
         "electric_train": {
             "terminal_cost": 3.05,
-            "time_based_cost": 3.7,
-            "distance_based_cost": 2.16,
+            "time_based_cost": 7.15,
+            "distance_based_cost": 4.04,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         },
         "diesel_train": {
             "terminal_cost": 2.89,
-            "time_based_cost": 3.24,
-            "distance_based_cost": 3.89,
+            "time_based_cost": 6.23,
+            "distance_based_cost": 7.62,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         }
     },
-    "2": {
+    "metsat": {
         "electric_train": {
             "terminal_cost": 3.86,
             "time_based_cost": 4.43,
-            "distance_based_cost": 3.75,
+            "distance_based_cost": 5.49,
             "wagon_yearly_cost": 0,
             "average_load": 1400
         },
         "diesel_train": {
             "terminal_cost": 3.82,
             "time_based_cost": 3.97,
-            "distance_based_cost": 5.29,
+            "distance_based_cost": 7.22,
             "wagon_yearly_cost": 0,
             "average_load": 1400
         }
     },
-    "3": {
+    "energy": {
         "electric_train": {
             "terminal_cost": 2.36,
             "time_based_cost": 4.04,
-            "distance_based_cost": 2.89,
+            "distance_based_cost": 3.8,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         },
         "diesel_train": {
             "terminal_cost": 2.3,
             "time_based_cost": 3.58,
-            "distance_based_cost": 4.53,
+            "distance_based_cost": 5.57,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         }
     },
-    "4": {
+    "kaivan": {
         "electric_train": {
             "terminal_cost": 2.11,
             "time_based_cost": 4.64,
-            "distance_based_cost": 4.18,
+            "distance_based_cost": 6.07,
             "wagon_yearly_cost": 2.42,
             "average_load": 1400
         },
         "diesel_train": {
             "terminal_cost": 2.07,
             "time_based_cost": 4.18,
-            "distance_based_cost": 5.66,
+            "distance_based_cost": 7.82,
             "wagon_yearly_cost": 2.42,
             "average_load": 1400
         }
     },
-    "5": {
+    "elint": {
         "electric_train": {
             "terminal_cost": 7.2,
-            "time_based_cost": 3.7,
-            "distance_based_cost": 2.16,
+            "time_based_cost": 7.15,
+            "distance_based_cost": 4.04,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         },
         "diesel_train": {
             "terminal_cost": 7.04,
-            "time_based_cost": 3.24,
-            "distance_based_cost": 3.89,
+            "time_based_cost": 6.23,
+            "distance_based_cost": 7.62,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         }
     },
-    "6": {
+    "tekst": {
         "electric_train": {
             "terminal_cost": 7.2,
-            "time_based_cost": 3.7,
-            "distance_based_cost": 2.16,
+            "time_based_cost": 7.15,
+            "distance_based_cost": 4.04,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         },
         "diesel_train": {
             "terminal_cost": 7.04,
-            "time_based_cost": 3.24,
-            "distance_based_cost": 3.89,
+            "time_based_cost": 6.23,
+            "distance_based_cost": 7.62,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         }
     },
-    "7": {
+    "puukor": {
         "electric_train": {
             "terminal_cost": 4.51,
             "time_based_cost": 4.04,
-            "distance_based_cost": 2.89,
+            "distance_based_cost": 3.8,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         },
         "diesel_train": {
             "terminal_cost": 4.45,
             "time_based_cost": 3.58,
-            "distance_based_cost": 4.53,
+            "distance_based_cost": 5.57,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         }
     },
-    "8": {
+    "papsel": {
         "electric_train": {
             "terminal_cost": 4.26,
             "time_based_cost": 4.43,
-            "distance_based_cost": 3.75,
+            "distance_based_cost": 5.29,
             "wagon_yearly_cost": 1.98,
             "average_load": 1400
         },
         "diesel_train": {
             "terminal_cost": 4.22,
             "time_based_cost": 3.97,
-            "distance_based_cost": 5.29,
+            "distance_based_cost": 7.05,
             "wagon_yearly_cost": 1.98,
             "average_load": 1400
         }
     },
-    "9": {
+    "oljytu": {
         "electric_train": {
             "terminal_cost": 6.51,
             "time_based_cost": 4.04,
-            "distance_based_cost": 2.89,
+            "distance_based_cost": 3.8,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         },
         "diesel_train": {
             "terminal_cost": 6.45,
             "time_based_cost": 3.58,
-            "distance_based_cost": 4.53,
+            "distance_based_cost": 5.57,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         }
     },
-    "10": {
+    "kemiat": {
         "electric_train": {
             "terminal_cost": 6.51,
             "time_based_cost": 4.04,
-            "distance_based_cost": 2.89,
+            "distance_based_cost": 3.8,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         },
         "diesel_train": {
             "terminal_cost": 6.45,
             "time_based_cost": 3.58,
-            "distance_based_cost": 4.53,
+            "distance_based_cost": 5.57,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         }
     },
-    "11": {
+    "metkot": {
         "electric_train": {
             "terminal_cost": 4.51,
             "time_based_cost": 4.04,
-            "distance_based_cost": 2.89,
+            "distance_based_cost": 3.8,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         },
         "diesel_train": {
             "terminal_cost": 4.45,
             "time_based_cost": 3.58,
-            "distance_based_cost": 4.53,
+            "distance_based_cost": 5.57,
             "wagon_yearly_cost": 4.83,
             "average_load": 700
         }
     },
-    "12": {
+    "jate": {
         "electric_train": {
             "terminal_cost": 3.05,
-            "time_based_cost": 3.7,
-            "distance_based_cost": 2.16,
+            "time_based_cost": 7.15,
+            "distance_based_cost": 4.04,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         },
         "diesel_train": {
             "terminal_cost": 2.89,
-            "time_based_cost": 3.24,
-            "distance_based_cost": 3.89,
+            "time_based_cost": 6.23,
+            "distance_based_cost": 7.62,
             "wagon_yearly_cost": 10.35,
             "average_load": 300
         }

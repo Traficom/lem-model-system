@@ -42,6 +42,7 @@ class ZoneData:
         landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
         attrdata = files.read_csv_file(".att")
+        gendata = files.read_csv_file(".gen")
         files = FileReader(data_dir)
         self.transit_zone = files.read_csv_file(".tco")
         try:
@@ -59,8 +60,10 @@ class ZoneData:
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["total"]
         self["population"] = pop
-        for i in range(1, 13):
-            self[f"attraction{i}"] = attrdata[f"attraction{i}"]
+        for i in attrdata.columns:
+            self[i] = attrdata[i]
+            j = i.replace("att", "gen")
+            self[j] = gendata[j]
         self.share["share_age_7-17"] = popdata["sh_7-17"]
         self.share["share_age_18-29"] = popdata["sh_1829"]
         self.share["share_age_30-49"] = popdata["sh_3049"]

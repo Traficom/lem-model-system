@@ -419,7 +419,7 @@ class FreightPurpose(Purpose):
             self.model = logit.ModeDestModel(*args)
         self.modes = list(self.model.mode_choice_param)
 
-    def calc_traffic(self, impedance: dict) -> List[Demand]:
+    def calc_traffic(self, impedance: dict, purpose_key: str) -> List[Demand]:
         """Calculate freight traffic matrix.
 
         Parameters
@@ -437,6 +437,6 @@ class FreightPurpose(Purpose):
         nr_zones = self.zone_data.nr_zones
         probs = self.model.calc_prob(impedance)
         self.model._dest_exps.clear()
-        nr_trips = numpy.ones((nr_zones, nr_zones)) # Insert generation model here
-        demand = {mode: (probs.pop(mode) * nr_trips).T for mode in self.modes}
+        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
