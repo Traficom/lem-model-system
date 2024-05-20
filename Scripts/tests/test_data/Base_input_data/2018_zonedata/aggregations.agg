@@ -1,11 +1,11 @@
-data_id	municipality	county		area		lauttasaari_dummy
-102	Helsinki	Uusimaa		helsinki_cbd	0
-103	Helsinki	Uusimaa		helsinki_cbd	0
-244	Helsinki	Uusimaa		helsinki_cbd	0
-1063	Helsinki	Uusimaa		helsinki_other	1
-1531	Helsinki	Uusimaa		helsinki_other	0
-2703	Espoo		Uusimaa		espoo_vant_kau	0
-2741	Espoo		Uusimaa		espoo_vant_kau	0
-6272	Kirkkonummi	Uusimaa		surrounding	0
-6291	Kirkkonummi	Uusimaa		surrounding	0
-19071	Lohja		Uusimaa		surrounding	0
+data_id	municipality	county		area
+102	Helsinki	Uusimaa		A1
+103	Helsinki	Uusimaa		A1
+244	Helsinki	Uusimaa		A1
+1063	Helsinki	Uusimaa		A1
+1531	Helsinki	Uusimaa		A1
+2703	Espoo		Uusimaa		A1
+2741	Espoo		Uusimaa		A1
+6272	Kirkkonummi	Uusimaa		A2
+6291	Kirkkonummi	Uusimaa		A2
+19071	Lohja		Uusimaa		A2

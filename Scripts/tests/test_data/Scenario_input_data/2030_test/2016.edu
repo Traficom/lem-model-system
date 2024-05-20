@@ -1,10 +1,10 @@
 # Schools 2016
 #
 # compreh: Students in comprehensive school (1-9)
-# secndry: Students in upper secondary education (gymnasium, vocational)
-# tertiary: Students in tertiary education (university, college, polytechnic)
+# upper_sec: Students in upper secondary education (gymnasium, vocational)
+# higher_edu: Students in higher education (university, college, polytechnic)
 #
-data_id	compreh	secndry	tertiary
+data_id	compreh upper_sec   higher_edu
 102	0	0	0
 103	0	0	0
 244	0	0	0

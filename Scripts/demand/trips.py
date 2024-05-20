@@ -10,6 +10,7 @@ from datatypes.person import Person
 
 import utils.log as log
 import parameters.zone as param
+from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
 from models import car_use, linear, tour_combinations
 
@@ -49,7 +50,7 @@ class DemandModel:
                 if isinstance(purpose, SecDestPurpose):
                     for source in purpose.sources:
                         source.sec_dest_purpose = purpose
-        bounds = param.purpose_areas["metropolitan"]
+        bounds = param.purpose_areas[tour_combination_area]
         self.bounds = slice(*zone_data.all_zone_numbers.searchsorted(
             [bounds[0], bounds[-1]]))
         self.car_use_model = car_use.CarUseModel(
@@ -145,25 +146,29 @@ class DemandModel:
         """
         for purpose in self.tour_purposes:
             purpose.gen_model.init_tours()
-            if purpose.area == "peripheral" or purpose.dest == "source":
+            if not isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.add_tours()
-        result_data = pandas.DataFrame()  # For printing of results
+        result_data = {}  # For printing of results
         gm = self.tour_generation_model
         for age in self._age_strings():
             segments = self.segments[age]
             prob_c = gm.calc_prob(age, is_car_user=True, zones=self.bounds)
             prob_n = gm.calc_prob(age, is_car_user=False, zones=self.bounds)
-            nr_tours_sums = pandas.Series()
+            nr_tours_sums = pandas.Series(name="nr_tours")
             for combination in prob_c:
                 # Each combination is a tuple of tours performed during a day
                 nr_tours = ( prob_c[combination] * segments["car_users"]
                            + prob_n[combination] * segments["no_car"])
                 for purpose in combination:
-                    self.purpose_dict[purpose].gen_model.tours += nr_tours
+                    try:
+                        self.purpose_dict[purpose].gen_model.tours += nr_tours
+                    except KeyError:
+                        pass
                 nr_tours_sums["-".join(combination)] = nr_tours.sum()
             result_data[age] = nr_tours_sums.sort_index()
-        self.resultdata.print_matrix(
-            result_data, "tour_combinations", "tour_combinations")
+        self.resultdata.print_concat(
+            pandas.concat(result_data, names=["age_group", "combination"]),
+            "tour_combinations.txt")
 
     def generate_tour_probs(self) -> Dict[Tuple[int,int], numpy.ndarray]:
         """Generate matrices of cumulative tour combination probabilities.

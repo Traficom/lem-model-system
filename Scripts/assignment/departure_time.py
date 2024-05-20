@@ -84,7 +84,7 @@ class DepartureTimeModel:
             Travel demand matrix or number of travellers
         """
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
-        if demand.mode in transport_classes and not demand.is_car_passenger:
+        if demand.mode in transport_classes:
             position: Sequence[int] = demand.position
             if len(position) == 2:
                 share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]

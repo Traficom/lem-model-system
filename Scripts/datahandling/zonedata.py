@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Sequence, Optional, Union
+import os
 import numpy # type: ignore
 import pandas
 
@@ -42,11 +43,18 @@ class ZoneData:
             data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
         popdata = files.read_csv_file(".pop")
         workdata = files.read_csv_file(".wrk")
+        incdata = files.read_csv_file(".inc")
         schooldata = files.read_csv_file(".edu")
         landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
+        sport_facilities = files.read_csv_file(".spo")
+        buildings = files.read_csv_file(".bld")
         files = FileReader(data_dir)
         self.transit_zone = files.read_csv_file(".tco")
+        try:
+            self.mtx_adjustment = files.read_csv_file(".add")
+        except (NameError, KeyError):
+            self.mtx_adjustment = None
         try:
             cardata = files.read_csv_file(".car")
             self["parking_norm"] = cardata["prknorm"]
@@ -60,51 +68,66 @@ class ZoneData:
         self.externalgrowth = files.read_csv_file(".ext")
         self.trailers_prohibited = list(map(int, truckdata.loc[0, :]))
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
-        pop = popdata["total"]
+        pop = popdata["population"]
         self["population"] = pop
+        self["age_7-17"] = popdata["sh_7-17"] * pop
+        self["age_18-29"] = popdata["sh_18-29"] * pop
+        self["age_30-49"] = popdata["sh_30-49"] * pop
+        self["age_50-64"] = popdata["sh_50-64"] * pop
+        self["age_65-99"] = popdata["sh_65"] * pop
         self.share["share_age_7-17"] = popdata["sh_7-17"]
-        self.share["share_age_18-29"] = popdata["sh_1829"]
-        self.share["share_age_30-49"] = popdata["sh_3049"]
-        self.share["share_age_50-64"] = popdata["sh_5064"]
-        self.share["share_age_65-99"] = popdata["sh_65-"]
-        self.share["share_age_7-99"] = (self["share_age_7-17"]      
-                                        + self["share_age_18-29"]
-                                        + self["share_age_30-49"]
-                                        + self["share_age_50-64"]
-                                        + self["share_age_65-99"])
-        self.share["share_age_18-99"] = (self["share_age_7-99"]
-                                         -self["share_age_7-17"])
+        self.share["share_age_18-29"] = popdata["sh_18-29"]
+        self.share["share_age_30-49"] = popdata["sh_30-49"]
+        self.share["share_age_50-64"] = popdata["sh_50-64"]
+        self.share["share_age_65-99"] = popdata["sh_65"]
+        self.share["share_age_7-99"] = popdata["sh_7-17"] + popdata["sh_18-29"] + popdata["sh_30-49"] + popdata["sh_50-64"] + popdata["sh_65"]
         self.share["share_female"] = pandas.Series(0.5, self.zone_numbers)
         self.share["share_male"] = pandas.Series(0.5, self.zone_numbers)
+        self["age_7-17_female"] = 0.5 * popdata["sh_7-17"] * pop
+        self["age_18-29_female"] = 0.5 * popdata["sh_18-29"] * pop
+        self["age_30-49_female"] = 0.5 * popdata["sh_30-49"] * pop
+        self["age_50-64_female"] = 0.5 * popdata["sh_50-64"] * pop
+        self["age_65-99_female"] = 0.5 * popdata["sh_65"] * pop
+        self["age_7-17_male"] = 0.5 * popdata["sh_7-17"] * pop
+        self["age_18-29_male"] = 0.5 * popdata["sh_18-29"] * pop
+        self["age_30-49_male"] = 0.5 * popdata["sh_30-49"] * pop
+        self["age_50-64_male"] = 0.5 * popdata["sh_50-64"] * pop
+        self["age_65-99_male"] = 0.5 * popdata["sh_65"] * pop
+        self["income_0-19"] = incdata["sh_income_0-19"] * pop
+        self["income_20-39"] = incdata["sh_income_20-39"] * pop
+        self["income_40-59"] = incdata["sh_income_40-59"] * pop
+        self["income_60-79"] = incdata["sh_income_60-79"] * pop
+        self["income_80-99"] = incdata["sh_income_80-99"] * pop
+        self["income_100"] = incdata["sh_income_100"] * pop
         self.nr_zones = len(self.zone_numbers)
         self["population_density"] = pop / landdata["builtar"]
-        wp = workdata["total"]
+        wp = workdata["workplaces"]
         self["workplaces"] = wp
+        self["sports_in"] = sport_facilities["sports_in"]
+        self["sports_out"] = sport_facilities["sports_out"]
+        self["area_education"] = buildings["area_edu"]
+        self["area_leisure"] = buildings["area_leis"]
         self["service"] = workdata["sh_serv"] * wp
-        self["shops"] = workdata["sh_shop"] * wp
+        self["shop"] = workdata["sh_shop"] * wp
         self["logistics"] = workdata["sh_logi"] * wp
         self["industry"] = workdata["sh_indu"] * wp
-        self["parking_cost_work"] = parkdata["avg_parcosw"]
-        self["parking_cost_errand"] = parkdata["avg_parcose"]
-        self["comprehensive_schools"] = schooldata["compreh"]
-        self["secondary_schools"] = schooldata["secndry"]
-        self["tertiary_education"] = schooldata["tertiary"]
-        self["zone_area"] = landdata["builtar"]
-        self.share["share_detached_houses"] = landdata["sh_detach"]
-        self["perc_detached_houses_sqrt"] = landdata["sh_detach"] ** 0.5
-        self["helsinki"] = self.dummy("municipality", "Helsinki")
-        self["cbd"] = self.dummy("area", "helsinki_cbd")
-        self["lauttasaari"] = self.aggregations.dummies["lauttasaari_dummy"]
-        self["helsinki_other"] = self.dummy("area", "helsinki_other")
-        self["espoo_vant_kau"] = self.dummy("area", "espoo_vant_kau")
-        self["surrounding"] = self.dummy("area", "surrounding")
-        self["shops_cbd"] = self["cbd"] * self["shops"]
-        self["shops_elsewhere"] = (1-self["cbd"]) * self["shops"]
+        self["hospitality"] = workdata["sh_hosp"] * wp
+        self["recreation"] = workdata["sh_recr"] * wp
+        self["park_cost"] = parkdata["avg_park_cost"]
+        self["park_time"] = parkdata["avg_park_time"]
+        self["comprehensive"] = schooldata["compreh"]
+        self["upper_secondary"] = schooldata["upper_sec"]
+        self["higher_education"] = schooldata["higher_edu"]
         # Create diagonal matrix with zone area
-        self["own_zone"] = numpy.full((self.nr_zones, self.nr_zones), False)
-        self["own_zone"][numpy.diag_indices(self.nr_zones)] = True
-        self["own_zone_area"] = self["own_zone"] * self["zone_area"].values
-        self["own_zone_area_sqrt"] = numpy.sqrt(self["own_zone_area"])
+        self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
+        self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
+        # Two-way intrazonal distances from building distances
+        self["within_zone_dist"] = self["within_zone"] * buildings["building_dist"].values * 2
+        self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
+        self["within_zone_cost"] = self["within_zone_dist"] * self.car_dist_cost["car_work"]
+        # Unavailability of intrazonal tours
+        self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
+        self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf
         # Create matrix where value is True if origin and destination is in
         # same municipality
         municipalities = self.aggregations.mappings["municipality"].values
@@ -176,7 +199,7 @@ class ZoneData:
         freight_variables = (
             "population",
             "workplaces",
-            "shops",
+            "shop",
             "logistics",
             "industry",
         )
@@ -227,14 +250,28 @@ class BaseZoneData(ZoneData):
         peripheral = param.purpose_areas["peripheral"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
             peripheral[1])]
+        municipality_file = "koko_suomi_kunta.zmp"
+        municipality_centre_zones = pandas.read_csv(
+            os.path.join(data_dir, municipality_file),
+            delim_whitespace=True,
+            index_col="data_id").squeeze().drop_duplicates().sort_values()
+        files = FileReader(
+            data_dir, municipality_centre_zones,
+            zone_mapping_file=municipality_file)
+        mapping = files.read_csv_file(".agg")["municipality"]
+        zone_indices = pandas.Series(
+            range(len(self.zone_numbers)), index=self.zone_numbers)
+        municipality_centres = pandas.Series(
+            mapping.index, index=mapping.values).map(zone_indices)
         files = FileReader(
             data_dir, self.zone_numbers, zone_mapping_file=zone_mapping_file)
-        aggregations = ZoneAggregations(files.read_csv_file(".agg"))
+        aggregations = ZoneAggregations(
+            files.read_csv_file(".agg"), municipality_centres)
         ZoneData.__init__(
             self, data_dir, zone_numbers, aggregations, zone_mapping_file)
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
-        self["car_density"] = files.read_csv_file(".car")["cardens"]
+        self["car_density"] = files.read_csv_file(".car")["car_dens"]
         self["cars_per_1000"] = 1000 * self["car_density"]
 
 

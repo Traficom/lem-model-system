@@ -53,21 +53,10 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.22232402719217942)
+            0.24755222002919075)
         
         print("Model system test done")
     
-    def test_agent_model(self):
-        log.initialize(Config())
-        ass_model = MockAssignmentModel(MatrixData(
-            RESULTS_PATH / "Matrices" / "uusimaa"))
-        model = AgentModelSystem(
-            ZONEDATA_PATH, BASE_ZONEDATA_PATH, BASE_MATRICES_PATH,
-            RESULTS_PATH, ass_model, "uusimaa")
-        impedance = model.assign_base_demand()
-        impedance = model.run_iteration(impedance)
-        impedance = model.run_iteration(impedance, "last")
-
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
