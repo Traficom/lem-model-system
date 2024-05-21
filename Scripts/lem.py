@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
 from pathlib import Path
-import shutil
 
 import utils.config
 import utils.log as log
