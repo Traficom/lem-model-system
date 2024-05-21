@@ -35,7 +35,7 @@ class ExternalModel:
             "name": "external",
             "orig": None,
             "dest": None,
-            "area": "external",
+            "area": "all",
             "impedance_share": None,
             "demand_share": demand_share["external"]
         }

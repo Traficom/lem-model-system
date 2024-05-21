@@ -25,6 +25,7 @@ from datatypes.purpose import new_tour_purpose
 from datatypes.purpose import Purpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
+from datatypes.demand import Demand
 from models.linear import CarDensityModel
 import parameters.assignment as param
 import parameters.zone as zone_param
@@ -167,6 +168,31 @@ class ModelSystem:
                         self.dtm.add_demand(demand[mode])
         log.info("Demand calculation completed")
 
+    def _add_external_demand(self):
+        if not self.ass_model.use_free_flow_speeds:
+            # If we want to assign all trips with traffic congestion,
+            # then add long-distance trips as background demand
+            long_dist_classes = (param.car_classes
+                                 + param.long_distance_transit_classes
+                                 # + param.freight_classes
+            )
+            try:
+                # Try getting long-distance trips from separate files
+                cm = self.long_dist_matrices.open(
+                    "demand", "vrk", self.ass_model.zone_numbers,
+                    self.mapping, long_dist_classes)
+                mtx = cm.__enter__()
+            except IOError:
+                # Otherwise long-distance trips must be in base matrices
+                cm = self.basematrices.open(
+                    "demand", "vrk", self.ass_model.zone_numbers,
+                    transport_classes=long_dist_classes)
+                mtx = cm.__enter__()
+            for ass_class in long_dist_classes:
+                self.dtm.add_demand(
+                    Demand(self.em.purpose, ass_class, mtx[ass_class]))
+            cm.__exit__(None, None, None)
+
     # possibly merge with init
     def assign_base_demand(self, 
             is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -202,6 +228,8 @@ class ModelSystem:
                 "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
             mtx["all"] = Purpose.distance
 
+        self._add_external_demand()
+
         # Perform traffic assignment and get result impedance, 
         # for each time period
         for ap in self.ass_model.assignment_periods:
@@ -209,24 +237,6 @@ class ModelSystem:
             log.info("Assigning period {}...".format(tp))
             if not self.ass_model.use_free_flow_speeds:
                 # If we want to assign all trips with traffic congestion
-                long_dist_classes = (param.car_classes
-                                     + param.long_distance_transit_classes
-                                     + param.freight_classes)
-                try:
-                    # Try getting long-distance trips from separate files
-                    cm = self.long_dist_matrices.open(
-                        "demand", tp, self.ass_model.zone_numbers,
-                        self.mapping, long_dist_classes)
-                    mtx = cm.__enter__()
-                except IOError:
-                    # Otherwise long-distance trips must be in base matrices
-                    cm = self.basematrices.open(
-                        "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=long_dist_classes)
-                    mtx = cm.__enter__()
-                for ass_class in long_dist_classes:
-                    self.dtm.demand[tp][ass_class] = mtx[ass_class]
-                cm.__exit__(None, None, None)
                 short_dist_classes = (param.private_classes
                                       + param.local_transit_classes)
                 with self.basematrices.open(
@@ -299,14 +309,8 @@ class ModelSystem:
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
-        # Calculate internal demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
-
-        # Calculate external demand
-        for mode in param.external_modes:
-            int_demand = self._sum_trips_per_zone(mode)
-            ext_demand = self.em.calc_external(mode, int_demand)
-            self.dtm.add_demand(ext_demand)
+        self._add_external_demand()
 
         # Calculate tour sums and mode shares
         tour_sum = {mode: self._sum_trips_per_zone(mode, include_dests=False)
