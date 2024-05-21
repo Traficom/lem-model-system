@@ -235,24 +235,18 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
-            if not self.ass_model.use_free_flow_speeds:
-                # If we want to assign all trips with traffic congestion
-                short_dist_classes = (param.private_classes
-                                      + param.local_transit_classes)
+            if is_end_assignment or not self.ass_model.use_free_flow_speeds:
+                if not self.ass_model.use_free_flow_speeds:
+                    transport_classes = (param.private_classes
+                                        + param.local_transit_classes)
+                else:
+                    transport_classes = (param.car_classes
+                                         + param.long_distance_transit_classes)
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=short_dist_classes) as mtx:
-                    for ass_class in short_dist_classes:
+                        transport_classes=transport_classes) as mtx:
+                    for ass_class in transport_classes:
                         self.dtm.demand[tp][ass_class] += mtx[ass_class]
-            elif is_end_assignment:
-                # If we only assign long-distance trip matrices
-                long_dist_classes = (param.car_classes
-                                     + param.long_distance_transit_classes)
-                with self.basematrices.open(
-                        "demand", tp, self.ass_model.zone_numbers,
-                        long_dist_classes) as mtx:
-                    for ass_class in long_dist_classes:
-                        self.dtm.demand[tp][ass_class] = mtx[ass_class]
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
