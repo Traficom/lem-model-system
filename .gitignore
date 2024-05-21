@@ -63,3 +63,5 @@ Scripts/tests/test_data/Results/*
 !Scripts/tests/test_data/Results/test/uusimaa/Matrices/beeline*
 project.mtbx-shm
 project.mtbx-wal
+Results/*
+!Results/.gitkeep
