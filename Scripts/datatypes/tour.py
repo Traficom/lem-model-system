@@ -43,9 +43,6 @@ class Tour:
             self.sec_dest_prob = purpose.sec_dest_purpose.gen_model.param[purpose.name]
         except AttributeError:
             self.sec_dest_prob = 0
-        self._is_car_passenger = (True
-            if random.random() > param.car_driver_share[self.purpose.name]
-            else False)
         self._mode_draw = random.random()
         self._dest_draw = random.random()
         self._sec_dest_gen_draw = random.random()
@@ -54,10 +51,6 @@ class Tour:
     @property
     def mode(self):
             return self.purpose.modes[self._mode_idx]
-
-    @property
-    def is_car_passenger(self) -> bool:
-        return self.mode == "car" and self._is_car_passenger
 
     @property
     def orig(self):
@@ -142,7 +135,7 @@ class Tour:
 
     @property
     def sustainable_access(self):
-        return -self.purpose.sustainable_access[self.orig]
+        return -self.purpose.accessibility_model.access["sustainable"][self.orig]
 
     def choose_destination(self, sec_dest_tours: Dict[str, Dict[int, Dict[int, List['Tour']]]]):
         """Choose primary destination for the tour.
@@ -180,7 +173,7 @@ class Tour:
                 is_in_area = False
         except AttributeError:
             is_in_area = False
-        if (self.mode != "walk" and is_in_area
+        if (self.mode not in ("walk", "car_pax") and is_in_area
                 and self._sec_dest_gen_draw < self.sec_dest_prob[self.mode]):
             orig_rel_idx = orig_idx - bounds.start
             dest_idx =- bounds.start

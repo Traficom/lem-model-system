@@ -101,8 +101,7 @@ class FileReader:
             map_path = self.map_path
             if map_path is not None:
                 log_path = map_path
-                mapping = pandas.read_csv(map_path, delim_whitespace=True).squeeze()
-                mapping = mapping.set_index("data_id")
+                mapping = pandas.read_csv(map_path, delim_whitespace=True, index_col="data_id").squeeze()
                 if "total" in data.columns:
                     # If file contains total and shares of total,
                     # shares are aggregated as averages with total as weight
@@ -116,7 +115,7 @@ class FileReader:
                         funcs[col] = "mean"
                     for col in text_cols:
                         funcs[col] = "first"
-                    data = data.groupby(mapping.zone_id).agg(funcs)
+                    data = data.groupby(mapping).agg(funcs)
                 data.index = data.index.astype(int)
             else:
                 log_path = path

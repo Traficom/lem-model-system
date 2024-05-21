@@ -16,10 +16,10 @@ class PersonTest(unittest.TestCase):
                         raise KeyError()
         class GenMod:
             zone_data = ZoneData()
-            tour_combinations = [("hw",), ("hw", "ho"), ("hw", "hw")]
+            tour_combinations = [("hb_work",), ("hb_work", "hb_other"), ("hb_work", "hb_work")]
             param = {
-                "hw": 0.3,
-                "ho": 0.7,
+                "hb_work": 0.3,
+                "hb_other": 0.7,
             }
         class Purpose:
             zone_data = ZoneData()
@@ -32,10 +32,11 @@ class PersonTest(unittest.TestCase):
         p = Person(Zone(), (18, 29), GenMod(), None, ZoneData())
         p.is_car_user = True
         purposes = {
-            "hw": Purpose("hw"),
-            "ho": Purpose("ho"),
-            "wo": Purpose("wo"),
-            "oo": Purpose("oo"),
+            "hb_work": Purpose("hb_work"),
+            "hb_other": Purpose("hb_other"),
+            "wb_business": Purpose("wb_business"),
+            "wb_other": Purpose("wb_other"),
+            "ob_other": Purpose("ob_other"),
         }
         data = numpy.array([
             [0.3, 0.6, 1.0],

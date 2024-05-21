@@ -1,6 +1,5 @@
 import threading
 import multiprocessing
-import os
 import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Set, Union, cast
@@ -161,8 +160,9 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                if purpose.name != "wh":
-                    demand = purpose.calc_demand()
+                demand = purpose.calc_demand()
+                if is_last_iteration:
+                    purpose.print_data()
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
@@ -263,7 +263,9 @@ class ModelSystem:
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
         if is_end_assignment:
-            self.ass_model.aggregate_results(self.resultdata)
+            self.ass_model.aggregate_results(
+                self.resultdata,
+                self.zdata_base.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.calc_gaps()
@@ -318,15 +320,15 @@ class ModelSystem:
         sum_all = sum(tour_sum.values())
         mode_shares = {}
         agg = self.zdata_base.aggregations
+        self.resultdata.print_data(tour_sum, "origins_demand.txt")
+        self.resultdata.print_data(
+            {mode: tour_sum[mode] / sum_all for mode in tour_sum},
+            "origins_shares.txt")
         for mode in tour_sum:
-            self.resultdata.print_data(
-                tour_sum[mode], "origins_demand.txt", mode)
             for area_type in agg.mappings:
                 self.resultdata.print_data(
                     agg.aggregate_array(tour_sum[mode], area_type),
-                    f"origins_demand_{area_type}.txt", mode)
-            self.resultdata.print_data(
-                tour_sum[mode] / sum_all, "origins_shares.txt", mode)
+                    f"origins_demand_{area_type}.txt")
             mode_shares[mode] = tour_sum[mode].sum() / sum_all.sum()
         self.mode_share.append(mode_shares)
         trip_sum = {mode: self._sum_trips_per_zone(mode)
@@ -335,7 +337,7 @@ class ModelSystem:
             for area_type in agg.mappings:
                 self.resultdata.print_data(
                     agg.aggregate_array(trip_sum[mode], area_type),
-                    f"trips_{area_type}.txt", mode)
+                    f"trips_{area_type}.txt")
         self.resultdata.print_line("\nAssigned demand", "result_summary")
         self.resultdata.print_line(
             "\t" + "\t".join(param.transport_classes), "result_summary")
@@ -396,55 +398,49 @@ class ModelSystem:
                     mtx[ass_class] = impedance[mtx_type][ass_class]
 
     def _calculate_noise_areas(self):
-        noise_areas = self.ass_model.calc_noise(
+        data = {}
+        data["area"] = self.ass_model.calc_noise(
             self.zdata_base.aggregations.municipality_mapping)
-        self.resultdata.print_data(noise_areas, "noise_areas.txt", "area")
         pop = self.zdata_base.aggregations.aggregate_array(
-            self.zdata_forecast["population"], "area")
+            self.zdata_forecast["population"], "county")
         conversion = pandas.Series(zone_param.pop_share_per_noise_area)
-        noise_pop = conversion * noise_areas * pop
-        self.resultdata.print_data(noise_pop, "noise_areas.txt", "population")
+        data["population"] = conversion * data["area"] * pop
+        self.resultdata.print_data(data, "noise_areas.txt")
 
     def _calculate_accessibility_and_savu_zones(self):
-        logsum = 0
-        sust_logsum = 0
-        car_logsum = 0
+        zone_numbers = self.zdata_forecast.zone_numbers
+        access = {modes: pandas.Series(0, zone_numbers, name="all")
+            for modes in ("total", "car", "sustainable")}
         for purpose in self.dm.tour_purposes:
-            if (purpose.area == "metropolitan" and purpose.orig == "home"
-                    and purpose.dest != "source"
-                    and not isinstance(purpose, SecDestPurpose)):
+            if purpose.name in gen_param.tour_weights:
                 zone_numbers = purpose.zone_numbers
                 bounds = purpose.bounds
-                weight = gen_param.tour_generation[purpose.name]["population"]
-                logsum += weight * purpose.access
-                sust_logsum += weight * purpose.sustainable_access
-                car_logsum += weight * purpose.car_access
+                weight = gen_param.tour_weights[purpose.name]
+                for modes in access:
+                    mode_access = purpose.accessibility_model.access[modes]
+                    access[modes][bounds] += weight * mode_access
         pop = self.zdata_forecast["population"][bounds]
-        self.resultdata.print_line(
-            "\nTotal accessibility:\t{:1.2f}".format(
-                numpy.average(logsum, weights=pop)),
-            "result_summary")
-        self.resultdata.print_data(logsum, "accessibility.txt", "all")
-        avg_sust_logsum = numpy.average(sust_logsum, weights=pop)
-        self.resultdata.print_line(
-            "Sustainable accessibility:\t{:1.2f}".format(avg_sust_logsum),
-            "result_summary")
-        self.resultdata.print_data(
-            sust_logsum, "sustainable_accessibility.txt", "all")
-        self.resultdata.print_data(car_logsum, "car_accessibility.txt", "all")
-        intervals = zone_param.savu_intervals
-        savu = numpy.searchsorted(intervals, sust_logsum) + 1
-        self.resultdata.print_data(
-            pandas.Series(savu, zone_numbers), "savu.txt", "savu_zone")
-        avg_savu = numpy.searchsorted(intervals, avg_sust_logsum) + 1
-        avg_savu += ((avg_sust_logsum - intervals[avg_savu-2])
-                     / (intervals[avg_savu-1] - intervals[avg_savu-2]))
-        self.resultdata.print_line(
-            "Average SAVU:\t{:1.4f}".format(avg_savu),
-            "result_summary")
+        for modes in access:
+            self.resultdata.print_data(
+                access[modes], f"{modes}_accessibility.txt")
+            avg_access = numpy.average(access[modes][bounds], weights=pop)
+            self.resultdata.print_line(
+                f"\n{modes.title()} accessibility:\t{avg_access:1.2f}",
+                "result_summary")
+            if modes == "sustainable":
+                intervals = zone_param.savu_intervals
+                savu = numpy.searchsorted(intervals, access[modes][bounds]) + 1
+                self.resultdata.print_data(
+                    pandas.Series(savu, zone_numbers, name="savu_zone"),
+                    "savu.txt")
+                avg_savu = numpy.searchsorted(intervals, avg_access) + 1
+                avg_savu += ((avg_access - intervals[avg_savu-2])
+                            / (intervals[avg_savu-1] - intervals[avg_savu-2]))
+                self.resultdata.print_line(
+                    f"Average SAVU:\t{avg_savu:1.4f}", "result_summary")
 
     def _sum_trips_per_zone(self, mode, include_dests=True):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers)
+        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
@@ -509,8 +505,8 @@ class ModelSystem:
         time_ratio = transit_time / car_time
         time_ratio = time_ratio.clip(0.01, None)
         self.resultdata.print_data(
-            pandas.Series(time_ratio, self.zone_numbers),
-            "impedance_ratio.txt", "time")
+            pandas.Series(time_ratio, self.zone_numbers, name="time"),
+            "impedance_ratio.txt")
         self.zdata_forecast["time_ratio"] = pandas.Series(
             numpy.ma.getdata(time_ratio), self.zone_numbers)
         car_cost = numpy.ma.average(
@@ -522,8 +518,8 @@ class ModelSystem:
         cost_ratio = transit_cost / 44. / car_cost
         cost_ratio = cost_ratio.clip(0.01, None)
         self.resultdata.print_data(
-            pandas.Series(cost_ratio, self.zone_numbers),
-            "impedance_ratio.txt", "cost")
+            pandas.Series(cost_ratio, self.zone_numbers, name="cost"),
+            "impedance_ratio.txt")
         self.zdata_forecast["cost_ratio"] = pandas.Series(
             numpy.ma.getdata(cost_ratio), self.zone_numbers)
 
@@ -626,8 +622,9 @@ class AgentModelSystem(ModelSystem):
                 purpose.model.cumul_dest_prob.clear()
             except AttributeError:
                 pass
-        self.dm.car_use_model.print_results(
-            car_users / self.dm.zone_population, self.dm.zone_population)
+        car_share = car_users / self.dm.zone_population
+        car_share.name = "car_share"
+        self.dm.car_use_model.print_results(car_share, self.dm.zone_population)
         log.info("Primary destinations assigned")
         purpose = self.dm.purpose_dict["hoo"]
         purpose_impedance = purpose.transform_impedance(

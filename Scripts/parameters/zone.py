@@ -33,7 +33,8 @@ purpose_areas: Dict[str, Union[Tuple[int,int],Tuple[int,int,int]]] = {
 }
 purpose_matrix_aggregation_level = "area"
 savu_intervals = (-172.85, -169.77, -167.11, -161.52, -156.85, -152.07, 9999)
-tour_length_intervals = (0, 1, 3, 5, 10, 20, 30, 40, float("inf"))
+tour_length_intervals = (0, 3, 5, 10, 20, 30, 40, 100,
+                         200, 400, 600, 800, float("inf"))
 # Population in noise zones as share of total area population as
 # function only of zone area, calculated by Ramboll Feb 2021
 pop_share_per_noise_area = {

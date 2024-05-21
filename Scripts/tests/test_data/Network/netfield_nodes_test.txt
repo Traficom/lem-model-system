@@ -1,4 +1,5 @@
 t network_fields
+#subarea NODE INTEGER32 subarea
 #municipality NODE STRING ''
 #transit_stop_b NODE BOOLEAN ''
 #transit_stop_e NODE BOOLEAN ''
@@ -6,614 +7,614 @@ t network_fields
 #transit_stop_t NODE BOOLEAN ''
 #transit_stop_p NODE BOOLEAN ''
 end network_fields
-inode	#municipality	#transit_stop_b	#transit_stop_e	#transit_stop_g	#transit_stop_t
-102	Helsinki	0	0	0	0
-103	Helsinki	0	0	0	0
-244	Helsinki	0	0	0	0
-1063	Helsinki	0	0	0	0
-1531	Helsinki	0	0	0	0
-2703	Espoo	0	0	0	0
-2741	Espoo	0	0	0	0
-6272	Espoo	0	0	0	0
-6291	Espoo	0	0	0	0
-19071	Lohja	0	0	0	0
-36102	Lohja	0	0	0	0
-36500	Lohja	0	0	0	0
-40222	Helsinki	0	0	0	0
-40223	Helsinki	0	0	0	0
-40224	Helsinki	0	0	0	0
-40225	Helsinki	0	0	0	0
-40226	Helsinki	0	0	0	0
-40227	Helsinki	1	0	0	0
-40228	Helsinki	1	0	1	0
-40229	Helsinki	0	0	0	0
-40252	Helsinki	0	0	0	0
-40340	Helsinki	0	0	0	0
-40344	Helsinki	0	0	0	0
-40345	Helsinki	1	0	0	0
-40346	Helsinki	0	0	0	0
-40347	Helsinki	1	1	1	0
-40348	Helsinki	0	0	0	0
-40350	Helsinki	0	0	0	0
-40401	Helsinki	0	0	0	0
-40402	Helsinki	0	0	0	0
-40403	Helsinki	0	0	0	0
-40477	Helsinki	1	0	1	0
-40483	Helsinki	0	0	0	0
-40484	Helsinki	0	0	0	0
-40514	Helsinki	0	0	0	0
-40520	Helsinki	0	0	0	0
-40521	Helsinki	0	0	0	0
-40526	Helsinki	0	0	0	0
-40527	Helsinki	0	0	0	0
-40704	Helsinki	1	0	0	0
-40852	Helsinki	1	0	1	0
-40854	Helsinki	1	0	1	0
-40877	Helsinki	1	0	0	0
-40881	Helsinki	1	0	0	0
-40887	Helsinki	1	0	0	0
-41702	Helsinki	1	0	0	0
-41704	Helsinki	1	0	0	0
-41712	Helsinki	1	0	0	0
-41738	Helsinki	0	0	0	0
-41748	Helsinki	1	0	0	0
-41753	Helsinki	1	0	0	0
-41796	Helsinki	0	0	0	0
-41797	Helsinki	1	0	1	0
-41799	Helsinki	1	0	1	0
-41803	Helsinki	1	0	0	0
-41864	Helsinki	1	0	1	0
-41865	Helsinki	1	0	1	0
-41964	Helsinki	1	0	0	0
-42058	Helsinki	0	0	0	0
-42059	Helsinki	1	0	1	0
-42060	Helsinki	0	0	0	0
-42061	Helsinki	1	0	0	0
-42066	Helsinki	1	0	1	0
-42067	Helsinki	0	0	0	0
-42069	Helsinki	1	0	0	0
-42084	Helsinki	1	0	0	0
-42106	Helsinki	0	0	0	0
-42107	Helsinki	0	0	0	0
-42109	Helsinki	1	1	1	0
-42110	Helsinki	0	0	0	0
-42111	Helsinki	1	0	0	0
-42916	Helsinki	0	1	0	0
-42917	Helsinki	0	1	0	0
-43075	Helsinki	0	0	0	0
-43076	Helsinki	0	0	0	0
-43570	Helsinki	0	0	0	0
-43571	Helsinki	0	0	0	0
-43573	Helsinki	0	0	0	0
-50053	Espoo	0	0	0	0
-50054	Espoo	0	0	0	0
-50055	Espoo	0	0	0	0
-50056	Espoo	0	0	0	0
-50058	Espoo	0	0	0	0
-50060	Espoo	0	0	0	0
-50065	Espoo	0	0	0	0
-50066	Espoo	0	0	0	0
-50067	Espoo	0	0	0	0
-50068	Espoo	0	0	0	0
-50071	Espoo	0	0	0	0
-50073	Espoo	0	0	0	0
-50074	Espoo	0	0	0	0
-50075	Espoo	0	0	0	0
-50076	Espoo	0	0	0	0
-50077	Espoo	0	0	0	0
-50079	Espoo	0	0	0	0
-50082	Espoo	0	0	0	0
-50083	Espoo	0	0	0	0
-50084	Espoo	0	0	0	0
-50085	Espoo	0	0	0	0
-50086	Espoo	0	0	0	0
-50087	Espoo	0	0	0	0
-50088	Espoo	0	0	0	0
-50089	Espoo	0	0	0	0
-50090	Espoo	0	0	0	0
-50093	Espoo	0	0	0	0
-50094	Espoo	0	0	0	0
-50095	Espoo	0	0	0	0
-50096	Espoo	0	0	0	0
-50099	Espoo	0	0	0	0
-50100	Espoo	0	0	0	0
-50101	Espoo	0	0	0	0
-50385	Espoo	0	0	0	0
-50386	Espoo	0	0	0	0
-50391	Espoo	0	0	0	0
-50392	Espoo	0	0	0	0
-50393	Espoo	0	0	0	0
-50394	Espoo	0	0	0	0
-50400	Espoo	0	0	0	0
-50403	Espoo	0	0	0	0
-50405	Espoo	0	0	0	0
-50409	Espoo	0	0	0	0
-50427	Espoo	0	0	0	0
-50443	Espoo	0	0	0	0
-50444	Espoo	0	0	0	0
-50445	Espoo	0	0	0	0
-50446	Espoo	0	0	0	0
-50482	Espoo	1	0	0	0
-131903	Lohja	0	0	0	0
-161384	Lohja	0	0	0	0
-161396	Lohja	0	0	0	0
-161406	Lohja	0	0	0	0
-161408	Lohja	1	0	0	0
-162919	Lohja	0	0	0	0
-163130	Lohja	0	0	0	0
-163131	Lohja	0	0	0	0
-163134	Lohja	0	0	0	0
-163146	Lohja	0	0	0	0
-163147	Lohja	0	0	0	0
-164600	Lohja	0	0	0	0
-164601	Lohja	1	0	0	0
-164603	Lohja	1	0	0	0
-164629	Lohja	0	0	0	0
-164630	Lohja	0	0	0	0
-166155	Lohja	0	0	0	0
-166156	Lohja	0	0	0	0
-167027	Lohja	1	0	0	0
-172392	Lohja	0	0	0	0
-172602	Lohja	0	0	0	0
-172605	Lohja	0	0	0	0
-173149	Lohja	0	0	0	0
-177378	Lohja	0	0	0	0
-177379	Lohja	0	0	0	0
-179244	Lohja	0	0	0	0
-181015	Lohja	0	0	0	0
-181260	Lohja	0	0	0	0
-181261	Lohja	0	0	0	0
-182028	Lohja	0	0	0	0
-182031	Lohja	1	0	0	0
-182034	Lohja	0	0	0	0
-182046	Lohja	1	0	0	0
-183601	Lohja	0	0	0	0
-183602	Lohja	0	0	0	0
-184840	Lohja	0	0	0	0
-185278	Lohja	0	0	0	0
-185283	Lohja	0	0	0	0
-185286	Lohja	0	0	0	0
-185289	Lohja	0	0	0	0
-185291	Lohja	0	0	0	0
-185293	Lohja	0	0	0	0
-185294	Lohja	0	0	0	0
-185295	Lohja	0	0	0	0
-195588	Lohja	0	0	0	0
-195589	Lohja	0	0	0	0
-195590	Lohja	0	0	0	0
-195594	Lohja	0	0	0	0
-195595	Lohja	0	0	0	0
-195601	Lohja	0	0	0	0
-195619	Lohja	0	0	0	0
-195620	Lohja	0	0	0	0
-195626	Lohja	0	0	0	0
-195627	Lohja	0	0	0	0
-195689	Lohja	0	0	0	0
-195727	Lohja	0	0	0	0
-195728	Lohja	0	0	0	0
-195729	Lohja	0	0	0	0
-195740	Lohja	0	0	0	0
-195741	Lohja	0	0	0	0
-195750	Lohja	0	0	0	0
-195865	Lohja	0	0	0	0
-195890	Lohja	0	0	0	0
-196175	Lohja	0	0	0	0
-196599	Lohja	0	0	0	0
-196981	Lohja	0	0	0	0
-196982	Lohja	0	0	0	0
-196983	Lohja	0	0	0	0
-196992	Lohja	0	0	0	0
-196993	Lohja	1	0	1	0
-196994	Lohja	0	0	0	0
-196999	Lohja	0	0	0	0
-197002	Lohja	0	0	0	0
-197004	Lohja	0	0	0	0
-197005	Lohja	0	0	0	0
-197006	Lohja	0	1	0	0
-197007	Lohja	0	0	0	0
-197008	Lohja	0	0	0	0
-197014	Lohja	0	0	0	0
-197015	Lohja	0	0	0	0
-197016	Lohja	0	0	0	0
-197018	Lohja	0	0	0	0
-197023	Lohja	1	0	0	0
-197024	Lohja	0	0	0	0
-197027	Lohja	0	0	0	0
-197033	Lohja	0	0	0	0
-197037	Lohja	0	0	0	0
-197038	Lohja	0	1	0	0
-197046	Lohja	0	0	0	0
-197048	Lohja	0	0	0	0
-197050	Lohja	0	0	0	0
-197051	Lohja	0	0	0	0
-197052	Lohja	0	0	0	0
-197068	Lohja	0	0	0	0
-197084	Lohja	0	0	0	0
-197093	Lohja	0	0	0	0
-197094	Lohja	0	0	0	0
-197101	Lohja	0	0	0	0
-197135	Lohja	0	0	0	0
-197493	Lohja	0	0	0	0
-197605	Lohja	0	0	0	0
-197730	Lohja	0	1	0	0
-197731	Lohja	0	0	0	0
-197768	Lohja	0	0	0	0
-197791	Lohja	0	0	0	0
-198032	Lohja	0	0	0	0
-198300	Lohja	0	1	0	0
-198301	Lohja	0	0	0	0
-198503	Lohja	0	0	0	0
-198793	Lohja	0	0	0	0
-198795	Lohja	0	0	0	0
-198825	Lohja	1	0	1	0
-198834	Lohja	1	0	0	0
-198835	Lohja	0	0	0	0
-198840	Lohja	0	0	0	0
-198841	Lohja	0	0	0	0
-198842	Lohja	1	0	0	0
-198843	Lohja	1	0	1	0
-198844	Lohja	1	0	1	0
-198893	Lohja	0	0	0	0
-198910	Lohja	0	0	0	0
-198911	Lohja	0	0	0	0
-198917	Lohja	0	0	0	0
-198919	Lohja	0	0	0	0
-198920	Lohja	1	0	1	0
-198921	Lohja	1	0	0	0
-198923	Lohja	0	0	0	0
-198925	Lohja	0	0	0	0
-199087	Lohja	0	0	0	0
-199089	Lohja	0	0	0	0
-199091	Lohja	0	0	0	0
-199093	Lohja	1	0	1	0
-199094	Lohja	0	0	0	0
-199095	Lohja	0	0	0	0
-199228	Lohja	0	0	0	0
-199234	Lohja	0	0	0	0
-199439	Lohja	0	0	0	0
-199476	Lohja	0	0	0	0
-199477	Lohja	0	0	0	0
-199478	Lohja	0	0	0	0
-199599	Lohja	0	0	0	0
-199620	Lohja	0	0	0	0
-199736	Lohja	0	0	0	0
-199737	Lohja	1	0	0	0
-199811	Lohja	0	0	0	0
-199880	Lohja	0	0	0	0
-199894	Lohja	0	0	0	0
-199913	Lohja	0	0	0	0
-199920	Lohja	0	0	0	0
-199946	Lohja	0	0	0	0
-199947	Lohja	0	0	0	0
-199987	Lohja	0	0	0	0
-200004	Lohja	0	0	0	0
-200007	Lohja	0	0	0	0
-200034	Lohja	0	0	0	0
-200036	Lohja	0	0	0	0
-200079	Lohja	0	0	0	0
-200155	Lohja	0	0	0	0
-200287	Lohja	0	0	0	0
-200539	Lohja	0	0	0	0
-200651	Lohja	0	0	0	0
-200779	Lohja	0	0	0	0
-200836	Lohja	0	0	0	0
-200837	Lohja	1	0	0	0
-200843	Lohja	0	0	0	0
-201026	Lohja	0	0	0	0
-201074	Lohja	0	0	0	0
-201142	Lohja	0	0	0	0
-201151	Lohja	0	0	0	0
-201152	Lohja	0	0	0	0
-201261	Lohja	0	0	0	0
-201490	Lohja	0	0	0	0
-201695	Lohja	0	0	0	0
-201717	Lohja	0	0	0	0
-201734	Lohja	0	0	0	0
-201788	Lohja	0	0	0	0
-202028	Lohja	0	0	0	0
-202029	Lohja	0	0	0	0
-202558	Lohja	0	0	0	0
-202559	Lohja	0	0	0	0
-202610	Lohja	0	0	0	0
-202612	Lohja	0	0	0	0
-202613	Lohja	0	0	0	0
-202694	Lohja	0	0	0	0
-202765	Lohja	0	0	0	0
-202801	Lohja	0	0	0	0
-202996	Lohja	0	0	0	0
-203007	Lohja	0	0	0	0
-203046	Lohja	0	0	0	0
-203058	Lohja	0	0	0	0
-203117	Lohja	0	0	0	0
-203231	Lohja	0	0	0	0
-203724	Lohja	0	0	0	0
-204557	Lohja	0	0	0	0
-204586	Lohja	0	0	0	0
-204624	Lohja	0	0	0	0
-204628	Lohja	1	0	0	0
-204630	Lohja	0	0	0	0
-204679	Lohja	0	0	0	0
-204990	Lohja	0	0	0	0
-204991	Lohja	0	0	0	0
-205050	Lohja	1	0	0	0
-205059	Lohja	0	0	0	0
-205062	Lohja	0	0	0	0
-205090	Lohja	0	0	0	0
-205307	Lohja	0	0	0	0
-205317	Lohja	0	0	0	0
-210272	Lohja	0	0	0	0
-210569	Lohja	0	0	0	0
-210662	Lohja	0	0	0	0
-210728	Lohja	0	0	0	0
-211368	Lohja	0	0	0	0
-211370	Lohja	0	0	0	0
-211423	Lohja	0	0	0	0
-211424	Lohja	0	0	0	0
-211425	Lohja	0	0	0	0
-211427	Lohja	0	0	0	0
-211428	Lohja	0	0	0	0
-211433	Lohja	0	0	0	0
-211764	Lohja	0	0	0	0
-212435	Lohja	0	0	0	0
-212438	Lohja	0	0	0	0
-212540	Lohja	0	0	0	0
-212542	Lohja	1	0	0	0
-212618	Lohja	0	0	0	0
-212619	Lohja	0	0	0	0
-212627	Lohja	0	0	0	0
-212654	Lohja	0	0	0	0
-212714	Lohja	0	0	0	0
-212918	Lohja	0	1	0	0
-212919	Lohja	0	0	0	0
-212920	Lohja	0	0	0	0
-213094	Lohja	0	0	0	0
-213249	Lohja	1	0	0	0
-213302	Lohja	0	0	0	0
-213386	Lohja	0	0	0	0
-213481	Lohja	0	0	0	0
-213533	Lohja	0	0	0	0
-213534	Lohja	0	0	0	0
-213695	Lohja	0	0	0	0
-213709	Lohja	1	0	1	0
-213710	Lohja	0	0	0	0
-213711	Lohja	1	0	1	0
-213713	Lohja	0	0	0	0
-213714	Lohja	0	0	0	0
-213801	Lohja	0	0	0	0
-213802	Lohja	0	0	0	0
-213872	Lohja	0	0	0	0
-213873	Lohja	0	0	0	0
-213875	Lohja	1	0	1	0
-213878	Lohja	0	0	0	0
-213879	Lohja	0	0	0	0
-214123	Lohja	0	0	0	0
-214138	Lohja	1	0	0	0
-214161	Lohja	0	0	0	0
-214325	Lohja	0	0	0	0
-216925	Lohja	0	0	0	0
-217259	Lohja	1	0	0	0
-217260	Lohja	0	0	0	0
-217261	Lohja	0	0	0	0
-217262	Lohja	0	0	0	0
-217263	Lohja	0	0	0	0
-217615	Lohja	0	0	0	0
-217616	Lohja	1	0	1	0
-217837	Lohja	0	0	0	0
-218003	Lohja	0	0	0	0
-218177	Lohja	0	0	0	0
-218435	Lohja	0	0	0	0
-218493	Lohja	0	0	0	0
-218495	Lohja	0	0	0	0
-218496	Lohja	0	0	0	0
-220977	Lohja	0	0	0	0
-221062	Lohja	0	0	0	0
-221245	Lohja	0	0	0	0
-221502	Lohja	1	0	1	0
-221503	Lohja	0	0	0	0
-221504	Lohja	0	0	0	0
-221611	Lohja	0	0	0	0
-221612	Lohja	0	0	0	0
-221795	Lohja	0	0	0	0
-221796	Lohja	0	0	0	0
-221797	Lohja	0	0	0	0
-221900	Lohja	1	1	1	0
-222561	Lohja	1	0	0	0
-222569	Lohja	1	0	0	0
-222571	Lohja	0	0	0	0
-222574	Lohja	0	0	0	0
-222575	Lohja	0	0	0	0
-222576	Lohja	0	0	0	0
-222577	Lohja	0	0	0	0
-222578	Lohja	0	0	0	0
-223322	Lohja	0	0	0	0
-223461	Lohja	0	0	0	0
-223535	Lohja	0	0	0	0
-223753	Lohja	0	0	0	0
-224389	Lohja	0	0	0	0
-224410	Lohja	0	0	0	0
-224720	Lohja	0	0	0	0
-224721	Lohja	1	0	1	0
-224723	Lohja	1	0	0	0
-224725	Lohja	0	0	0	0
-224726	Lohja	1	0	0	0
-224802	Lohja	0	0	0	0
-225373	Lohja	1	0	1	0
-225720	Lohja	1	0	1	0
-225722	Lohja	1	1	1	0
-225872	Lohja	0	0	0	0
-235338	Lohja	0	0	0	0
-235630	Lohja	0	0	0	0
-235752	Lohja	0	0	0	0
-235825	Lohja	1	1	1	0
-235826	Lohja	0	0	0	0
-235827	Lohja	1	0	0	0
-235828	Lohja	0	0	0	0
-235829	Lohja	0	0	0	0
-236152	Lohja	0	0	0	0
-236329	Lohja	0	0	0	0
-236899	Lohja	1	0	1	0
-236900	Lohja	0	0	0	0
-236902	Lohja	0	0	0	0
-236903	Lohja	1	0	0	0
-236905	Lohja	0	0	0	0
-236906	Lohja	0	0	0	0
-236907	Lohja	0	0	0	0
-237550	Lohja	1	0	1	0
-237551	Lohja	0	0	0	0
-237553	Lohja	0	0	0	0
-237554	Lohja	1	0	1	0
-238138	Lohja	0	0	0	0
-238499	Lohja	0	0	0	0
-238561	Lohja	0	0	0	0
-238869	Lohja	0	0	0	0
-238898	Lohja	1	0	1	0
-238901	Lohja	0	0	0	0
-238902	Lohja	1	0	1	0
-238903	Lohja	1	0	1	0
-238904	Lohja	0	0	0	0
-238906	Lohja	0	0	0	0
-238907	Lohja	0	0	0	0
-238914	Lohja	0	0	0	0
-238915	Lohja	0	0	0	0
-238916	Lohja	1	0	1	0
-238918	Lohja	0	0	0	0
-238919	Lohja	1	0	0	0
-238920	Lohja	0	0	0	0
-239284	Lohja	0	0	0	0
-239286	Lohja	0	0	0	0
-239287	Lohja	0	0	0	0
-239319	Lohja	0	0	0	0
-239320	Lohja	0	0	0	0
-239328	Lohja	0	0	0	0
-239330	Lohja	1	0	0	0
-239331	Lohja	0	0	0	0
-239332	Lohja	1	0	1	0
-239333	Lohja	1	0	0	0
-239334	Lohja	0	0	0	0
-239335	Lohja	1	0	1	0
-240749	Lohja	1	1	1	0
-240750	Lohja	0	0	0	0
-240751	Lohja	1	0	1	0
-240841	Lohja	1	0	0	0
-240842	Lohja	0	0	0	0
-240843	Lohja	0	0	0	0
-240844	Lohja	1	0	0	0
-240846	Lohja	0	0	0	0
-240853	Lohja	1	0	0	0
-240862	Lohja	0	0	0	0
-242024	Lohja	1	1	1	0
-243055	Lohja	0	0	0	0
-280061	Lohja	0	0	0	0
-280062	Lohja	0	0	0	0
-280076	Lohja	0	0	0	0
-280081	Lohja	0	0	0	0
-280086	Lohja	1	0	0	0
-280267	Lohja	0	0	0	0
-280275	Lohja	0	0	0	0
-300003	Lohja	0	0	0	0
-300004	Lohja	0	0	0	0
-300005	Lohja	0	0	0	0
-300006	Lohja	0	0	0	0
-300007	Lohja	0	0	0	0
-300010	Lohja	0	0	0	0
-300011	Lohja	0	0	0	0
-300012	Lohja	0	0	0	0
-300013	Lohja	0	0	0	0
-300014	Lohja	1	0	0	0
-300015	Lohja	0	0	0	0
-300016	Lohja	0	0	0	0
-300017	Lohja	0	0	0	0
-300018	Lohja	1	0	0	0
-300019	Lohja	1	0	0	0
-300021	Lohja	0	0	0	0
-300022	Lohja	0	0	0	0
-300054	Lohja	0	0	0	0
-300162	Lohja	0	0	0	0
-300163	Lohja	0	0	0	0
-310005	Lohja	1	0	1	0
-310006	Lohja	0	0	0	0
-310018	Lohja	0	0	0	0
-310028	Lohja	0	0	0	0
-310087	Lohja	0	0	0	0
-310088	Lohja	0	0	0	0
-310089	Lohja	1	0	1	0
-310376	Lohja	0	0	0	0
-310377	Lohja	0	0	0	0
-310473	Lohja	0	0	0	0
-310474	Lohja	0	0	0	0
-310483	Lohja	0	0	0	0
-310484	Lohja	1	0	1	0
-310485	Lohja	0	0	0	0
-310488	Lohja	0	0	0	0
-310493	Lohja	0	0	0	0
-310494	Lohja	0	0	0	0
-310495	Lohja	0	0	0	0
-310496	Lohja	0	0	0	0
-321079	Lohja	0	0	0	0
-321090	Lohja	0	0	0	0
-321091	Lohja	0	0	0	0
-321092	Lohja	0	0	0	0
-321093	Lohja	0	0	0	0
-321094	Lohja	0	0	0	0
-321095	Lohja	0	1	0	0
-321096	Lohja	1	0	0	0
-321465	Lohja	0	1	0	0
-321597	Lohja	0	0	0	0
-801000	Lohja	0	0	0	0
-801029	Lohja	0	0	0	0
-801030	Lohja	0	0	0	0
-801031	Lohja	0	0	0	0
-801032	Lohja	0	0	0	0
-801033	Lohja	0	0	0	0
-801034	Lohja	0	0	0	0
-801035	Lohja	0	0	0	0
-801036	Lohja	0	0	0	0
-801037	Lohja	0	0	0	0
-801038	Lohja	0	0	0	0
-801039	Lohja	0	0	0	0
-801040	Lohja	0	0	0	0
-801041	Lohja	0	0	0	0
-801042	Lohja	0	0	0	0
-802001	Lohja	0	0	0	0
-802045	Lohja	0	0	0	0
-802046	Lohja	0	0	0	0
-802073	Lohja	0	0	0	0
-802074	Lohja	0	0	0	0
-802091	Lohja	0	0	0	0
-802092	Lohja	1	0	0	1
-802093	Lohja	1	0	0	1
-802094	Lohja	1	0	0	1
-802095	Lohja	0	0	0	0
-802105	Lohja	0	0	0	0
-802106	Lohja	1	0	0	1
-802107	Lohja	1	0	0	1
-802108	Lohja	1	0	0	1
-802109	Lohja	1	0	0	1
-802113	Lohja	1	0	0	1
-802114	Lohja	1	0	0	1
-802115	Lohja	1	0	0	1
-802116	Lohja	0	0	0	0
-802117	Lohja	1	0	0	1
-802118	Lohja	0	0	0	0
-802119	Lohja	0	0	0	0
-802120	Lohja	0	0	0	0
-802121	Lohja	1	0	0	1
-802122	Lohja	0	0	0	0
-802123	Lohja	1	0	0	1
-802124	Lohja	1	0	0	1
-802125	Lohja	1	0	0	1
-802126	Lohja	0	0	0	0
-802127	Lohja	0	0	0	0
-802142	Lohja	1	0	0	1
-802225	Lohja	1	0	0	1
-802226	Lohja	0	0	0	0
-802227	Lohja	1	0	0	1
-802228	Salo	1	0	0	1
-802229	Salo	0	0	0	0
-802230	Lohja	1	0	0	1
-802231	Lohja	0	0	0	0
-802232	Lohja	1	0	0	1
-802233	Lohja	1	0	0	1
-802234	Lohja	1	0	0	1
-802235	Lohja	1	0	0	1
-802245	Lohja	0	0	0	0
+inode	#subarea	#municipality	#transit_stop_b	#transit_stop_e	#transit_stop_g	#transit_stop_t
+102	2	Helsinki	0	0	0	0
+103	2	Helsinki	0	0	0	0
+244	2	Helsinki	0	0	0	0
+1063	2	Helsinki	0	0	0	0
+1531	2	Helsinki	0	0	0	0
+2703	2	Espoo	0	0	0	0
+2741	2	Espoo	0	0	0	0
+6272	2	Espoo	0	0	0	0
+6291	2	Espoo	0	0	0	0
+19071	1	Lohja	0	0	0	0
+36102	1	Lohja	0	0	0	0
+36500	1	Lohja	0	0	0	0
+40222	2	Helsinki	0	0	0	0
+40223	2	Helsinki	0	0	0	0
+40224	2	Helsinki	0	0	0	0
+40225	2	Helsinki	0	0	0	0
+40226	2	Helsinki	0	0	0	0
+40227	2	Helsinki	1	0	0	0
+40228	2	Helsinki	1	0	1	0
+40229	2	Helsinki	0	0	0	0
+40252	2	Helsinki	0	0	0	0
+40340	2	Helsinki	0	0	0	0
+40344	2	Helsinki	0	0	0	0
+40345	2	Helsinki	1	0	0	0
+40346	2	Helsinki	0	0	0	0
+40347	2	Helsinki	1	1	1	0
+40348	2	Helsinki	0	0	0	0
+40350	2	Helsinki	0	0	0	0
+40401	2	Helsinki	0	0	0	0
+40402	2	Helsinki	0	0	0	0
+40403	2	Helsinki	0	0	0	0
+40477	2	Helsinki	1	0	1	0
+40483	2	Helsinki	0	0	0	0
+40484	2	Helsinki	0	0	0	0
+40514	2	Helsinki	0	0	0	0
+40520	2	Helsinki	0	0	0	0
+40521	2	Helsinki	0	0	0	0
+40526	2	Helsinki	0	0	0	0
+40527	2	Helsinki	0	0	0	0
+40704	2	Helsinki	1	0	0	0
+40852	2	Helsinki	1	0	1	0
+40854	2	Helsinki	1	0	1	0
+40877	2	Helsinki	1	0	0	0
+40881	2	Helsinki	1	0	0	0
+40887	2	Helsinki	1	0	0	0
+41702	2	Helsinki	1	0	0	0
+41704	2	Helsinki	1	0	0	0
+41712	2	Helsinki	1	0	0	0
+41738	2	Helsinki	0	0	0	0
+41748	2	Helsinki	1	0	0	0
+41753	2	Helsinki	1	0	0	0
+41796	2	Helsinki	0	0	0	0
+41797	2	Helsinki	1	0	1	0
+41799	2	Helsinki	1	0	1	0
+41803	2	Helsinki	1	0	0	0
+41864	2	Helsinki	1	0	1	0
+41865	2	Helsinki	1	0	1	0
+41964	2	Helsinki	1	0	0	0
+42058	2	Helsinki	0	0	0	0
+42059	2	Helsinki	1	0	1	0
+42060	2	Helsinki	0	0	0	0
+42061	2	Helsinki	1	0	0	0
+42066	2	Helsinki	1	0	1	0
+42067	2	Helsinki	0	0	0	0
+42069	2	Helsinki	1	0	0	0
+42084	2	Helsinki	1	0	0	0
+42106	2	Helsinki	0	0	0	0
+42107	2	Helsinki	0	0	0	0
+42109	2	Helsinki	1	1	1	0
+42110	2	Helsinki	0	0	0	0
+42111	2	Helsinki	1	0	0	0
+42916	2	Helsinki	0	1	0	0
+42917	2	Helsinki	0	1	0	0
+43075	2	Helsinki	0	0	0	0
+43076	2	Helsinki	0	0	0	0
+43570	2	Helsinki	0	0	0	0
+43571	2	Helsinki	0	0	0	0
+43573	2	Helsinki	0	0	0	0
+50053	2	Espoo	0	0	0	0
+50054	2	Espoo	0	0	0	0
+50055	2	Espoo	0	0	0	0
+50056	2	Espoo	0	0	0	0
+50058	2	Espoo	0	0	0	0
+50060	2	Espoo	0	0	0	0
+50065	2	Espoo	0	0	0	0
+50066	2	Espoo	0	0	0	0
+50067	2	Espoo	0	0	0	0
+50068	2	Espoo	0	0	0	0
+50071	2	Espoo	0	0	0	0
+50073	2	Espoo	0	0	0	0
+50074	2	Espoo	0	0	0	0
+50075	2	Espoo	0	0	0	0
+50076	2	Espoo	0	0	0	0
+50077	2	Espoo	0	0	0	0
+50079	2	Espoo	0	0	0	0
+50082	2	Espoo	0	0	0	0
+50083	2	Espoo	0	0	0	0
+50084	2	Espoo	0	0	0	0
+50085	2	Espoo	0	0	0	0
+50086	2	Espoo	0	0	0	0
+50087	2	Espoo	0	0	0	0
+50088	2	Espoo	0	0	0	0
+50089	2	Espoo	0	0	0	0
+50090	2	Espoo	0	0	0	0
+50093	2	Espoo	0	0	0	0
+50094	2	Espoo	0	0	0	0
+50095	2	Espoo	0	0	0	0
+50096	2	Espoo	0	0	0	0
+50099	2	Espoo	0	0	0	0
+50100	2	Espoo	0	0	0	0
+50101	2	Espoo	0	0	0	0
+50385	2	Espoo	0	0	0	0
+50386	2	Espoo	0	0	0	0
+50391	2	Espoo	0	0	0	0
+50392	2	Espoo	0	0	0	0
+50393	2	Espoo	0	0	0	0
+50394	2	Espoo	0	0	0	0
+50400	2	Espoo	0	0	0	0
+50403	2	Espoo	0	0	0	0
+50405	2	Espoo	0	0	0	0
+50409	2	Espoo	0	0	0	0
+50427	2	Espoo	0	0	0	0
+50443	2	Espoo	0	0	0	0
+50444	2	Espoo	0	0	0	0
+50445	2	Espoo	0	0	0	0
+50446	2	Espoo	0	0	0	0
+50482	2	Espoo	1	0	0	0
+131903	1	Lohja	0	0	0	0
+161384	1	Lohja	0	0	0	0
+161396	1	Lohja	0	0	0	0
+161406	1	Lohja	0	0	0	0
+161408	1	Lohja	1	0	0	0
+162919	1	Lohja	0	0	0	0
+163130	1	Lohja	0	0	0	0
+163131	1	Lohja	0	0	0	0
+163134	1	Lohja	0	0	0	0
+163146	1	Lohja	0	0	0	0
+163147	1	Lohja	0	0	0	0
+164600	1	Lohja	0	0	0	0
+164601	1	Lohja	1	0	0	0
+164603	1	Lohja	1	0	0	0
+164629	1	Lohja	0	0	0	0
+164630	1	Lohja	0	0	0	0
+166155	1	Lohja	0	0	0	0
+166156	1	Lohja	0	0	0	0
+167027	1	Lohja	1	0	0	0
+172392	1	Lohja	0	0	0	0
+172602	1	Lohja	0	0	0	0
+172605	1	Lohja	0	0	0	0
+173149	1	Lohja	0	0	0	0
+177378	1	Lohja	0	0	0	0
+177379	1	Lohja	0	0	0	0
+179244	1	Lohja	0	0	0	0
+181015	1	Lohja	0	0	0	0
+181260	1	Lohja	0	0	0	0
+181261	1	Lohja	0	0	0	0
+182028	1	Lohja	0	0	0	0
+182031	1	Lohja	1	0	0	0
+182034	1	Lohja	0	0	0	0
+182046	1	Lohja	1	0	0	0
+183601	1	Lohja	0	0	0	0
+183602	1	Lohja	0	0	0	0
+184840	1	Lohja	0	0	0	0
+185278	1	Lohja	0	0	0	0
+185283	1	Lohja	0	0	0	0
+185286	1	Lohja	0	0	0	0
+185289	1	Lohja	0	0	0	0
+185291	1	Lohja	0	0	0	0
+185293	1	Lohja	0	0	0	0
+185294	1	Lohja	0	0	0	0
+185295	1	Lohja	0	0	0	0
+195588	1	Lohja	0	0	0	0
+195589	1	Lohja	0	0	0	0
+195590	1	Lohja	0	0	0	0
+195594	1	Lohja	0	0	0	0
+195595	1	Lohja	0	0	0	0
+195601	1	Lohja	0	0	0	0
+195619	1	Lohja	0	0	0	0
+195620	1	Lohja	0	0	0	0
+195626	1	Lohja	0	0	0	0
+195627	1	Lohja	0	0	0	0
+195689	1	Lohja	0	0	0	0
+195727	1	Lohja	0	0	0	0
+195728	1	Lohja	0	0	0	0
+195729	1	Lohja	0	0	0	0
+195740	1	Lohja	0	0	0	0
+195741	1	Lohja	0	0	0	0
+195750	1	Lohja	0	0	0	0
+195865	1	Lohja	0	0	0	0
+195890	1	Lohja	0	0	0	0
+196175	1	Lohja	0	0	0	0
+196599	1	Lohja	0	0	0	0
+196981	1	Lohja	0	0	0	0
+196982	1	Lohja	0	0	0	0
+196983	1	Lohja	0	0	0	0
+196992	1	Lohja	0	0	0	0
+196993	1	Lohja	1	0	1	0
+196994	1	Lohja	0	0	0	0
+196999	1	Lohja	0	0	0	0
+197002	1	Lohja	0	0	0	0
+197004	1	Lohja	0	0	0	0
+197005	1	Lohja	0	0	0	0
+197006	1	Lohja	0	1	0	0
+197007	1	Lohja	0	0	0	0
+197008	1	Lohja	0	0	0	0
+197014	1	Lohja	0	0	0	0
+197015	1	Lohja	0	0	0	0
+197016	1	Lohja	0	0	0	0
+197018	1	Lohja	0	0	0	0
+197023	1	Lohja	1	0	0	0
+197024	1	Lohja	0	0	0	0
+197027	1	Lohja	0	0	0	0
+197033	1	Lohja	0	0	0	0
+197037	1	Lohja	0	0	0	0
+197038	1	Lohja	0	1	0	0
+197046	1	Lohja	0	0	0	0
+197048	1	Lohja	0	0	0	0
+197050	1	Lohja	0	0	0	0
+197051	1	Lohja	0	0	0	0
+197052	1	Lohja	0	0	0	0
+197068	1	Lohja	0	0	0	0
+197084	1	Lohja	0	0	0	0
+197093	1	Lohja	0	0	0	0
+197094	1	Lohja	0	0	0	0
+197101	1	Lohja	0	0	0	0
+197135	1	Lohja	0	0	0	0
+197493	1	Lohja	0	0	0	0
+197605	1	Lohja	0	0	0	0
+197730	1	Lohja	0	1	0	0
+197731	1	Lohja	0	0	0	0
+197768	1	Lohja	0	0	0	0
+197791	1	Lohja	0	0	0	0
+198032	1	Lohja	0	0	0	0
+198300	1	Lohja	0	1	0	0
+198301	1	Lohja	0	0	0	0
+198503	1	Lohja	0	0	0	0
+198793	1	Lohja	0	0	0	0
+198795	1	Lohja	0	0	0	0
+198825	1	Lohja	1	0	1	0
+198834	1	Lohja	1	0	0	0
+198835	1	Lohja	0	0	0	0
+198840	1	Lohja	0	0	0	0
+198841	1	Lohja	0	0	0	0
+198842	1	Lohja	1	0	0	0
+198843	1	Lohja	1	0	1	0
+198844	1	Lohja	1	0	1	0
+198893	1	Lohja	0	0	0	0
+198910	1	Lohja	0	0	0	0
+198911	1	Lohja	0	0	0	0
+198917	1	Lohja	0	0	0	0
+198919	1	Lohja	0	0	0	0
+198920	1	Lohja	1	0	1	0
+198921	1	Lohja	1	0	0	0
+198923	1	Lohja	0	0	0	0
+198925	1	Lohja	0	0	0	0
+199087	1	Lohja	0	0	0	0
+199089	1	Lohja	0	0	0	0
+199091	1	Lohja	0	0	0	0
+199093	1	Lohja	1	0	1	0
+199094	1	Lohja	0	0	0	0
+199095	1	Lohja	0	0	0	0
+199228	1	Lohja	0	0	0	0
+199234	1	Lohja	0	0	0	0
+199439	1	Lohja	0	0	0	0
+199476	1	Lohja	0	0	0	0
+199477	1	Lohja	0	0	0	0
+199478	1	Lohja	0	0	0	0
+199599	1	Lohja	0	0	0	0
+199620	1	Lohja	0	0	0	0
+199736	1	Lohja	0	0	0	0
+199737	1	Lohja	1	0	0	0
+199811	1	Lohja	0	0	0	0
+199880	1	Lohja	0	0	0	0
+199894	1	Lohja	0	0	0	0
+199913	1	Lohja	0	0	0	0
+199920	1	Lohja	0	0	0	0
+199946	1	Lohja	0	0	0	0
+199947	1	Lohja	0	0	0	0
+199987	1	Lohja	0	0	0	0
+200004	1	Lohja	0	0	0	0
+200007	1	Lohja	0	0	0	0
+200034	1	Lohja	0	0	0	0
+200036	1	Lohja	0	0	0	0
+200079	1	Lohja	0	0	0	0
+200155	1	Lohja	0	0	0	0
+200287	1	Lohja	0	0	0	0
+200539	1	Lohja	0	0	0	0
+200651	1	Lohja	0	0	0	0
+200779	1	Lohja	0	0	0	0
+200836	1	Lohja	0	0	0	0
+200837	1	Lohja	1	0	0	0
+200843	1	Lohja	0	0	0	0
+201026	1	Lohja	0	0	0	0
+201074	1	Lohja	0	0	0	0
+201142	1	Lohja	0	0	0	0
+201151	1	Lohja	0	0	0	0
+201152	1	Lohja	0	0	0	0
+201261	1	Lohja	0	0	0	0
+201490	1	Lohja	0	0	0	0
+201695	1	Lohja	0	0	0	0
+201717	1	Lohja	0	0	0	0
+201734	1	Lohja	0	0	0	0
+201788	1	Lohja	0	0	0	0
+202028	1	Lohja	0	0	0	0
+202029	1	Lohja	0	0	0	0
+202558	1	Lohja	0	0	0	0
+202559	1	Lohja	0	0	0	0
+202610	1	Lohja	0	0	0	0
+202612	1	Lohja	0	0	0	0
+202613	1	Lohja	0	0	0	0
+202694	1	Lohja	0	0	0	0
+202765	1	Lohja	0	0	0	0
+202801	1	Lohja	0	0	0	0
+202996	1	Lohja	0	0	0	0
+203007	1	Lohja	0	0	0	0
+203046	1	Lohja	0	0	0	0
+203058	1	Lohja	0	0	0	0
+203117	1	Lohja	0	0	0	0
+203231	1	Lohja	0	0	0	0
+203724	1	Lohja	0	0	0	0
+204557	1	Lohja	0	0	0	0
+204586	1	Lohja	0	0	0	0
+204624	1	Lohja	0	0	0	0
+204628	1	Lohja	1	0	0	0
+204630	1	Lohja	0	0	0	0
+204679	1	Lohja	0	0	0	0
+204990	1	Lohja	0	0	0	0
+204991	1	Lohja	0	0	0	0
+205050	1	Lohja	1	0	0	0
+205059	1	Lohja	0	0	0	0
+205062	1	Lohja	0	0	0	0
+205090	1	Lohja	0	0	0	0
+205307	1	Lohja	0	0	0	0
+205317	1	Lohja	0	0	0	0
+210272	1	Lohja	0	0	0	0
+210569	1	Lohja	0	0	0	0
+210662	1	Lohja	0	0	0	0
+210728	1	Lohja	0	0	0	0
+211368	1	Lohja	0	0	0	0
+211370	1	Lohja	0	0	0	0
+211423	1	Lohja	0	0	0	0
+211424	1	Lohja	0	0	0	0
+211425	1	Lohja	0	0	0	0
+211427	1	Lohja	0	0	0	0
+211428	1	Lohja	0	0	0	0
+211433	1	Lohja	0	0	0	0
+211764	1	Lohja	0	0	0	0
+212435	1	Lohja	0	0	0	0
+212438	1	Lohja	0	0	0	0
+212540	1	Lohja	0	0	0	0
+212542	1	Lohja	1	0	0	0
+212618	1	Lohja	0	0	0	0
+212619	1	Lohja	0	0	0	0
+212627	1	Lohja	0	0	0	0
+212654	1	Lohja	0	0	0	0
+212714	1	Lohja	0	0	0	0
+212918	1	Lohja	0	1	0	0
+212919	1	Lohja	0	0	0	0
+212920	1	Lohja	0	0	0	0
+213094	1	Lohja	0	0	0	0
+213249	1	Lohja	1	0	0	0
+213302	1	Lohja	0	0	0	0
+213386	1	Lohja	0	0	0	0
+213481	1	Lohja	0	0	0	0
+213533	1	Lohja	0	0	0	0
+213534	1	Lohja	0	0	0	0
+213695	1	Lohja	0	0	0	0
+213709	1	Lohja	1	0	1	0
+213710	1	Lohja	0	0	0	0
+213711	1	Lohja	1	0	1	0
+213713	1	Lohja	0	0	0	0
+213714	1	Lohja	0	0	0	0
+213801	1	Lohja	0	0	0	0
+213802	1	Lohja	0	0	0	0
+213872	1	Lohja	0	0	0	0
+213873	1	Lohja	0	0	0	0
+213875	1	Lohja	1	0	1	0
+213878	1	Lohja	0	0	0	0
+213879	1	Lohja	0	0	0	0
+214123	1	Lohja	0	0	0	0
+214138	1	Lohja	1	0	0	0
+214161	1	Lohja	0	0	0	0
+214325	1	Lohja	0	0	0	0
+216925	1	Lohja	0	0	0	0
+217259	1	Lohja	1	0	0	0
+217260	1	Lohja	0	0	0	0
+217261	1	Lohja	0	0	0	0
+217262	1	Lohja	0	0	0	0
+217263	1	Lohja	0	0	0	0
+217615	1	Lohja	0	0	0	0
+217616	1	Lohja	1	0	1	0
+217837	1	Lohja	0	0	0	0
+218003	1	Lohja	0	0	0	0
+218177	1	Lohja	0	0	0	0
+218435	1	Lohja	0	0	0	0
+218493	1	Lohja	0	0	0	0
+218495	1	Lohja	0	0	0	0
+218496	1	Lohja	0	0	0	0
+220977	1	Lohja	0	0	0	0
+221062	1	Lohja	0	0	0	0
+221245	1	Lohja	0	0	0	0
+221502	1	Lohja	1	0	1	0
+221503	1	Lohja	0	0	0	0
+221504	1	Lohja	0	0	0	0
+221611	1	Lohja	0	0	0	0
+221612	1	Lohja	0	0	0	0
+221795	1	Lohja	0	0	0	0
+221796	1	Lohja	0	0	0	0
+221797	1	Lohja	0	0	0	0
+221900	1	Lohja	1	1	1	0
+222561	1	Lohja	1	0	0	0
+222569	1	Lohja	1	0	0	0
+222571	1	Lohja	0	0	0	0
+222574	1	Lohja	0	0	0	0
+222575	1	Lohja	0	0	0	0
+222576	1	Lohja	0	0	0	0
+222577	1	Lohja	0	0	0	0
+222578	1	Lohja	0	0	0	0
+223322	1	Lohja	0	0	0	0
+223461	1	Lohja	0	0	0	0
+223535	1	Lohja	0	0	0	0
+223753	1	Lohja	0	0	0	0
+224389	1	Lohja	0	0	0	0
+224410	1	Lohja	0	0	0	0
+224720	1	Lohja	0	0	0	0
+224721	1	Lohja	1	0	1	0
+224723	1	Lohja	1	0	0	0
+224725	1	Lohja	0	0	0	0
+224726	1	Lohja	1	0	0	0
+224802	1	Lohja	0	0	0	0
+225373	1	Lohja	1	0	1	0
+225720	1	Lohja	1	0	1	0
+225722	1	Lohja	1	1	1	0
+225872	1	Lohja	0	0	0	0
+235338	1	Lohja	0	0	0	0
+235630	1	Lohja	0	0	0	0
+235752	1	Lohja	0	0	0	0
+235825	1	Lohja	1	1	1	0
+235826	1	Lohja	0	0	0	0
+235827	1	Lohja	1	0	0	0
+235828	1	Lohja	0	0	0	0
+235829	1	Lohja	0	0	0	0
+236152	1	Lohja	0	0	0	0
+236329	1	Lohja	0	0	0	0
+236899	1	Lohja	1	0	1	0
+236900	1	Lohja	0	0	0	0
+236902	1	Lohja	0	0	0	0
+236903	1	Lohja	1	0	0	0
+236905	1	Lohja	0	0	0	0
+236906	1	Lohja	0	0	0	0
+236907	1	Lohja	0	0	0	0
+237550	1	Lohja	1	0	1	0
+237551	1	Lohja	0	0	0	0
+237553	1	Lohja	0	0	0	0
+237554	1	Lohja	1	0	1	0
+238138	1	Lohja	0	0	0	0
+238499	1	Lohja	0	0	0	0
+238561	1	Lohja	0	0	0	0
+238869	1	Lohja	0	0	0	0
+238898	1	Lohja	1	0	1	0
+238901	1	Lohja	0	0	0	0
+238902	1	Lohja	1	0	1	0
+238903	1	Lohja	1	0	1	0
+238904	1	Lohja	0	0	0	0
+238906	1	Lohja	0	0	0	0
+238907	1	Lohja	0	0	0	0
+238914	1	Lohja	0	0	0	0
+238915	1	Lohja	0	0	0	0
+238916	1	Lohja	1	0	1	0
+238918	1	Lohja	0	0	0	0
+238919	1	Lohja	1	0	0	0
+238920	1	Lohja	0	0	0	0
+239284	1	Lohja	0	0	0	0
+239286	1	Lohja	0	0	0	0
+239287	1	Lohja	0	0	0	0
+239319	1	Lohja	0	0	0	0
+239320	1	Lohja	0	0	0	0
+239328	1	Lohja	0	0	0	0
+239330	1	Lohja	1	0	0	0
+239331	1	Lohja	0	0	0	0
+239332	1	Lohja	1	0	1	0
+239333	1	Lohja	1	0	0	0
+239334	1	Lohja	0	0	0	0
+239335	1	Lohja	1	0	1	0
+240749	1	Lohja	1	1	1	0
+240750	1	Lohja	0	0	0	0
+240751	1	Lohja	1	0	1	0
+240841	1	Lohja	1	0	0	0
+240842	1	Lohja	0	0	0	0
+240843	1	Lohja	0	0	0	0
+240844	1	Lohja	1	0	0	0
+240846	1	Lohja	0	0	0	0
+240853	1	Lohja	1	0	0	0
+240862	1	Lohja	0	0	0	0
+242024	1	Lohja	1	1	1	0
+243055	1	Lohja	0	0	0	0
+280061	1	Lohja	0	0	0	0
+280062	1	Lohja	0	0	0	0
+280076	1	Lohja	0	0	0	0
+280081	1	Lohja	0	0	0	0
+280086	1	Lohja	1	0	0	0
+280267	1	Lohja	0	0	0	0
+280275	1	Lohja	0	0	0	0
+300003	1	Lohja	0	0	0	0
+300004	1	Lohja	0	0	0	0
+300005	1	Lohja	0	0	0	0
+300006	1	Lohja	0	0	0	0
+300007	1	Lohja	0	0	0	0
+300010	1	Lohja	0	0	0	0
+300011	1	Lohja	0	0	0	0
+300012	1	Lohja	0	0	0	0
+300013	1	Lohja	0	0	0	0
+300014	1	Lohja	1	0	0	0
+300015	1	Lohja	0	0	0	0
+300016	1	Lohja	0	0	0	0
+300017	1	Lohja	0	0	0	0
+300018	1	Lohja	1	0	0	0
+300019	1	Lohja	1	0	0	0
+300021	1	Lohja	0	0	0	0
+300022	1	Lohja	0	0	0	0
+300054	1	Lohja	0	0	0	0
+300162	1	Lohja	0	0	0	0
+300163	1	Lohja	0	0	0	0
+310005	1	Lohja	1	0	1	0
+310006	1	Lohja	0	0	0	0
+310018	1	Lohja	0	0	0	0
+310028	1	Lohja	0	0	0	0
+310087	1	Lohja	0	0	0	0
+310088	1	Lohja	0	0	0	0
+310089	1	Lohja	1	0	1	0
+310376	1	Lohja	0	0	0	0
+310377	1	Lohja	0	0	0	0
+310473	1	Lohja	0	0	0	0
+310474	1	Lohja	0	0	0	0
+310483	1	Lohja	0	0	0	0
+310484	1	Lohja	1	0	1	0
+310485	1	Lohja	0	0	0	0
+310488	1	Lohja	0	0	0	0
+310493	1	Lohja	0	0	0	0
+310494	1	Lohja	0	0	0	0
+310495	1	Lohja	0	0	0	0
+310496	1	Lohja	0	0	0	0
+321079	1	Lohja	0	0	0	0
+321090	1	Lohja	0	0	0	0
+321091	1	Lohja	0	0	0	0
+321092	1	Lohja	0	0	0	0
+321093	1	Lohja	0	0	0	0
+321094	1	Lohja	0	0	0	0
+321095	1	Lohja	0	1	0	0
+321096	1	Lohja	1	0	0	0
+321465	1	Lohja	0	1	0	0
+321597	1	Lohja	0	0	0	0
+801000	1	Lohja	0	0	0	0
+801029	1	Lohja	0	0	0	0
+801030	1	Lohja	0	0	0	0
+801031	1	Lohja	0	0	0	0
+801032	1	Lohja	0	0	0	0
+801033	1	Lohja	0	0	0	0
+801034	1	Lohja	0	0	0	0
+801035	1	Lohja	0	0	0	0
+801036	1	Lohja	0	0	0	0
+801037	1	Lohja	0	0	0	0
+801038	1	Lohja	0	0	0	0
+801039	1	Lohja	0	0	0	0
+801040	1	Lohja	0	0	0	0
+801041	1	Lohja	0	0	0	0
+801042	1	Lohja	0	0	0	0
+802001	1	Lohja	0	0	0	0
+802045	1	Lohja	0	0	0	0
+802046	1	Lohja	0	0	0	0
+802073	1	Lohja	0	0	0	0
+802074	1	Lohja	0	0	0	0
+802091	1	Lohja	0	0	0	0
+802092	1	Lohja	1	0	0	1
+802093	1	Lohja	1	0	0	1
+802094	1	Lohja	1	0	0	1
+802095	1	Lohja	0	0	0	0
+802105	1	Lohja	0	0	0	0
+802106	1	Lohja	1	0	0	1
+802107	1	Lohja	1	0	0	1
+802108	1	Lohja	1	0	0	1
+802109	1	Lohja	1	0	0	1
+802113	1	Lohja	1	0	0	1
+802114	1	Lohja	1	0	0	1
+802115	1	Lohja	1	0	0	1
+802116	1	Lohja	0	0	0	0
+802117	1	Lohja	1	0	0	1
+802118	1	Lohja	0	0	0	0
+802119	1	Lohja	0	0	0	0
+802120	1	Lohja	0	0	0	0
+802121	1	Lohja	1	0	0	1
+802122	1	Lohja	0	0	0	0
+802123	1	Lohja	1	0	0	1
+802124	1	Lohja	1	0	0	1
+802125	1	Lohja	1	0	0	1
+802126	1	Lohja	0	0	0	0
+802127	1	Lohja	0	0	0	0
+802142	1	Lohja	1	0	0	1
+802225	1	Lohja	1	0	0	1
+802226	1	Lohja	0	0	0	0
+802227	1	Lohja	1	0	0	1
+802228	0	Salo	1	0	0	1
+802229	0	Salo	0	0	0	0
+802230	1	Lohja	1	0	0	1
+802231	1	Lohja	0	0	0	0
+802232	1	Lohja	1	0	0	1
+802233	1	Lohja	1	0	0	1
+802234	1	Lohja	1	0	0	1
+802235	1	Lohja	1	0	0	1
+802245	1	Lohja	0	0	0	0

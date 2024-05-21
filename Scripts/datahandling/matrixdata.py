@@ -28,13 +28,12 @@ def temp_cd(path: Path):
         yield
     finally:
         os.chdir(original_cwd)
-        
+
 class MatrixData:
-    def __init__(self, path: str):
+    def __init__(self, path: Path):
         self.path = path
-        if not os.path.exists(self.path):
-            os.makedirs(self.path)
-    
+        self.path.mkdir(parents=True, exist_ok=True)
+
     @contextmanager
     def open(self,
              mtx_type: str,
@@ -44,7 +43,7 @@ class MatrixData:
              transport_classes: Iterable[str] = param.transport_classes,
              m: str = 'r'):
         file_name = mtx_type+'_'+time_period+".omx"
-        with temp_cd(Path(self.path)):
+        with temp_cd(self.path):
             # Use context manager to temporarely change the cwd to bypass
             # a bug in pytables version provided by Emme 
             # (https://github.com/PyTables/PyTables/issues/757)

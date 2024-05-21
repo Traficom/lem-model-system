@@ -37,6 +37,7 @@ class ExternalModel:
             "dest": None,
             "area": "all",
             "impedance_share": None,
+            "impedance_transform": None,
             "demand_share": demand_share["external"]
         }
         self.purpose = Purpose(spec, zone_data)
