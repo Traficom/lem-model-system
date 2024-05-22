@@ -46,7 +46,7 @@ class ZoneAggregations:
         pandas.Series
             Aggregated array
         """
-        avg = lambda a, w: numpy.average(a, weights=w[a.index])
+        avg = lambda a, w: numpy.ma.average(a, weights=w[a.index])
         agg = array.groupby(self.mappings[area_type]).agg(avg, w=weights)
         agg["all"] = avg(array, weights)
         return agg
