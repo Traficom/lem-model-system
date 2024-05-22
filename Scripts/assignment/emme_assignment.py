@@ -5,9 +5,7 @@ import pandas
 from math import log10
 
 import utils.log as log
-from utils.zone_interval import belongs_to_area, faulty_kela_code_nodes
 import parameters.assignment as param
-import parameters.zone as zone_param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
 from assignment.freight_assignment import FreightAssignmentPeriod
@@ -72,6 +70,8 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project = emme_context
         self.mod_scenario = self.emme_project.modeller.emmebank.scenario(
             first_scenario_id)
+        if self.mod_scenario is None:
+            raise ValueError(f"EMME project has no scenario {first_scenario_id}")
 
     def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
         """Create matrices, extra attributes and calc background variables.
@@ -243,14 +243,24 @@ class EmmeAssignmentModel(AssignmentModel):
             mtx[i, :] = numpy.sqrt(numpy.sum((centr_array - centr) ** 2, axis=1))
         return mtx
 
-    def aggregate_results(self, resultdata: ResultsData):
+    def aggregate_results(self,
+                          resultdata: ResultsData,
+                          mapping: pandas.Series):
         """Aggregate results to 24h and print vehicle kms.
 
         Parameters
         ----------
         resultdata : datahandling.resultdata.Resultdata
             Result data container to print to
+        mapping : pandas.Series
+            Mapping between municipality and county
         """
+        car_times = pandas.DataFrame(
+            {ap.netfield("car_time"): ap.get_car_times()
+                for ap in self.assignment_periods})
+        car_times.index.name = "i_node\tj_node"
+        resultdata.print_data(car_times, "netfield_links.txt")
+
         # Aggregate results to 24h
         for ap in self.assignment_periods:
             ap.transit_results_links_nodes()
@@ -271,17 +281,21 @@ class EmmeAssignmentModel(AssignmentModel):
         vdfs = {param.roadclasses[linktype].volume_delay_func
             for linktype in param.roadclasses}
         vdfs.add(0) # Links with car traffic prohibited
-        vdf_kms = {ass_class: pandas.Series(0.0, vdfs)
-            for ass_class in ass_classes}
-        areas = zone_param.area_aggregation
+        vdf_kms = pandas.concat(
+            {ass_class: pandas.Series(0.0, vdfs, name="veh_km")
+                for ass_class in ass_classes},
+            names=["class", "v/d-func"])
+        areas = mapping.drop_duplicates()
         area_kms = {ass_class: pandas.Series(0.0, areas)
             for ass_class in ass_classes}
         vdf_area_kms = {vdf: pandas.Series(0.0, areas) for vdf in vdfs}
         #The following line only works well in Python 3.7+
-        linktypes = list(dict.fromkeys(param.roadtypes.values())) + list(dict.fromkeys(param.railtypes.values()))
-        linklengths = pandas.Series(0.0, linktypes)
+        linktypes = (list(dict.fromkeys(param.roadtypes.values()))
+                     + list(dict.fromkeys(param.railtypes.values())))
+        linklengths = pandas.Series(0.0, linktypes, name="length")
         soft_modes = param.transit_classes + ("bike",)
         network = self.day_scenario.get_network()
+        faulty_kela_code_nodes = set()
         for link in network.links():
             linktype = link.type % 100
             if linktype in param.roadclasses:
@@ -290,7 +304,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = linktype - 90
             else:
                 vdf = 0
-            area = belongs_to_area(link.i_node)
+            try:
+                area = mapping[link.i_node["#municipality"]]
+            except KeyError:
+                faulty_kela_code_nodes.add(link.i_node.id)
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
                 kms[ass_class] += veh_kms
@@ -307,37 +324,33 @@ class EmmeAssignmentModel(AssignmentModel):
             else:
                 linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
-            s = "Municipality KELA code not found for nodes: " + ", ".join(
+            s = "Municipality name not found for nodes: " + ", ".join(
                 faulty_kela_code_nodes)
             log.warn(s)
         resultdata.print_line("\nVehicle kilometres", "result_summary")
+        resultdata.print_concat(vdf_kms, "vehicle_kms_vdfs.txt")
         for ass_class in ass_classes:
             resultdata.print_line(
                 "{}:\t{:1.0f}".format(ass_class, kms[ass_class]),
                 "result_summary")
-            resultdata.print_data(
-                vdf_kms[ass_class], "vehicle_kms_vdfs.txt", ass_class)
-            resultdata.print_data(
-                area_kms[ass_class], "vehicle_kms_areas.txt", ass_class)
-        for vdf in vdf_area_kms:
-            resultdata.print_data(
-                vdf_area_kms[vdf], "vehicle_kms_vdfs_areas.txt", vdf)
-        resultdata.print_data(linklengths, "link_lengths.txt", "length")
+        resultdata.print_data(area_kms, "vehicle_kms_areas.txt")
+        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_areas.txt")
+        resultdata.print_data(linklengths, "link_lengths.txt")
 
         # Aggregate and print numbers of stations
-        stations = pandas.Series(0, param.station_ids)
+        stations = pandas.Series(0, param.station_ids, name="number")
         for node in network.regular_nodes():
             for mode in param.station_ids:
                 if (node.data2 == param.station_ids[mode]
                         and node[self._extra("transit_won_boa")] > 0):
                     stations[mode] += 1
                     break
-        resultdata.print_data(stations, "transit_stations.txt", "number")
+        resultdata.print_data(stations, "transit_stations.txt")
 
         # Aggregate and print transit vehicle kms
         transit_modes = [veh.description for veh in network.transit_vehicles()]
-        dists = pandas.Series(0.0, transit_modes)
-        times = pandas.Series(0.0, transit_modes)
+        miles = {miletype: pandas.Series(0.0, transit_modes)
+            for miletype in ("dist", "time")}
         for ap in self.assignment_periods:
             network = ap.emme_scenario.get_network()
             volume_factor = param.volume_factors["bus"][ap.name]
@@ -347,11 +360,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 if 0 < headway < 990:
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
-                        dists[mode] += departures * segment.link.length
-                        times[mode] += (departures
-                                        * segment[ap.extra("base_timtr")])
-        resultdata.print_data(dists, "transit_kms.txt", "dist")
-        resultdata.print_data(times, "transit_kms.txt", "time")
+                        miles["dist"][mode] += departures * segment.link.length
+                        miles["time"][mode] += (departures
+                                                * segment[ap.extra("base_timtr")])
+        resultdata.print_data(miles, "transit_kms.txt")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
@@ -636,15 +648,21 @@ class EmmeAssignmentModel(AssignmentModel):
             scenario))
         return segment_results, park_and_ride_results
 
-    def calc_noise(self) -> pandas.Series:
+    def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.
+
+        Parameters
+        ----------
+        mapping : pandas.Series
+            Mapping between municipality and county
 
         Returns
         -------
         pandas.Series
             Area (km2) of noise polluted zone, aggregated to area level
         """
-        noise_areas = pandas.Series(0.0, zone_param.area_aggregation)
+        noise_areas = pandas.Series(
+            0.0, mapping.drop_duplicates(), name="county")
         network = self.day_scenario.get_network()
         morning_network = self.assignment_periods[0].emme_scenario.get_network()
         for link in network.links():
@@ -700,7 +718,10 @@ class EmmeAssignmentModel(AssignmentModel):
                     break
 
             # Calculate noise zone area and aggregate to area level
-            area = belongs_to_area(link.i_node)
+            try:
+                area = mapping[link.i_node["#municipality"]]
+            except KeyError:
+                area = None
             if area in noise_areas:
                 noise_areas[area] += 0.001 * zone_width * link.length
         return noise_areas

@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 from models.logit import LogitModel
 from parameters.car import car_usage
-from utils.zone_interval import ZoneIntervals
 
 
 class CarUseModel(LogitModel):
@@ -101,7 +100,7 @@ class CarUseModel(LogitModel):
         no_dummy_prob = no_dummy_share * prob
         prob = no_dummy_prob + dummy_prob
         prob = pandas.Series(
-            prob, self.zone_data.zone_numbers[self.bounds])
+            prob, self.zone_data.zone_numbers[self.bounds], name="car_use")
         self.print_results(prob)
         return prob
 
@@ -146,14 +145,14 @@ class CarUseModel(LogitModel):
                       population_7_99: Optional[pandas.Series]=None):
         """ Print results, mainly for calibration purposes"""
         # Print car user share by zone
-        self.resultdata.print_data(prob, "car_use.txt", "car_use")
+        self.resultdata.print_data(prob, "car_use.txt")
         if population_7_99 is None:
             # Comparison data has car user shares of population
             # over 6 years old (from HEHA)
             population_7_99 = (self.zone_data["population"][self.bounds]
                                * self.zone_data["share_age_7-99"][self.bounds])
         # print car use share by municipality and area
-        for area_type in ("municipalities", "areas"):
-            prob_area = ZoneIntervals(area_type).averages(prob, population_7_99)
-            self.resultdata.print_data(
-                prob_area, "car_use_{}.txt".format(area_type), "car_use")
+        for area_type in self.zone_data.aggregations.mappings:
+            prob_area = self.zone_data.aggregations.averages(
+                prob, population_7_99, area_type)
+            self.resultdata.print_data(prob_area, f"car_use_{area_type}.txt")

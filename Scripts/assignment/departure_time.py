@@ -57,7 +57,7 @@ class DepartureTimeModel:
         return {"rel_gap": relative_gap, "max_gap": max_gap}
 
     def _create_container(self, modes: Sequence[str] = transport_classes):
-        self.demand = {tp: {tc: 0 for tc in modes}
+        self.demand = {tp: {tc: 0 for tc in modes if tc in transport_classes}
             for tp in self.time_periods}
 
     def init_demand(self, modes: Sequence[str] = transport_classes):
@@ -72,7 +72,8 @@ class DepartureTimeModel:
         n = self.nr_zones
         for tp in self.time_periods:
             for tc in modes:
-                self.demand[tp][tc] = numpy.zeros((n, n), numpy.float32)
+                if tc in transport_classes:
+                    self.demand[tp][tc] = numpy.zeros((n, n), numpy.float32)
 
     def add_demand(self, demand: Union[Demand, Tour]):
         """Add demand matrix for whole day.
@@ -83,7 +84,7 @@ class DepartureTimeModel:
             Travel demand matrix or number of travellers
         """
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
-        if demand.mode in transport_classes and not demand.is_car_passenger:
+        if demand.mode in transport_classes:
             position: Sequence[int] = demand.position
             if len(position) == 2:
                 share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]

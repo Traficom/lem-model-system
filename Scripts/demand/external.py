@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 
 from datatypes.demand import Demand
 from datatypes.purpose import Purpose
-from utils.zone_interval import ZoneIntervals
 from parameters.departure_time import demand_share
 
 
@@ -38,6 +37,7 @@ class ExternalModel:
             "dest": None,
             "area": "external",
             "impedance_share": None,
+            "impedance_transform": None,
             "demand_share": demand_share["external"]
         }
         self.purpose = Purpose(spec, zone_data)

@@ -17,9 +17,8 @@ class DepartureTimeTest(unittest.TestCase):
         dem = Demand()
         pur1 = Purpose()
         dem.purpose = pur1
-        dem.is_car_passenger = False
 
-        dem.purpose.name = "hoo"
+        dem.purpose.name = "wb_other"
         dem.purpose.demand_share = {
             "car_leisure": {
                 "aht":[
@@ -58,7 +57,7 @@ class DepartureTimeTest(unittest.TestCase):
         dtm.add_demand(dem)
 
         dem.purpose = Purpose()
-        dem.purpose.name = "hw"
+        dem.purpose.name = "hb_work"
         dem.purpose.demand_share = {
             "transit_work": {
                 "aht": [0.168710422485735, 0.0387468664988151],
@@ -78,7 +77,7 @@ class DepartureTimeTest(unittest.TestCase):
         dtm.add_demand(dem)
 
         dem.purpose = Purpose()
-        dem.purpose.name = "ho"
+        dem.purpose.name = "hb_leisure"
         dem.purpose.demand_share = {
             "transit_leisure": {
                 "aht": [0.168710422485735, 0.0387468664988151],

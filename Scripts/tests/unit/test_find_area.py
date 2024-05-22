@@ -3,28 +3,19 @@
 import numpy
 import pandas
 import unittest
-from utils.zone_interval import MatrixAggregator, belongs_to_area
 
 
 class AreaFindTest(unittest.TestCase):
     def test_find_area(self):
-        a = MatrixAggregator([101, 1006, 1007, 1009, 10001, 17601, 23000])
-        orig = 1007
-        self.assertEquals(a.mapping[orig], "helsinki")
-        dest = 17601
-        self.assertEquals(a.mapping[dest], "keski_suomi")
-        a.add(orig, dest)
-        self.assertEquals(a.matrix.at["helsinki", "keski_suomi"], 1)
-
-    def test_belongs_to_area(self):
-        class Node:
-            id = "test"
-            x = 25497000
-            y = 6673000
-        node = Node()
-        node.data3 = 91
-        area = belongs_to_area(node)
-        self.assertEquals(area, "helsinki")
-        node.data3 = 245
-        area = belongs_to_area(node)
-        self.assertEquals(area, "satakunta")
+        mapping = pandas.Series({
+            101: "Uusimaa",
+            2021: "Uusimaa",
+            5500: "Uusimaa",
+            13561: "Varsinais-Suomi",
+        })
+        agg = mapping.drop_duplicates()
+        a = pandas.DataFrame(0, agg, agg)
+        county1 = mapping.iat[0]
+        county2 = mapping.iat[3]
+        a.at[county1, county2] += 1
+        self.assertEquals(a.at["Uusimaa", "Varsinais-Suomi"], 1)

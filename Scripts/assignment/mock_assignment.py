@@ -62,11 +62,11 @@ class MockAssignmentModel(AssignmentModel):
     def calc_transit_cost(self, fare):
         pass
 
-    def aggregate_results(self, resultdata):
+    def aggregate_results(self, resultdata, mapping):
         pass
 
-    def calc_noise(self):
-        return pandas.Series(0, zone_param.area_aggregation)
+    def calc_noise(self, mapping):
+        return pandas.Series(0, mapping.drop_duplicates())
 
     def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
         for ap in self.assignment_periods:

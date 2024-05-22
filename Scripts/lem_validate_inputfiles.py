@@ -9,7 +9,8 @@ import utils.log as log
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import ZoneData, BaseZoneData
+from datatypes.zone import ZoneAggregations
 import parameters.assignment as param
 
 
@@ -91,7 +92,7 @@ def main(args):
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
                 msg = "Project {} has no scenario {}".format(
-                    emp_path, first_scenario_ids[0])
+                    emp_path, first_scenario_ids[i])
                 log.error(msg)
                 raise ValueError(msg)
             for scenario in emmebank.scenarios():
@@ -151,16 +152,7 @@ def main(args):
             validate(scen.get_network(), time_periods)
             app.close()
 
-        # Check forecasted zonedata
-        if not os.path.exists(forecast_zonedata_paths[i]):
-            msg = "Forecast data directory '{}' does not exist.".format(
-                forecast_zonedata_paths[i])
-            log.error(msg)
-            raise ValueError(msg)
-        forecast_zonedata = ZoneData(
-            forecast_zonedata_paths[i], zone_numbers[args.submodel[i]],
-            f"{args.submodel[i]}.zmp")
-
+    aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
         base_matrices_path = os.path.join(
@@ -178,8 +170,20 @@ def main(args):
                         a = mtx[ass_class]
 
         # Check base zonedata
-        base_zonedata = ZoneData(
+        base_zonedata = BaseZoneData(
             base_zonedata_path, zone_numbers[submodel], f"{submodel}.zmp")
+        aggregations[submodel] = base_zonedata.aggregations
+
+    for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
+        # Check forecasted zonedata
+        if not os.path.exists(data_path):
+            msg = "Forecast data directory '{}' does not exist.".format(
+                data_path)
+            log.error(msg)
+            raise ValueError(msg)
+        forecast_zonedata = ZoneData(
+            data_path, zone_numbers[submodel], aggregations[submodel],
+            f"{submodel}.zmp")
 
     log.info("Successfully validated all input files")
 

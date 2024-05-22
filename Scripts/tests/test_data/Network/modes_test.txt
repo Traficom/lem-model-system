@@ -22,6 +22,5 @@ a s 'Ship_7m' 2   1
 a S 'Ship_9m' 2   1
 a l 'Lentokone' 2   1
 a a 'Kavely'   3   1   0.00   0.00   0.00   0.00          5.0
-a s 'Ulkokavely' 3   1   0.00   0.00   0.00   0.00          5.0
 a f 'Polkupyora' 3   1   0.00   0.00   0.00   0.00         17.0
 a u 'Liitynta' 3   1   0.00   0.00   0.00   0.00         timau*2

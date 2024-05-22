@@ -263,8 +263,6 @@ class AssignmentPeriod(Period):
             for mtx_class in mtxs[mtx_type]:
                 path_not_found = mtxs["time"][mtx_class] > 999999
                 mtxs[mtx_type][mtx_class][path_not_found] = 999999
-        # adjust impedance
-        mtxs["time"]["bike"] = mtxs["time"]["bike"].clip(None, 9999.)
         return mtxs
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
@@ -309,6 +307,22 @@ class AssignmentPeriod(Period):
                     else:
                         segment.i_node[nodeattr] += segment[segres[tc][res]]
         self.emme_scenario.publish_network(network)
+
+    def get_car_times(self) -> Dict[str, float]:
+        """Get dict of link car travel times for links within sub-model.
+
+        Returns
+        -------
+        dict
+            key : str
+                Link id
+            value : float
+                Link car travel time
+        """
+        time_attr = self.netfield("car_time")
+        network = self.emme_scenario.get_network()
+        return {link.id.replace('-', '\t'): link[time_attr]
+            for link in network.links() if link.i_node["#subarea"] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
@@ -470,9 +484,9 @@ class AssignmentPeriod(Period):
                     mtx = self._extract_transit_time_from_gcost(ass_class)
                 else:
                     mtx = self.get_matrix(ass_class, mtx_type)
-                matrices[ass_class] = mtx
                 if numpy.any(mtx > 1e10):
                     log.warn(f"Matrix with infinite values: {mtx_type} : {ass_class}.")
+                matrices[ass_class] = mtx
         return matrices
 
     def get_matrix(self,

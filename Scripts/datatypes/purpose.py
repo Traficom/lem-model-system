@@ -6,11 +6,12 @@ import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 
+import utils.log as log
 import parameters.zone as param
 import models.logit as logit
+from parameters.assignment import assignment_classes
 import models.generation as generation
 from datatypes.demand import Demand
-from utils.zone_interval import MatrixAggregator, ArrayAggregator
 from datatypes.histogram import TourLengthHistogram
 
 
@@ -49,6 +50,7 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
+        self.impedance_transform = specification["impedance_transform"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -103,16 +105,38 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
+        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
-            for time_period in impedance:
+            ass_class = mode.replace("pax", assignment_classes[self.name])
+            for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
-                    if mode in impedance[time_period][mtx_type]:
+                    if ass_class in impedance[time_period][mtx_type]:
                         share = self.impedance_share[mode][time_period]
-                        imp = impedance[time_period][mtx_type][mode]
+                        imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
+            if "vrk" in impedance:
+                for mtx_type in day_imp[mode]:
+                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
+        # Apply cost change to validate model elasticities
+        if self.zone_data.mtx_adjustment is not None:
+            for idx, row in self.zone_data.mtx_adjustment.iterrows():
+                try:
+                    t = row["mtx_type"]
+                    m = row["mode"]
+                    p = row["cost_change"]
+                    day_imp[m][t] = p * day_imp[m][t]
+                    msg = (f"Demand calculation {self.name}: " 
+                           + f"Added {round(100*(p-1))} % to {t} : {m}.")
+                    log.warn(msg)
+                except KeyError:
+                    pass
+        for mode in self.impedance_transform:
+            for mtx_type in self.impedance_transform[mode]:
+                p = self.impedance_transform[mode][mtx_type]
+                day_imp[mode][mtx_type] *= p
         return day_imp
 
 
@@ -134,6 +158,8 @@ def new_tour_purpose(specification, zone_data, resultdata):
             Model structure (dest>mode/mode>dest)
         "impedance_share" : dict
             Impedance shares
+        "impedance_transform" : dict
+            Impedance transformations
         "destination_choice" : dict
             Destionation choice parameters
         "mode_choice" dict
@@ -183,11 +209,12 @@ class TourPurpose(Purpose):
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
-        self.histograms = {mode: TourLengthHistogram() for mode in self.modes}
-        self.aggregates = {mode: MatrixAggregator(zone_data.zone_numbers)
+        self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
-        self.own_zone_aggregates = {mode: ArrayAggregator(zone_data.zone_numbers)
-            for mode in self.modes}
+        self.mapping = self.zone_data.aggregations.mappings[
+            param.purpose_matrix_aggregation_level]
+        self.aggregates = {}
+        self.own_zone_demand = {}
         self.sec_dest_purpose = None
 
     @property
@@ -197,38 +224,43 @@ class TourPurpose(Purpose):
     def print_data(self):
         self.resultdata.print_data(
             pandas.Series(
-                sum(self.generated_tours.values()), self.zone_numbers),
-            "generation.txt", self.name)
+                sum(self.generated_tours.values()), self.zone_numbers,
+                name=self.name),
+            "generation.txt")
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")
         demsums = {mode: self.generated_tours[mode].sum()
             for mode in self.modes}
         demand_all = float(sum(demsums.values()))
-        mode_shares = {mode: demsums[mode] / demand_all for mode in demsums}
-        self.resultdata.print_data(
-            pandas.Series(mode_shares),
-            "mode_share.txt", self.name)
-        for mode in self.histograms:
+        mode_shares = pandas.concat(
+            {self.name: pandas.Series(
+                {mode: demsums[mode] / demand_all for mode in demsums},
+                name="mode_share")},
+            names=["purpose", "mode"])
+        self.resultdata.print_concat(mode_shares, "mode_share.txt")
+        self.resultdata.print_concat(
+            pandas.concat(
+                {m: self.histograms[m].histogram for m in self.histograms},
+                names=["mode", "purpose", "interval"]),
+            "trip_lengths.txt")
+        self.resultdata.print_matrices(
+            self.aggregates, "aggregated_demand", self.name)
+        for mode in self.aggregates:
             self.resultdata.print_data(
-                self.histograms[mode].histogram, "trip_lengths.txt",
-                "{}_{}".format(self.name, mode))
-            self.resultdata.print_matrix(
-                self.aggregates[mode].matrix, "aggregated_demand",
-                "{}_{}".format(self.name, mode))
-            self.resultdata.print_data(
-                self.own_zone_aggregates[mode].array,
-                "own_zone_demand.txt", "{}_{}".format(self.name, mode))
+                self.own_zone_demand[mode], "own_zone_demand.txt")
 
     def init_sums(self):
+        agg = self.mapping.drop_duplicates()
         for mode in self.modes:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
-            self.histograms[mode].__init__()
-            self.aggregates[mode].init_matrix()
-            self.own_zone_aggregates[mode].init_array()
+            self.histograms[mode].__init__(self.name)
+            self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
+            self.own_zone_demand[mode] = pandas.Series(
+                0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -273,6 +305,7 @@ class TourPurpose(Purpose):
         """
         tours = self.gen_model.get_tours()
         demand = {}
+        agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
             try:
@@ -283,11 +316,13 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
-            self.aggregates[mode].aggregate(pandas.DataFrame(
-                mtx, self.zone_numbers, self.zone_data.zone_numbers))
-            self.own_zone_aggregates[mode].aggregate(pandas.Series(
-                numpy.diag(mtx), self.zone_numbers))
-        self.print_data()
+            self.aggregates[mode] = agg.aggregate_mtx(
+                pandas.DataFrame(
+                    mtx, self.zone_numbers, self.zone_data.zone_numbers),
+                self.mapping.name)
+            self.own_zone_demand[mode] = pandas.Series(
+                numpy.diag(mtx), self.zone_numbers,
+                name="{}_{}".format(self.name, mode))
         return demand
 
 
@@ -404,8 +439,8 @@ class SecDestPurpose(Purpose):
         self.resultdata.print_data(
             pandas.Series(
                 sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers),
-            "attraction.txt", self.name)
+                self.zone_data.zone_numbers, name=self.name),
+            "attraction.txt")
 
 class FreightPurpose(Purpose):
 

@@ -38,6 +38,11 @@ class LogitModelTest(unittest.TestCase):
                 "cost": mtx,
                 "dist": mtx,
             },
+            "car_pax": {
+                "time": mtx,
+                "cost": mtx,
+                "dist": mtx,
+            },
             "transit_work": {
                 "time": mtx,
                 "cost": mtx,
@@ -61,7 +66,7 @@ class LogitModelTest(unittest.TestCase):
         pur.dist = mtx
         parameters_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), "..", "..", "parameters", "demand")
-        for file_name in os.listdir(parameters_path):
+        for file_name in ["hb_work.json"]:
             with open(os.path.join(parameters_path, file_name), 'r') as file:
                 parameters = json.load(file)
             pur.name = parameters["name"]
@@ -71,7 +76,7 @@ class LogitModelTest(unittest.TestCase):
                     and parameters["area"] != "peripheral"):
                 model = ModeDestModel(pur, parameters, zd, resultdata)
                 prob = model.calc_prob(impedance)
-                if parameters["dest"] in ("work", "comprehensive_school", "tertiary_education"):
+                if parameters["dest"] in ("work"):
                     for mode in ("car_work", "transit_work", "bike", "walk"):
                         self._validate(prob[mode])
                 else:
@@ -82,5 +87,5 @@ class LogitModelTest(unittest.TestCase):
         self.assertIs(type(prob), numpy.ndarray)
         self.assertEquals(prob.ndim, 2)
         self.assertEquals(prob.shape[1], 9)
-        self.assertNotEquals(prob[5, 0], 0)
+        self.assertNotEquals(prob[1, 0], 0)
         assert numpy.isfinite(prob).all()

@@ -109,7 +109,7 @@ def create_emme_project(args):
     eb.create_scenario(scenario_num)
     emmebank_path = eb.path
     eb.dispose()
-    EmmeProject(project_path, emmebank_path)
+    EmmeProject(project_path, emmebank_path, project_name)
 
 if __name__ == "__main__":
     # Initially read defaults from config file ("dev-config.json")

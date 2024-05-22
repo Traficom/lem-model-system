@@ -72,7 +72,7 @@ class Person:
             if self.age_group in param["age_dummies"]:
                 log_income += param["age_dummies"][self.age_group]
             log_income += random.gauss(0, param["standard_deviation"])
-            self.income = numpy.exp(log_income)
+            self.income = int(numpy.exp(log_income))
 
     @property
     def gender(self) -> str:
@@ -128,15 +128,16 @@ class Person:
         for key in new_tours:
             tour = Tour(purposes[key], self.zone, self.id)
             self.tours.append(tour)
-            if key == "hw":
-                non_home_prob = purposes["wo"].gen_model.param[key]
-                if random.random() < non_home_prob:
-                    non_home_tour = Tour(purposes["wo"], tour, self.id)
-                    self.tours.append(non_home_tour)
+            if key == "hb_work":
+                for purpose in ["wb_business", "wb_other"]:
+                    prob = purposes[purpose].gen_model.param[key]
+                    if random.random() < prob:
+                        non_home_tour = Tour(purposes[purpose], tour, self.id)
+                        self.tours.append(non_home_tour)
             else:
-                non_home_prob = purposes["oo"].gen_model.param[key]
-                if random.random() < non_home_prob:
-                    non_home_tour = Tour(purposes["oo"], tour, self.id)
+                prob = purposes["ob_other"].gen_model.param[key]
+                if random.random() < prob:
+                    non_home_tour = Tour(purposes["ob_other"], tour, self.id)
                     self.tours.append(non_home_tour)
 
     def __str__(self) -> str:
