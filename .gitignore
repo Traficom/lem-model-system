@@ -65,3 +65,4 @@ project.mtbx-shm
 project.mtbx-wal
 Results/*
 !Results/.gitkeep
+!example_*.ipynb
