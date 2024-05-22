@@ -112,7 +112,7 @@ class FileReader:
                     text_cols = data.columns[data.dtypes == object]
                     funcs = dict.fromkeys(data.columns, "sum")
                     for col in share_cols:
-                        funcs[col] = "mean"
+                        funcs[col] = avg
                     for col in text_cols:
                         funcs[col] = "first"
                     data = data.groupby(mapping).agg(funcs)
@@ -148,10 +148,13 @@ class FileReader:
                 raise ValueError(msg)
         return data
 
-def avg (data, weights):
-    if data.name == weights.name:
-        return sum(data)
+def avg (data, weights=None):
+    if weights is not None:
+        if data.name == weights.name:
+            return sum(data)
+        else:
+            weights = weights[data.index]
     try:
-        return numpy.average(data, weights=weights[data.index])
+        return numpy.average(data, weights=weights)
     except ZeroDivisionError:
         return 0
