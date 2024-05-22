@@ -1,1 +1,3 @@
 openpyxl==2.6.4
+fiona = <1.9
+geopandas = *

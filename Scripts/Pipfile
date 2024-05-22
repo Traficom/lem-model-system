@@ -16,6 +16,9 @@ numpy = "==1.16.2"
 numexpr = "==2.7.1"
 tables = "==3.5.1"
 shapely = "*"
+fiona = "<1.9"
+geopandas = "*"
+matplotlib= "*"
 
 [requires]
 python_version = "3.7"
