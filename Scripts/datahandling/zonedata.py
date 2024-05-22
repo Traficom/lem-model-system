@@ -184,24 +184,6 @@ class ZoneData:
         """
         return self.zones[zone_number].index
 
-    def get_freight_data(self) -> pandas.DataFrame:
-        """Get zone data for freight traffic calculation.
-        
-        Returns
-        -------
-        pandas DataFrame
-            Zone data for freight traffic calculation
-        """
-        freight_variables = (
-            "population",
-            "workplaces",
-            "shop",
-            "logistics",
-            "industry",
-        )
-        data = {k: self._values[k] for k in freight_variables}
-        return pandas.DataFrame(data)
-
     def get_data(self, key: str, bounds: slice, generation: bool=False) -> Union[pandas.Series, numpy.ndarray]:
         """Get data of correct shape for zones included in purpose.
         
