@@ -105,7 +105,7 @@ class FileReader:
                 if "total" in data.columns:
                     # If file contains total and shares of total,
                     # shares are aggregated as averages with total as weight
-                    data = data.groupby(mapping.zone_id).agg(avg, weights=data["total"])
+                    data = data.groupby(mapping).agg(avg, weights=data["total"])
                 else:
                     share_cols = [col for col in data.columns
                         if ("sh_" in col or "avg_" in col or "dummy" in col)]
