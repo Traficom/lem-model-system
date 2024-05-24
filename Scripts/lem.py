@@ -41,15 +41,15 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not base_zonedata_path.exists():
+    if not base_zonedata_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_zonedata_path))
-    if not base_matrices_path.exists():
+    if not base_matrices_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not forecast_zonedata_path.exists():
+    if not forecast_zonedata_path.is_dir():
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
@@ -63,7 +63,7 @@ def main(args):
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = results_path / "Matrices" / args.submodel
-        if not mock_result_path.exists():
+        if not mock_result_path.is_dir():
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
                     mock_result_path))
