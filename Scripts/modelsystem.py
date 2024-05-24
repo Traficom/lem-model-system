@@ -35,13 +35,13 @@ class ModelSystem:
     
     Parameters
     ----------
-    zone_data_path : str
+    zone_data_path : Path
         Directory path where input data for forecast year are found
-    base_zone_data_path : str
+    base_zone_data_path : Path
         Directory path where input data for base year are found
-    base_matrices_path : str
+    base_matrices_path : Path
         Directory path where base demand matrices are found
-    results_path : str
+    results_path : Path
         Directory path where to store results
     assignment_model : assignment.abstract_assignment.AssignmentModel
         Assignment model wrapper used in model runs,
