@@ -49,6 +49,8 @@ class TransitSpecification:
         }
         modes = (param.local_transit_modes + param.aux_modes
                  + param.long_dist_transit_modes[transit_class])
+        if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
+            modes = modes + ['e']
         self.transit_spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
             "modes": modes,
@@ -120,7 +122,13 @@ class TransitSpecification:
         self.local_result_spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
                 subset: {
-                    "modes": param.local_transit_modes,
+                    "modes": param.local_transit_modes + ['e'] if ("e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class) else param.local_transit_modes
+                },
+            }
+        self.park_and_ride_spec = {
+                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+                subset: {
+                    "modes": [param.park_and_ride_mode],
                 },
             }
         if count_zone_boardings:
@@ -136,3 +144,6 @@ class TransitSpecification:
                 self.transit_result_spec[subset][trip_part] = matrix_id
             for trip_part, matrix_id in emme_matrices["local"].items():
                 self.local_result_spec[subset][trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices["park_and_ride"].items():
+                self.park_and_ride_spec[subset][trip_part] = matrix_id
+

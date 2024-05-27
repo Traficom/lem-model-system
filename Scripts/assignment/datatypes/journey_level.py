@@ -38,19 +38,32 @@ class JourneyLevel:
     def __init__(self, level: int, transit_class: str, headway_attribute: str,
             park_and_ride: Union[str, bool] = False,
             count_zone_boardings: bool = False):
+        local_modes = param.local_transit_modes
         # Boarding transit modes allowed only on levels 0-3
-        next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
+        if ('j' in param.long_dist_transit_modes[transit_class]) or ('e' in param.long_dist_transit_modes[transit_class]) or ('l' in param.long_dist_transit_modes[transit_class]):
+            if level <= BOARDED_LOCAL:
+                next = BOARDED_LOCAL
+            elif level == BOARDED_LONG_D:
+                next = BOARDED_LONG_D
+            else:
+                next = FORBIDDEN
+            DESTINATIONS_REACHABLE = [False, False, False, True, True, False]
+        else:
+            next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
+            DESTINATIONS_REACHABLE = [False, False, True, True, True, False]
+        if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
+            local_modes = local_modes + ['e']
         transitions = [{
                 "mode": mode,
                 "next_journey_level": next,
-            } for mode in param.local_transit_modes]
+            } for mode in local_modes]
         next = BOARDED_LONG_D if level <= BOARDED_LONG_D else FORBIDDEN
         transitions += [{
                 "mode": mode,
                 "next_journey_level": next,
             } for mode in param.long_dist_transit_modes[transit_class]]
         if park_and_ride:
-            if "first_mile" in park_and_ride:
+            if "first_mile" in park_and_ride or "first_taxi" in park_and_ride:
                 # Park-and-ride (car) mode allowed only on level 0.
                 car = FORBIDDEN if level >= PARKED else NOT_BOARDED
                 # If we want parking to be allowed only on specific links
@@ -77,6 +90,11 @@ class JourneyLevel:
                 "mode": mode,
                 "next_journey_level": walk,
             } for mode in param.aux_modes]
+        if level < BOARDED_LOCAL and ("l_first_mile" in transit_class or "j_first_mile" in transit_class):
+            transitions[0]["next_journey_level"] = FORBIDDEN
+            transitions[1]["next_journey_level"] = FORBIDDEN
+            transitions[3]["next_journey_level"] = FORBIDDEN
+            transitions[5]["next_journey_level"] = FORBIDDEN
         self.spec = {
             "description": DESCRIPTION[level],
             "destinations_reachable": DESTINATIONS_REACHABLE[level],
@@ -94,6 +112,9 @@ class JourneyLevel:
             },
             "waiting_time": None,
         }
+        avg_days = {"j": 1.98, "e": 1.98, "l": 2.78}
+        if level <= PARKED and "first_mile" in transit_class:
+            self.spec["boarding_cost"]["at_nodes"] = {"penalty": "@pnr_cost","perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]} #1.5 (0.75) average for all purposes 
         if level == BOARDED_LOCAL:
             # Free transfers within local transit
             (self.spec["boarding_cost"]

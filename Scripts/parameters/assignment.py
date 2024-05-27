@@ -280,9 +280,13 @@ transfer_penalty = {
     "car_first_mile": 5,
     "car_last_mile": 5,
     "transit": 5,
-    "train": 10,
-    "long_d_bus": 10,
-    "airplane": 10,
+    "train": 5,
+    "long_d_bus": 5,
+    "airplane": 5,
+    "j_first_mile": 5,
+    "j_first_taxi": 5,
+    "e_first_mile": 5,
+    "l_first_mile": 5,
 }
 extra_waiting_time = {
     "penalty": "@wait_time_dev",
@@ -398,6 +402,26 @@ volume_factors = {
         "pt": 1 / 0.090, 
         "iht": 1 / 0.497,
     },
+    "l_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_first_taxi": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "e_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
@@ -434,8 +458,14 @@ car_classes = (
 )
 private_classes = car_classes + ("bike",)
 park_and_ride_classes = (
-    # "car_first_mile",
-    # "car_last_mile",
+    "j_first_mile",
+    "j_first_taxi",
+    #"j_last_mile",
+    "e_first_mile",
+    #"e_last_mile",
+    "l_first_mile",
+    #"l_first_taxi",
+    #"l_last_mile"
 )
 long_distance_transit_classes = park_and_ride_classes + (
     "train",
@@ -496,6 +526,10 @@ vot_classes = {
     "train": "work",
     "long_d_bus": "leisure",
     "airplane": "work",
+    "j_first_mile": "work",
+    "j_first_taxi": "work",
+    "e_first_mile": "leisure",
+    "l_first_mile": "work",
 }
 local_transit_modes = [
     'b',
@@ -510,10 +544,14 @@ long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],
     "transit_leisure": ['e', 'j', 'l'],
     "car_first_mile": ['e', 'j', 'l'],
-    "car_last_mile": ['e', 'j', 'l'],
+    #"car_last_mile": ['e', 'j', 'l'],
     "train": ['j'],
     "long_d_bus": ['e'],
     "airplane": ['l'],
+    "j_first_mile": ['j'],
+    "j_first_taxi": ['j'],
+    "e_first_mile": ['e'],
+    "l_first_mile": ['l'],
 }
 aux_modes = [
     'a',
@@ -549,7 +587,7 @@ emme_matrices = {
     "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
     "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    #"car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
     "train": ("demand", "time", "dist", "cost", "gen_cost"),
     "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
     "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -559,6 +597,10 @@ emme_matrices = {
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "van": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_first_taxi": ("demand", "time", "dist", "cost", "gen_cost"),
+    "e_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "l_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
 }
 transit_impedance_matrices = {
     "total": {
@@ -572,11 +614,18 @@ transit_impedance_matrices = {
         "board_time": "actual_total_boarding_times",
         "num_board": "avg_boardings",
         "board_cost": "actual_total_boarding_costs",
+        "perc_bcost": "perceived_total_boarding_costs",
     },
     "local": {
         "loc_bc": "actual_total_boarding_costs",
         "loc_ic": "actual_in_vehicle_costs",
         "loc_time": "actual_in_vehicle_times",
+        "loc_btime": "actual_total_boarding_times",
+        "loc_fboard": "actual_first_boarding_times",
+    },
+    "park_and_ride": {
+        "car_time": "actual_aux_transit_times",
+        "car_dist": "distance",
     },
 }
 freight_matrices = {

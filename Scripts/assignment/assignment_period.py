@@ -248,7 +248,7 @@ class AssignmentPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {imp_type: self._get_matrices(imp_type, assignment_classes)
-            for imp_type in ("time", "cost", "dist")}
+            for imp_type in ("time", "cost", "dist", "car_time", "loc_time", "car_dist", "loc_btime", "total_time", "aux_time", "board_cost", "num_board", "loc_fboard", "perc_bcost")}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -537,6 +537,7 @@ class AssignmentPeriod(Period):
         gcost = self.get_matrix(transit_class, "gen_cost")
         cost = (self.get_matrix(transit_class, "cost")
                 + self.get_matrix(transit_class, "board_cost"))
+        cost = self.apply_pnr_cost_weighting(cost, self.get_matrix(transit_class, "perc_bcost"), self.get_matrix(transit_class, "board_cost"), transit_class, vot_inv)
         time = self.get_matrix(transit_class, "time")
         path_found = cost < 999999
         time[path_found] = (gcost[path_found]
@@ -545,6 +546,15 @@ class AssignmentPeriod(Period):
         self.set_matrix(transit_class, time, "time")
         self.set_matrix(transit_class, cost, "cost")
         return time
+    
+    def apply_pnr_cost_weighting(self, cost, perc_bcost, actual_bcost, transit_class, vot_inv):
+        avg_days = {"j": 1.98, "e": 1.98, "l": 2.78}
+        days = 0
+        if "first_mile" in transit_class:
+            days = avg_days[transit_class[0]]
+        pnr_cost_24h = (perc_bcost-actual_bcost*vot_inv)/(vot_inv*(days-2))
+        cost += pnr_cost_24h*(days-1)
+        return cost
 
     def _calc_background_traffic(self, include_trucks: bool = False):
         """Calculate background traffic (buses)."""
@@ -861,6 +871,10 @@ class AssignmentPeriod(Period):
             if transit_class in param.long_distance_transit_classes:
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
+                    class_name=transit_class)
+            if transit_class in param.park_and_ride_classes:
+                self.emme_project.matrix_results(
+                    spec.park_and_ride_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
         log.info("Transit assignment performed for scenario {}".format(
             str(self.emme_scenario.id)))
