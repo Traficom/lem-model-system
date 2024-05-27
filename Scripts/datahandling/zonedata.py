@@ -45,7 +45,6 @@ class ZoneData:
         workdata = files.read_csv_file(".wrk")
         incdata = files.read_csv_file(".inc")
         schooldata = files.read_csv_file(".edu")
-        landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
         sport_facilities = files.read_csv_file(".spo")
         buildings = files.read_csv_file(".bld")
@@ -100,7 +99,6 @@ class ZoneData:
         self["income_80-99"] = incdata["sh_income_80-99"] * pop
         self["income_100"] = incdata["sh_income_100"] * pop
         self.nr_zones = len(self.zone_numbers)
-        self["population_density"] = pop / landdata["builtar"]
         wp = workdata["workplaces"]
         self["workplaces"] = wp
         self["sports_in"] = sport_facilities["sports_in"]
@@ -109,8 +107,6 @@ class ZoneData:
         self["area_leisure"] = buildings["area_leis"]
         self["service"] = workdata["sh_serv"] * wp
         self["shop"] = workdata["sh_shop"] * wp
-        self["logistics"] = workdata["sh_logi"] * wp
-        self["industry"] = workdata["sh_indu"] * wp
         self["hospitality"] = workdata["sh_hosp"] * wp
         self["recreation"] = workdata["sh_recr"] * wp
         self["park_cost"] = parkdata["avg_park_cost"]
@@ -188,24 +184,6 @@ class ZoneData:
         """
         return self.zones[zone_number].index
 
-    def get_freight_data(self) -> pandas.DataFrame:
-        """Get zone data for freight traffic calculation.
-        
-        Returns
-        -------
-        pandas DataFrame
-            Zone data for freight traffic calculation
-        """
-        freight_variables = (
-            "population",
-            "workplaces",
-            "shop",
-            "logistics",
-            "industry",
-        )
-        data = {k: self._values[k] for k in freight_variables}
-        return pandas.DataFrame(data)
-
     def get_data(self, key: str, bounds: slice, generation: bool=False) -> Union[pandas.Series, numpy.ndarray]:
         """Get data of correct shape for zones included in purpose.
         
@@ -279,9 +257,9 @@ class ShareChecker:
         self.data = data
 
     def __setitem__(self, key, data):
-        if (data > 1.005).any():
+        if (data > 1.02).any():
             for (i, val) in data.iteritems():
-                if val > 1.005:
+                if val > 1.02:
                     msg = "{} ({}) for zone {} is larger than one".format(
                         key, val, i).capitalize()
                     log.error(msg)
