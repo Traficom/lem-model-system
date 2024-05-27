@@ -66,3 +66,7 @@ project.mtbx-wal
 Results/*
 !Results/.gitkeep
 !example_*.ipynb
+Base_input_data/*
+!Base_input_data/.gitkeep
+Scenario_input_data/*
+!Scenario_input_data/*/.gitkeep
