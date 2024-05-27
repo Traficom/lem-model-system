@@ -2,12 +2,28 @@
 import os
 import pandas as pd
 import geopandas as gpd
+from typing import Optional
 
-from data_explorer.util import read_zone_data, read_zones
 from datahandling.matrixdata import MatrixData
 
+def read_zone_data(filepath: str) -> pd.DataFrame:
+    return pd.read_csv(
+        filepath, sep="\t", decimal=".", skipinitialspace=True,
+        dtype={"zone_id": int}).dropna()
+
+CRS = "EPSG:3067"
+def read_zones(data_path: str) -> gpd.GeoDataFrame:
+    zones = gpd.read_file(os.path.join(data_path, "zones.gpkg"), engine = "pyogrio")
+    zones = zones.to_crs(CRS)
+    return zones
+
 class ScenarioData(object):
-    def __init__(self, name: str, results_path: str, input_path: str):
+    def __init__(self, 
+                 name: str, 
+                 base_data_path: str, 
+                 scenario_data_path: str,
+                 result_data_path: str
+                 ):
         """Container for result data of single scenario, which 
         also enables export to geopackage file format.
 
@@ -17,24 +33,39 @@ class ScenarioData(object):
             zones_path : Path to model-system zones (geopackage)
         """
         name = name
-        self.input_path = input_path
-        self.zones = read_zones(input_path)
-        self.results_path = results_path
+        paths = [base_data_path, scenario_data_path, result_data_path]
+        for path in paths:
+            if os.path.isdir(path):
+                pass
+            else:
+                raise FileNotFoundError(f"Directory {path} does not exist.")
+        self.base_data_path = base_data_path
+        self.scenario_data_path = scenario_data_path
+        self.result_data_path = result_data_path
+        # Zonedata
         self.aggregations = read_zone_data(
-            os.path.join(self.input_path, "admin_regions.agg"))
-        self.accessibility = read_zone_data(
-            os.path.join(self.results_path, "accessibility.txt"))
-        self.demand = read_zone_data(
-            os.path.join(self.results_path, "origins_demand.txt"))
-        self.mode_shares = read_zone_data(
-            os.path.join(self.results_path, "origins_shares.txt"))
+            os.path.join(self.base_data_path, "admin_regions.agg"))
+        # Spatial data
+        self.zones = read_zones(base_data_path)            
 
-    def zonedata_to_gdf(self, zonedata):
+    def set_subregion(self, subregion_type: str, subregions: list):
+        data_columns = list(self.aggregations.columns)
+        if subregion_type not in list(data_columns):
+            print(f"Subregion type not found from aggregations. Available types: {data_columns}.")
+        for subregion in subregions:
+            if subregion not in self.aggregations[subregion_type].to_list():
+                print(f"Subregion {subregion} not in zone aggregations.")
+        ids = self.aggregations.loc[self.aggregations[subregion_type].isin(subregions)]["zone_id"]
+        self.zones.loc[self.zones.zone_id.isin(ids)]
+    
+    def get_spatial_zonedata(self, name_zonedata: str):
+        files = os.listdir(self.result_data_path)
+        filename = f"{name_zonedata}.txt"
+        if filename in files:
+            zonedata = read_zone_data(os.path.join(self.result_data_path, filename))
+        else:
+            raise FileNotFoundError(f"File {filename} not found. Available files: {files}")
         return self.zones.merge(zonedata, on='zone_id', how='left')
-
-    def zones_subregion(self, subregion_type, subregion):
-        ids = self.aggregations.loc[self.aggregations[subregion_type] == subregion]["zone_id"]
-        self.zones = self.zones.loc[self.zones.zone_id.isin(ids)]
 
     def read_costs(self, time_period, mtx_type, ass_class):
         """
