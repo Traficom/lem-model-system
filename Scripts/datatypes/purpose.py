@@ -319,7 +319,6 @@ class TourPurpose(Purpose):
         fm_utils = {}
         split_probs = {}
         access_modes = ("car", "transit") if pt_mode == "long_d_bus" else ("car", "car_pax", "transit")
-        # Access mode weighting (perception factor) from Trafikverket's ASEK. For walking 1.75 as its similar to aux time perception factor in emme assignment.
         for mode in access_modes:
             utility = numpy.zeros_like(expsum)
             parameters = self.get_acc_model_parameters(mode, pt_mode)
@@ -331,34 +330,22 @@ class TourPurpose(Purpose):
             del utility
             expsum = expsum + exps[mode]
         
-        utils_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/utils.omx","a")
-        shares_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/shares.omx","a")
-        for a_mode in access_modes:
-            util_ = fm_utils[a_mode]
-            try:
-                utils_file[pt_mode + "_" + a_mode + "_" + self.name] = util_
-            except:
-                utils_file[pt_mode + "_" + a_mode + "_" + self.name][:] = util_
-            del util_
-            try:
-                shares_file[pt_mode + "_" + a_mode + "_" + self.name] = exps[a_mode]/expsum
-            except:
-                shares_file[pt_mode + "_" + a_mode + "_" + self.name][:] = exps[a_mode]/expsum
-            if a_mode == "car_pax" and pt_mode != "train":
-                split_probs["car"] = split_probs["car"] + exps[a_mode]/expsum * prob_main_mode
-            else:
-                split_probs[a_mode] = exps[a_mode]/expsum * prob_main_mode
-        utils_file.close()
-        no_local_pt_ratio = numpy.maximum(numpy.zeros_like(impedance[pt_mode]["loc_fboard"]), numpy.ones_like(impedance[pt_mode]["loc_fboard"]) - impedance[pt_mode]["loc_fboard"]/10)#- impedance[pt_mode]["loc_rboard"])/ 5
-        try:
-            shares_file[pt_mode + "_" + "walk" + "_" + self.name] = no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        except:
-            shares_file[pt_mode + "_" + "walk" + "_" + self.name][:] = no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        try:
-            shares_file[pt_mode + "_" + "transit" + "_" + self.name] -= no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        except:
-            shares_file[pt_mode + "_" + "transit" + "_" + self.name][:] -= no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        shares_file.close()
+        #utils_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/utils.omx","a")
+        #shares_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/shares.omx","a")
+        #for a_mode in access_modes:
+        #    util_ = fm_utils[a_mode]
+        #    utils_file[pt_mode + "_" + a_mode + "_" + self.name][:] = util_
+        #    del util_
+        #    shares_file[pt_mode + "_" + a_mode + "_" + self.name][:] = exps[a_mode]/expsum
+        #    if a_mode == "car_pax" and pt_mode != "train":
+        #        split_probs["car"] = split_probs["car"] + exps[a_mode]/expsum * prob_main_mode
+        #    else:
+        #        split_probs[a_mode] = exps[a_mode]/expsum * prob_main_mode
+        #utils_file.close()
+        #no_local_pt_ratio = numpy.maximum(numpy.zeros_like(impedance[pt_mode]["loc_fboard"]), numpy.ones_like(impedance[pt_mode]["loc_fboard"]) - impedance[pt_mode]["loc_fboard"]/10)#- impedance[pt_mode]["loc_rboard"])/ 5
+        #shares_file[pt_mode + "_" + "walk" + "_" + self.name][:] = no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
+        #shares_file[pt_mode + "_" + "transit" + "_" + self.name][:] -= no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
+        #shares_file.close()
 
         return split_probs
     

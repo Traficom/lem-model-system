@@ -86,7 +86,14 @@ class TransitSpecification:
                 "choices_at_origins": "OPTIMAL_STRATEGY",
             },
             "flow_distribution_at_regular_nodes_with_aux_transit_choices": {
-                "choices_at_regular_nodes": "OPTIMAL_STRATEGY",
+                "choices_at_regular_nodes": {
+                    "choice_points": "ui2",
+                    "aux_transit_choice_set": "EFFICIENT_LINKS",
+                    "logit_parameters": {
+                        "scale": 0.05,
+                        "truncation": 0.05
+                    }
+                }
             },
             "flow_distribution_between_lines": {
                 "consider_total_impedance": True,
