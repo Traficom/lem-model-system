@@ -57,9 +57,9 @@ Scripts/.pytest_cache
 Scripts/tests/.pytest_cache
 Scripts/.env
 Scripts/tests/test_data/Results/*
-!Scripts/tests/test_data/Results/test/uusimaa/Matrices/cost*
-!Scripts/tests/test_data/Results/test/uusimaa/Matrices/dist*
-!Scripts/tests/test_data/Results/test/uusimaa/Matrices/time*
-!Scripts/tests/test_data/Results/test/uusimaa/Matrices/beeline*
+!Scripts/tests/test_data/Results/test/Matrices/uusimaa/cost*
+!Scripts/tests/test_data/Results/test/Matrices/uusimaa/dist*
+!Scripts/tests/test_data/Results/test/Matrices/uusimaa/time*
+!Scripts/tests/test_data/Results/test/Matrices/uusimaa/beeline*
 project.mtbx-shm
 project.mtbx-wal

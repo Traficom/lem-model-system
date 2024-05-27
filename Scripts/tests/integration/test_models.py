@@ -1,40 +1,38 @@
 import unittest
 import numpy
+from pathlib import Path
 
 import utils.log as log
 from modelsystem import ModelSystem, AgentModelSystem
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datatypes.demand import Demand
-import os
+from tests.integration.test_data_handling import (
+    TEST_DATA_PATH,
+    RESULTS_PATH,
+    ZONEDATA_PATH,
+    BASE_ZONEDATA_PATH,
+    BASE_MATRICES_PATH,
+)
 
-TEST_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "..", "test_data")
 
 class Config():
     log_format = None
     log_level = "DEBUG"
     scenario_name = "TEST"
-    results_path = os.path.join(TEST_DATA_PATH, "Results")
+    results_path = TEST_DATA_PATH / "Results"
+
 
 class ModelTest(unittest.TestCase):
     
     def test_models(self):
         print("Testing assignment..")
         log.initialize(Config())
-        results_path = os.path.join(TEST_DATA_PATH, "Results")
-        ass_model = MockAssignmentModel(
-            MatrixData(
-                os.path.join(results_path, "test", "uusimaa", "Matrices")))
-        zone_data_path = os.path.join(
-            TEST_DATA_PATH, "Scenario_input_data", "2030_test")
-        base_zone_data_path = os.path.join(
-            TEST_DATA_PATH, "Base_input_data", "2018_zonedata")
-        base_matrices_path = os.path.join(
-            TEST_DATA_PATH, "Base_input_data", "base_matrices")
+        ass_model = MockAssignmentModel(MatrixData(
+            RESULTS_PATH / "Matrices" / "uusimaa"))
         model = ModelSystem(
-            zone_data_path, base_zone_data_path, base_matrices_path,
-            results_path, ass_model, "test", "uusimaa")
+            ZONEDATA_PATH, BASE_ZONEDATA_PATH, BASE_MATRICES_PATH,
+            RESULTS_PATH, ass_model, "uusimaa")
         impedance = model.assign_base_demand()
         for ap in ass_model.assignment_periods:
             tp = ap.name
