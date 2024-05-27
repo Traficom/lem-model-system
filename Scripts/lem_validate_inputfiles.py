@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import os
 import sys
+from pathlib import Path
 import numpy
 from typing import List, Dict, Union
 
@@ -12,10 +13,11 @@ from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData, BaseZoneData
 from datatypes.zone import ZoneAggregations
 import parameters.assignment as param
+from lem import BASE_ZONEDATA_DIR
 
 
 def main(args):
-    base_zonedata_path = os.path.join(args.baseline_data_path, "2018_zonedata")
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -47,7 +49,7 @@ def main(args):
     # Check basedata input
     log.info("Checking base inputdata...")
     # Check filepaths (& first .emp path for zone_numbers in base zonedata)
-    if not os.path.exists(base_zonedata_path):
+    if not base_zonedata_path.exists():
         msg = "Baseline zonedata directory '{}' does not exist.".format(
             base_zonedata_path)
         log.error(msg)
@@ -63,10 +65,10 @@ def main(args):
 
         # Check network
         if args.do_not_use_emme:
-            mock_result_path = os.path.join(
-                args.results_path, args.scenario_name, args.submodel[i],
-                "Matrices")
-            if not os.path.exists(mock_result_path):
+            mock_result_path = Path(
+                args.results_path, args.scenario_name, "Matrices",
+                args.submodel[i])
+            if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
                     mock_result_path)
                 log.error(msg)
@@ -155,9 +157,9 @@ def main(args):
     aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
-        base_matrices_path = os.path.join(
-            args.baseline_data_path, "base_matrices", submodel)
-        if not os.path.exists(base_matrices_path):
+        base_matrices_path = Path(
+            args.baseline_data_path, "Matrices", submodel)
+        if not base_matrices_path.exists():
             msg = "Baseline matrices' directory '{}' does not exist.".format(
                 base_matrices_path)
             log.error(msg)

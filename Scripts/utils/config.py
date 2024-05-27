@@ -1,16 +1,15 @@
 import os
+from pathlib import Path
 import json
 import subprocess
 
 
-def read_from_file(
-        path=os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), "..", "dev-config.json")):
+def read_from_file(path=Path(__file__).parent.parent / "dev-config.json"):
     """Read config parameters from json file.
 
     Parameters
     ----------
-    path : str (optional)
+    path : Path (optional)
         Path where json file is found (default: Scripts/dev-config.json)
 
     Returns
@@ -74,7 +73,7 @@ class Config:
     @property
     def VERSION(self):
         """HELMET version number from git tag or dev_config.json."""
-        os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        os.chdir(Path(__file__).parent)
         try:
             # If model system is in a git repo
             return subprocess.check_output(

@@ -1,7 +1,6 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
-import os
-from glob import glob
+from pathlib import Path
 
 import utils.config
 import utils.log as log
@@ -9,6 +8,9 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
+
+
+BASE_ZONEDATA_DIR = "2018_zonedata"
 
 
 def main(args):
@@ -21,11 +23,11 @@ def main(args):
     else:
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
-    base_zonedata_path: str = os.path.join(args.baseline_data_path, "2018_zonedata")
-    base_matrices_path: str = os.path.join(args.baseline_data_path, "base_matrices")
-    forecast_zonedata_path: str = args.forecast_data_path
-    results_path: str = args.results_path
-    emme_project_path: str = args.emme_path
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_matrices_path = Path(args.baseline_data_path, "Matrices")
+    forecast_zonedata_path = Path(args.forecast_data_path)
+    results_path = Path(args.results_path, args.scenario_name)
+    emme_project_path = Path(args.emme_path)
     log_extra = {
         "status": {
             "name": args.scenario_name,
@@ -39,15 +41,15 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not os.path.exists(base_zonedata_path):
+    if not base_zonedata_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_zonedata_path))
-    if not os.path.exists(base_matrices_path):
+    if not base_matrices_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not os.path.exists(forecast_zonedata_path):
+    if not forecast_zonedata_path.is_dir():
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
@@ -60,15 +62,14 @@ def main(args):
         kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
-        mock_result_path = os.path.join(
-            results_path, args.scenario_name, args.submodel, "Matrices")
-        if not os.path.exists(mock_result_path):
+        mock_result_path = results_path / "Matrices" / args.submodel
+        if not mock_result_path.is_dir():
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
                     mock_result_path))
         ass_model = MockAssignmentModel(MatrixData(mock_result_path), **kwargs)
     else:
-        if not os.path.isfile(emme_project_path):
+        if not emme_project_path.is_file():
             raise NameError(
                 ".emp project file not found in given '{}' location.".format(
                     emme_project_path))
@@ -86,8 +87,7 @@ def main(args):
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
     model_args = (forecast_zonedata_path, base_zonedata_path,
-                  base_matrices_path, results_path, ass_model,
-                  args.scenario_name, args.submodel)
+                  base_matrices_path, results_path, ass_model, args.submodel)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
              else ModelSystem(*model_args))
     log_extra["status"]["results"] = model.mode_share
@@ -138,18 +138,13 @@ def main(args):
 
     # delete emme strategy files for scenarios
     if args.del_strat_files:
-        dbase_path = os.path.join(os.path.dirname(emme_project_path), "database")
-        filepath = os.path.join(dbase_path, "STRAT_s{}*")
-        dirpath = os.path.join(dbase_path, "STRATS_s{}", "*")
-        scenario_ids = range(args.first_scenario_id, args.first_scenario_id+5)
-        for s in scenario_ids:
-            strategy_files = glob(filepath.format(s)) + glob(dirpath.format(s))
-            for f in strategy_files:
-                try:
-                    os.remove(f)
-                except:
-                    log.info("Not able to remove file {}.".format(f))
-        log.info("Removed strategy files in {}".format(dbase_path))
+        db_path = emme_project_path.parent / "database"
+        for f in db_path.glob("STRAT_s*") + db_path.glob("STRATS_s*/*"):
+            try:
+                f.unlink()
+            except:
+                log.info(f"Not able to remove file {f}.")
+        log.info(f"Removed strategy files in {db_path}")
     log.info("Simulation ended.", extra=log_extra)
 
 
