@@ -6,16 +6,29 @@ from typing import Optional
 
 from datahandling.matrixdata import MatrixData
 
-def read_zone_data(filepath: str) -> pd.DataFrame:
-    return pd.read_csv(
-        filepath, sep="\t", decimal=".", skipinitialspace=True,
-        dtype={"zone_id": int}).dropna()
-
 CRS = "EPSG:3067"
-def read_zones(data_path: str) -> gpd.GeoDataFrame:
-    zones = gpd.read_file(os.path.join(data_path, "zones.gpkg"), engine = "pyogrio")
-    zones = zones.to_crs(CRS)
-    return zones
+def read_spatial(path: str, file_name: str) -> gpd.GeoDataFrame:
+    # Check that paths are valid
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory {path} does not exist.")
+    files = os.listdir(path)
+    if file_name not in files:
+        raise FileNotFoundError(f"File {file_name} not found. Available files: {files}")
+    data = gpd.read_file(os.path.join(path, file_name), engine = "pyogrio")
+    data = data.to_crs(CRS)
+    return data
+
+def read_zonedata(path: str, file_name: str):
+    # Check that paths are valid
+    if not os.path.isdir(path):
+        raise FileNotFoundError(f"Directory {path} does not exist.")
+    files = os.listdir(path)
+    if file_name not in files:
+        raise FileNotFoundError(f"File {file_name} not found. Available files: {files}")
+    # Return data
+    return pd.read_csv(os.path.join(path, file_name), 
+                        sep="\t", decimal=".", skipinitialspace=True, 
+                        dtype={"zone_id": int}).dropna()
 
 class ScenarioData(object):
     def __init__(self, 
@@ -32,40 +45,37 @@ class ScenarioData(object):
             results_path : Path to scenario results.
             zones_path : Path to model-system zones (geopackage)
         """
-        name = name
-        paths = [base_data_path, scenario_data_path, result_data_path]
-        for path in paths:
-            if os.path.isdir(path):
-                pass
-            else:
-                raise FileNotFoundError(f"Directory {path} does not exist.")
+        self.name = name
         self.base_data_path = base_data_path
         self.scenario_data_path = scenario_data_path
         self.result_data_path = result_data_path
-        # Zonedata
-        self.aggregations = read_zone_data(
-            os.path.join(self.base_data_path, "admin_regions.agg"))
-        # Spatial data
-        self.zones = read_zones(base_data_path)            
+        self.zones = read_spatial(self.base_data_path, "zones.gpkg")
+        self.zone_ids = self.zones.zone_id
+        self.aggregations = read_zonedata(self.base_data_path, "admin_regions.agg")  
+
+    def get_result_data(self, file_name, geometry = False):
+        data = read_zonedata(self.result_data_path, file_name)
+        if geometry:
+            data = self.zones.merge(data, on='zone_id', how='left')
+        return data.loc[data.zone_id.isin(self.zone_ids)]
+    
+    def get_input_data(self, file_name, geometry = False):
+        data = read_zonedata(self.scenario_data_path, file_name)
+        if geometry:
+            data = self.zones.merge(data, on='zone_id', how='left')
+        return data.loc[data.zone_id.isin(self.zone_ids)]
+    
+    def get_basemap(self):
+        return read_spatial(self.base_data_path, "basemap.gpkg")
 
     def set_subregion(self, subregion_type: str, subregions: list):
-        data_columns = list(self.aggregations.columns)
-        if subregion_type not in list(data_columns):
-            print(f"Subregion type not found from aggregations. Available types: {data_columns}.")
+        cols = list(self.aggregations.columns)
+        if subregion_type not in list(cols):
+            print(f"Subregion type not found. Available types: {cols}.")
         for subregion in subregions:
             if subregion not in self.aggregations[subregion_type].to_list():
                 print(f"Subregion {subregion} not in zone aggregations.")
-        ids = self.aggregations.loc[self.aggregations[subregion_type].isin(subregions)]["zone_id"]
-        self.zones.loc[self.zones.zone_id.isin(ids)]
-    
-    def get_spatial_zonedata(self, name_zonedata: str):
-        files = os.listdir(self.result_data_path)
-        filename = f"{name_zonedata}.txt"
-        if filename in files:
-            zonedata = read_zone_data(os.path.join(self.result_data_path, filename))
-        else:
-            raise FileNotFoundError(f"File {filename} not found. Available files: {files}")
-        return self.zones.merge(zonedata, on='zone_id', how='left')
+        self.zone_ids = self.aggregations.loc[self.aggregations[subregion_type].isin(subregions)]["zone_id"]        
 
     def read_costs(self, time_period, mtx_type, ass_class):
         """
@@ -93,8 +103,7 @@ class ScenarioData(object):
             lookup = mtx.lookup
         return matrix, lookup
     
-        
-    def get_costs_from(self, time_period, mtx_type, ass_class, origin_zone):
+    def costs_from(self, time_period, mtx_type, ass_class, origin_zone):
         matrix, lookup = self.read_costs(time_period, ass_class, mtx_type)
         return pd.DataFrame(cost = matrix[:,lookup == origin_zone], index=lookup)
 
