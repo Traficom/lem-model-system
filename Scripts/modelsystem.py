@@ -1,6 +1,5 @@
 import threading
 import multiprocessing
-import os
 import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Set, Union, cast
@@ -36,30 +35,27 @@ class ModelSystem:
     
     Parameters
     ----------
-    zone_data_path : str
+    zone_data_path : Path
         Directory path where input data for forecast year are found
-    base_zone_data_path : str
+    base_zone_data_path : Path
         Directory path where input data for base year are found
-    base_matrices_path : str
+    base_matrices_path : Path
         Directory path where base demand matrices are found
-    results_path : str
+    results_path : Path
         Directory path where to store results
     assignment_model : assignment.abstract_assignment.AssignmentModel
         Assignment model wrapper used in model runs,
         can be EmmeAssignmentModel or MockAssignmentModel
-    name : str
-        Name of scenario, used for results subfolder
     submodel: str
         Name of submodel, used for choosing appropriate zone mapping
     """
 
-    def __init__(self, 
-                 zone_data_path: str, 
-                 base_zone_data_path: str, 
-                 base_matrices_path: str,
-                 results_path: str, 
-                 assignment_model: AssignmentModel, 
-                 name: str,
+    def __init__(self,
+                 zone_data_path: Path,
+                 base_zone_data_path: Path,
+                 base_matrices_path: Path,
+                 results_path: Path,
+                 assignment_model: AssignmentModel,
                  submodel: str):
         self.ass_model = cast(Union[MockAssignmentModel,EmmeAssignmentModel], assignment_model) #type checker hint
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
@@ -67,17 +63,14 @@ class ModelSystem:
         # Input data
         self.zdata_base = BaseZoneData(
             base_zone_data_path, self.zone_numbers, f"{submodel}.zmp")
-        self.basematrices = MatrixData(
-            os.path.join(base_matrices_path, submodel))
+        self.basematrices = MatrixData(base_matrices_path / submodel)
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
             f"{submodel}.zmp")
 
         # Output data
-        results_path = os.path.join(results_path, name, submodel)
         self.resultdata = ResultsData(results_path)
-        self.resultmatrices = MatrixData(
-            os.path.join(results_path, "Matrices"))
+        self.resultmatrices = MatrixData(results_path / "Matrices" / submodel)
         parameters_path = Path(__file__).parent / "parameters" / "demand"
         home_based_purposes = []
         sec_dest_purposes = []

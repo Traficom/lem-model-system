@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Sequence, Optional, Union
-import os
+from pathlib import Path
 import numpy # type: ignore
 import pandas
 
@@ -15,7 +15,7 @@ class ZoneData:
 
     Parameters
     ----------
-    data_dir : str
+    data_dir : Path
         Directory where scenario input data files are found
     zone_numbers : list
         Zone numbers to compare with for validation
@@ -24,7 +24,7 @@ class ZoneData:
     zone_mapping_file : str (optional)
         Name of zone mapping file
     """
-    def __init__(self, data_dir: str, zone_numbers: Sequence,
+    def __init__(self, data_dir: Path, zone_numbers: Sequence,
                  aggregations: ZoneAggregations,
                  zone_mapping_file: Optional[str] = None):
         self.aggregations = aggregations
@@ -222,7 +222,7 @@ class ZoneData:
 
 
 class BaseZoneData(ZoneData):
-    def __init__(self, data_dir: str, zone_numbers: Sequence,
+    def __init__(self, data_dir: Path, zone_numbers: Sequence,
                  zone_mapping_file: Optional[str] = None):
         all_zone_numbers = numpy.array(zone_numbers)
         peripheral = param.purpose_areas["peripheral"]
@@ -230,8 +230,7 @@ class BaseZoneData(ZoneData):
             peripheral[1])]
         municipality_file = "koko_suomi_kunta.zmp"
         municipality_centre_zones = pandas.read_csv(
-            os.path.join(data_dir, municipality_file),
-            delim_whitespace=True,
+            data_dir / municipality_file, delim_whitespace=True,
             index_col="data_id").squeeze().drop_duplicates().sort_values()
         files = FileReader(
             data_dir, municipality_centre_zones,
