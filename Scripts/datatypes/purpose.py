@@ -141,6 +141,7 @@ class Purpose:
         for mode in self.impedance_transform:
             for mtx_type in self.impedance_transform[mode]:
                 p = self.impedance_transform[mode][mtx_type]
+                day_imp[mode][mtx_type] *= p
                 if mtx_type == "time" and "car" in mode:
                     day_imp[mode][mtx_type] = self.add_destination_cost(
                                                 day_imp[mode][mtx_type], 
