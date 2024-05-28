@@ -146,7 +146,7 @@
     },
     "mode_choice": {
         "car_pax": {
-            "constant": -3.14845,
+            "constant": -3.519555652,
             "generation": {
                 "car_density": 2.60601
             },
@@ -158,7 +158,7 @@
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -3.60263,
+            "constant": -2.340595933,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -168,7 +168,7 @@
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.2438,
+            "constant": -1.070144175,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -178,7 +178,7 @@
             "individual_dummy": {}
         },
         "walk": {
-            "constant": 0,
+            "constant": -0.350196841,
             "generation": {},
             "attraction": {},
             "impedance": {},

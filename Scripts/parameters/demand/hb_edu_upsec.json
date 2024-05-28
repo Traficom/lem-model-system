@@ -7,7 +7,7 @@
     "impedance_transform": {
         "transit_work": {
             "cost": 0.5
-        }  
+        }
     },
     "impedance_share": {
         "car_work": {
@@ -182,7 +182,7 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": -5.44978,
+            "constant": -5.778948516,
             "generation": {
                 "car_density": 6.3151
             },
@@ -194,7 +194,7 @@
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.63655,
+            "constant": -3.840205048,
             "generation": {
                 "car_density": 2.35013
             },
@@ -206,7 +206,7 @@
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -0.99404,
+            "constant": -0.678502503,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -216,7 +216,7 @@
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -0.89486,
+            "constant": -0.773226813,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -226,7 +226,7 @@
             "individual_dummy": {}
         },
         "walk": {
-            "constant": 0,
+            "constant": -0.146617542,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -241,71 +241,71 @@
             "aht": [
                 0.3764,
                 0.0077
-              ],
-              "pt": [
+            ],
+            "pt": [
                 0.0546,
                 0.0593
-              ],
-              "iht": [
+            ],
+            "iht": [
                 0.0133,
                 0.1986
-              ]
+            ]
         },
         "car_pax": {
             "aht": [
                 0.3764,
                 0.0077
-              ],
-              "pt": [
+            ],
+            "pt": [
                 0.0546,
                 0.0593
-              ],
-              "iht": [
+            ],
+            "iht": [
                 0.0133,
                 0.1986
-              ]
+            ]
         },
         "transit_work": {
             "aht": [
                 0.3764,
                 0.0077
-              ],
-              "pt": [
+            ],
+            "pt": [
                 0.0546,
                 0.0593
-              ],
-              "iht": [
+            ],
+            "iht": [
                 0.0133,
                 0.1986
-              ]
+            ]
         },
         "bike": {
             "aht": [
                 0.3764,
                 0.0077
-              ],
-              "pt": [
+            ],
+            "pt": [
                 0.0546,
                 0.0593
-              ],
-              "iht": [
+            ],
+            "iht": [
                 0.0133,
                 0.1986
-              ]
+            ]
         },
         "walk": {
             "aht": [
                 0.3764,
                 0.0077
-              ],
-              "pt": [
+            ],
+            "pt": [
                 0.0546,
                 0.0593
-              ],
-              "iht": [
+            ],
+            "iht": [
                 0.0133,
                 0.1986
-              ]
+            ]
         }
     }
 }
