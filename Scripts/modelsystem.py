@@ -167,14 +167,13 @@ class ModelSystem:
                         self.dtm.add_demand(demand[mode])
         log.info("Demand calculation completed")
 
-    def _add_external_demand(self):
+    def _add_external_demand(self,
+                             long_dist_classes = (param.car_classes
+                                 + param.long_distance_transit_classes)):
+                                 # + param.freight_classes
         if not self.ass_model.use_free_flow_speeds:
             # If we want to assign all trips with traffic congestion,
             # then add long-distance trips as background demand
-            long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes
-                                 # + param.freight_classes
-            )
             try:
                 # Try getting long-distance trips from separate files
                 cm = self.long_dist_matrices.open(
@@ -305,7 +304,7 @@ class ModelSystem:
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
-        self._add_external_demand()
+        self._add_external_demand(param.car_classes)
 
         # Calculate tour sums and mode shares
         tour_sum = {mode: self._sum_trips_per_zone(mode, include_dests=False)
