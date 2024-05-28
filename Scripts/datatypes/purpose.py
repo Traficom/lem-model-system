@@ -73,6 +73,11 @@ class Purpose:
     @property
     def dest_interval(self):
         return slice(0, self.zone_data.nr_zones)
+    
+    def add_destination_cost(self, mtx, vector):
+        """Add zonedata to matrix. """
+        mtx = numpy.add(mtx, vector)
+        return mtx
 
     def transform_impedance(self, impedance):
         """Perform transformation from time period dependent matrices
@@ -136,7 +141,14 @@ class Purpose:
         for mode in self.impedance_transform:
             for mtx_type in self.impedance_transform[mode]:
                 p = self.impedance_transform[mode][mtx_type]
-                day_imp[mode][mtx_type] *= p
+                if mtx_type == "time" and "car" in mode:
+                    day_imp[mode][mtx_type] = self.add_destination_cost(
+                                                day_imp[mode][mtx_type], 
+                                                self.zone_data["park_time"].values)
+                if mtx_type == "cost" and "car" in mode:
+                    day_imp[mode][mtx_type] = self.add_destination_cost(
+                                                day_imp[mode][mtx_type], 
+                                                self.zone_data["park_cost"].values)
         return day_imp
 
 

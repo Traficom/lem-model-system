@@ -106,16 +106,15 @@
     "destination_choice": {
         "car_work": {
             "attraction": {
-                "park_cost": -0.37268,
-                "park_time": -0.05531,
-                "within_zone_time": -0.05531
+                "within_zone_time": -0.06353
             },
             "impedance": {
-                "time": -0.05531,
-                "cost": -0.27005
+                "time": -0.06353,
+                "cost": -0.12022
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.12022
             },
             "attraction_size": {
                 "upper_secondary": 1
@@ -123,11 +122,10 @@
         },
         "car_pax": {
             "attraction": {
-                "park_time": -0.10002,
-                "within_zone_time": -0.10002
+                "within_zone_time": -0.09987
             },
             "impedance": {
-                "time": -0.10002
+                "time": -0.09987
             },
             "log": {
                 "attraction_size": 1
@@ -141,11 +139,12 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "time": -0.0163,
-                "cost": -0.27005
+                "time": -0.01753,
+                "cost": -0.12022
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.12022
             },
             "attraction_size": {
                 "upper_secondary": 1
@@ -153,10 +152,10 @@
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.41308
+                "within_zone_dist": -0.41335
             },
             "impedance": {
-                "dist": -0.41308
+                "dist": -0.41335
             },
             "log": {
                 "attraction_size": 1
@@ -167,10 +166,10 @@
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.68326
+                "within_zone_dist": -0.68236
             },
             "impedance": {
-                "dist": -0.68326
+                "dist": -0.68236
             },
             "log": {
                 "attraction_size": 1
@@ -182,46 +181,46 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": -5.44978,
+            "constant": -5.2325,
             "generation": {
-                "car_density": 6.3151
+                "car_density": 6.0634
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.5863
+                "logsum": 0.59806
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.63655,
+            "constant": -3.64633,
             "generation": {
-                "car_density": 2.35013
+                "car_density": 2.36494
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.5863
+                "logsum": 0.59806
             },
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -0.99404,
+            "constant": -1.08059,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.5863
+                "logsum": 0.59806
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -0.89486,
+            "constant": -0.89433,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.5863
+                "logsum": 0.59806
             },
             "individual_dummy": {}
         },
@@ -231,7 +230,7 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.5863
+                "logsum": 0.59806
             },
             "individual_dummy": {}
         }
