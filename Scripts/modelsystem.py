@@ -174,22 +174,42 @@ class ModelSystem:
         if not self.ass_model.use_free_flow_speeds:
             # If we want to assign all trips with traffic congestion,
             # then add long-distance trips as background demand
+            zone_numbers = self.ass_model.zone_numbers
+            car_matrices = {}
             try:
-                # Try getting long-distance trips from separate files
-                cm = self.long_dist_matrices.open(
-                    "demand", "vrk", self.ass_model.zone_numbers,
-                    self.mapping, long_dist_classes)
-                mtx = cm.__enter__()
+                # Try getting long-distance trips from separate file
+                with self.long_dist_matrices.open(
+                        "demand", "vrk", zone_numbers,
+                        self.mapping, long_dist_classes) as mtx:
+                    for ass_class in long_dist_classes:
+                        demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                        self.dtm.add_demand(demand)
+                        if ass_class in param.car_classes:
+                            car_matrices[ass_class] = demand.matrix
             except IOError:
                 # Otherwise long-distance trips must be in base matrices
-                cm = self.basematrices.open(
-                    "demand", "vrk", self.ass_model.zone_numbers,
-                    transport_classes=long_dist_classes)
-                mtx = cm.__enter__()
-            for ass_class in long_dist_classes:
-                self.dtm.add_demand(
-                    Demand(self.em.purpose, ass_class, mtx[ass_class]))
-            cm.__exit__(None, None, None)
+                # Long car trips must be in separate file
+                with self.basematrices.open(
+                        "demand", "vrk", zone_numbers,
+                        transport_classes=param.car_classes) as mtx:
+                    for ass_class in param.car_classes:
+                        demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                        self.dtm.add_demand(demand)
+                        car_matrices[ass_class] = demand.matrix
+                other_classes = [ass_class for ass_class in long_dist_classes
+                    if ass_class not in param.car_classes]
+                if other_classes:
+                    for ap in self.ass_model.assignment_periods:
+                        tp = ap.name
+                        with self.basematrices.open(
+                                "demand", tp, zone_numbers,
+                                transport_classes=other_classes) as mtx:
+                            for ass_class in other_classes:
+                                self.dtm.demand[tp][ass_class] = mtx[ass_class]
+            with self.resultmatrices.open(
+                    "demand", "vrk", zone_numbers, m='w') as mtx:
+                for ass_class in car_matrices:
+                    mtx[ass_class] = car_matrices[ass_class]
 
     # possibly merge with init
     def assign_base_demand(self, 
@@ -244,7 +264,7 @@ class ModelSystem:
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes=transport_classes) as mtx:
                     for ass_class in transport_classes:
-                        self.dtm.demand[tp][ass_class] += mtx[ass_class]
+                        self.dtm.demand[tp][ass_class] = mtx[ass_class]
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
