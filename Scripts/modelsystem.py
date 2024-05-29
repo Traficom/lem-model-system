@@ -65,8 +65,9 @@ class ModelSystem:
         # Input data
         self.mapping = read_mapping(zone_data_path / f"{submodel}.zmp")
         self.zdata_base = BaseZoneData(
-            base_zone_data_path, self.zone_numbers, f"{submodel}.zmp")
+            base_zone_data_path, self.zone_numbers, self.mapping)
         self.basematrices = MatrixData(base_matrices_path / submodel)
+        self.long_dist_matrices = MatrixData(base_matrices_path / "koko_suomi")
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
             self.mapping)

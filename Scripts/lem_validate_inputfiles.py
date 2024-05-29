@@ -154,6 +154,7 @@ def main(args):
                 raise ValueError(msg)
             validate(scen.get_network(), time_periods)
             app.close()
+
     aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
