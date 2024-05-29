@@ -618,3 +618,17 @@ station_ids = {
     "metro": 13,
     "train": 14,
 }
+time_in_dest = {
+    "hb_work": 7.2,
+    "hb_edu_basic": 5.3,
+    "hb_edu_higher": 4.6,
+    "hb_grocery": 0.6,
+    "hb_other_shop": 1.1,
+    "hb_leisure": 2.0,
+    "hb_sport": 1.5,
+    "hb_visit": 2.5,
+    "wb_business": 1.7,
+    "wb_other": 0.4,
+    "ob_other": 1.4,
+
+} 

@@ -9,7 +9,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import assignment_classes, time_in_dest
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -144,12 +144,12 @@ class Purpose:
                 day_imp[mode][mtx_type] *= p
                 if mtx_type == "time" and "car" in mode:
                     day_imp[mode][mtx_type] = self.add_destination_cost(
-                                                day_imp[mode][mtx_type], 
-                                                self.zone_data["park_time"].values)
+                        day_imp[mode][mtx_type], 
+                        self.zone_data["park_time"].values)
                 if mtx_type == "cost" and "car" in mode:
                     day_imp[mode][mtx_type] = self.add_destination_cost(
-                                                day_imp[mode][mtx_type], 
-                                                self.zone_data["park_cost"].values)
+                        day_imp[mode][mtx_type], 
+                        time_in_dest[self.name] * self.zone_data["park_cost"].values)
         return day_imp
 
 
