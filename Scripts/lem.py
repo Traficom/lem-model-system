@@ -139,7 +139,7 @@ def main(args):
     # delete emme strategy files for scenarios
     if args.del_strat_files:
         db_path = emme_project_path.parent / "database"
-        for f in db_path.glob("STRAT_s*") + db_path.glob("STRATS_s*/*"):
+        for f in list(db_path.glob("STRAT_s*")) + list(db_path.glob("STRATS_s*/*")):
             try:
                 f.unlink()
             except:
