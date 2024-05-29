@@ -630,5 +630,7 @@ time_in_dest = {
     "wb_business": 1.7,
     "wb_other": 0.4,
     "ob_other": 1.4,
-
+    "hb_work_long": 0.0,
+    "hb_business_long": 0.0,
+    "hb_leisure_long": 0.0
 } 
