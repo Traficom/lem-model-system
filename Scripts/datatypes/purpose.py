@@ -214,43 +214,12 @@ class TourPurpose(Purpose):
         self.mapping = self.zone_data.aggregations.mappings[
             param.purpose_matrix_aggregation_level]
         self.aggregates = {}
-        self.own_zone_demand = {}
+        self.within_zone_tours = {}
         self.sec_dest_purpose = None
 
     @property
     def dist(self):
         return self.distance[self.bounds, self.dest_interval]
-
-    def print_data(self):
-        self.resultdata.print_data(
-            pandas.Series(
-                sum(self.generated_tours.values()), self.zone_numbers,
-                name=self.name),
-            "generation.txt")
-        self.resultdata.print_data(
-            pandas.Series(
-                sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers, name=self.name),
-            "attraction.txt")
-        demsums = {mode: self.generated_tours[mode].sum()
-            for mode in self.modes}
-        demand_all = float(sum(demsums.values()))
-        mode_shares = pandas.concat(
-            {self.name: pandas.Series(
-                {mode: demsums[mode] / demand_all for mode in demsums},
-                name="mode_share")},
-            names=["purpose", "mode"])
-        self.resultdata.print_concat(mode_shares, "mode_share.txt")
-        self.resultdata.print_concat(
-            pandas.concat(
-                {m: self.histograms[m].histogram for m in self.histograms},
-                names=["mode", "purpose", "interval"]),
-            "trip_lengths.txt")
-        self.resultdata.print_matrices(
-            self.aggregates, "aggregated_demand", self.name)
-        for mode in self.aggregates:
-            self.resultdata.print_data(
-                self.own_zone_demand[mode], "own_zone_demand.txt")
 
     def init_sums(self):
         agg = self.mapping.drop_duplicates()
@@ -259,7 +228,7 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
             self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
-            self.own_zone_demand[mode] = pandas.Series(
+            self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_prob(self, impedance, is_last_iteration):
@@ -320,7 +289,7 @@ class TourPurpose(Purpose):
                 pandas.DataFrame(
                     mtx, self.zone_numbers, self.zone_data.zone_numbers),
                 self.mapping.name)
-            self.own_zone_demand[mode] = pandas.Series(
+            self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
         return demand

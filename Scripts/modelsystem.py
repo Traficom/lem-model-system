@@ -156,11 +156,11 @@ class ModelSystem:
                         purpose, "car_leisure", purpose_impedance)
             else:
                 demand = purpose.calc_demand()
-                if is_last_iteration:
-                    purpose.print_data()
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
+        if is_last_iteration:
+            self._export_resultdata()
         log.info("Demand calculation completed")
 
     # possibly merge with init
@@ -276,37 +276,9 @@ class ModelSystem:
 
         # Calculate external demand
         for mode in param.external_modes:
-            int_demand = self._sum_trips_per_zone(mode)
+            int_demand = self._get_mode_tours(mode)
             ext_demand = self.em.calc_external(mode, int_demand)
             self.dtm.add_demand(ext_demand)
-
-        # Calculate tour sums and mode shares
-        tour_sum = {mode: self._sum_trips_per_zone(mode, include_dests=False)
-            for mode in self.travel_modes}
-        sum_all = sum(tour_sum.values())
-        mode_shares = {}
-        agg = self.zdata_base.aggregations
-        self.resultdata.print_data(tour_sum, "origins_demand.txt")
-        self.resultdata.print_data(
-            {mode: tour_sum[mode] / sum_all for mode in tour_sum},
-            "origins_shares.txt")
-        for mode in tour_sum:
-            for area_type in agg.mappings:
-                self.resultdata.print_data(
-                    agg.aggregate_array(tour_sum[mode], area_type),
-                    f"origins_demand_{area_type}.txt")
-            mode_shares[mode] = tour_sum[mode].sum() / sum_all.sum()
-        self.mode_share.append(mode_shares)
-        trip_sum = {mode: self._sum_trips_per_zone(mode)
-            for mode in self.travel_modes}
-        for mode in tour_sum:
-            for area_type in agg.mappings:
-                self.resultdata.print_data(
-                    agg.aggregate_array(trip_sum[mode], area_type),
-                    f"trips_{area_type}.txt")
-        self.resultdata.print_line("\nAssigned demand", "result_summary")
-        self.resultdata.print_line(
-            "\t" + "\t".join(param.transport_classes), "result_summary")
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
@@ -329,12 +301,17 @@ class ModelSystem:
                 self.zdata_base.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self._calculate_accessibility_and_savu_zones()
-            self.resultdata.print_line("\nMode shares", "result_summary")
-            for mode in mode_shares:
-                self.resultdata.print_line(
-                    "{}\t{:1.2%}".format(mode, mode_shares[mode]),
-                    "result_summary")
 
+        # Log mode shares
+        tours_mode = {mode: self._get_mode_tours(mode) for mode in self.travel_modes}
+        sum_all = sum(tours_mode.values())
+        mode_shares = {}
+        for mode in tours_mode:
+            share = tours_mode[mode].sum() / sum_all.sum()
+            mode_shares[mode] = share
+            log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
+        self.mode_share.append(mode_shares)
+        
         # Reset time-period specific demand matrices (DTM),
         # and empty result buffer
         gap = self.dtm.calc_gaps()
@@ -405,16 +382,67 @@ class ModelSystem:
                 self.resultdata.print_line(
                     f"Average SAVU:\t{avg_savu:1.4f}", "result_summary")
 
-    def _sum_trips_per_zone(self, mode, include_dests=True):
+    def _export_resultdata(self):
+        # Export purpose demand
+        gen_tours_purpose = {purpose.name: self._get_purpose_tours(purpose, attraction=False) 
+                             for purpose in self.dm.tour_purposes}
+        attr_tours_purpose = {purpose.name: self._get_purpose_tours(purpose, generation=False)
+                              for purpose in self.dm.tour_purposes}
+        self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
+        self.resultdata.print_data(attr_tours_purpose, "zone_attraction_by_purpose.txt")
+
+        # Export mode demand
+        gen_tours_mode = {mode: self._get_mode_tours(mode, attraction=False)
+                           for mode in self.travel_modes}
+        attr_tours_mode = {mode: self._get_mode_tours(mode, generation=False)
+                           for mode in self.travel_modes}
+        self.resultdata.print_data(gen_tours_mode, "zone_generation_by_mode.txt")
+        self.resultdata.print_data(attr_tours_mode, "zone_attraction_by_mode.txt")
+
+        # Export mode shares by purpose
+        for purpose in self.dm.tour_purposes:
+            demsums = {mode: purpose.generated_tours[mode].sum() for mode in purpose.modes}
+            demand_all = float(sum(demsums.values()))
+            mode_shares = pandas.concat({purpose.name: pandas.Series(
+                {mode: demsums[mode] / demand_all for mode in demsums}, 
+                name="mode_share")}, names=["purpose", "mode"])
+            self.resultdata.print_concat(mode_shares, "purpose_mode_shares.txt")
+        
+        # Export tour length histograms
+        for purpose in self.dm.tour_purposes:
+            self.resultdata.print_concat(
+                pandas.concat(
+                    {m: purpose.histograms[m].histogram for m in purpose.histograms},
+                    names=["mode", "purpose", "interval"]),
+                "trip_lengths.txt")
+            self.resultdata.print_matrices(
+                purpose.aggregates, "aggregated_demand", purpose.name)
+        
+        # Export within zone demand
+        for purpose in self.dm.tour_purposes:
+            for mode in purpose.aggregates:
+                self.resultdata.print_data(
+                    purpose.within_zone_tours[mode], "within_zone_tours.txt")
+
+    def _get_mode_tours(self, mode, generation = True, attraction = True):
         int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
                     if isinstance(purpose, SecDestPurpose)
                     else purpose.bounds)
-                int_demand[bounds] += purpose.generated_tours[mode]
-                if include_dests:
+                if generation:
+                    int_demand[bounds] += purpose.generated_tours[mode]
+                if attraction:
                     int_demand += purpose.attracted_tours[mode]
+        return int_demand
+    
+    def _get_purpose_tours(self, purpose, generation = True, attraction = True):
+        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=purpose.name)
+        if generation:
+            int_demand += sum(purpose.generated_tours.values())
+        if attraction:
+            int_demand += sum(purpose.generated_tours.values())
         return int_demand
 
     def _distribute_sec_dests(self, purpose, mode, impedance):
@@ -445,7 +473,6 @@ class ModelSystem:
             for tp in dtm.demand:
                 for ass_class in dtm.demand[tp]:
                     self.dtm.demand[tp][ass_class] += dtm.demand[tp][ass_class]
-        purpose.print_data()
 
     def _distribute_tours(self, container, purpose, mode, impedance, origs):
         for orig in origs:
@@ -483,9 +510,6 @@ class ModelSystem:
             weights=self.dtm.demand[tp]["transit_work"])
         cost_ratio = transit_cost / 44. / car_cost
         cost_ratio = cost_ratio.clip(0.01, None)
-        self.resultdata.print_data(
-            pandas.Series(cost_ratio, self.zone_numbers, name="cost"),
-            "impedance_ratio.txt")
         self.zdata_forecast["cost_ratio"] = pandas.Series(
             numpy.ma.getdata(cost_ratio), self.zone_numbers)
 
@@ -615,8 +639,6 @@ class AgentModelSystem(ModelSystem):
                 thread.start()
             for thread in threads:
                 thread.join()
-        for purpose in self.dm.tour_purposes:
-            purpose.print_data()
         if is_last_iteration:
             random.seed(zone_param.population_draw)
             self.dm.predict_income()
