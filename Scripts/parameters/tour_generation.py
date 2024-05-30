@@ -173,19 +173,6 @@ tour_generation = {
         "shop": 0.005,
     }
 }
-tour_weights = {
-    "hb_work": 1,
-    "hb_edu_basic": 1,
-    "hb_edu_upsec": 1,
-    "hb_edu_higher": 1,
-    "hb_grocery": 1,
-    "hb_other_shop": 1,
-    "hb_sport": 1,
-    "hb_visit": 1,
-    "hb_work_long": 1,
-    "hb_business_long": 1,
-    "hb_leisure_long": 1
-}
 garbage_generation = {
     "population": 0.000125,
     "workplaces": 0.000025,

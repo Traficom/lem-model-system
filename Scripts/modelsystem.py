@@ -300,7 +300,7 @@ class ModelSystem:
                 self.resultdata,
                 self.zdata_base.aggregations.municipality_mapping)
             self._calculate_noise_areas()
-            self._calculate_accessibility_and_savu_zones()
+            self._export_accessibility()
 
         # Log mode shares
         tours_mode = {mode: self._get_mode_tours(mode) for mode in self.travel_modes}
@@ -350,38 +350,14 @@ class ModelSystem:
         data["population"] = conversion * data["area"] * pop
         self.resultdata.print_data(data, "noise_areas.txt")
 
-    def _calculate_accessibility_and_savu_zones(self):
-        zone_numbers = self.zdata_forecast.zone_numbers
-        access = {modes: pandas.Series(0, zone_numbers, name="all")
-            for modes in ("total", "car", "sustainable")}
+    def _export_accessibility(self):
         for purpose in self.dm.tour_purposes:
-            if purpose.name in gen_param.tour_weights:
-                zone_numbers = purpose.zone_numbers
-                bounds = purpose.bounds
-                weight = gen_param.tour_weights[purpose.name]
-                for modes in access:
-                    mode_access = purpose.accessibility_model.access[modes]
-                    access[modes][bounds] += weight * mode_access
-        pop = self.zdata_forecast["population"][bounds]
-        for modes in access:
-            self.resultdata.print_data(
-                access[modes], f"{modes}_accessibility.txt")
-            avg_access = numpy.average(access[modes][bounds], weights=pop)
-            self.resultdata.print_line(
-                f"\n{modes.title()} accessibility:\t{avg_access:1.2f}",
-                "result_summary")
-            if modes == "sustainable":
-                intervals = zone_param.savu_intervals
-                savu = numpy.searchsorted(intervals, access[modes][bounds]) + 1
-                self.resultdata.print_data(
-                    pandas.Series(savu, zone_numbers, name="savu_zone"),
-                    "savu.txt")
-                avg_savu = numpy.searchsorted(intervals, avg_access) + 1
-                avg_savu += ((avg_access - intervals[avg_savu-2])
-                            / (intervals[avg_savu-1] - intervals[avg_savu-2]))
-                self.resultdata.print_line(
-                    f"Average SAVU:\t{avg_savu:1.4f}", "result_summary")
-
+            accessibility = purpose.accessibility_model.accessibility
+            for key in accessibility:
+                logsum = pandas.Series(numpy.log(accessibility[key]), 
+                    purpose.zone_numbers, name=f"{purpose.name}_{key}")
+                self.resultdata.print_data(logsum, f"accessibility.txt")
+    
     def _export_resultdata(self):
         # Export purpose demand
         gen_tours_purpose = {purpose.name: self._get_purpose_tours(purpose, attraction=False) 
@@ -497,9 +473,6 @@ class ModelSystem:
             weights=self.dtm.demand[tp]["transit_work"])
         time_ratio = transit_time / car_time
         time_ratio = time_ratio.clip(0.01, None)
-        self.resultdata.print_data(
-            pandas.Series(time_ratio, self.zone_numbers, name="time"),
-            "impedance_ratio.txt")
         self.zdata_forecast["time_ratio"] = pandas.Series(
             numpy.ma.getdata(time_ratio), self.zone_numbers)
         car_cost = numpy.ma.average(
