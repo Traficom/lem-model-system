@@ -216,10 +216,6 @@ class ModelSystem:
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
-            if tp == self.ass_model.time_periods[0]:
-                for mode, mtx in impedance[tp]["dist"].items():
-                    divide_matrices(
-                        mtx, Purpose.distance, f"Network/beeline dist {mode}")
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
         if is_end_assignment:
