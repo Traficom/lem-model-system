@@ -390,7 +390,7 @@ class ModelSystem:
                 pandas.concat(
                     {m: purpose.histograms[m].histogram for m in purpose.histograms},
                     names=["mode", "purpose", "interval"]),
-                "trip_lengths.txt")
+                "tour_lengths.txt")
             self.resultdata.print_matrices(
                 purpose.aggregates, "aggregated_demand", purpose.name)
         
