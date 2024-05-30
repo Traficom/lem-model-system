@@ -110,7 +110,7 @@
             },
             "impedance": {
                 "time": -0.06353,
-                "cost": -0.12022
+                "cost": -0.17366
             },
             "log": {
                 "attraction_size": 1,
@@ -140,7 +140,7 @@
             },
             "impedance": {
                 "time": -0.01753,
-                "cost": -0.12022
+                "cost": -0.17366
             },
             "log": {
                 "attraction_size": 1,
