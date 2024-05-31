@@ -159,8 +159,6 @@ class ModelSystem:
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
-        if is_last_iteration:
-            self._export_resultdata()
         log.info("Demand calculation completed")
 
     # possibly merge with init
@@ -308,6 +306,10 @@ class ModelSystem:
             log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
         self.mode_share.append(mode_shares)
         
+        # Export  model results
+        if iteration == "last":
+            self._export_resultdata()
+
         # Reset time-period specific demand matrices (DTM),
         # and empty result buffer
         gap = self.dtm.calc_gaps()
