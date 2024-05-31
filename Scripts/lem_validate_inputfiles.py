@@ -174,8 +174,8 @@ def main(args):
 
         # Check base zonedata
         base_zonedata = BaseZoneData(
-            base_zonedata_path, zone_numbers[submodel],
-            read_mapping(base_zonedata_path / f"{submodel}.zmp"))
+            Path(base_zonedata_path), zone_numbers[submodel],
+            read_mapping(Path(base_zonedata_path) / f"{submodel}.zmp"))
         aggregations[submodel] = base_zonedata.aggregations
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
@@ -186,8 +186,8 @@ def main(args):
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
-            data_path, zone_numbers[submodel], aggregations[submodel],
-            read_mapping(data_path / f"{submodel}.zmp"))
+            Path(data_path), zone_numbers[submodel], aggregations[submodel],
+            read_mapping(Path(data_path) / f"{submodel}.zmp"))
 
     log.info("Successfully validated all input files")
 

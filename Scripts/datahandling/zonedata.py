@@ -5,7 +5,7 @@ import numpy # type: ignore
 import pandas
 
 import parameters.zone as param
-from utils.read_csv_file import FileReader
+from utils.read_csv_file import FileReader, read_mapping
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations
 
@@ -228,9 +228,8 @@ class BaseZoneData(ZoneData):
         peripheral = param.purpose_areas["peripheral"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
             peripheral[1])]
-        municipality_centre_mapping = pandas.read_csv(
-            data_dir / "koko_suomi_kunta.zmp", delim_whitespace=True,
-            index_col="data_id").squeeze()
+        municipality_centre_mapping = read_mapping(
+            data_dir / "koko_suomi_kunta.zmp")
         if zone_mapping is not None:
             municipality_centre_mapping = municipality_centre_mapping.groupby(
                 zone_mapping).agg("first")

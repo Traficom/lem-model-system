@@ -181,13 +181,16 @@ class ModelSystem:
                 with self.long_dist_matrices.open(
                         "demand", "vrk", zone_numbers,
                         self.mapping, long_dist_classes) as mtx:
+                    log.info("Get matrices from long-distance model run...")
                     for ass_class in long_dist_classes:
                         demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
                         self.dtm.add_demand(demand)
                         if ass_class in param.car_classes:
                             car_matrices[ass_class] = demand.matrix
             except IOError:
-                # Otherwise long-distance trips must be in base matrices
+                log.info(
+                    ("Matrices from long-distance model run not found, "
+                     + "getting long trips from base matrices..."))
                 # Long car trips must be in separate file
                 with self.basematrices.open(
                         "demand", "vrk", zone_numbers,
@@ -210,6 +213,7 @@ class ModelSystem:
                     "demand", "vrk", zone_numbers, m='w') as mtx:
                 for ass_class in car_matrices:
                     mtx[ass_class] = car_matrices[ass_class]
+            log.info("Long-distance trip matrices imported")
 
     # possibly merge with init
     def assign_base_demand(self, 
