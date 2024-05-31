@@ -470,12 +470,6 @@ class AccessibilityModel(ModeDestModel):
         """
         mode_expsum = self._calc_utils(impedance)
         self._dest_exps.clear()
-        b = self._get_cost_util_coefficient()
-        try:
-            money_utility = 1 / b
-        except TypeError:  # Separate params for cap region and surrounding
-            money_utility = 1 / b[0]
-        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         self.accessibility = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
         self.accessibility["sustainable"] = numpy.zeros_like(mode_expsum)
@@ -487,10 +481,15 @@ class AccessibilityModel(ModeDestModel):
                 self.accessibility["car"] += logsum
             else:
                 self.accessibility["sustainable"] += numpy.log(self.mode_exps[mode])
+        # Scale logsum value to eur
+        b = self._get_cost_util_coefficient()
+        try:
+            money_utility = 1 / b
+        except TypeError:  # Separate params for cap region and surrounding
+            money_utility = 1 / b[0]
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-        self.accessibility["all_scaled"] = money_utility * self.accessibility["all"]
-        self.accessibility["sustainable_scaled"] = money_utility *  self.accessibility["sustainable"]
-        self.accessibility["car_scaled"] = money_utility * self.accessibility["car"]
+        for key in ["all", "sustainable", "car"]:
+            self.accessibility[f"{key}_scaled"] = money_utility * self.accessibility[key]
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.
