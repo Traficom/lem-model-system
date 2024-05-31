@@ -270,7 +270,7 @@ class ModelSystem:
 
         # Calculate external demand
         for mode in param.external_modes:
-            int_demand = self._get_mode_tours(mode)
+            int_demand = self._generated_tours_mode(mode) + self._attracted_tours_mode(mode)
             ext_demand = self.em.calc_external(mode, int_demand)
             self.dtm.add_demand(ext_demand)
 
@@ -297,7 +297,7 @@ class ModelSystem:
             self._export_accessibility()
 
         # Log mode shares
-        tours_mode = {mode: self._get_mode_tours(mode) for mode in self.travel_modes}
+        tours_mode = {mode: self._generated_tours_mode(mode) for mode in self.travel_modes}
         sum_all = sum(tours_mode.values())
         mode_shares = {}
         for mode in tours_mode:
@@ -357,66 +357,45 @@ class ModelSystem:
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_resultdata(self):
-        # Export purpose demand
-        gen_tours_purpose = {purpose.name: self._get_purpose_tours(purpose, attraction=False) 
+        gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
-        attr_tours_purpose = {purpose.name: self._get_purpose_tours(purpose, generation=False)
-                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
+        attr_tours_purpose = {purpose.name: purpose.attracted_tours_all
+                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(attr_tours_purpose, "zone_attraction_by_purpose.txt")
-
-        # Export mode demand
-        gen_tours_mode = {mode: self._get_mode_tours(mode, attraction=False)
-                           for mode in self.travel_modes}
-        attr_tours_mode = {mode: self._get_mode_tours(mode, generation=False)
+        gen_tours_mode = {mode: self._generated_tours_mode(mode)
                            for mode in self.travel_modes}
         self.resultdata.print_data(gen_tours_mode, "zone_generation_by_mode.txt")
+        attr_tours_mode = {mode: self._attracted_tours_mode(mode)
+                           for mode in self.travel_modes}
         self.resultdata.print_data(attr_tours_mode, "zone_attraction_by_mode.txt")
-
-        # Export mode shares by purpose
         for purpose in self.dm.tour_purposes:
-            demsums = {mode: purpose.generated_tours[mode].sum() for mode in purpose.modes}
-            demand_all = float(sum(demsums.values()))
-            mode_shares = pandas.concat({purpose.name: pandas.Series(
-                {mode: demsums[mode] / demand_all for mode in demsums}, 
-                name="mode_share")}, names=["purpose", "mode"])
-            self.resultdata.print_concat(mode_shares, "purpose_mode_shares.txt")
-        
-        # Export tour length histograms
-        for purpose in self.dm.tour_purposes:
-            self.resultdata.print_concat(
-                pandas.concat(
-                    {m: purpose.histograms[m].histogram for m in purpose.histograms},
-                    names=["mode", "purpose", "interval"]),
-                "tour_lengths.txt")
+            self.resultdata.print_concat(purpose.generation_mode_shares, "purpose_mode_shares.txt")
+            self.resultdata.print_concat(purpose.tour_lengths, "tour_lengths.txt")
             self.resultdata.print_matrices(
                 purpose.aggregates, "aggregated_demand", purpose.name)
-        
-        # Export within zone demand
-        for purpose in self.dm.tour_purposes:
-            for mode in purpose.aggregates:
+            for mode in purpose.within_zone_tours:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
-    def _get_mode_tours(self, mode, generation = True, attraction = True):
+    def _generated_tours_mode(self, mode):
         int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
                     if isinstance(purpose, SecDestPurpose)
                     else purpose.bounds)
-                if generation:
-                    int_demand[bounds] += purpose.generated_tours[mode]
-                if attraction:
-                    int_demand += purpose.attracted_tours[mode]
+                int_demand[bounds] += purpose.generated_tours[mode]
         return int_demand
     
-    def _get_purpose_tours(self, purpose, generation = True, attraction = True):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=purpose.name)
-        if generation:
-            int_demand += sum(purpose.generated_tours.values())
-        if attraction:
-            int_demand += sum(purpose.generated_tours.values())
+    def _attracted_tours_mode(self, mode):
+        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
+        for purpose in self.dm.tour_purposes:
+            if mode in purpose.modes and purpose.dest != "source":
+                bounds = (next(iter(purpose.sources)).bounds
+                    if isinstance(purpose, SecDestPurpose)
+                    else purpose.bounds)
+                int_demand[bounds] += purpose.attracted_tours[mode]
         return int_demand
 
     def _distribute_sec_dests(self, purpose, mode, impedance):

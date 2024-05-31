@@ -220,6 +220,28 @@ class TourPurpose(Purpose):
     @property
     def dist(self):
         return self.distance[self.bounds, self.dest_interval]
+    
+    @property
+    def generated_tours_all(self):
+        return pandas.Series(
+            sum(self.generated_tours.values()), self.zone_numbers, name=self.name)
+    
+    @property
+    def attracted_tours_all(self):
+        return pandas.Series(
+            sum(self.generated_tours.values()), self.zone_numbers, name=self.name)
+    
+    @property
+    def generation_mode_shares(self):
+        shares = {mode: (self.generated_tours[mode].sum() 
+                          / self.generated_tours_all.sum()) for mode in self.modes}
+        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")}, 
+                             names=["purpose", "mode"])
+    
+    @property
+    def tour_lengths(self):
+        lengths = {mode: self.histograms[mode].histogram for mode in self.histograms}
+        return pandas.concat(lengths, names=["mode", "purpose", "interval"])
 
     def init_sums(self):
         agg = self.mapping.drop_duplicates()
