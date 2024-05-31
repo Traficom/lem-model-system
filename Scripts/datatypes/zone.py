@@ -9,22 +9,21 @@ class ZoneAggregations:
     """
 
     def __init__(self, mappings: pandas.DataFrame,
-                 municipality_centres: pandas.Series):
+                 municipality_centre_mapping: pandas.Series):
         """Initialize mappings.
 
         Parameters
         ----------
         mapping : pandas.Dataframe
             Zone numbers as index and different zone mappings as columns
-        municipality_centres : pandas.Series
-            Mapping between municipality name and zone index
+        municipality_centre_mapping : pandas.Series
+            Mapping between zone id and municipality centre index
         """
         self.mappings = mappings[mappings.columns[mappings.dtypes == object]]
         self.dummies = mappings[mappings.columns[mappings.dtypes != object]]
         self.municipality_mapping = mappings.groupby(
             "municipality").agg("first")["county"]
-        self.municipality_centre_mapping = mappings["municipality"].map(
-            municipality_centres)
+        self.municipality_centre_mapping = municipality_centre_mapping
 
     def averages(self,
                  array: pandas.Series,
