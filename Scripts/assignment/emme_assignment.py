@@ -620,7 +620,10 @@ class EmmeAssignmentModel(AssignmentModel):
                         "NODE", extra(tc[:10] + "n_" + attr[res]),
                         tc + " " + res, overwrite=True, scenario=scenario)
             if tc in param.park_and_ride_classes:
-                attr_name = extra(tc[4:] + "_aux")
+                if tc[0]=="c":
+                    attr_name = extra(tc[0] + tc[4:] + "_aux")
+                else:
+                    attr_name = extra(tc[0] + tc[2:] + "_aux")
                 park_and_ride_results[tc] = attr_name
                 self.emme_project.create_extra_attribute(
                     "LINK", attr_name, tc,

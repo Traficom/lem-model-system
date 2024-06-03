@@ -51,6 +51,9 @@ class JourneyLevel:
     """
     def __init__(self, level: int, transit_class: str,
             park_and_ride: Union[str, bool] = False):
+        #local_modes = param.local_transit_modes
+        #if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
+        #    local_modes = local_modes + ['e']
         # Boarding transit modes allowed only on levels 0-4
         if level <= BOARDED_LOCAL:
             next = BOARDED_LOCAL
@@ -68,7 +71,7 @@ class JourneyLevel:
                 "next_journey_level": next,
             } for mode in param.long_dist_transit_modes[transit_class]]
         if park_and_ride:
-            if "first_mile" in park_and_ride:
+            if "first_mile" in park_and_ride or "first_taxi" in park_and_ride:
                 # Park-and-ride (car) mode allowed only on level 0.
                 car = FORBIDDEN if level >= PARKED else NOT_BOARDED
                 # If we want parking to be allowed only on specific links
@@ -95,6 +98,11 @@ class JourneyLevel:
                 "mode": mode,
                 "next_journey_level": walk,
             } for mode in param.aux_modes]
+        if level < BOARDED_LOCAL and ("l_first_mile" in transit_class or "j_first_mile" in transit_class):
+            transitions[0]["next_journey_level"] = FORBIDDEN
+            transitions[1]["next_journey_level"] = FORBIDDEN
+            transitions[3]["next_journey_level"] = FORBIDDEN
+            transitions[5]["next_journey_level"] = FORBIDDEN
         self.spec = {
             "description": DESCRIPTION[level],
             "destinations_reachable": DESTINATIONS_REACHABLE[level],
@@ -112,6 +120,9 @@ class JourneyLevel:
             },
             "waiting_time": None,
         }
+        avg_days = {"j": 1.98, "e": 1.98, "l": 2.78}
+        if level <= PARKED and "first_mile" in transit_class:
+            self.spec["boarding_cost"]["at_nodes"] = {"penalty": "@pnr_cost","perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]} #1.5 (0.75) average for all purposes 
         if level in (BOARDED_LOCAL, BOARDED_DEST):
             # Free transfers within local transit
             (self.spec["boarding_cost"]
