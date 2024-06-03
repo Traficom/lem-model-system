@@ -38,25 +38,15 @@ class JourneyLevel:
     def __init__(self, level: int, transit_class: str, headway_attribute: str,
             park_and_ride: Union[str, bool] = False,
             count_zone_boardings: bool = False):
-        local_modes = param.local_transit_modes
+        #local_modes = param.local_transit_modes
+        #if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
+        #    local_modes = local_modes + ['e']
         # Boarding transit modes allowed only on levels 0-3
-        if ('j' in param.long_dist_transit_modes[transit_class]) or ('e' in param.long_dist_transit_modes[transit_class]) or ('l' in param.long_dist_transit_modes[transit_class]):
-            if level <= BOARDED_LOCAL:
-                next = BOARDED_LOCAL
-            elif level == BOARDED_LONG_D:
-                next = BOARDED_LONG_D
-            else:
-                next = FORBIDDEN
-            DESTINATIONS_REACHABLE = [False, False, False, True, True, False]
-        else:
-            next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
-            DESTINATIONS_REACHABLE = [False, False, True, True, True, False]
-        if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
-            local_modes = local_modes + ['e']
+        next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
         transitions = [{
                 "mode": mode,
                 "next_journey_level": next,
-            } for mode in local_modes]
+            } for mode in param.local_transit_modes]
         next = BOARDED_LONG_D if level <= BOARDED_LONG_D else FORBIDDEN
         transitions += [{
                 "mode": mode,
