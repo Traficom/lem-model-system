@@ -35,7 +35,8 @@ class ScenarioData(object):
                  name: str, 
                  base_data_path: str, 
                  scenario_data_path: str,
-                 result_data_path: str
+                 result_data_path: str,
+                 spatial_data_path: str
                  ):
         """Container for result data of single scenario, which 
         also enables export to geopackage file format.
@@ -46,27 +47,24 @@ class ScenarioData(object):
             zones_path : Path to model-system zones (geopackage)
         """
         self.name = name
-        self.base_data_path = base_data_path
         self.scenario_data_path = scenario_data_path
         self.result_data_path = result_data_path
-        self.zones = read_spatial(self.base_data_path, "zones.gpkg")
+        self.zones = read_spatial(spatial_data_path, "zones.gpkg")
+        self.basemap = read_spatial(spatial_data_path, "water_areas.gpkg")
         self.zone_ids = self.zones.zone_id
-        self.aggregations = read_zonedata(self.base_data_path, "admin_regions.agg")  
+        self.aggregations = read_zonedata(base_data_path, "admin_regions.agg")
+
+    def get_input_data(self, file_name, geometry = False):
+        data = read_zonedata(self.scenario_data_path, file_name)
+        if geometry:
+            data = self.zones.merge(data, on='zone_id', how='left')
+        return data.loc[data.zone_id.isin(self.zone_ids)]
 
     def get_result_data(self, file_name, geometry = False):
         data = read_zonedata(self.result_data_path, file_name)
         if geometry:
             data = self.zones.merge(data, on='zone_id', how='left')
         return data.loc[data.zone_id.isin(self.zone_ids)]
-    
-    def get_input_data(self, file_name, geometry = False):
-        data = read_zonedata(self.scenario_data_path, file_name)
-        if geometry:
-            data = self.zones.merge(data, on='zone_id', how='left')
-        return data.loc[data.zone_id.isin(self.zone_ids)]
-    
-    def get_basemap(self):
-        return read_spatial(self.base_data_path, "basemap.gpkg")
 
     def set_subregion(self, subregion_type: str, subregions: list):
         cols = list(self.aggregations.columns)
