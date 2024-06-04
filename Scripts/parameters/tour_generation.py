@@ -133,30 +133,30 @@ tour_generation = {
     "hb_work_long": {
         "age_7-17_female": 0.0005,
         "age_7-17_male": 0.0001,
-        "age_18-29_female":  0.0045,
-        "age_18-29_male":  0.0072,
+        "age_18-29_female":  0.0044,
+        "age_18-29_male":  0.0071,
         "age_30-49_female":  0.005,
         "age_30-49_male":  0.0118,
         "age_50-64_female":  0.0027,
-        "age_50-64_male":  0.0068,
+        "age_50-64_male":  0.0067,
         "age_65-99_female":  0.0002,
         "age_65-99_male":  0.0004
     },
     "hb_business_long": {
         "income_0-19": 0.0004,
-        "income_20-39": 0.0015,
-        "income_40-59": 0.0026,
+        "income_20-39": 0.0011,
+        "income_40-59": 0.0021,
         "income_60-79": 0.0032,
         "income_80-99": 0.0058,
-        "income_100": 0.007
+        "income_100": 0.0068
     },
     "hb_leisure_long": {
-        "income_0-19": 0.0125,
-        "income_20-39": 0.0152,
-        "income_40-59": 0.0213,
+        "income_0-19": 0.0122,
+        "income_20-39": 0.0147,
+        "income_40-59": 0.0222,
         "income_60-79": 0.0228,
-        "income_80-99": 0.0272,
-        "income_100": 0.0276
+        "income_80-99": 0.0264,
+        "income_100": 0.027
     },
     "truck": {
         "population": 0.01,
