@@ -224,12 +224,12 @@ class TourPurpose(Purpose):
     @property
     def generated_tours_all(self):
         return pandas.Series(
-            sum(self.generated_tours.values()), self.zone_numbers, name=self.name)
+            sum(self.generated_tours.values()), self.zone_numbers)
     
     @property
     def attracted_tours_all(self):
         return pandas.Series(
-            sum(self.generated_tours.values()), self.zone_numbers, name=self.name)
+            sum(self.generated_tours.values()), self.zone_numbers)
     
     @property
     def generation_mode_shares(self):
