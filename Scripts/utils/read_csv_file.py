@@ -1,6 +1,4 @@
-from decimal import DivisionByZero
-from itertools import groupby
-import os
+from pathlib import Path
 from typing import Optional
 import pandas
 import numpy # type: ignore
@@ -8,10 +6,10 @@ import numpy # type: ignore
 import utils.log as log
 
 class FileReader:
-    def __init__(self, data_dir: str,
+    def __init__(self, data_dir: Path,
                  zone_numbers: Optional[numpy.ndarray] = None,
                  dtype: Optional[numpy.dtype] = None,
-                 zone_mapping_file: Optional[str] = None):
+                 zone_mapping: Optional[pandas.Series] = None):
         """Read (zone) data from space-separated files.
 
         If a zone mapping file is provided, data in files
@@ -28,14 +26,13 @@ class FileReader:
             Zone numbers to compare with for validation
         dtype : data type (optional)
             Data type to cast data to
-        zone_mapping_file : str (optional)
-            Name of zone mapping file
+        zone_mapping : pandas.Series (optional)
+            Mapping between data zones (index) and assignment zones
         """
         self.data_dir = data_dir
         self.zone_numbers = zone_numbers
         self.dtype = dtype
-        self.map_path = (os.path.join(data_dir, zone_mapping_file)
-                             if zone_mapping_file is not None else None)
+        self.mapping = zone_mapping
 
     def read_csv_file(self, file_end: str, squeeze: bool = False):
         """Read (zone) data from space-separated file.
@@ -53,21 +50,18 @@ class FileReader:
         """
         data_dir = self.data_dir
         zone_numbers = self.zone_numbers
-        file_found = False
-        for file_name in os.listdir(data_dir):
-            if file_name.endswith(file_end):
-                if file_found:
-                    msg = "Multiple {} files found in folder {}".format(
-                        file_end, data_dir)
-                    log.error(msg)
-                    raise NameError(msg)
-                else:
-                    path = os.path.join(data_dir, file_name)
-                    file_found = True
-        if not file_found:
+        files = list(data_dir.glob(f"*{file_end}"))
+        if not files:
             msg = "No {} file found in folder {}".format(file_end, data_dir)
             # This error should not be logged, as it is sometimes excepted
             raise NameError(msg)
+        elif len(files) > 1:
+            msg = "Multiple {} files found in folder {}".format(
+                file_end, data_dir)
+            log.error(msg)
+            raise NameError(msg)
+        else:
+            path = files[0]
         header = None if squeeze else "infer"
         data: pandas.DataFrame = pandas.read_csv(
             path, delim_whitespace=True, keep_default_na=False,
@@ -98,10 +92,9 @@ class FileReader:
             if not data.index.is_monotonic:
                 data.sort_index(inplace=True)
                 log.warn("File {} is not sorted in ascending order".format(path))
-            map_path = self.map_path
-            if map_path is not None:
-                log_path = map_path
-                mapping = pandas.read_csv(map_path, delim_whitespace=True, index_col="data_id").squeeze()
+            mapping = self.mapping
+            if mapping is not None:
+                log_path = mapping.name
                 if "total" in data.columns:
                     # If file contains total and shares of total,
                     # shares are aggregated as averages with total as weight
@@ -128,7 +121,7 @@ class FileReader:
                         raise IndexError(msg)
                 for i in zone_numbers:
                     if i not in data.index:
-                        if log_path == map_path and i in mapping.array:
+                        if mapping is not None and i in mapping.array:
                             # If mapping is ok, then error must be in data file
                             log_path = path
                             i = mapping[mapping == i].index[0]
@@ -147,6 +140,10 @@ class FileReader:
                 log.error(msg)
                 raise ValueError(msg)
         return data
+
+def read_mapping(path: Path) -> pandas.Series:
+    return pandas.read_csv(
+        path, delim_whitespace=True, index_col="data_id").squeeze()
 
 def avg (data, weights):
     if data.name == weights.name:

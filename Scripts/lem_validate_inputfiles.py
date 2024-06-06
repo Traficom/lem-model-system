@@ -7,6 +7,7 @@ from typing import List, Dict, Union
 
 import utils.config
 import utils.log as log
+from utils.read_csv_file import read_mapping
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
@@ -173,7 +174,8 @@ def main(args):
 
         # Check base zonedata
         base_zonedata = BaseZoneData(
-            base_zonedata_path, zone_numbers[submodel], f"{submodel}.zmp")
+            Path(base_zonedata_path), zone_numbers[submodel],
+            read_mapping(Path(base_zonedata_path) / f"{submodel}.zmp"))
         aggregations[submodel] = base_zonedata.aggregations
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
@@ -184,8 +186,8 @@ def main(args):
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
-            data_path, zone_numbers[submodel], aggregations[submodel],
-            f"{submodel}.zmp")
+            Path(data_path), zone_numbers[submodel], aggregations[submodel],
+            read_mapping(Path(data_path) / f"{submodel}.zmp"))
 
     log.info("Successfully validated all input files")
 
