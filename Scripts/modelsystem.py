@@ -306,9 +306,8 @@ class ModelSystem:
             log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
         self.mode_share.append(mode_shares)
         
-        # Export  model results
         if iteration == "last":
-            self._export_resultdata()
+            self._export_model_results()
 
         # Reset time-period specific demand matrices (DTM),
         # and empty result buffer
@@ -356,7 +355,7 @@ class ModelSystem:
                     purpose.zone_numbers, name=f"{purpose.name}_{key}")
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
-    def _export_resultdata(self):
+    def _export_model_results(self):
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
