@@ -12,6 +12,7 @@
     "FIRST_MATRIX_ID": 100,
     "BASELINE_DATA_PATH": "C:\\XXX\\Lahtodata",
     "FORECAST_DATA_PATH": "C:\\XXX\\Ennusteskenaarioiden_syottotiedot\\2017",
+    "LONG_DIST_DEMAND_FORECAST": "base",
     "ITERATION_COUNT": 15,
     "MAX_GAP": 1.0,
     "REL_GAP": 0.01,
