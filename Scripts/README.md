@@ -72,11 +72,14 @@ If you are trying another model, fill in whatever the path is.
 
 There should be two directiories under the path: `2018_zonedata` and `Matrices`.
 The names of these directories are hardcoded.
-There are 13 different input vector files in `2018_zonedata` from `.car` to `.wrk`.
-`Matrices` contains `.omx` files for demand, external traffic and freight traffic.
 
-There must also exist a .zmp file that matches the name of the chosen [`SUBMODEL`](#submodel)
-and zone system of the network.
+There are 13 different input vector files in `2018_zonedata` from `.car` to `.wrk`.
+In the `2018_zonedata` directory, there must also exist a .zmp file that matches
+the name of the chosen [`SUBMODEL`](#submodel),
+which maps the data to the zone system of the network.
+
+`Matrices` contains `.omx` files for demand, external traffic and freight traffic.
+The matrices may have missing zones (compared to the network), but cannot have extra zones.
 
 ### `FORECAST_DATA_PATH`
 
@@ -103,8 +106,10 @@ and zone system of the network.
 ### `LONG_DIST_DEMAND_FORECAST`
 
 If 'calc', runs assigment with free-flow speed and calculates demand for long-distance trips.
-If 'base', takes long-distance trips from base matrices.
+If 'base', takes long-distance trips from [base matrices](#baseline_data_path).
 If path, takes long-distance trips from that path.
+The zone system of the long-distance trips in path must match the baseline data
+in `2018_zonedata` directory.
 
 ### `FREIGHT_MATRIX_PATH`
 
