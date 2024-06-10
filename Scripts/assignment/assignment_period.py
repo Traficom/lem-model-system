@@ -485,7 +485,9 @@ class AssignmentPeriod(Period):
                 else:
                     mtx = self.get_matrix(ass_class, mtx_type)
                 if numpy.any(mtx > 1e10):
-                    log.warn(f"Matrix with infinite values: {mtx_type} : {ass_class}.")
+                    msg = (f"Matrix with infinite values: {mtx_type} : {ass_class}.")
+                    log.error(msg)
+                    raise ValueError(msg)
                 matrices[ass_class] = mtx
         return matrices
 
