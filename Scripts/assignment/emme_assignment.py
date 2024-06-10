@@ -328,8 +328,8 @@ class EmmeAssignmentModel(AssignmentModel):
             resultdata.print_line(
                 "{}:\t{:1.0f}".format(ass_class, kms[ass_class]),
                 "result_summary")
-        resultdata.print_data(area_kms, "vehicle_kms_areas.txt")
-        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_areas.txt")
+        resultdata.print_data(area_kms, "vehicle_kms_county.txt")
+        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_county.txt")
         resultdata.print_data(linklengths, "link_lengths.txt")
 
         # Aggregate and print numbers of stations
