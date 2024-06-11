@@ -148,7 +148,6 @@ class DemandModel:
             purpose.gen_model.init_tours()
             if not isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.add_tours()
-        result_data = {}  # For printing of results
         gm = self.tour_generation_model
         for age in self._age_strings():
             segments = self.segments[age]
@@ -165,10 +164,6 @@ class DemandModel:
                     except KeyError:
                         pass
                 nr_tours_sums["-".join(combination)] = nr_tours.sum()
-            result_data[age] = nr_tours_sums.sort_index()
-        self.resultdata.print_concat(
-            pandas.concat(result_data, names=["age_group", "combination"]),
-            "tour_combinations.txt")
 
     def generate_tour_probs(self) -> Dict[Tuple[int,int], numpy.ndarray]:
         """Generate matrices of cumulative tour combination probabilities.

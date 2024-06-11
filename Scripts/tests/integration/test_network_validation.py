@@ -1,4 +1,6 @@
-import unittest, os, pandas
+import unittest
+import pandas
+from pathlib import Path
 from assignment.emme_bindings.mock_project import MockProject
 from assignment.datatypes.transit_fare import TransitFareZoneSpecification
 from utils.validate_network import validate
@@ -14,9 +16,7 @@ MODE_TYPES = {
 class EmmeAssignmentTest(unittest.TestCase):
     def test_assignment(self):
         context = MockProject()
-        scenario_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..", "test_data", "Network")
+        scenario_dir = Path(__file__).parent.parent / "test_data" / "Network"
         scenario_id = 19
         context.import_scenario(scenario_dir, scenario_id, "test")
         fares = TransitFareZoneSpecification(pandas.DataFrame({

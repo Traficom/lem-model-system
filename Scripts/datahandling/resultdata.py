@@ -1,5 +1,5 @@
 from __future__ import annotations
-import os
+from pathlib import Path
 from typing import Any, Dict, Union
 import pandas
 
@@ -8,10 +8,9 @@ class ResultsData:
     """
     Saves all result data to same folder.
     """
-    def __init__(self, results_directory_path: str):
-        if not os.path.exists(results_directory_path):
-            os.makedirs(results_directory_path)
+    def __init__(self, results_directory_path: Path):
         self.path = results_directory_path
+        self.path.mkdir(parents=True, exist_ok=True)
         self._line_buffer: Dict[str, Any] = {}
         self._df_buffer: Dict[str, Any] = {}
         self._xlsx_buffer: Dict[str, Any] = {}
@@ -23,9 +22,8 @@ class ResultsData:
         self._line_buffer = {}
         for filename in self._df_buffer:
             self._df_buffer[filename].to_csv(
-                os.path.join(self.path, filename),
-                sep='\t', float_format="%1.5f", header=True,
-                quotechar=" ")
+                self.path / filename, sep='\t', float_format="%1.5f",
+                header=True, quotechar=" ")
         self._df_buffer = {}
         for filename in self._xlsx_buffer:
             self._xlsx_buffer[filename].close()
@@ -78,8 +76,7 @@ class ResultsData:
         try:
             buffer = self._line_buffer[filename]
         except KeyError:
-            buffer = open(
-                os.path.join(self.path, "{}.txt".format(filename)), 'w')
+            buffer = open(self.path / "{}.txt".format(filename), 'w')
             self._line_buffer[filename] = buffer
         buffer.write(line + "\n")
 
@@ -104,12 +101,12 @@ class ResultsData:
             # Get/create new workbook
             if filename not in self._xlsx_buffer:
                 self._xlsx_buffer[filename] = pandas.ExcelWriter(
-                    os.path.join(self.path, f"{filename}.xlsx"))
+                    self.path / f"{filename}.xlsx")
         except ModuleNotFoundError:
             # If no openpyxl package available, save data to csv
             for key, df in data.items():
                 df.to_csv(
-                    os.path.join(self.path, f"{filename}_{description}_{key}.txt"),
+                    self.path / f"{filename}_{description}_{key}.txt",
                     sep='\t', float_format="%8.1f")
         else:
             for key, df in data.items():
