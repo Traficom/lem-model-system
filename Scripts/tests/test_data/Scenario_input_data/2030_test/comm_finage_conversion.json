@@ -1,0 +1,14 @@
+{
+    "mameka": ["marita", "kalevi"],
+    "metsat": ["metsat"],
+    "energy": ["krhiil", "rkoljy", "turve", "kokbri"],
+    "kaivan": ["metkai", "minkai"],
+    "elint": ["elint"],
+    "tekst": ["tekst"],
+    "puukor": ["puukor"],
+    "papsel": ["papsel", "pappai"],
+    "oljytu": ["bensa", "diesel", "kpoljy", "kroljy", "mpoljy"],
+    "kemiat": ["kemlaa", "kummuo"],
+    "metkot": ["rauter", "jaloml", "mltuot", "elektr", "konela", "majon", "huonek"],
+    "jate": ["jate"]
+}

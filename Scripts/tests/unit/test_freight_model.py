@@ -6,6 +6,7 @@ import numpy
 import unittest
 
 from datatypes.purpose import FreightPurpose
+from datahandling.zonedata import BaseZoneData
 from datahandling.zonedata import ZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_bindings.emme_project import EmmeProject
@@ -39,10 +40,15 @@ class FreightModelTest(unittest.TestCase):
 
         resultdata = ResultsData(os.path.join(TEST_DATA_PATH, "Results",
                                               "test", "freight", MODEL_TYPE))
+        basezonedata = BaseZoneData(
+            os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test"),
+            numpy.array(METROPOLITAN_ZONES),
+            "koko_suomi_kunta.zmp")
         zonedata = ZoneData(
             os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test"),
             numpy.array(METROPOLITAN_ZONES),
-            "freight_zones.zmp")
+            basezonedata.aggregations,
+            "koko_suomi_kunta.zmp")
         parameters_path = os.path.join(os.path.dirname(
                 os.path.realpath(__file__)), "..", "..", "parameters",
                 "freight", MODEL_TYPE)

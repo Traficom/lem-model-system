@@ -11,7 +11,7 @@ def calc_road_cost(unit_cost_parameters: Dict[str, Dict],
         time_cost = time * parameters["time_based_cost"]
         dist_cost = distance * parameters["distance_based_cost"]
         road_cost = (time_cost+dist_cost+toll_cost) / parameters["average_load"]
-        mode_cost[mode] = ((road_cost + parameters["terminal_cost"]*2
+        mode_cost[mode] = ((parameters["terminal_cost"]*2
                             + road_cost*parameters["empty_share"])
                            * parameters["distribution"])
     road_total_cost = sum(mode_cost.values())
