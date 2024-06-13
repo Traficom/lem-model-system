@@ -132,47 +132,47 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.7201
+                "logsum": 0.72034
             },
             "individual_dummy": {}
         },
         "train": {
-            "constant": -0.93174,
+            "constant": -0.9327,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.7201
+                "logsum": 0.72034
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": -1.24571,
+            "constant": -1.24644,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.7201
+                "logsum": 0.72034
             },
             "individual_dummy": {}
         },
         "car_work": {
-            "constant": 1.32378,
+            "constant": 1.32173,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.7201
+                "logsum": 0.72034
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -1.19211,
+            "constant": -1.19342,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.7201
+                "logsum": 0.72034
             },
             "individual_dummy": {}
         }
