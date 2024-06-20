@@ -74,11 +74,6 @@ class Purpose:
     def dest_interval(self):
         return slice(0, self.zone_data.nr_zones)
     
-    def add_destination_cost(self, mtx, vector):
-        """Add zonedata to matrix. """
-        mtx = numpy.add(mtx, vector)
-        return mtx
-
     def transform_impedance(self, impedance):
         """Perform transformation from time period dependent matrices
         to aggregate impedance matrices for specific travel purpose.
@@ -144,15 +139,11 @@ class Purpose:
                 day_imp[mode][mtx_type] *= p
                 # Add parking time and cost to LOS matrix
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] = self.add_destination_cost(
-                        day_imp[mode][mtx_type], 
-                        self.zone_data["park_time"].values)
+                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
                 if mtx_type == "cost" and "car" in mode:
-                    park_cost = (activity_time[self.name] * 
-                                 share_paying[self.name] * 
-                                 self.zone_data["park_cost"].values)
-                    day_imp[mode][mtx_type] = self.add_destination_cost(
-                        day_imp[mode][mtx_type], park_cost)
+                    day_imp[mode][mtx_type] += (activity_time[self.name] * 
+                                                share_paying[self.name] * 
+                                                self.zone_data["park_cost"].values)
         return day_imp
 
 
