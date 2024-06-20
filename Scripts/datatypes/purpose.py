@@ -9,7 +9,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import assignment_classes, activity_time, share_paying
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -73,6 +73,11 @@ class Purpose:
     @property
     def dest_interval(self):
         return slice(0, self.zone_data.nr_zones)
+    
+    def add_destination_cost(self, mtx, vector):
+        """Add zonedata to matrix. """
+        mtx = numpy.add(mtx, vector)
+        return mtx
 
     def transform_impedance(self, impedance):
         """Perform transformation from time period dependent matrices
@@ -137,6 +142,17 @@ class Purpose:
             for mtx_type in self.impedance_transform[mode]:
                 p = self.impedance_transform[mode][mtx_type]
                 day_imp[mode][mtx_type] *= p
+                # Add parking time and cost to LOS matrix
+                if mtx_type == "time" and "car" in mode:
+                    day_imp[mode][mtx_type] = self.add_destination_cost(
+                        day_imp[mode][mtx_type], 
+                        self.zone_data["park_time"].values)
+                if mtx_type == "cost" and "car" in mode:
+                    park_cost = (activity_time[self.name] * 
+                                 share_paying[self.name] * 
+                                 self.zone_data["park_cost"].values)
+                    day_imp[mode][mtx_type] = self.add_destination_cost(
+                        day_imp[mode][mtx_type], park_cost)
         return day_imp
 
 
