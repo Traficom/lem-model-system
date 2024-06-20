@@ -368,6 +368,31 @@ volume_factors = {
         "pt": 1. / 0.1,
         "iht": 1. / 0.3,
     },
+    "car_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "car_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "train": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "long_d_bus": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "airplane": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
