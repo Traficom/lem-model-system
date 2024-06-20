@@ -393,6 +393,11 @@ volume_factors = {
         "pt": 1. / 0.109,
         "iht": 1. / 0.405,
     },
+    "bus": {
+        "aht": 1 / 0.497, 
+        "pt": 1 / 0.090, 
+        "iht": 1 / 0.497,
+    },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
