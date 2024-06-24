@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
 from pathlib import Path
+import shutil
 
 import utils.config
 import utils.log as log
@@ -14,9 +15,13 @@ BASE_ZONEDATA_DIR = "2018_zonedata"
 
 
 def main(args):
+    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
+    long_dist_matrices_path = (None
+        if args.long_dist_demand_forecast in ("calc", "base")
+        else Path(args.long_dist_demand_forecast))
     if args.end_assignment_only:
         iterations = 0
-    elif args.free_flow_assignment or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
@@ -25,6 +30,8 @@ def main(args):
             "Iteration number {} not valid".format(args.iterations))
     base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
     base_matrices_path = Path(args.baseline_data_path, "Matrices")
+    freight_matrices_path = (Path(args.freight_matrix_path)
+        if args.freight_matrix_path is not None else None)
     forecast_zonedata_path = Path(args.forecast_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
@@ -53,12 +60,18 @@ def main(args):
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
+    shutil.rmtree(results_path / BASE_ZONEDATA_DIR, ignore_errors=True)
+    shutil.copytree(base_zonedata_path, results_path / BASE_ZONEDATA_DIR)
+    shutil.rmtree(results_path / forecast_zonedata_path.name, ignore_errors=True)
+    shutil.copytree(
+        forecast_zonedata_path, results_path / forecast_zonedata_path.name)
+
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {
-        "use_free_flow_speeds": args.free_flow_assignment,
+        "use_free_flow_speeds": calculate_long_dist_demand,
         "delete_extra_matrices": args.delete_extra_matrices,
     }
-    if args.free_flow_assignment:
+    if calculate_long_dist_demand:
         kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
@@ -87,7 +100,8 @@ def main(args):
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
     model_args = (forecast_zonedata_path, base_zonedata_path,
-                  base_matrices_path, results_path, ass_model, args.submodel)
+                  base_matrices_path, results_path, ass_model, args.submodel,
+                  long_dist_matrices_path, freight_matrices_path)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
              else ModelSystem(*model_args))
     log_extra["status"]["results"] = model.mode_share
@@ -139,7 +153,7 @@ def main(args):
     # delete emme strategy files for scenarios
     if args.del_strat_files:
         db_path = emme_project_path.parent / "database"
-        for f in db_path.glob("STRAT_s*") + db_path.glob("STRATS_s*/*"):
+        for f in list(db_path.glob("STRAT_s*")) + list(db_path.glob("STRATS_s*/*")):
             try:
                 f.unlink()
             except:
@@ -176,10 +190,19 @@ if __name__ == "__main__":
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."
+        "-l", "--long-dist-demand-forecast",
+        type=str,
+        default=config.LONG_DIST_DEMAND_FORECAST,
+        help=("If 'calc', runs assigment with free-flow speed and "
+              + "calculates demand for long-distance trips. "
+              + "If 'base', takes long-distance trips from base matrices. "
+              + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-path",
+        type=str,
+        default=config.FREIGHT_MATRIX_PATH,
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",

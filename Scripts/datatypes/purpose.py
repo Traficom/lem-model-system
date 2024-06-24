@@ -9,7 +9,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes, time_in_dest
+from parameters.assignment import assignment_classes, activity_time, share_paying
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -74,11 +74,6 @@ class Purpose:
     def dest_interval(self):
         return slice(0, self.zone_data.nr_zones)
     
-    def add_destination_cost(self, mtx, vector):
-        """Add zonedata to matrix. """
-        mtx = numpy.add(mtx, vector)
-        return mtx
-
     def transform_impedance(self, impedance):
         """Perform transformation from time period dependent matrices
         to aggregate impedance matrices for specific travel purpose.
@@ -142,14 +137,13 @@ class Purpose:
             for mtx_type in self.impedance_transform[mode]:
                 p = self.impedance_transform[mode][mtx_type]
                 day_imp[mode][mtx_type] *= p
+                # Add parking time and cost to LOS matrix
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] = self.add_destination_cost(
-                        day_imp[mode][mtx_type], 
-                        self.zone_data["park_time"].values)
+                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
                 if mtx_type == "cost" and "car" in mode:
-                    day_imp[mode][mtx_type] = self.add_destination_cost(
-                        day_imp[mode][mtx_type], 
-                        time_in_dest[self.name] * self.zone_data["park_cost"].values)
+                    day_imp[mode][mtx_type] += (activity_time[self.name] * 
+                                                share_paying[self.name] * 
+                                                self.zone_data["park_cost"].values)
         return day_imp
 
 
@@ -227,43 +221,34 @@ class TourPurpose(Purpose):
         self.mapping = self.zone_data.aggregations.mappings[
             param.purpose_matrix_aggregation_level]
         self.aggregates = {}
-        self.own_zone_demand = {}
+        self.within_zone_tours = {}
         self.sec_dest_purpose = None
 
     @property
     def dist(self):
         return self.distance[self.bounds, self.dest_interval]
-
-    def print_data(self):
-        self.resultdata.print_data(
-            pandas.Series(
-                sum(self.generated_tours.values()), self.zone_numbers,
-                name=self.name),
-            "generation.txt")
-        self.resultdata.print_data(
-            pandas.Series(
-                sum(self.attracted_tours.values()),
-                self.zone_data.zone_numbers, name=self.name),
-            "attraction.txt")
-        demsums = {mode: self.generated_tours[mode].sum()
-            for mode in self.modes}
-        demand_all = float(sum(demsums.values()))
-        mode_shares = pandas.concat(
-            {self.name: pandas.Series(
-                {mode: demsums[mode] / demand_all for mode in demsums},
-                name="mode_share")},
-            names=["purpose", "mode"])
-        self.resultdata.print_concat(mode_shares, "mode_share.txt")
-        self.resultdata.print_concat(
-            pandas.concat(
-                {m: self.histograms[m].histogram for m in self.histograms},
-                names=["mode", "purpose", "interval"]),
-            "trip_lengths.txt")
-        self.resultdata.print_matrices(
-            self.aggregates, "aggregated_demand", self.name)
-        for mode in self.aggregates:
-            self.resultdata.print_data(
-                self.own_zone_demand[mode], "own_zone_demand.txt")
+    
+    @property
+    def generated_tours_all(self):
+        return pandas.Series(
+            sum(self.generated_tours.values()), self.zone_numbers)
+    
+    @property
+    def attracted_tours_all(self):
+        return pandas.Series(
+            sum(self.generated_tours.values()), self.zone_numbers)
+    
+    @property
+    def generation_mode_shares(self):
+        shares = {mode: (self.generated_tours[mode].sum() 
+                          / self.generated_tours_all.sum()) for mode in self.modes}
+        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")}, 
+                             names=["purpose", "mode"])
+    
+    @property
+    def tour_lengths(self):
+        lengths = {mode: self.histograms[mode].histogram for mode in self.histograms}
+        return pandas.concat(lengths, names=["mode", "purpose", "interval"])
 
     def init_sums(self):
         agg = self.mapping.drop_duplicates()
@@ -272,7 +257,7 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
             self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
-            self.own_zone_demand[mode] = pandas.Series(
+            self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_prob(self, impedance, is_last_iteration):
@@ -333,7 +318,7 @@ class TourPurpose(Purpose):
                 pandas.DataFrame(
                     mtx, self.zone_numbers, self.zone_data.zone_numbers),
                 self.mapping.name)
-            self.own_zone_demand[mode] = pandas.Series(
+            self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
         return demand

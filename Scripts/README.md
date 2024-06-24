@@ -70,11 +70,16 @@ If you are trying the test model, try
 `"C:\\FILL_YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Base_input_data"`.
 If you are trying another model, fill in whatever the path is.
 
-There should be two directiories under the path: `2018_zonedata` and `base_matrices`.
+There should be two directiories under the path: `2018_zonedata` and `Matrices`.
 The names of these directories are hardcoded.
-There are 10 different input vector files in `2018_zonedata` from `.car` to `.wrk`.
-`base_matrices` contains `.omx` and `.txt` files for costs, demand, external
-traffic and freight traffic.
+
+There are 13 different input vector files in `2018_zonedata` from `.car` to `.wrk`.
+In the `2018_zonedata` directory, there must also exist a .zmp file that matches
+the name of the chosen [`SUBMODEL`](#submodel),
+which maps the data to the zone system of the network.
+
+`Matrices` contains `.omx` files for demand, external traffic and freight traffic.
+The matrices may have missing zones (compared to the network), but cannot have extra zones.
 
 ### `FORECAST_DATA_PATH`
 
@@ -86,16 +91,29 @@ If you are trying the test model, try
 `"C:\\FILL_YOUR_PATH\\model-system\\Scripts\\tests\\test_data\\Scenario_input_data\\2030_test"`.
 If you are trying another model, fill in whatever the path is.
 
-There should be 9 or 10 different input vector files in your forecast data path.
+There should be 12 or 13 different input vector files in your forecast data path.
 File extensions are similar to your `BASELINE_DATA_PATH\\2018_zonedata` files.
-The file `.car` is optional (?).
+The file `.car` is optional.
 
-In the .ext file there must be a value line for every external zone in use
-(i.e. centroids 31000…31999 In the network).
-In all other files (excluding files .cco, .tco and .trk) there must be a value
-line for every internal zone in use (i.e. centroids 1…30999 In the network).
+In all files, excluding files .cco, .tco and .trk, there must be a value
+line for every internal zone in use.
 It means that if there are no inhabitants, workplaces, parking costs etc. in
 some zone a zero value line instead of a missing line must be used.
+
+There must also exist a .zmp file that matches the name of the chosen [`SUBMODEL`](#submodel)
+and zone system of the network.
+
+### `LONG_DIST_DEMAND_FORECAST`
+
+If 'calc', runs assigment with free-flow speed and calculates demand for long-distance trips.
+If 'base', takes long-distance trips from [base matrices](#baseline_data_path).
+If path, takes long-distance trips from that path.
+The zone system of the long-distance trips in path must match the baseline data
+in `2018_zonedata` directory.
+
+### `FREIGHT_MATRIX_PATH`
+
+If specified, take freight demand matrices from path.
 
 ### `ITERATION_COUNT`
 
@@ -122,13 +140,7 @@ flags are separated by commas (e.g., `"OPTIONAL_FLAGS": ["RUN_AGENT_SIMULATION",
 
 Using this flag runs only end assignment of base demand matrices.
 
-### `FREE_FLOW_ASSIGNMENT`
-
-Using this flag runs assigment with free flow speed.
-Only one time period "vrk" is assigned.
-Forces the number of iterations to one, as speeds will not change.
-
-### `STORED_SPEED_ASSIGNMENT`
+#### `STORED_SPEED_ASSIGNMENT`
 
 Using this flag runs assigment with stored (fixed) speed.
 Forces the number of iterations to one, as speeds will not change.
@@ -155,7 +167,3 @@ periods will be saved to EMME project Database folder.
 
 Transit assignment in EMME stores large files which are used for assignment analyses.
 If activated, these files will be deleted after the model run.
-
-#### `USE_FIXED_TRANSIT_COST`
-
-If set, pre-calculated transit costs are taken from the Results folder.

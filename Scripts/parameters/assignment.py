@@ -618,19 +618,27 @@ station_ids = {
     "metro": 13,
     "train": 14,
 }
-time_in_dest = {
+
+activity_time = {
     "hb_work": 7.2,
-    "hb_edu_basic": 5.3,
+    "hb_edu_upsec": 5.2,
     "hb_edu_higher": 4.6,
     "hb_grocery": 0.6,
     "hb_other_shop": 1.1,
     "hb_leisure": 2.0,
     "hb_sport": 1.5,
     "hb_visit": 2.5,
-    "wb_business": 1.7,
-    "wb_other": 0.4,
-    "ob_other": 1.4,
-    "hb_work_long": 0.0,
-    "hb_business_long": 0.0,
-    "hb_leisure_long": 0.0
+    "ob_other": 1.4
+}
+
+share_paying = {
+    "hb_work": 0.50,
+    "hb_edu_upsec": 0.30,
+    "hb_edu_higher": 0.30,
+    "hb_grocery": 1.00,
+    "hb_other_shop": 0.15,
+    "hb_leisure": 1.00,
+    "hb_sport": 0.00,
+    "hb_visit": 0.75,
+    "ob_other": 0.00
 } 
