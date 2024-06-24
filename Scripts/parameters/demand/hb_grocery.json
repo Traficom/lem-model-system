@@ -102,7 +102,6 @@
     "destination_choice": {
         "car_leisure": {
             "attraction": {
-                "park_time": -0.10685,
                 "within_zone_time": -0.10685
             },
             "impedance": {
@@ -119,7 +118,6 @@
         },
         "car_pax": {
             "attraction": {
-                "park_time": -0.11946,
                 "within_zone_time": -0.11946
             },
             "impedance": {

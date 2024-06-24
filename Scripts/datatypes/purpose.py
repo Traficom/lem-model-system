@@ -137,13 +137,18 @@ class Purpose:
             for mtx_type in self.impedance_transform[mode]:
                 p = self.impedance_transform[mode][mtx_type]
                 day_imp[mode][mtx_type] *= p
+        for mode in day_imp:
+            for mtx_type in day_imp[mode]:
                 # Add parking time and cost to LOS matrix
                 if mtx_type == "time" and "car" in mode:
                     day_imp[mode][mtx_type] += self.zone_data["park_time"].values
                 if mtx_type == "cost" and "car" in mode:
-                    day_imp[mode][mtx_type] += (activity_time[self.name] * 
-                                                share_paying[self.name] * 
-                                                self.zone_data["park_cost"].values)
+                    try:
+                        day_imp[mode][mtx_type] += (activity_time[self.name] *
+                                                    share_paying[self.name] *
+                                                    self.zone_data["park_cost"].values)
+                    except KeyError:
+                        pass
         return day_imp
 
 
