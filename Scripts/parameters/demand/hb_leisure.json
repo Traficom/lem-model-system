@@ -102,33 +102,34 @@
     "destination_choice": {
         "car_leisure": {
             "attraction": {
-                "within_zone_time": -0.06164
+                "within_zone_time": -0.05255
             },
             "impedance": {
-                "time": -0.06164,
-                "cost": -0.12997
+                "time": -0.05255,
+                "cost": -0.07646
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.38464
             },
             "attraction_size": {
                 "hospitality": 1,
-                "recreation": 1.31805
+                "recreation": 1.30957
             }
         },
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.07647
+                "within_zone_time": -0.07637
             },
             "impedance": {
-                "time": -0.07647
+                "time": -0.07637
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "hospitality": 1,
-                "recreation": 1.31805
+                "recreation": 1.30957
             }
         },
         "transit_leisure": {
@@ -136,90 +137,91 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "time": -0.01988,
-                "cost": -0.12997
+                "time": -0.02018,
+                "cost": -0.07646
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.38464
             },
             "attraction_size": {
                 "hospitality": 1,
-                "recreation": 1.31805
+                "recreation": 1.30957
             }
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.18426
+                "within_zone_dist": -0.18614
             },
             "impedance": {
-                "dist": -0.18426
+                "dist": -0.18614
             },
             "log": {
                 "attraction_size": 1.0
             },
             "attraction_size": {
                 "hospitality": 1,
-                "recreation": 1.31805
+                "recreation": 1.30957
             }
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.52639
+                "within_zone_dist": -0.5301
             },
             "impedance": {
-                "dist": -0.52639
+                "dist": -0.5301
             },
             "log": {
                 "attraction_size": 1.0
             },
             "attraction_size": {
                 "hospitality": 1,
-                "recreation": 1.31805
+                "recreation": 1.30957
             }
         }
     },
     "mode_choice": {
         "car_leisure": {
-            "constant": -2.61326,
+            "constant": -2.76827,
             "generation": {
-                "car_density": 4.92192
+                "car_density": 4.58301
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.70031
+                "logsum": 0.72041
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -2.87048,
+            "constant": -2.78963,
             "generation": {
-                "car_density": 4.43401
+                "car_density": 4.08921
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.70031
+                "logsum": 0.72041
             },
             "individual_dummy": {}
         },
         "transit_leisure": {
-            "constant": -1.99498,
+            "constant": -1.63938,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.70031
+                "logsum": 0.72041
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -2.35663,
+            "constant": -2.34847,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.70031
+                "logsum": 0.72041
             },
             "individual_dummy": {}
         },
@@ -229,7 +231,7 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.70031
+                "logsum": 0.72041
             },
             "individual_dummy": {}
         }
