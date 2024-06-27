@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
+from pathlib import Path
 import json
 import numpy
 import unittest
@@ -13,58 +14,57 @@ from datahandling.resultdata import ResultsData
 from assignment.emme_bindings.emme_project import EmmeProject
 from assignment.emme_assignment import EmmeAssignmentModel
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
+from utils.read_csv_file import read_mapping
 
 
-TEST_DATA_PATH = os.path.join(
-    os.path.dirname(os.path.realpath(__file__)), "..", "test_data")
-ZONE_NUMBERS = numpy.loadtxt(
-    os.path.join(TEST_DATA_PATH, "Scenario_input_data",
-                 "2030_test", "freight_zones.csv"))
 MODEL_TYPE = "dest_mode"
-ESTIM_TYPE = "attr"
+TEST_DATA_PATH = Path(__file__).parent.parent / "test_data"
+PARAMETERS_PATH = Path(__file__).parent.parent.parent / "parameters" / "freight" / MODEL_TYPE
+ZONE_NUMBERS = numpy.loadtxt(
+    TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "freight_zones.csv")
 
 
 class FreightModelTest(unittest.TestCase):
 
     def test_freight_model(self):
 
-        def read_freight_costdata():
-            path = os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test")
+        def read_freight_costdata(path: Path):
             freight_costdata = {
                 "truck": "freight_truck_costs.json",
                 "freight_train": "freight_train_costs.json",
                 "ship": "freight_ship_costs.json"}
             for k,v in freight_costdata.items():
-                with open(path + "\\" + v) as f:
+                with open(path / v) as f:
                    freight_costdata[k] = json.load(f)
             return freight_costdata
-        wd = os.path.join(TEST_DATA_PATH, "Scenario_input_data", "2030_test")
-        resultdata = ResultsData(os.path.join(TEST_DATA_PATH, "Results",
-                                              "test", "freight", MODEL_TYPE))
-        basezonedata = BaseZoneData(
-            wd, numpy.array(ZONE_NUMBERS), "koko_suomi_kunta.zmp")
-        zonedata = ZoneData(
-            wd, numpy.array(ZONE_NUMBERS), basezonedata.aggregations, "koko_suomi_kunta.zmp")
-        parameters_path = os.path.join(os.path.dirname(
-                os.path.realpath(__file__)), "..", "..", "parameters",
-                "freight", MODEL_TYPE)
-        purposes = {}
-        with open(os.path.join(wd, "comm_finage_conversion.json")) as f:
+        
+        inputdata = TEST_DATA_PATH / "Scenario_input_data" / "2030_test"
+        resultpath = TEST_DATA_PATH / "Results" / "test" / "freight" / MODEL_TYPE
+        resultdata = ResultsData(resultpath)
+        submodel = "koko_suomi_kunta"
+        mapping = read_mapping(inputdata / f"{submodel}.zmp")
+        basezonedata = BaseZoneData(inputdata, numpy.array(ZONE_NUMBERS), mapping)
+        zonedata = ZoneData(inputdata, numpy.array(ZONE_NUMBERS),
+                            basezonedata.aggregations, mapping)
+        with open(inputdata / "comm_finage_conversion.json") as f:
             finage_comms = json.load(f)
-        for file_name in os.listdir(parameters_path):
+        purposes = {}
+        for file_name in os.listdir(PARAMETERS_PATH):
             if file_name.endswith(".json"):
-                with open(os.path.join(parameters_path, file_name), 'r') as file:
+                with open(os.path.join(PARAMETERS_PATH, file_name), 'r') as file:
                     comm_params = json.load(file)
                     comm_names = finage_comms[file_name.split("_")[0]]
                     for comm in comm_names:
-                        purposes[comm] = FreightPurpose(comm_params, zonedata,
-                                                        resultdata)
+                        purposes[comm] = FreightPurpose(comm_params, zonedata, resultdata)
+                    fname = file_name.split("_")[0]
+                    purposes[fname] = FreightPurpose(json.load(file), zonedata,
+                                                    resultdata)
+        freight_costdata = read_freight_costdata(inputdata)
         ass_model = EmmeAssignmentModel(
-            EmmeProject("C:\\emmeproj\\freight_testing\\freight_testing.emp"), first_scenario_id=11)
+            EmmeProject("C:\\emmeproj\\freight_kunta\\freight_kunta.emp"), first_scenario_id=11)
         ass_model.prepare_freight_network(zonedata.car_dist_cost, list(purposes))
         temp_impedance = ass_model.freight_network.assign()
-        freight_costdata = read_freight_costdata()
-        omx_file = omx.open_file(wd + "\\freight_demand_tons_year.omx", "w")
+        omx_file = omx.open_file(resultpath / "freight_demand_tons_year.omx", "w")
         omx_file.create_mapping("zone_number", ZONE_NUMBERS)
         for purpose_key, purpose_value in purposes.items():
             impedance = {
@@ -92,8 +92,11 @@ class FreightModelTest(unittest.TestCase):
             demand = purpose_value.calc_traffic(impedance, purpose_key)
             for mode in demand:
                 omx_file[f"{purpose_key}_{mode}"] = demand[mode]
-                #ass_model.freight_network.set_matrix(mode, demand[mode])
+                ass_model.freight_network.set_matrix(mode, demand[mode])
             #ass_model.freight_network.save_network_volumes(purpose_key)
+            #ass_model.freight_network.output_traversal_matrix(resultpath, purpose_key)
+        omx_file.close()
+
 
 test = FreightModelTest()
 test.test_freight_model()

@@ -57,7 +57,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         spec["stopping_criteria"] = param.stopping_criteria["coarse"]
         self.emme_project.car_assignment(spec, self.emme_scenario)
 
-    def output_traversal_matrix(self, output_path: Path):
+    def output_traversal_matrix(self, output_path: Path, purposekey: str):
         spec = {
             "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
             "portion_of_path": "COMPLETE",
@@ -66,7 +66,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             },
         }
         for ass_class in param.freight_modes:
-            output_file = output_path / f"{ass_class}.txt"
+            output_file = output_path / f"{ass_class}_{purposekey}.txt"
             spec["analyzed_demand"] = self.emme_matrices[ass_class]["demand"]
             self.emme_project.traversal_analysis(
                 spec, output_file, append_to_output_file=False,
