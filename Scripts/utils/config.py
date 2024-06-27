@@ -56,7 +56,8 @@ class Config:
         self.FIRST_SCENARIO_ID = None
         self.FIRST_MATRIX_ID = None
         self.END_ASSIGNMENT_ONLY = False
-        self.FREE_FLOW_ASSIGNMENT = False
+        self.LONG_DIST_DEMAND_FORECAST = None
+        self.FREIGHT_MATRIX_PATH = None
         self.STORED_SPEED_ASSIGNMENT = False
         self.RUN_AGENT_SIMULATION = False
         self.DO_NOT_USE_EMME = False

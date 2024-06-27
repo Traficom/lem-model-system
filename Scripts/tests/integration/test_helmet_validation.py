@@ -15,7 +15,7 @@ class Args:
     results_path = TEST_DATA_PATH / "Results"
     scenario_name = "test"
     do_not_use_emme = True
-    free_flow_assignment = False
+    long_dist_demand_forecast = None
     submodel = ["uusimaa"]
 
 
