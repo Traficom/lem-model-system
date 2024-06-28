@@ -80,8 +80,10 @@ class ZoneData:
         self.share["share_age_50-64"] = popdata["sh_50-64"]
         self.share["share_age_65-99"] = popdata["sh_65"]
         self.share["share_age_7-99"] = popdata["sh_7-17"] + popdata["sh_18-29"] + popdata["sh_30-49"] + popdata["sh_50-64"] + popdata["sh_65"]
-        self.share["share_female"] = pandas.Series(0.5, self.zone_numbers)
-        self.share["share_male"] = pandas.Series(0.5, self.zone_numbers)
+        self.share["share_female"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
+        self.share["share_male"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
         self["age_7-17_female"] = 0.5 * popdata["sh_7-17"] * pop
         self["age_18-29_female"] = 0.5 * popdata["sh_18-29"] * pop
         self["age_30-49_female"] = 0.5 * popdata["sh_30-49"] * pop
