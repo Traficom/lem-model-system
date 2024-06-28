@@ -284,6 +284,7 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
                 self.resultdata,
@@ -353,6 +354,7 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if iteration=="last":
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata,
