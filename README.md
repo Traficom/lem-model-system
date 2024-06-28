@@ -4,7 +4,7 @@ This repository contains python files for LEM model system. Source codes can be 
 
 ## Usage
 
-You can run LEM from the command line or by using [LEM UI](https://swd.int.traficom.fi/stash/projects/VLE/repos/lem-ui/browse).
+You can run LEM from the command line or by using [LEM UI](https://github.com/Traficom/lem-ui).
 In this chapter, we will guide you how to install LEM to work with Inro EMME software from the command line.
 The user is not expected to install any new software apart from model-system and EMME.
 
