@@ -1,4 +1,4 @@
-data_id	municipality	county		area
+zone_id	municipality	county		area
 102	Helsinki	Uusimaa		A1
 103	Helsinki	Uusimaa		A1
 244	Helsinki	Uusimaa		A1
