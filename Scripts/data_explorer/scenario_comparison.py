@@ -15,6 +15,8 @@ class ScenarioComparison(object):
         """
         self.scenario0 = scenario0
         self.scenario1 = scenario1
+        self.zones = scenario0.zones
+        self.zone_ids = scenario0.zone_ids
 
 
     def accessibility(self, tour_type, mode = None):
@@ -24,20 +26,13 @@ class ScenarioComparison(object):
         Return : Series for tour type or mode.
         """
 
-        
-    def travel_times(self, time_period, mtx_type, ass_class, origin_zone):
-        return (self.scenario1.get_costs_from(time_period, mtx_type, ass_class, origin_zone) 
-                - self.scenario0.get_costs_from(time_period, mtx_type, ass_class, origin_zone))
+
+    def travel_times(self, time_period, mtx_type, ass_class, origin_zone, geometry = False):
+        data1 = self.scenario1.costs_from(time_period, mtx_type, ass_class, origin_zone)
+        data0 = self.scenario0.costs_from(time_period, mtx_type, ass_class, origin_zone)
+        data = data0.merge(data1, on = "zone_id", suffixes=('0', '1'))
+        data["difference"] = data["cost1"] - data["cost0"]
+        if geometry:
+            data = self.zones.merge(data, on='zone_id', how='left')
+        return data
     
-    def demand(self):
-        return
-
-
-    def mode_shares(self):
-        return
-
-
-    def export_comparison(self, cols = list):
-        """self.zones join cols
-        geopandas write to file to results_path"""
-        return
