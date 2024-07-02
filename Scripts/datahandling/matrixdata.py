@@ -39,6 +39,7 @@ class MatrixData:
              mtx_type: str,
              time_period: str,
              zone_numbers: Optional[numpy.ndarray] = None,
+             mapping: Optional[pandas.Series] = None,
              transport_classes: Iterable[str] = param.transport_classes,
              m: str = 'r'):
         file_name = mtx_type+'_'+time_period+".omx"
@@ -47,7 +48,8 @@ class MatrixData:
             # a bug in pytables version provided by Emme 
             # (https://github.com/PyTables/PyTables/issues/757)
             mtxfile = MatrixFile(
-                omx.open_file(file_name, m), zone_numbers, transport_classes)
+                omx.open_file(file_name, m), zone_numbers, mapping,
+                transport_classes)
         try:
             yield mtxfile
         finally:
@@ -58,9 +60,13 @@ class MatrixFile:
     def __init__(self,
                  omx_file: omx.File,
                  zone_numbers: numpy.ndarray,
-                 transport_classes: Iterable[str] = param.transport_classes):
+                 mapping: pandas.Series,
+                 transport_classes: Iterable[str]):
         self._file = omx_file
         self.missing_zones = []
+        if mapping is not None:
+            zone_numbers = mapping.index
+        self._data_zone_mapping = mapping
         if zone_numbers is None:
             pass
         elif omx_file.mode == 'r':
@@ -117,13 +123,15 @@ class MatrixFile:
                 mode, self._file.filename)
             log.error(msg)
             raise ValueError(msg)
+        mtx = pandas.DataFrame(mtx, self.zone_numbers, self.zone_numbers)
         if self.missing_zones:
-            mtx = pandas.DataFrame(mtx, self.zone_numbers, self.zone_numbers)
             mtx = mtx.reindex(
                 index=self.new_zone_numbers, columns=self.new_zone_numbers,
                 fill_value=0)
-            mtx = mtx.values
-        return mtx
+        if self._data_zone_mapping is not None:
+            for _ in range(2):
+                mtx = mtx.groupby(self._data_zone_mapping).agg("sum").T
+        return mtx.values
 
     def __setitem__(self, mode, data):
         try:

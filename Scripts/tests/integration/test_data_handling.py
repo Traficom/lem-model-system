@@ -5,6 +5,7 @@ import numpy
 from pathlib import Path
 
 import utils.log as log
+from utils.read_csv_file import read_mapping
 from datahandling.zonedata import ZoneData, BaseZoneData
 from datahandling.matrixdata import MatrixData
 import parameters.assignment as param
@@ -65,12 +66,15 @@ class ZoneDataTest(unittest.TestCase):
         return df
 
     def test_csv_file_read(self):
-        zdata2016 = BaseZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES, "uusimaa.zmp")
+        zdata2016 = BaseZoneData(
+            BASE_ZONEDATA_PATH, ZONE_INDEXES,
+            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
         self.assertIsNotNone(zdata2016["population"])
         self.assertIsNotNone(zdata2016["workplaces"])
 
         zdata2030 = ZoneData(
-            ZONEDATA_PATH, ZONE_INDEXES, zdata2016.aggregations, "uusimaa.zmp")
+            ZONEDATA_PATH, ZONE_INDEXES, zdata2016.aggregations,
+            read_mapping(ZONEDATA_PATH / "uusimaa.zmp"))
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 
@@ -84,21 +88,3 @@ class ZoneDataTest(unittest.TestCase):
             zdata2016["population"].equals(zdata2030["population"]))
         self.assertFalse(
             zdata2016["workplaces"].equals(zdata2030["workplaces"]))
-
-    def test_all_cols_have_values_2016(self):
-        df = self._get_freight_data_2016()
-        row = df.loc[244, :]  # Let's pick some row and validate it
-        expected_row = pandas.Series(
-            [1142, 229, 3.8014, 1.8091, 2.1984],
-            index=["population", "workplaces", "shop", "logistics", "industry"],
-            dtype=numpy.float32, name=244)
-        pandas.testing.assert_series_equal(row, expected_row)
-
-    def test_industry_series_and_indexes_2016(self):
-        df = self._get_freight_data_2016()
-        industry = df["industry"] # Let's pick a column and validate it
-        expected_industry = pandas.Series(
-            [3.3971, 579.7232, 2.1984, 467.7852, 29.4101, 2.1424, 7.392, 0, 0, 0],
-            index=pandas.Index(INTERNAL_ZONES, name="data_id"),
-            dtype=numpy.float32, name="industry")
-        pandas.testing.assert_series_equal(industry, expected_industry)

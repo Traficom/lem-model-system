@@ -7,6 +7,7 @@ from typing import List, Dict, Union
 
 import utils.config
 import utils.log as log
+from utils.read_csv_file import read_mapping
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
@@ -56,7 +57,9 @@ def main(args):
         raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
-    time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
+    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
+    time_periods = (["vrk"] if calculate_long_dist_demand
+        else param.time_periods)
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")
@@ -74,8 +77,7 @@ def main(args):
                 log.error(msg)
                 raise NameError(msg)
             assignment_model = MockAssignmentModel(
-                MatrixData(mock_result_path), args.free_flow_assignment,
-                time_periods)
+                MatrixData(mock_result_path), time_periods=time_periods)
             zone_numbers[args.submodel[i]] = assignment_model.zone_numbers
         else:
             if not os.path.isfile(emp_path):
@@ -164,7 +166,7 @@ def main(args):
                 base_matrices_path)
             log.error(msg)
             raise ValueError(msg)
-        if not args.free_flow_assignment:
+        if not calculate_long_dist_demand:
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
@@ -173,7 +175,8 @@ def main(args):
 
         # Check base zonedata
         base_zonedata = BaseZoneData(
-            base_zonedata_path, zone_numbers[submodel], f"{submodel}.zmp")
+            Path(base_zonedata_path), zone_numbers[submodel],
+            read_mapping(Path(base_zonedata_path) / f"{submodel}.zmp"))
         aggregations[submodel] = base_zonedata.aggregations
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
@@ -184,8 +187,8 @@ def main(args):
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
-            data_path, zone_numbers[submodel], aggregations[submodel],
-            f"{submodel}.zmp")
+            Path(data_path), zone_numbers[submodel], aggregations[submodel],
+            read_mapping(Path(data_path) / f"{submodel}.zmp"))
 
     log.info("Successfully validated all input files")
 
@@ -207,10 +210,13 @@ if __name__ == "__main__":
         default=config.LOG_FORMAT,
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."
+        "-f", "--long-dist-demand-forecast",
+        type=str,
+        default=config.LONG_DIST_DEMAND_FORECAST,
+        help=("If 'calc', runs assigment with free-flow speed and "
+              + "calculates demand for long-distance trips. "
+              + "If 'base', takes long-distance trips from base matrices. "
+              + "If path, takes long-distance trips from that path.")
     )
     parser.add_argument(
         "--do-not-use-emme",
