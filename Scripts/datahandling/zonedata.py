@@ -21,7 +21,7 @@ class ZoneData:
         Zone numbers to compare with for validation
     aggregations : datatypes.zone.ZoneAggregations
         Container for zone aggregations read from input file
-    zone_mapping : pandas.Series (optional)
+    zone_mapping : pandas.Series
         Mapping between data zones (index) and assignment zones
     """
     def __init__(self, data_dir: Path, zone_numbers: Sequence,
