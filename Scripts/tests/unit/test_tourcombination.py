@@ -19,7 +19,7 @@ class TourCombinationModelTest(unittest.TestCase):
     def test_generation(self):
         zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
         zone_mapping = read_mapping(BASE_ZONEDATA_PATH / "zones_uusimaa.tsv", ZONE_INDEXES)
-        zd = BaseZoneData(BASE_ZONEDATA_PATH, zi, zone_mapping))
+        zd = BaseZoneData(BASE_ZONEDATA_PATH, zi, zone_mapping)
         zd._values["hb_edu_higher_t"] = pandas.Series(0.0, METROPOLITAN_ZONES)
         model = TourCombinationModel(zd)
         prob = model.calc_prob("age_50-64", False, 102)
