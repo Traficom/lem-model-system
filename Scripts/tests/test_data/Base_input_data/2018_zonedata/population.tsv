@@ -1,13 +1,13 @@
 # Population 2016						
 #						
-# total: total number of residents in zone						
+# total: total number of residents in zone_input						
 # sh_7-17: share of population aged 7-17						
 # sh_1829: share of population aged 18-29						
 # sh_3049: share of population aged 30-49						
 # sh_5064: share of population aged 50-64						
 # sh_65-: share of population aged over 65						
 #						
-zone_id	population	sh_7-17	sh_18-29	sh_30-49	sh_50-64	sh_65
+zone_input	population	sh_7-17	sh_18-29	sh_30-49	sh_50-64	sh_65
 102	0	0	0	0	0	0
 103	148	0.0743	0.2432	0.2432	0.277	0.0946
 244	1142	0.169	0.1489	0.3012	0.1804	0.1016

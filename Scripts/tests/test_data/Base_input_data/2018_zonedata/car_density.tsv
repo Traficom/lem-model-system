@@ -3,7 +3,7 @@
 # caruse: share of population that is car main user		
 # cardens: cars per inhabitants		
 #		
-zone_id car_dens
+zone_input car_dens
 102 0.256
 103 0.226
 244 0.206

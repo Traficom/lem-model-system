@@ -4,7 +4,7 @@
 # upper_sec: Students in upper secondary education (gymnasium, vocational)
 # higher_edu: Students in tertiary education (university, college, polytechnic)
 #
-zone_id	compreh upper_sec   higher_edu
+zone_input	compreh upper_sec   higher_edu
 102	0	0	0
 103	0	0	0
 244	0	0	0

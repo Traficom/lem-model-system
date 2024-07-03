@@ -1,6 +1,6 @@
 # Income classes 2030
 #
-zone_id	sh_income_0-19	sh_income_20-39	sh_income_40-59	sh_income_60-79	sh_income_80-99	sh_income_100
+zone_input	sh_income_0-19	sh_income_20-39	sh_income_40-59	sh_income_60-79	sh_income_80-99	sh_income_100
 102	0	0	0	0	0	0
 103	0.07	0.24	0.24	0.27	0.09	0.09
 244	0.17	0.15	0.30	0.18	0.10	0.10
