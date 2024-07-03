@@ -20,7 +20,7 @@ ZONE_INDEXES = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONE
 
 
 class LogitModelTest(unittest.TestCase):
-apping        resultdata = ResultsData(RESULTS_PATH)
+        resultdata = ResultsData(RESULTS_PATH)
         class Purpose:
             pass
         pur = Purpose()
