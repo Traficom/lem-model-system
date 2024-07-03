@@ -3,7 +3,7 @@
 # builtar: area of built environment
 # detach: detached houses as share of total building area of houses
 #
-data_id	builtar	sh_detach
+zone_id	builtar	sh_detach
 102	0.1168	0
 103	0.382	0.007
 244	0.1748	0
