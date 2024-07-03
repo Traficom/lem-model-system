@@ -68,13 +68,13 @@ class ZoneDataTest(unittest.TestCase):
     def test_csv_file_read(self):
         zdata2016 = BaseZoneData(
             BASE_ZONEDATA_PATH, ZONE_INDEXES,
-            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
+            read_mapping(BASE_ZONEDATA_PATH / "zones_uusimaa.tsv"))
         self.assertIsNotNone(zdata2016["population"])
         self.assertIsNotNone(zdata2016["workplaces"])
 
         zdata2030 = ZoneData(
             ZONEDATA_PATH, ZONE_INDEXES, zdata2016.aggregations,
-            read_mapping(ZONEDATA_PATH / "uusimaa.zmp"))
+            read_mapping(ZONEDATA_PATH / "zones_uusimaa.tsv"))
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 

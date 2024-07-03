@@ -34,7 +34,7 @@ class FileReader:
         self.dtype = dtype
         self.mapping = zone_mapping
 
-    def read_csv_file(self, file_end: str, squeeze: bool = False):
+    def read_csv_file(self, file_name: str, squeeze: bool = False):
         """Read (zone) data from space-separated file.
 
         Parameters
@@ -50,18 +50,10 @@ class FileReader:
         """
         data_dir = self.data_dir
         zone_numbers = self.zone_numbers
-        files = list(data_dir.glob(f"*{file_end}"))
-        if not files:
-            msg = "No {} file found in folder {}".format(file_end, data_dir)
-            # This error should not be logged, as it is sometimes excepted
-            raise NameError(msg)
-        elif len(files) > 1:
-            msg = "Multiple {} files found in folder {}".format(
-                file_end, data_dir)
-            log.error(msg)
-            raise NameError(msg)
-        else:
-            path = files[0]
+        path = data_dir / file_name
+        if not path.exists():
+            msg = f"Path {path} not found."
+            raise NameError(msg)     
         header = None if squeeze else "infer"
         data: pandas.DataFrame = pandas.read_csv(
             path, delim_whitespace=True, keep_default_na=False,
@@ -136,7 +128,7 @@ class FileReader:
                 data = data.astype(dtype=self.dtype, errors='raise')
             except ValueError:
                 msg = "Zone data file {} has values not convertible to floats.".format(
-                    file_end)
+                    file_name)
                 log.error(msg)
                 raise ValueError(msg)
         return data

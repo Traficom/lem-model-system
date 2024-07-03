@@ -41,30 +41,30 @@ class ZoneData:
         self.zones = {number: Zone(number, aggregations) for number in self.zone_numbers}
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping)
-        popdata = files.read_csv_file(".pop")
-        workdata = files.read_csv_file(".wrk")
-        incdata = files.read_csv_file(".inc")
-        schooldata = files.read_csv_file(".edu")
-        parkdata = files.read_csv_file(".prk")
-        sport_facilities = files.read_csv_file(".spo")
-        buildings = files.read_csv_file(".bld")
+        popdata = files.read_csv_file("population.tsv")
+        workdata = files.read_csv_file("workplaces.tsv")
+        incdata = files.read_csv_file("income_classes.tsv")
+        schooldata = files.read_csv_file("education.tsv")
+        parkdata = files.read_csv_file("parking_data.tsv")
+        sport_facilities = files.read_csv_file("sport_facilities.tsv")
+        buildings = files.read_csv_file("buildings.tsv")
         files = FileReader(data_dir)
-        self.transit_zone = files.read_csv_file(".tco")
+        self.transit_zone = files.read_csv_file("transit_cost.tsv")
         try:
-            self.mtx_adjustment = files.read_csv_file(".add")
+            self.mtx_adjustment = files.read_csv_file("matrix_adjustment.tsv")
         except (NameError, KeyError):
             self.mtx_adjustment = None
         try:
-            cardata = files.read_csv_file(".car")
+            cardata = files.read_csv_file("car_data.tsv")
             self["parking_norm"] = cardata["prknorm"]
         except (NameError, KeyError):
             self._values["parking_norm"] = None
-        car_cost = files.read_csv_file(".cco", squeeze=False)
+        car_cost = files.read_csv_file("car_cost.tsv", squeeze=False)
         self.car_dist_cost = car_cost["dist_cost"].to_dict()
-        truckdata = files.read_csv_file(".trk", squeeze=True)
+        truckdata = files.read_csv_file("truck_data.tsv", squeeze=True)
         files.zone_numbers = all_zone_numbers[all_zone_numbers.searchsorted(external[0]):]
         files.dtype = numpy.float32
-        self.externalgrowth = files.read_csv_file(".ext")
+        self.externalgrowth = files.read_csv_file("external_traffic.tsv")
         self.trailers_prohibited = list(map(int, truckdata.loc[0, :]))
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["population"]
@@ -229,7 +229,7 @@ class BaseZoneData(ZoneData):
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
             peripheral[1])]
         municipality_centre_mapping = read_mapping(
-            data_dir / "koko_suomi_kunta.zmp")
+            data_dir / "zones_municipality_center.tsv")
         if zone_mapping is not None:
             municipality_centre_mapping = municipality_centre_mapping.groupby(
                 zone_mapping).agg("first")
@@ -238,13 +238,13 @@ class BaseZoneData(ZoneData):
         files = FileReader(
             data_dir, self.zone_numbers, zone_mapping=zone_mapping)
         aggregations = ZoneAggregations(
-            files.read_csv_file(".agg"),
+            files.read_csv_file("aggregations.tsv"),
             municipality_centre_mapping.map(zone_indices))
         ZoneData.__init__(
             self, data_dir, zone_numbers, aggregations, zone_mapping)
         files = FileReader(
             data_dir, self.zone_numbers, numpy.float32, zone_mapping)
-        self["car_density"] = files.read_csv_file(".car")["car_dens"]
+        self["car_density"] = files.read_csv_file("car_density.tsv")["car_dens"]
         self["cars_per_1000"] = 1000 * self["car_density"]
 
 
