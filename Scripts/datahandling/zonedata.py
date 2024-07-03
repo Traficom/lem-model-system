@@ -26,7 +26,7 @@ class ZoneData:
     """
     def __init__(self, data_dir: Path, zone_numbers: Sequence,
                  aggregations: ZoneAggregations,
-                 zone_mapping: Optional[pandas.Series] = None):
+                 zone_mapping: pandas.Series):
         self.aggregations = aggregations
         self._values = {}
         self.share = ShareChecker(self)
@@ -36,35 +36,32 @@ class ZoneData:
         external = param.purpose_areas["external"]
         self.zone_numbers = pandas.Index(
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
-            name="zone_id")
+            name="zone_analysis")
         Zone.counter = 0
         self.zones = {number: Zone(number, aggregations) for number in self.zone_numbers}
-        files = FileReader(
-            data_dir, self.zone_numbers, numpy.float32, zone_mapping)
-        popdata = files.read_csv_file("population.tsv")
-        workdata = files.read_csv_file("workplaces.tsv")
-        incdata = files.read_csv_file("income_classes.tsv")
-        schooldata = files.read_csv_file("education.tsv")
-        parkdata = files.read_csv_file("parking_data.tsv")
-        sport_facilities = files.read_csv_file("sport_facilities.tsv")
-        buildings = files.read_csv_file("buildings.tsv")
-        files = FileReader(data_dir)
-        self.transit_zone = files.read_csv_file("transit_cost.tsv")
+        files = FileReader(data_dir, zone_mapping)
+        popdata = files.read_zonedata("population.tsv")
+        workdata = files.read_zonedata("workplaces.tsv")
+        incdata = files.read_zonedata("income_classes.tsv")
+        schooldata = files.read_zonedata("education.tsv")
+        parkdata = files.read_zonedata("parking_data.tsv")
+        sport_facilities = files.read_zonedata("sport_facilities.tsv")
+        buildings = files.read_zonedata("buildings.tsv")
+        self.transit_zone = files.read_other_data("transit_cost.tsv")
+        self.externalgrowth = files.read_zonedata("external_traffic.tsv")
         try:
-            self.mtx_adjustment = files.read_csv_file("matrix_adjustment.tsv")
+            self.mtx_adjustment = files.read_other_data("matrix_adjustment.tsv")
         except (NameError, KeyError):
             self.mtx_adjustment = None
         try:
-            cardata = files.read_csv_file("car_data.tsv")
+            cardata = files.read_other_data("car_data.tsv")
             self["parking_norm"] = cardata["prknorm"]
         except (NameError, KeyError):
             self._values["parking_norm"] = None
-        car_cost = files.read_csv_file("car_cost.tsv", squeeze=False)
+        car_cost = files.read_other_data("car_cost.tsv", squeeze=False)
         self.car_dist_cost = car_cost["dist_cost"].to_dict()
-        truckdata = files.read_csv_file("truck_data.tsv", squeeze=True)
+        truckdata = files.read_other_data("truck_data.tsv", squeeze=True)
         files.zone_numbers = all_zone_numbers[all_zone_numbers.searchsorted(external[0]):]
-        files.dtype = numpy.float32
-        self.externalgrowth = files.read_csv_file("external_traffic.tsv")
         self.trailers_prohibited = list(map(int, truckdata.loc[0, :]))
         self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
         pop = popdata["population"]
@@ -223,28 +220,25 @@ class ZoneData:
 
 class BaseZoneData(ZoneData):
     def __init__(self, data_dir: Path, zone_numbers: Sequence,
-                 zone_mapping: Optional[pandas.Series] = None):
+                 zone_mapping: pandas.Series):
         all_zone_numbers = numpy.array(zone_numbers)
         peripheral = param.purpose_areas["peripheral"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
             peripheral[1])]
         municipality_centre_mapping = read_mapping(
-            data_dir / "zones_municipality_center.tsv")
-        if zone_mapping is not None:
-            municipality_centre_mapping = municipality_centre_mapping.groupby(
-                zone_mapping).agg("first")
+            data_dir / "zones_municipality_center.tsv", self.zone_numbers)
+        municipality_centre_mapping = municipality_centre_mapping.groupby(
+            zone_mapping).agg("first")
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
-        files = FileReader(
-            data_dir, self.zone_numbers, zone_mapping=zone_mapping)
+        files = FileReader(data_dir, zone_mapping)
         aggregations = ZoneAggregations(
-            files.read_csv_file("aggregations.tsv"),
+            files.read_zonedata("aggregations.tsv", dtype="str"),
             municipality_centre_mapping.map(zone_indices))
         ZoneData.__init__(
             self, data_dir, zone_numbers, aggregations, zone_mapping)
-        files = FileReader(
-            data_dir, self.zone_numbers, numpy.float32, zone_mapping)
-        self["car_density"] = files.read_csv_file("car_density.tsv")["car_dens"]
+        files = FileReader(data_dir, zone_mapping)
+        self["car_density"] = files.read_zonedata("car_density.tsv")["car_dens"]
         self["cars_per_1000"] = 1000 * self["car_density"]
 
 

@@ -70,7 +70,7 @@ class ModelSystem:
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
 
         # Input data
-        self.mapping = read_mapping(zone_data_path / f"zones_{submodel}.tsv")
+        self.mapping = read_mapping(zone_data_path / f"zones_{submodel}.tsv", self.zone_numbers)
         self.zdata_base = BaseZoneData(
             base_zone_data_path, self.zone_numbers, self.mapping)
         self.basematrices = MatrixData(base_matrices_path / submodel)

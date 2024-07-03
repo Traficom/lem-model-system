@@ -174,9 +174,8 @@ def main(args):
                         a = mtx[ass_class]
 
         # Check base zonedata
-        base_zonedata = BaseZoneData(
-            Path(base_zonedata_path), zone_numbers[submodel],
-            read_mapping(Path(base_zonedata_path) / f"zones_{submodel}.tsv"))
+        mapping = read_mapping(Path(base_zonedata_path) / f"zones_{submodel}.tsv", zone_numbers[submodel])
+        base_zonedata = BaseZoneData(Path(base_zonedata_path), zone_numbers[submodel], mapping)
         aggregations[submodel] = base_zonedata.aggregations
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
@@ -186,9 +185,9 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
+        mapping = read_mapping(Path(data_path) / f"zones_{submodel}.tsv", zone_numbers[submodel])
         forecast_zonedata = ZoneData(
-            Path(data_path), zone_numbers[submodel], aggregations[submodel],
-            read_mapping(Path(data_path) / f"zones_{submodel}.tsv"))
+            Path(data_path), zone_numbers[submodel], aggregations[submodel], mapping)
 
     log.info("Successfully validated all input files")
 
