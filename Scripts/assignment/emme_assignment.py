@@ -108,9 +108,8 @@ class EmmeAssignmentModel(AssignmentModel):
                     overwrite=True, copy_paths=False, copy_strategies=False)
             else:
                 scen_id = self.mod_scenario.number
-            if i == 0 or self.save_matrices:
-                emme_matrices = self._create_matrices(
-                    tp, i*hundred + self.first_matrix_id, id_ten)
+            emme_matrices = self._create_matrices(
+                tp, i*hundred + self.first_matrix_id, id_ten)
             self.assignment_periods.append(AssignmentPeriod(
                 tp, scen_id, self.emme_project, emme_matrices,
                 separate_emme_scenarios=self.separate_emme_scenarios,
@@ -470,8 +469,10 @@ class EmmeAssignmentModel(AssignmentModel):
         for i, ass_class in enumerate(param.emme_matrices, start=1):
             matrix_ids = {}
             for mtx_type in param.emme_matrices[ass_class]:
+                _id_hundred = (id_hundred
+                    if self.save_matrices or mtx_type == "demand" else 0)
                 matrix_ids[mtx_type] = "mf{}".format(
-                    id_hundred + id_ten[mtx_type] + i)
+                    _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
                 self.emme_project.create_matrix(
                     matrix_id=matrix_ids[mtx_type],
@@ -483,7 +484,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     matrix_ids[subset] = {}
                     for mtx_type, longer_name in parts.items():
                         j += 1
-                        id = f"mf{id_hundred + id_ten[ass_class] + j}"
+                        id = f"mf{_id_hundred + id_ten[ass_class] + j}"
                         matrix_ids[subset][longer_name] = id
                         matrix_ids[mtx_type] = id
                         self.emme_project.create_matrix(
