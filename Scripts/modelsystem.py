@@ -424,21 +424,29 @@ class ModelSystem:
     def _export_model_results(self):
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
+        self.resultdata.print_data(
+            gen_tours_purpose, "zone_generation_by_purpose.txt")
         attr_tours_purpose = {purpose.name: purpose.attracted_tours_all
                               for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(attr_tours_purpose, "zone_attraction_by_purpose.txt")
+        self.resultdata.print_data(
+            attr_tours_purpose, "zone_attraction_by_purpose.txt")
         gen_tours_mode = {mode: self._generated_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(gen_tours_mode, "zone_generation_by_mode.txt")
+        self.resultdata.print_data(
+            gen_tours_mode, "zone_generation_by_mode.txt")
         attr_tours_mode = {mode: self._attracted_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(attr_tours_mode, "zone_attraction_by_mode.txt")
+        self.resultdata.print_data(
+            attr_tours_mode, "zone_attraction_by_mode.txt")
         for purpose in self.dm.tour_purposes:
-            self.resultdata.print_concat(purpose.generation_mode_shares, "purpose_mode_shares.txt")
-            self.resultdata.print_concat(purpose.tour_lengths, "tour_lengths.txt")
-            self.resultdata.print_matrices(
-                purpose.aggregates, "aggregated_demand", purpose.name)
+            self.resultdata.print_concat(
+                purpose.generation_mode_shares, "purpose_mode_shares.txt")
+            self.resultdata.print_concat(
+                purpose.tour_lengths, "tour_lengths.txt")
+            for mapping in purpose.aggregates:
+                self.resultdata.print_matrices(
+                    purpose.aggregates[mapping],
+                    f"aggregated_demand_{mapping}", purpose.name)
             for mode in purpose.within_zone_tours:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
