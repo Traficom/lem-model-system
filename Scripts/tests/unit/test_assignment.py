@@ -3,20 +3,19 @@
 import unittest
 import numpy
 import pandas
-import os
+from pathlib import Path
 
 from utils.validate_network import validate
 from assignment.emme_bindings.mock_project import MockProject
 from assignment.emme_assignment import EmmeAssignmentModel
 from datahandling.resultdata import ResultsData
+from tests.integration.test_data_handling import TEST_DATA_PATH, RESULTS_PATH
 
 
 class EmmeAssignmentTest(unittest.TestCase):
     def setUp(self):
         self.context = MockProject()
-        scenario_dir = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..", "test_data", "Network")
+        scenario_dir = TEST_DATA_PATH / "Network"
         self.scenario_id = 19
         self.context.import_scenario(scenario_dir, self.scenario_id, "test")
         self.dist_cost = {
@@ -53,8 +52,8 @@ class EmmeAssignmentTest(unittest.TestCase):
             "car_leisure",
             "transit_work",
             "transit_leisure",
-            "car_first_mile",
-            "car_last_mile",
+            # "car_first_mile",
+            # "car_last_mile",
             "bike",
             "trailer_truck",
             "semi_trailer",
@@ -68,9 +67,7 @@ class EmmeAssignmentTest(unittest.TestCase):
                 ass_class, car_matrix)
         ass_model.assignment_periods[0].assign(demand + ["car_pax"])
         ass_model.assignment_periods[0].end_assign()
-        resultdata = ResultsData(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..", "test_data", "Results", "test"))
+        resultdata = ResultsData(RESULTS_PATH)
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
             "Espoo": "Uusimaa",

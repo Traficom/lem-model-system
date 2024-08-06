@@ -548,8 +548,8 @@ emme_matrices = {
     "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    # "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    # "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
     "train": ("demand", "time", "dist", "cost", "gen_cost"),
     "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
     "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -571,6 +571,7 @@ transit_impedance_matrices = {
         "aux_time": "actual_aux_transit_times",
         "board_time": "actual_total_boarding_times",
         "num_board": "avg_boardings",
+        "inv_cost": "actual_in_vehicle_costs",
         "board_cost": "actual_total_boarding_costs",
     },
     "local": {
@@ -618,3 +619,27 @@ station_ids = {
     "metro": 13,
     "train": 14,
 }
+
+activity_time = {
+    "hb_work": 7.2,
+    "hb_edu_upsec": 5.2,
+    "hb_edu_higher": 4.6,
+    "hb_grocery": 0.6,
+    "hb_other_shop": 1.1,
+    "hb_leisure": 2.0,
+    "hb_sport": 1.5,
+    "hb_visit": 2.5,
+    "ob_other": 1.4
+}
+
+share_paying = {
+    "hb_work": 0.50,
+    "hb_edu_upsec": 0.30,
+    "hb_edu_higher": 0.30,
+    "hb_grocery": 1.00,
+    "hb_other_shop": 0.15,
+    "hb_leisure": 1.00,
+    "hb_sport": 0.00,
+    "hb_visit": 0.75,
+    "ob_other": 0.00
+} 

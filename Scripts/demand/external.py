@@ -35,27 +35,9 @@ class ExternalModel:
             "name": "external",
             "orig": None,
             "dest": None,
-            "area": "external",
+            "area": "all",
             "impedance_share": None,
             "impedance_transform": None,
             "demand_share": demand_share["external"]
         }
         self.purpose = Purpose(spec, zone_data)
-
-    def calc_external(self, mode: str, internal_trips: pandas.Series) -> Demand:
-        """Calculate external traffic.
-
-        Parameters
-        ----------
-        mode : str
-            Travel mode (car/transit/truck/trailer_truck)
-        internal_trips : pandas.Series
-            Sums of all (intra-area) trips to and frome zones
-        
-        Return
-        ------
-        Demand
-            Matrix of whole day trips from external to internal zones
-        """
-        mtx = pandas.DataFrame(0, self.all_zone_numbers, self.growth.index)
-        return Demand(self.purpose, mode, mtx.to_numpy().T)

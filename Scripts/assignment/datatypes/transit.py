@@ -120,8 +120,6 @@ class TransitSpecification:
                 },
             }
         self.transit_result_spec["total_impedance"] = emme_matrices["gen_cost"]
-        icost = "actual_in_vehicle_costs"
-        self.transit_result_spec[subset][icost] = emme_matrices["cost"]
         for trip_part, matrix_id in emme_matrices["total"].items():
             self.transit_result_spec[trip_part] = matrix_id
         for trip_part, matrix_id in emme_matrices[subset].items():

@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
-import os
-from glob import glob
+from pathlib import Path
+import shutil
 
 import utils.config
 import utils.log as log
@@ -11,21 +11,30 @@ from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
+BASE_ZONEDATA_DIR = "2018_zonedata"
+
+
 def main(args):
+    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
+    long_dist_matrices_path = (None
+        if args.long_dist_demand_forecast in ("calc", "base")
+        else Path(args.long_dist_demand_forecast))
     if args.end_assignment_only:
         iterations = 0
-    elif args.free_flow_assignment or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
     else:
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
-    base_zonedata_path: str = os.path.join(args.baseline_data_path, "2018_zonedata")
-    base_matrices_path: str = os.path.join(args.baseline_data_path, "base_matrices")
-    forecast_zonedata_path: str = args.forecast_data_path
-    results_path: str = args.results_path
-    emme_project_path: str = args.emme_path
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_matrices_path = Path(args.baseline_data_path, "Matrices")
+    freight_matrices_path = (Path(args.freight_matrix_path)
+        if args.freight_matrix_path is not None else None)
+    forecast_zonedata_path = Path(args.forecast_data_path)
+    results_path = Path(args.results_path, args.scenario_name)
+    emme_project_path = Path(args.emme_path)
     log_extra = {
         "status": {
             "name": args.scenario_name,
@@ -39,36 +48,41 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not os.path.exists(base_zonedata_path):
+    if not base_zonedata_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_zonedata_path))
-    if not os.path.exists(base_matrices_path):
+    if not base_matrices_path.is_dir():
         raise NameError(
             "Baseline zonedata directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not os.path.exists(forecast_zonedata_path):
+    if not forecast_zonedata_path.is_dir():
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
+    shutil.rmtree(results_path / BASE_ZONEDATA_DIR, ignore_errors=True)
+    shutil.copytree(base_zonedata_path, results_path / BASE_ZONEDATA_DIR)
+    shutil.rmtree(results_path / forecast_zonedata_path.name, ignore_errors=True)
+    shutil.copytree(
+        forecast_zonedata_path, results_path / forecast_zonedata_path.name)
+
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {
-        "use_free_flow_speeds": args.free_flow_assignment,
+        "use_free_flow_speeds": calculate_long_dist_demand,
         "delete_extra_matrices": args.delete_extra_matrices,
     }
-    if args.free_flow_assignment:
+    if calculate_long_dist_demand:
         kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
-        mock_result_path = os.path.join(
-            results_path, args.scenario_name, args.submodel, "Matrices")
-        if not os.path.exists(mock_result_path):
+        mock_result_path = results_path / "Matrices" / args.submodel
+        if not mock_result_path.is_dir():
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
                     mock_result_path))
         ass_model = MockAssignmentModel(MatrixData(mock_result_path), **kwargs)
     else:
-        if not os.path.isfile(emme_project_path):
+        if not emme_project_path.is_file():
             raise NameError(
                 ".emp project file not found in given '{}' location.".format(
                     emme_project_path))
@@ -78,7 +92,7 @@ def main(args):
             EmmeProject(emme_project_path),
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
-            save_matrices=True,
+            save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id,
             use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,
@@ -86,8 +100,8 @@ def main(args):
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
     model_args = (forecast_zonedata_path, base_zonedata_path,
-                  base_matrices_path, results_path, ass_model,
-                  args.scenario_name, args.submodel)
+                  base_matrices_path, results_path, ass_model, args.submodel,
+                  long_dist_matrices_path, freight_matrices_path)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
              else ModelSystem(*model_args))
     log_extra["status"]["results"] = model.mode_share
@@ -138,18 +152,13 @@ def main(args):
 
     # delete emme strategy files for scenarios
     if args.del_strat_files:
-        dbase_path = os.path.join(os.path.dirname(emme_project_path), "database")
-        filepath = os.path.join(dbase_path, "STRAT_s{}*")
-        dirpath = os.path.join(dbase_path, "STRATS_s{}", "*")
-        scenario_ids = range(args.first_scenario_id, args.first_scenario_id+5)
-        for s in scenario_ids:
-            strategy_files = glob(filepath.format(s)) + glob(dirpath.format(s))
-            for f in strategy_files:
-                try:
-                    os.remove(f)
-                except:
-                    log.info("Not able to remove file {}.".format(f))
-        log.info("Removed strategy files in {}".format(dbase_path))
+        db_path = emme_project_path.parent / "database"
+        for f in list(db_path.glob("STRAT_s*")) + list(db_path.glob("STRATS_s*/*")):
+            try:
+                f.unlink()
+            except:
+                log.info(f"Not able to remove file {f}.")
+        log.info(f"Removed strategy files in {db_path}")
     log.info("Simulation ended.", extra=log_extra)
 
 
@@ -181,10 +190,19 @@ if __name__ == "__main__":
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."
+        "-l", "--long-dist-demand-forecast",
+        type=str,
+        default=config.LONG_DIST_DEMAND_FORECAST,
+        help=("If 'calc', runs assigment with free-flow speed and "
+              + "calculates demand for long-distance trips. "
+              + "If 'base', takes long-distance trips from base matrices. "
+              + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-path",
+        type=str,
+        default=config.FREIGHT_MATRIX_PATH,
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",

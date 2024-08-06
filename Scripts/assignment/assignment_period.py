@@ -535,7 +535,7 @@ class AssignmentPeriod(Period):
         boards = self.get_matrix(transit_class, "num_board") > 0
         transfer_penalty = boards * param.transfer_penalty[transit_class]
         gcost = self.get_matrix(transit_class, "gen_cost")
-        cost = (self.get_matrix(transit_class, "cost")
+        cost = (self.get_matrix(transit_class, "inv_cost")
                 + self.get_matrix(transit_class, "board_cost"))
         time = self.get_matrix(transit_class, "time")
         path_found = cost < 999999

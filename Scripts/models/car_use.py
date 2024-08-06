@@ -63,7 +63,7 @@ class CarUseModel(LogitModel):
                 Choice probabilities
         """
         b = self.param
-        utility = numpy.zeros(self.bounds.stop)
+        utility = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
         self._add_constant(utility, b["constant"])
         self._add_zone_util(utility, b["generation"], True)
         self.exps = numpy.exp(utility)

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
@@ -46,6 +48,21 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
+
+    def output_traversal_matrix(self, output_path: Path):
+        spec = {
+            "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
+            "portion_of_path": "COMPLETE",
+            "gates_by_trip_component": {
+                "aux_transit": "@freight_gate",
+            },
+        }
+        for ass_class in param.freight_modes:
+            output_file = output_path / f"{ass_class}.txt"
+            spec["analyzed_demand"] = self.emme_matrices[ass_class]["demand"]
+            self.emme_project.traversal_analysis(
+                spec, output_file, append_to_output_file=False,
+                scenario=self.emme_scenario, class_name=ass_class)
 
     def _set_freight_vdfs(self):
         network = self.emme_scenario.get_network()

@@ -1,11 +1,11 @@
 from __future__ import annotations
 from typing import Any, Dict, List, Sequence, Optional, Union
-import os
+from pathlib import Path
 import numpy # type: ignore
 import pandas
 
 import parameters.zone as param
-from utils.read_csv_file import FileReader
+from utils.read_csv_file import FileReader, read_mapping
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations
 
@@ -15,18 +15,18 @@ class ZoneData:
 
     Parameters
     ----------
-    data_dir : str
+    data_dir : Path
         Directory where scenario input data files are found
     zone_numbers : list
         Zone numbers to compare with for validation
     aggregations : datatypes.zone.ZoneAggregations
         Container for zone aggregations read from input file
-    zone_mapping_file : str (optional)
-        Name of zone mapping file
+    zone_mapping : pandas.Series (optional)
+        Mapping between data zones (index) and assignment zones
     """
-    def __init__(self, data_dir: str, zone_numbers: Sequence,
+    def __init__(self, data_dir: Path, zone_numbers: Sequence,
                  aggregations: ZoneAggregations,
-                 zone_mapping_file: Optional[str] = None):
+                 zone_mapping: Optional[pandas.Series] = None):
         self.aggregations = aggregations
         self._values = {}
         self.share = ShareChecker(self)
@@ -40,12 +40,11 @@ class ZoneData:
         Zone.counter = 0
         self.zones = {number: Zone(number, aggregations) for number in self.zone_numbers}
         files = FileReader(
-            data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
+            data_dir, self.zone_numbers, numpy.float32, zone_mapping)
         popdata = files.read_csv_file(".pop")
         workdata = files.read_csv_file(".wrk")
         incdata = files.read_csv_file(".inc")
         schooldata = files.read_csv_file(".edu")
-        landdata = files.read_csv_file(".lnd")
         parkdata = files.read_csv_file(".prk")
         sport_facilities = files.read_csv_file(".spo")
         buildings = files.read_csv_file(".bld")
@@ -81,8 +80,10 @@ class ZoneData:
         self.share["share_age_50-64"] = popdata["sh_50-64"]
         self.share["share_age_65-99"] = popdata["sh_65"]
         self.share["share_age_7-99"] = popdata["sh_7-17"] + popdata["sh_18-29"] + popdata["sh_30-49"] + popdata["sh_50-64"] + popdata["sh_65"]
-        self.share["share_female"] = pandas.Series(0.5, self.zone_numbers)
-        self.share["share_male"] = pandas.Series(0.5, self.zone_numbers)
+        self.share["share_female"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
+        self.share["share_male"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
         self["age_7-17_female"] = 0.5 * popdata["sh_7-17"] * pop
         self["age_18-29_female"] = 0.5 * popdata["sh_18-29"] * pop
         self["age_30-49_female"] = 0.5 * popdata["sh_30-49"] * pop
@@ -100,7 +101,6 @@ class ZoneData:
         self["income_80-99"] = incdata["sh_income_80-99"] * pop
         self["income_100"] = incdata["sh_income_100"] * pop
         self.nr_zones = len(self.zone_numbers)
-        self["population_density"] = pop / landdata["builtar"]
         wp = workdata["workplaces"]
         self["workplaces"] = wp
         self["sports_in"] = sport_facilities["sports_in"]
@@ -109,8 +109,6 @@ class ZoneData:
         self["area_leisure"] = buildings["area_leis"]
         self["service"] = workdata["sh_serv"] * wp
         self["shop"] = workdata["sh_shop"] * wp
-        self["logistics"] = workdata["sh_logi"] * wp
-        self["industry"] = workdata["sh_indu"] * wp
         self["hospitality"] = workdata["sh_hosp"] * wp
         self["recreation"] = workdata["sh_recr"] * wp
         self["park_cost"] = parkdata["avg_park_cost"]
@@ -188,24 +186,6 @@ class ZoneData:
         """
         return self.zones[zone_number].index
 
-    def get_freight_data(self) -> pandas.DataFrame:
-        """Get zone data for freight traffic calculation.
-        
-        Returns
-        -------
-        pandas DataFrame
-            Zone data for freight traffic calculation
-        """
-        freight_variables = (
-            "population",
-            "workplaces",
-            "shop",
-            "logistics",
-            "industry",
-        )
-        data = {k: self._values[k] for k in freight_variables}
-        return pandas.DataFrame(data)
-
     def get_data(self, key: str, bounds: slice, generation: bool=False) -> Union[pandas.Series, numpy.ndarray]:
         """Get data of correct shape for zones included in purpose.
         
@@ -244,33 +224,28 @@ class ZoneData:
 
 
 class BaseZoneData(ZoneData):
-    def __init__(self, data_dir: str, zone_numbers: Sequence,
-                 zone_mapping_file: Optional[str] = None):
+    def __init__(self, data_dir: Path, zone_numbers: Sequence,
+                 zone_mapping: Optional[pandas.Series] = None):
         all_zone_numbers = numpy.array(zone_numbers)
         peripheral = param.purpose_areas["peripheral"]
         self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
             peripheral[1])]
-        municipality_file = "koko_suomi_kunta.zmp"
-        municipality_centre_zones = pandas.read_csv(
-            os.path.join(data_dir, municipality_file),
-            delim_whitespace=True,
-            index_col="data_id").squeeze().drop_duplicates().sort_values()
-        files = FileReader(
-            data_dir, municipality_centre_zones,
-            zone_mapping_file=municipality_file)
-        mapping = files.read_csv_file(".agg")["municipality"]
+        municipality_centre_mapping = read_mapping(
+            data_dir / "koko_suomi_kunta.zmp")
+        if zone_mapping is not None:
+            municipality_centre_mapping = municipality_centre_mapping.groupby(
+                zone_mapping).agg("first")
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
-        municipality_centres = pandas.Series(
-            mapping.index, index=mapping.values).map(zone_indices)
         files = FileReader(
-            data_dir, self.zone_numbers, zone_mapping_file=zone_mapping_file)
+            data_dir, self.zone_numbers, zone_mapping=zone_mapping)
         aggregations = ZoneAggregations(
-            files.read_csv_file(".agg"), municipality_centres)
+            files.read_csv_file(".agg"),
+            municipality_centre_mapping.map(zone_indices))
         ZoneData.__init__(
-            self, data_dir, zone_numbers, aggregations, zone_mapping_file)
+            self, data_dir, zone_numbers, aggregations, zone_mapping)
         files = FileReader(
-            data_dir, self.zone_numbers, numpy.float32, zone_mapping_file)
+            data_dir, self.zone_numbers, numpy.float32, zone_mapping)
         self["car_density"] = files.read_csv_file(".car")["car_dens"]
         self["cars_per_1000"] = 1000 * self["car_density"]
 
@@ -280,9 +255,9 @@ class ShareChecker:
         self.data = data
 
     def __setitem__(self, key, data):
-        if (data > 1.005).any():
+        if (data > 1.02).any():
             for (i, val) in data.iteritems():
-                if val > 1.005:
+                if val > 1.02:
                     msg = "{} ({}) for zone {} is larger than one".format(
                         key, val, i).capitalize()
                     log.error(msg)

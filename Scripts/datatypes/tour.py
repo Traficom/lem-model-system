@@ -135,7 +135,7 @@ class Tour:
 
     @property
     def sustainable_access(self):
-        return -self.purpose.accessibility_model.access["sustainable"][self.orig]
+        return -self.purpose.accessibility_model.accessibility["sustainable_scaled"][self.orig]
 
     def choose_destination(self, sec_dest_tours: Dict[str, Dict[int, Dict[int, List['Tour']]]]):
         """Choose primary destination for the tour.
