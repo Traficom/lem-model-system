@@ -31,7 +31,6 @@ purpose_areas: Dict[str, Union[Tuple[int,int],Tuple[int,int,int]]] = {
     "all": (0, 2000, 36000),
     "external": (36000, 40000),
 }
-purpose_matrix_aggregation_level = "area"
 tour_length_intervals = (0, 3, 5, 10, 20, 30, 40, 100,
                          200, 400, 600, 800, float("inf"))
 # Population in noise zones as share of total area population as
