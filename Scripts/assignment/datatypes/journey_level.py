@@ -58,10 +58,12 @@ class JourneyLevel:
             next = BOARDED_DEST
         else:
             next = FORBIDDEN
+        local_transit_modes = [mode for mode in param.local_transit_modes
+            if mode not in param.long_dist_transit_modes[transit_class]]
         transitions = [{
                 "mode": mode,
                 "next_journey_level": next,
-            } for mode in param.local_transit_modes]
+            } for mode in local_transit_modes]
         next = BOARDED_LONG_D if level <= BOARDED_DEST else FORBIDDEN
         transitions += [{
                 "mode": mode,
