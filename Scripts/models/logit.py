@@ -79,8 +79,6 @@ class LogitModel:
             l, u = self.distance_boundary[mode]
             dist = self.purpose.dist
             self._dest_exps[mode][(dist < l) | (dist >= u)] = 0
-        if mode == "airplane":
-            self._dest_exps[mode][impedance["cost"] < 150] = 0
         try:
             return self._dest_exps[mode].sum(1)
         except ValueError:
