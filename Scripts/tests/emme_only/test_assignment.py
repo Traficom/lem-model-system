@@ -1,15 +1,20 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import os
 import logging
-import utils.log as log
 import numpy
+import pandas
 
+import utils.log as log
+from utils.read_csv_file import read_mapping
 import assignment.emme_assignment as ass
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import BaseZoneData
 from datahandling.matrixdata import MatrixData
 from datahandling.resultdata import ResultsData
+from tests.integration.test_data_handling import (
+    TEST_DATA_PATH,
+    BASE_ZONEDATA_PATH,
+)
 try:
     from assignment.emme_bindings.emme_project import EmmeProject
     import inro.emme.desktop.app as _app
@@ -30,18 +35,15 @@ class EmmeAssignmentTest:
         logging.basicConfig(format='%(asctime)s %(message)s',
                             datefmt='%Y-%m-%d %H:%M:%S',
                             level=logging.INFO)
-        project_dir = os.path.join(
-            os.path.dirname(os.path.realpath('__file__')),
-            "tests", "test_data", "Results")
+        project_dir = TEST_DATA_PATH / "Results"
         log.info(str(project_dir))
         project_name = "test_assignment"
-        db_dir = os.path.join(project_dir, project_name, "Database")
+        db_dir = project_dir / project_name / "Database"
         try:
             project_path = _app.create_project(project_dir, project_name)
-            os.makedirs(db_dir)
+            db_dir.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
-            project_path = os.path.join(
-                project_dir, project_name, project_name + ".emp")
+            project_path = project_dir / project_name / (project_name + ".emp")
         dim = {
             "scalar_matrices": 100,
             "origin_matrices": 100,
@@ -62,7 +64,7 @@ class EmmeAssignmentTest:
         }
         scenario_num = 19
         try:
-            eb = _eb.create(os.path.join(db_dir, "emmebank"), dim)
+            eb = _eb.create(db_dir / "emmebank", dim)
             eb.create_scenario(scenario_num)
             emmebank_path = eb.path
             eb.dispose()
@@ -70,7 +72,7 @@ class EmmeAssignmentTest:
             emmebank_path = None
         emme_context = EmmeProject(project_path, emmebank_path, "test")
         emme_context.import_scenario(
-            os.path.join(project_dir, "..", "Network"), scenario_num, "test",
+            project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
         dist_cost = {
@@ -91,8 +93,8 @@ class EmmeAssignmentTest:
             "car_leisure": car_matrix,
             "transit_work": car_matrix,
             "transit_leisure": car_matrix,
-            "car_first_mile": car_matrix,
-            "car_last_mile": car_matrix,
+            # "car_first_mile": car_matrix,
+            # "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
             "semi_trailer": car_matrix,
@@ -105,16 +107,19 @@ class EmmeAssignmentTest:
         for ap in self.ass_model.assignment_periods:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
-            travel_cost[ap.name] = ap.assign(iteration="last")
-        resultdata = ResultsData(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..","test_data", "Results", "assignment"))
-        self.ass_model.aggregate_results(resultdata)
-        self.ass_model.calc_noise()
+            travel_cost[ap.name] = ap.end_assign()
+        resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
+        mapping = pandas.Series({
+            "Helsinki": "Uusimaa",
+            "Espoo": "Uusimaa",
+            "Lohja": "Uusimaa",
+            "Salo": "Varsinais-Suomi",
+        })
+        self.ass_model.aggregate_results(resultdata, mapping)
+        self.ass_model.calc_noise(mapping)
         resultdata.flush()
-        costs_files = MatrixData(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)),
-            "..","test_data", "Results", "assignment", "Matrices"))
+        costs_files = MatrixData(
+            TEST_DATA_PATH / "Results" / "assignment" / "Matrices")
         for time_period in travel_cost:
             for mtx_type in travel_cost[time_period]:
                 zone_numbers = self.ass_model.zone_numbers
@@ -124,10 +129,9 @@ class EmmeAssignmentTest:
                         mtx[ass_class] = cost_data
 
     def test_transit_cost(self):
-        zdata = ZoneData(os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "..", "test_data",
-            "Scenario_input_data", "2030_test"), self.ass_model.zone_numbers,
-            "uusimaa.zmp")
+        zdata = BaseZoneData(
+            BASE_ZONEDATA_PATH, self.ass_model.zone_numbers,
+            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
         self.ass_model.calc_transit_cost(zdata.transit_zone)
 
 if emme_available:
