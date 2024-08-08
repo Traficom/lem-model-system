@@ -3,7 +3,7 @@
 # area_edu = Floor area of educational buildings
 # area_leis = Floor area of leisure buildings (cottages, etc)
 #
-data_id	area_edu area_leis	area_total  building_dist
+zone_id	area_edu area_leis	area_total  building_dist
 102	100	50	200 0.12
 103	500	50	600 0.12
 244	20	30	100 0.12

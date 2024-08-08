@@ -7,7 +7,7 @@
 # sh_5064: share of population aged 50-64
 # sh_65-: share of population aged over 65
 #
-data_id	population	sh_7-17	sh_18-29	sh_30-49	sh_50-64	sh_65
+zone_id	population	sh_7-17	sh_18-29	sh_30-49	sh_50-64	sh_65
 101	11	0	0	1	0	0
 102	1	0	0	0	0	0
 103	110	0.0743	0.2432	0.2432	0.277	0.0946
