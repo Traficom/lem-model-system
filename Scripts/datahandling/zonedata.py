@@ -111,6 +111,7 @@ class ZoneData:
         self["shop"] = workdata["sh_shop"] * wp
         self["hospitality"] = workdata["sh_hosp"] * wp
         self["recreation"] = workdata["sh_recr"] * wp
+        self["sh_office"] = workdata["sh_office"]
         self["park_cost"] = parkdata["avg_park_cost"]
         self["park_time"] = parkdata["avg_park_time"]
         self["comprehensive"] = schooldata["compreh"]
