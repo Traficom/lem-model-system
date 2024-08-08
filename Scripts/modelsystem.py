@@ -199,15 +199,19 @@ class ModelSystem:
                 ("Matrices from model run not provided, "
                     + "getting trips from base matrices..."))
             # Long car trips must be in separate file
-            with self.basematrices.open(
-                    "demand", "vrk", zone_numbers,
-                    transport_classes=param.car_classes) as mtx:
-                for ass_class in param.car_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    car_matrices[ass_class] = demand.matrix
+            car_classes = [ass_class for ass_class in long_dist_classes
+                if ass_class in param.car_classes]
             other_classes = [ass_class for ass_class in long_dist_classes
                 if ass_class not in param.car_classes]
+            if car_classes:
+                with self.basematrices.open(
+                        "demand", "vrk", zone_numbers,
+                        transport_classes=car_classes) as mtx:
+                    for ass_class in car_classes:
+                        demand = Demand(
+                            self.em.purpose, ass_class, mtx[ass_class])
+                        self.dtm.add_demand(demand)
+                        car_matrices[ass_class] = demand.matrix
             if other_classes:
                 for ap in self.ass_model.assignment_periods:
                     tp = ap.name
@@ -216,10 +220,11 @@ class ModelSystem:
                             transport_classes=other_classes) as mtx:
                         for ass_class in other_classes:
                             self.dtm.demand[tp][ass_class] = mtx[ass_class]
-        with self.resultmatrices.open(
-                "demand", "vrk", zone_numbers, m='w') as mtx:
-            for ass_class in car_matrices:
-                mtx[ass_class] = car_matrices[ass_class]
+        if car_matrices:
+            with self.resultmatrices.open(
+                    "demand", "vrk", zone_numbers, m='w') as mtx:
+                for ass_class in car_matrices:
+                    mtx[ass_class] = car_matrices[ass_class]
 
     # possibly merge with init
     def assign_base_demand(self, 
