@@ -127,7 +127,7 @@ class EmmeAssignmentTest:
         zdata = ZoneData(os.path.join(
             os.path.dirname(os.path.realpath(__file__)), "..", "test_data",
             "Scenario_input_data", "2030_test"), self.ass_model.zone_numbers,
-            "uusimaa.zmp")
+            "zones_uusimaa.tsv")
         self.ass_model.calc_transit_cost(zdata.transit_zone)
 
 if emme_available:
