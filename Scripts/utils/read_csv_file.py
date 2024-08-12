@@ -125,7 +125,6 @@ def read_mapping(path: Path, zone_numbers: list) -> pandas.Series:
         Zone numbers to compare with for validation
     """
     data = pandas.read_csv(path, delim_whitespace=True, index_col="zone_input").squeeze()
-    is_in(numpy.array(zone_numbers), data.values, "assignment zones", path)
     is_in(data.values, numpy.array(zone_numbers), path, "assignment zones")
     return data
 
