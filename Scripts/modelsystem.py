@@ -420,6 +420,8 @@ class ModelSystem:
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_model_results(self):
+        input_zdata = {var: self.zdata_forecast[var] for var in zone_param.export_zdata}
+        self.resultdata.print_data(input_zdata, "zonedata_input.txt")
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")

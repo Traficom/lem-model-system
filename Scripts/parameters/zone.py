@@ -44,3 +44,12 @@ pop_share_per_noise_area = {
     "surround_other": 0.001407824,
     "peripheral": 0,  # Not calculated
 }
+
+export_zdata = [
+    "population", "age_7-17", "age_18-29", "age_50-64", "age_65-99", 
+    "income_0-19", "income_20-39", "income_40-59", "income_60-79", 
+    "income_80-99", "income_100", "workplaces", "sports_in", "sports_out",
+    "area_education", "area_leisure", "service", "shop", "hospitality",
+    "recreation", "park_cost", "park_time", "comprehensive",
+    "upper_secondary", "higher_education", "building_dist"
+]
