@@ -548,8 +548,8 @@ emme_matrices = {
     "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    # "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    # "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
     "train": ("demand", "time", "dist", "cost", "gen_cost"),
     "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
     "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -571,6 +571,7 @@ transit_impedance_matrices = {
         "aux_time": "actual_aux_transit_times",
         "board_time": "actual_total_boarding_times",
         "num_board": "avg_boardings",
+        "inv_cost": "actual_in_vehicle_costs",
         "board_cost": "actual_total_boarding_costs",
     },
     "local": {
