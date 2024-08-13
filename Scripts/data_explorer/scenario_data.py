@@ -27,7 +27,6 @@ def read_mtx(file_path: Path, time_period: str, mtx_type: str, ass_class: str):
         time_period (str) : Time period
         mtx_type (str) : Matrix type
         ass_class (str) : Assignment class of model
-        zone_id (int) : Zone id for origin zone
 
     Return
         numpy.Matrix : Cost matrix of specified type 

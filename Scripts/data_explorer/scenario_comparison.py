@@ -18,14 +18,12 @@ class ScenarioComparison(object):
         self.zones = scenario0.zones
         self.zone_ids = scenario0.zone_ids
 
-
     def accessibility(self, tour_type, mode = None):
         """
         Get accessibility values of tour type (and mode).
 
         Return : Series for tour type or mode.
         """
-
 
     def travel_times(self, time_period, mtx_type, ass_class, origin_zone, geometry = False):
         data1 = self.scenario1.costs_from(time_period, mtx_type, ass_class, origin_zone)
