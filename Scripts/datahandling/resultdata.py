@@ -115,7 +115,7 @@ class ResultsData:
                     sheet_name=f"{description}_{key}")
         # Create text file
         stacked_matrices = pandas.concat(
-            {f"{description}_{key}": df.stack() for key, df in data.items()},
-            names=["purpose", "orig", "dest"])
+             {(description, key): df.stack() for key, df in data.items()},
+            names=["purpose", "mode", "orig", "dest"])
         stacked_matrices.name = "nr_tours"
         self.print_concat(stacked_matrices, filename + ".txt")
