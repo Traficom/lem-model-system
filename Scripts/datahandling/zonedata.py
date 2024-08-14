@@ -105,6 +105,7 @@ class ZoneData:
         self["workplaces"] = wp
         self["sports_in"] = sport_facilities["sports_in"]
         self["sports_out"] = sport_facilities["sports_out"]
+        self["ski_resort"] = sport_facilities["ski_resort"]
         self["area_education"] = buildings["area_edu"]
         self["area_leisure"] = buildings["area_leis"]
         self["service"] = workdata["sh_serv"] * wp
