@@ -395,25 +395,30 @@ class AssignmentPeriod(Period):
         transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
             for modes in param.transit_delay_funcs}
         for link in network.links():
-            for modeset in param.transit_delay_funcs:
-                # Check that intersection is not empty,
-                # hence that mode is active on link
-                if transit_modesets[modeset[0]] & link.modes:
-                    funcs = param.transit_delay_funcs[modeset]
-                    if modeset[0] == "bus":
-                        if link["#buslane"]:
-                            func = funcs["buslane"]
-                        else:
-                            func = funcs["no_buslane"]
-                    else:
-                        func = funcs[self.name]
-                    break
+            try:
+                next(link.segments())
+            except StopIteration:
+                pass
             else:
-                msg = f"No transit time function for modes on link {link.id}"
-                log.error(msg)
-                raise ValueError(msg)
-            for segment in link.segments():
-                segment.transit_time_func = func
+                for modeset in param.transit_delay_funcs:
+                    # Check that intersection is not empty,
+                    # hence that mode is active on link
+                    if transit_modesets[modeset[0]] & link.modes:
+                        funcs = param.transit_delay_funcs[modeset]
+                        if modeset[0] == "bus":
+                            if link["#buslane"]:
+                                func = funcs["buslane"]
+                            else:
+                                func = funcs["no_buslane"]
+                        else:
+                            func = funcs[self.name]
+                        break
+                else:
+                    msg = f"No transit time function for modes on link {link.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
+                for segment in link.segments():
+                    segment.transit_time_func = func
         self.emme_scenario.publish_network(network)
 
     def _init_truck_times(self):
