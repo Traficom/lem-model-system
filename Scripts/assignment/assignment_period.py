@@ -174,7 +174,6 @@ class AssignmentPeriod(Period):
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
-        self._set_walk_time()
         self._assign_pedestrians()
         self._set_bike_vdfs()
         self._assign_bikes(self.emme_matrices["bike"]["dist"], "all")
@@ -207,7 +206,6 @@ class AssignmentPeriod(Period):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        self._set_walk_time()
         if self.use_free_flow_speeds:
             self._assign_transit(param.long_distance_transit_classes)
             self._long_distance_trips_assigned = True
@@ -238,7 +236,6 @@ class AssignmentPeriod(Period):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        self._set_walk_time()
         if self.use_free_flow_speeds:
             if not self._long_distance_trips_assigned:
                 self._assign_transit(param.long_distance_transit_classes)
@@ -760,7 +757,6 @@ class AssignmentPeriod(Period):
             "aggregation": None,
         }
         self.emme_project.network_calc(netw_spec, scen)
-        self.emme_project.set_extra_function_parameters(el1 = 0)
         # Define for which links to calculate length and save in ul3
         netw_spec = {
             "type": "NETWORK_CALCULATION",
@@ -779,6 +775,7 @@ class AssignmentPeriod(Period):
 
     def _assign_pedestrians(self):
         """Perform pedestrian assignment for one scenario."""
+        self._set_walk_time()
         log.info("Pedestrian assignment started...")
         self.emme_project.pedestrian_assignment(
             specification=self.walk_spec, scenario=self.emme_scenario)
@@ -865,6 +862,7 @@ class AssignmentPeriod(Period):
     def _assign_transit(self, transit_classes=param.local_transit_classes):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
+        self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
