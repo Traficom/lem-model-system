@@ -91,7 +91,7 @@ transit_delay_funcs = {
         "no_buslane": 1,
         "buslane": 2,
     },
-    ("rail", "rjmwtp"): {
+    ("rail", "rjmwtpl"): {
         "aht": 6,
         "pt": 6,
         "iht": 6,

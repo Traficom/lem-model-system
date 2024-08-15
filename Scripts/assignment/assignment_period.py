@@ -408,6 +408,10 @@ class AssignmentPeriod(Period):
                     else:
                         func = funcs[self.name]
                     break
+            else:
+                msg = f"No transit time function for modes on link {link.id}"
+                log.error(msg)
+                raise ValueError(msg)
             for segment in link.segments():
                 segment.transit_time_func = func
         self.emme_scenario.publish_network(network)
