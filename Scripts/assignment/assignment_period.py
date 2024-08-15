@@ -575,13 +575,14 @@ class AssignmentPeriod(Period):
     def _set_walk_time(self):
         """Set walk or ferry time to data3"""
         network = self.emme_scenario.get_network()
+        walk_time = param.background_traffic_attr.replace("ul", "data")
         for link in network.links():
             linktype = link.type % 100
             if linktype == 44:
-                ferry_travel_time = link["length"] / link["data2"] * 60
-                link["data3"] = link["@ferry_wait_time"] + ferry_travel_time
+                ferry_travel_time = link.length / link.data2 * 60
+                link[walk_time] = link[param.ferry_wait_attr] + ferry_travel_time
             else:
-                link["data3"] = link["length"] / 5 * 60
+                link[walk_time] = link.length / param.walk_speed * 60
         self.emme_scenario.publish_network(network)
 
     def _calc_road_cost(self, link_cost_attrs: Dict[str, str]):

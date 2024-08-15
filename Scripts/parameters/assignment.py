@@ -155,6 +155,7 @@ volume_delay_funcs = {
     ## Escape function, speed 40 km/h
     "ft7": "length/(40/60)",
 }
+walk_speed = 5
 # Network fields defining whether transit mode stops at node
 stop_codes = {
     't': "#transit_stop_t",
@@ -601,6 +602,7 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
+ferry_wait_attr = "@ferry_wait_time"
 railtypes = {
     2: "tram",
     3: "metro",

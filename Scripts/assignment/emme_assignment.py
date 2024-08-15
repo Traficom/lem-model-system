@@ -132,7 +132,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 *self._create_transit_attributes(ap.emme_scenario, ap.extra))
         self._init_functions()
         #add ferry wait time
-        self.emme_project.set_extra_function_parameters(el1 = '@ferry_wait_time')  
+        self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
 
     def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float],
                                 commodity_classes: List[str]):
