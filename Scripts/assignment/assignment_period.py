@@ -398,6 +398,7 @@ class AssignmentPeriod(Period):
             try:
                 next(link.segments())
             except StopIteration:
+                # Skip the else clause if no transit segments on link
                 pass
             else:
                 for modeset in param.transit_delay_funcs:
