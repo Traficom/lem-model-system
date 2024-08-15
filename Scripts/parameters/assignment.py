@@ -617,6 +617,7 @@ roadtypes = {
     3: "multi-lane",
     4: "single-lane",
     5: "single-lane",
+    11: "ferry",
     99: "connector",
 }
 station_ids = {
