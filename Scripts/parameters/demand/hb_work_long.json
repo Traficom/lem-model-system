@@ -63,8 +63,8 @@
         "airplane": {
             "attraction": {},
             "impedance": {
-                "time": -0.00072,
-                "cost": -0.02956
+                "time": -0.00073,
+                "cost": -0.02925
             },
             "log": {
                 "attraction_size": 1
@@ -77,7 +77,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00079,
-                "cost": -0.02956
+                "cost": -0.02925
             },
             "log": {
                 "attraction_size": 1
@@ -89,8 +89,8 @@
         "long_d_bus": {
             "attraction": {},
             "impedance": {
-                "time": -0.00065,
-                "cost": -0.02956
+                "time": -0.00067,
+                "cost": -0.02925
             },
             "log": {
                 "attraction_size": 1
@@ -102,8 +102,8 @@
         "car_work": {
             "attraction": {},
             "impedance": {
-                "time": -0.00105,
-                "cost": -0.02956
+                "time": -0.00111,
+                "cost": -0.02925
             },
             "log": {
                 "attraction_size": 1
@@ -137,7 +137,7 @@
             "individual_dummy": {}
         },
         "train": {
-            "constant": -2.71963,
+            "constant": -2.61807,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -147,7 +147,7 @@
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": -3.98842,
+            "constant": -3.8765,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -157,9 +157,9 @@
             "individual_dummy": {}
         },
         "car_work": {
-            "constant": -3.56968,
+            "constant": -3.45658,
             "generation": {
-                "car_density": 3.35914
+                "car_density": 3.36446
             },
             "attraction": {},
             "impedance": {},
@@ -169,7 +169,7 @@
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -5.35781,
+            "constant": -5.24196,
             "generation": {},
             "attraction": {},
             "impedance": {},
