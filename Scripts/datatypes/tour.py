@@ -159,9 +159,10 @@ class Tour:
         self.purpose.attracted_tours[self.mode][dest_idx] += 1
         self.purpose.histograms[self.mode].add(
             self.purpose.dist[orig_rel_idx, dest_idx])
-        area1 = self.purpose.mapping.iat[orig_idx]
-        area2 = self.purpose.mapping.iat[dest_idx]
-        self.purpose.aggregates[self.mode].at[area1, area2] += 1
+        for name in self.purpose.mappings:
+            i = self.purpose.mappings[name].iat[orig_idx]
+            j = self.purpose.mappings[name].iat[dest_idx]
+            self.purpose.aggregates[name][self.mode].at[i, j] += 1
         if orig_idx == dest_idx:
             self.purpose.own_zone_demand[self.mode].iat[orig_rel_idx] += 1
         bounds = self.purpose.sec_dest_purpose.bounds
