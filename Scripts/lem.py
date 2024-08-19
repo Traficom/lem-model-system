@@ -48,13 +48,13 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not base_zonedata_path.is_dir():
-        raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
-                base_zonedata_path))
+    # if not base_zonedata_path.is_dir():
+    #     raise NameError(
+    #         "Baseline zonedata directory '{}' does not exist.".format(
+    #             base_zonedata_path))
     if not base_matrices_path.is_dir():
         raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
+            "Baseline matrix directory '{}' does not exist.".format(
                 base_matrices_path))
     if not forecast_zonedata_path.is_dir():
         raise NameError(

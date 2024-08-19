@@ -141,12 +141,12 @@ class Purpose:
             for mtx_type in day_imp[mode]:
                 # Add parking time and cost to LOS matrix
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
+                    day_imp[mode][mtx_type] += self.zone_data["avg_park_time"].values
                 if mtx_type == "cost" and "car" in mode:
                     try:
                         day_imp[mode][mtx_type] += (activity_time[self.name] *
                                                     share_paying[self.name] *
-                                                    self.zone_data["park_cost"].values)
+                                                    self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
         return day_imp

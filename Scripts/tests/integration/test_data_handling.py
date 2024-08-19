@@ -5,8 +5,7 @@ import numpy
 from pathlib import Path
 
 import utils.log as log
-from utils.read_csv_file import read_mapping
-from datahandling.zonedata import ZoneData, BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 import parameters.assignment as param
 from lem import BASE_ZONEDATA_DIR
@@ -60,21 +59,17 @@ class MatrixDataTest(unittest.TestCase):
 class ZoneDataTest(unittest.TestCase):
 
     def _get_freight_data_2016(self):
-        zdata = BaseZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES)
+        zdata = ZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES)
         df = zdata.get_freight_data()
         self.assertIsNotNone(df)
         return df
 
     def test_csv_file_read(self):
-        zdata2016 = BaseZoneData(
-            BASE_ZONEDATA_PATH, ZONE_INDEXES,
-            read_mapping(BASE_ZONEDATA_PATH / "zones_uusimaa.tsv", ZONE_INDEXES))
+        zdata2016 = ZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES, "uusimaa")
         self.assertIsNotNone(zdata2016["population"])
         self.assertIsNotNone(zdata2016["workplaces"])
 
-        zdata2030 = ZoneData(
-            ZONEDATA_PATH, ZONE_INDEXES, zdata2016.aggregations,
-            read_mapping(ZONEDATA_PATH / "zones_uusimaa.tsv", ZONE_INDEXES))
+        zdata2030 = ZoneData(ZONEDATA_PATH, ZONE_INDEXES, "uusimaa")
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 

@@ -6,11 +6,10 @@ import unittest
 import json
 from pathlib import Path
 
-from datahandling.zonedata import BaseZoneData
+from datahandling.zonedata import ZoneData
 from models.logit import ModeDestModel
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PATH
-from utils.read_csv_file import read_mapping
 
 
 METROPOLITAN_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291]
@@ -26,8 +25,7 @@ class LogitModelTest(unittest.TestCase):
             pass
         pur = Purpose()
         zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
-        zone_mapping = read_mapping(BASE_ZONEDATA_PATH / "zones_uusimaa.tsv", ZONE_INDEXES)
-        zd = BaseZoneData(BASE_ZONEDATA_PATH, zi, zone_mapping)
+        zd = ZoneData(BASE_ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
         mtx = numpy.arange(90, dtype=numpy.float32)
         mtx.shape = (9, 10)

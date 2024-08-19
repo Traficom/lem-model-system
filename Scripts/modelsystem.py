@@ -12,11 +12,9 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
-from utils.divide_matrices import divide_matrices
-from utils.read_csv_file import read_mapping
 import assignment.departure_time as dt
 from datahandling.resultdata import ResultsData
-from datahandling.zonedata import ZoneData, BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
@@ -25,10 +23,8 @@ from datatypes.purpose import Purpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
-from models.linear import CarDensityModel
 import parameters.assignment as param
 import parameters.zone as zone_param
-import parameters.tour_generation as gen_param
 
 
 class ModelSystem:
@@ -70,17 +66,13 @@ class ModelSystem:
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
 
         # Input data
-        self.mapping = read_mapping(zone_data_path / f"zones_{submodel}.tsv", self.zone_numbers)
-        self.zdata_base = BaseZoneData(
-            base_zone_data_path, self.zone_numbers, self.mapping)
         self.basematrices = MatrixData(base_matrices_path / submodel)
         self.long_dist_matrices = (MatrixData(long_dist_matrices_path)
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
-            self.mapping)
+            zone_data_path, self.zone_numbers, submodel)
 
         # Output data
         self.resultdata = ResultsData(results_path)
@@ -328,7 +320,7 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         # Update car density
-        prediction = (self.zdata_base["car_density"][:self.zdata_base.nr_zones]
+        prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
                       .clip(upper=1.0))
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
@@ -444,7 +436,8 @@ class ModelSystem:
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
     def _generated_tours_mode(self, mode):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
+        int_demand = pandas.Series(
+            0, self.zdata_forecast.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds

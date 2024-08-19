@@ -3,9 +3,11 @@ from typing import Any, Dict, List, Sequence, Optional, Union
 from pathlib import Path
 import numpy # type: ignore
 import pandas
+import geopandas as gpd
+import json
 
 import parameters.zone as param
-from utils.read_csv_file import FileReader, read_mapping
+from utils.read_csv_file import read_other_data
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations
 
@@ -19,103 +21,68 @@ class ZoneData:
         Directory where scenario input data files are found
     zone_numbers : list
         Zone numbers to compare with for validation
-    aggregations : datatypes.zone.ZoneAggregations
-        Container for zone aggregations read from input file
-    zone_mapping : pandas.Series
-        Mapping between data zones (index) and assignment zones
+    zone_mapping : str
+            Name of column where mapping between data zones (index)
+            and assignment zones
     """
     def __init__(self, data_dir: Path, zone_numbers: Sequence,
-                 aggregations: ZoneAggregations,
-                 zone_mapping: pandas.Series):
-        self.aggregations = aggregations
+                 zone_mapping: str):
+        self.transit_zone = read_other_data(data_dir / "transit_cost.tsv")
+        try:
+            self.mtx_adjustment = read_other_data(
+                data_dir / "matrix_adjustment.tsv")
+        except (NameError, KeyError):
+            self.mtx_adjustment = None
+        car_cost = read_other_data(data_dir / "car_cost.tsv")
+        self.car_dist_cost = car_cost["dist_cost"].to_dict()
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
         self.all_zone_numbers = all_zone_numbers
         peripheral = param.purpose_areas["peripheral"]
-        external = param.purpose_areas["external"]
         self.zone_numbers = pandas.Index(
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
             name="zone_analysis")
         Zone.counter = 0
-        self.zones = {number: Zone(number, aggregations) for number in self.zone_numbers}
-        files = FileReader(data_dir, zone_mapping)
-        popdata = files.read_zonedata("population.tsv")
-        workdata = files.read_zonedata("workplaces.tsv")
-        incdata = files.read_zonedata("income_classes.tsv")
-        schooldata = files.read_zonedata("education.tsv")
-        parkdata = files.read_zonedata("parking_data.tsv")
-        sport_facilities = files.read_zonedata("sport_facilities.tsv")
-        buildings = files.read_zonedata("buildings.tsv")
-        self.transit_zone = files.read_other_data("transit_cost.tsv")
-        self.externalgrowth = files.read_zonedata("external_traffic.tsv")
-        try:
-            self.mtx_adjustment = files.read_other_data("matrix_adjustment.tsv")
-        except (NameError, KeyError):
-            self.mtx_adjustment = None
-        try:
-            cardata = files.read_other_data("car_data.tsv")
-            self["parking_norm"] = cardata["prknorm"]
-        except (NameError, KeyError):
-            self._values["parking_norm"] = None
-        car_cost = files.read_other_data("car_cost.tsv", squeeze=False)
-        self.car_dist_cost = car_cost["dist_cost"].to_dict()
-        truckdata = files.read_other_data("truck_data.tsv", squeeze=True)
-        files.zone_numbers = all_zone_numbers[all_zone_numbers.searchsorted(external[0]):]
-        self.trailers_prohibited = list(map(int, truckdata.loc[0, :]))
-        self.garbage_destination = list(map(int, truckdata.loc[1, :].dropna()))
-        pop = popdata["population"]
-        self["population"] = pop
-        self["age_7-17"] = popdata["sh_7-17"] * pop
-        self["age_18-29"] = popdata["sh_18-29"] * pop
-        self["age_30-49"] = popdata["sh_30-49"] * pop
-        self["age_50-64"] = popdata["sh_50-64"] * pop
-        self["age_65-99"] = popdata["sh_65"] * pop
-        self.share["share_age_7-17"] = popdata["sh_7-17"]
-        self.share["share_age_18-29"] = popdata["sh_18-29"]
-        self.share["share_age_30-49"] = popdata["sh_30-49"]
-        self.share["share_age_50-64"] = popdata["sh_50-64"]
-        self.share["share_age_65-99"] = popdata["sh_65"]
-        self.share["share_age_7-99"] = popdata["sh_7-17"] + popdata["sh_18-29"] + popdata["sh_30-49"] + popdata["sh_50-64"] + popdata["sh_65"]
-        self.share["share_female"] = pandas.Series(0.5, self.zone_numbers)
-        self.share["share_male"] = pandas.Series(0.5, self.zone_numbers)
-        self["age_7-17_female"] = 0.5 * popdata["sh_7-17"] * pop
-        self["age_18-29_female"] = 0.5 * popdata["sh_18-29"] * pop
-        self["age_30-49_female"] = 0.5 * popdata["sh_30-49"] * pop
-        self["age_50-64_female"] = 0.5 * popdata["sh_50-64"] * pop
-        self["age_65-99_female"] = 0.5 * popdata["sh_65"] * pop
-        self["age_7-17_male"] = 0.5 * popdata["sh_7-17"] * pop
-        self["age_18-29_male"] = 0.5 * popdata["sh_18-29"] * pop
-        self["age_30-49_male"] = 0.5 * popdata["sh_30-49"] * pop
-        self["age_50-64_male"] = 0.5 * popdata["sh_50-64"] * pop
-        self["age_65-99_male"] = 0.5 * popdata["sh_65"] * pop
-        self["income_0-19"] = incdata["sh_income_0-19"] * pop
-        self["income_20-39"] = incdata["sh_income_20-39"] * pop
-        self["income_40-59"] = incdata["sh_income_40-59"] * pop
-        self["income_60-79"] = incdata["sh_income_60-79"] * pop
-        self["income_80-99"] = incdata["sh_income_80-99"] * pop
-        self["income_100"] = incdata["sh_income_100"] * pop
+        data = read_zonedata(
+            data_dir / "landuse.gpkg", self.zone_numbers, zone_mapping)
+        zone_indices = pandas.Series(
+            range(len(self.zone_numbers)), index=self.zone_numbers)
+        agg_keys = [key for key in data if "_agg" in key]
+        aggs = data[agg_keys].rename(columns=lambda x : x.replace("_agg", ""))
+        self.aggregations = ZoneAggregations(
+            aggs, data["municipality_center"].map(zone_indices))
+        self.zones = {number: Zone(number, self.aggregations)
+            for number in self.zone_numbers}
+        self.share["share_female"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
+        self.share["share_male"] = pandas.Series(
+            0.5, self.zone_numbers, dtype=numpy.float32)
+        share_7_99 = pandas.Series(0, self.zone_numbers, dtype=numpy.float32)
+        pop = data["population"]
+        wp = data["workplaces"]
+        for col in data:
+            if col not in agg_keys:
+                self[col] = data[col]
+            if col.startswith("share_age"):
+                pop_share = data[col]
+                self.share[col] = pop_share
+                col_name = col.replace("share_", "")
+                self[col_name] = pop_share * pop
+                self[col_name + "_female"] = 0.5 * pop_share * pop
+                self[col_name + "_male"] = 0.5 * pop_share * pop
+                share_7_99 += pop_share
+            if col.startswith("sh_income"):
+                self[col.replace("sh_", "")] = data[col] * pop
+            if col.startswith("wrk_sh_"):
+                self[col.replace("wrk_sh_", "")] = data[col] * wp
+        self.share["share_age_7-99"] = share_7_99
         self.nr_zones = len(self.zone_numbers)
-        wp = workdata["workplaces"]
-        self["workplaces"] = wp
-        self["sports_in"] = sport_facilities["sports_in"]
-        self["sports_out"] = sport_facilities["sports_out"]
-        self["area_education"] = buildings["area_edu"]
-        self["area_leisure"] = buildings["area_leis"]
-        self["service"] = workdata["sh_serv"] * wp
-        self["shop"] = workdata["sh_shop"] * wp
-        self["hospitality"] = workdata["sh_hosp"] * wp
-        self["recreation"] = workdata["sh_recr"] * wp
-        self["park_cost"] = parkdata["avg_park_cost"]
-        self["park_time"] = parkdata["avg_park_time"]
-        self["comprehensive"] = schooldata["compreh"]
-        self["upper_secondary"] = schooldata["upper_sec"]
-        self["higher_education"] = schooldata["higher_edu"]
         # Create diagonal matrix with zone area
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
         # Two-way intrazonal distances from building distances
-        self["within_zone_dist"] = self["within_zone"] * buildings["building_dist"].values * 2
+        self["within_zone_dist"] = self["within_zone"] * data["building_dist"].values * 2
         self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
         self["within_zone_cost"] = self["within_zone_dist"] * self.car_dist_cost["car_work"]
         # Unavailability of intrazonal tours
@@ -218,30 +185,6 @@ class ZoneData:
             return val[bounds, :]
 
 
-class BaseZoneData(ZoneData):
-    def __init__(self, data_dir: Path, zone_numbers: Sequence,
-                 zone_mapping: pandas.Series):
-        all_zone_numbers = numpy.array(zone_numbers)
-        peripheral = param.purpose_areas["peripheral"]
-        self.zone_numbers = all_zone_numbers[:all_zone_numbers.searchsorted(
-            peripheral[1])]
-        municipality_centre_mapping = read_mapping(
-            data_dir / "zones_municipality_center.tsv", self.zone_numbers)
-        municipality_centre_mapping = municipality_centre_mapping.groupby(
-            zone_mapping).agg("first")
-        zone_indices = pandas.Series(
-            range(len(self.zone_numbers)), index=self.zone_numbers)
-        files = FileReader(data_dir, zone_mapping)
-        aggregations = ZoneAggregations(
-            files.read_zonedata("aggregations.tsv", dtype="str"),
-            municipality_centre_mapping.map(zone_indices))
-        ZoneData.__init__(
-            self, data_dir, zone_numbers, aggregations, zone_mapping)
-        files = FileReader(data_dir, zone_mapping)
-        self["car_density"] = files.read_zonedata("car_density.tsv")["car_dens"]
-        self["cars_per_1000"] = 1000 * self["car_density"]
-
-
 class ShareChecker:
     def __init__(self, data):
         self.data = data
@@ -255,3 +198,67 @@ class ShareChecker:
                     log.error(msg)
                     raise ValueError(msg)
         self.data[key] = data
+
+def read_zonedata(path: Path,
+                  zone_numbers: numpy.ndarray,
+                  zone_mapping: str):
+    """Read zone data from space-separated file.
+
+    Parameters
+    ----------
+    path : Path
+        Path to the .gpkg file
+    zone_numbers : ndarray
+        Zone numbers to compare with for validation
+    zone_mapping : str
+        Name of column where mapping between data zones (index)
+        and assignment zones
+
+    Returns
+    -------
+    pandas.DataFrame
+    """
+    if not path.exists():
+        msg = f"Path {path} not found."
+        raise NameError(msg)
+    data: pandas.DataFrame = gpd.read_file(path, ignore_geometry=True)
+    data.set_index("input_zone_id", inplace=True)
+    if data.index.hasnans:
+        msg = "Row with only spaces or tabs in file {}".format(path)
+        log.error(msg)
+        raise IndexError(msg)
+    if data.index.has_duplicates:
+        raise IndexError("Index in file {} has duplicates".format(path))
+    if not data.index.is_monotonic:
+        data.sort_index(inplace=True)
+        log.warn("File {} is not sorted in ascending order".format(path))
+    aggs = json.loads(
+        (Path(__file__).parent / "zone_variables.json").read_text("utf-8"))
+    for key in aggs:
+        if aggs[key].startswith("weighted_avg_"):
+            weight = aggs[key].replace("weighted_avg_", "")
+            aggs[key] = lambda x: avg(x, data[weight])
+    data = data.groupby(zone_mapping).agg(aggs)
+    data.index = data.index.astype(int)
+    if data.index.size != zone_numbers.size or (data.index != zone_numbers).any():
+        for i in data.index:
+            if int(i) not in zone_numbers:
+                msg = "Zone number {} from file {} not found in network".format(
+                    i, path)
+                log.error(msg)
+                raise IndexError(msg)
+        for i in zone_numbers:
+            if i not in data.index:
+                msg = "Zone number {} not found in file {}".format(i, path)
+                log.error(msg)
+                raise IndexError(msg)
+        msg = "Zone numbers did not match for file {}".format(path)
+        log.error(msg)
+        raise IndexError(msg)
+    return data
+
+def avg(data, weights):
+    try:
+        return numpy.average(data, weights=weights[data.index])
+    except ZeroDivisionError:
+        return 0

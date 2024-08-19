@@ -7,12 +7,10 @@ from typing import List, Dict, Union
 
 import utils.config
 import utils.log as log
-from utils.read_csv_file import read_mapping
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData, BaseZoneData
-from datatypes.zone import ZoneAggregations
+from datahandling.zonedata import ZoneData
 import parameters.assignment as param
 from lem import BASE_ZONEDATA_DIR
 
@@ -156,7 +154,6 @@ def main(args):
             validate(scen.get_network(), time_periods)
             app.close()
 
-    aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
         base_matrices_path = Path(
@@ -173,11 +170,6 @@ def main(args):
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
 
-        # Check base zonedata
-        mapping = read_mapping(Path(base_zonedata_path) / f"zones_{submodel}.tsv", zone_numbers[submodel])
-        base_zonedata = BaseZoneData(Path(base_zonedata_path), zone_numbers[submodel], mapping)
-        aggregations[submodel] = base_zonedata.aggregations
-
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
@@ -185,9 +177,8 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
-        mapping = read_mapping(Path(data_path) / f"zones_{submodel}.tsv", zone_numbers[submodel])
         forecast_zonedata = ZoneData(
-            Path(data_path), zone_numbers[submodel], aggregations[submodel], mapping)
+            Path(data_path), zone_numbers[submodel], submodel)
 
     log.info("Successfully validated all input files")
 
