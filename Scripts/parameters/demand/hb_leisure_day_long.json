@@ -1,0 +1,187 @@
+{
+    "name": "hb_leisure_day_long",
+    "orig": "home",
+    "dest": "leisure",
+    "area": "all",
+    "struct": "mode>dest",
+    "impedance_transform": {},
+    "impedance_share": {
+        "car_leisure": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+            },
+        "car_pax": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+            },
+        "train": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+            },
+        "long_d_bus": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+            }
+    },
+    "distance_boundaries": {
+        "car_leisure": [
+            100,
+            9999
+        ],
+        "car_pax": [
+            100,
+            9999
+        ],
+        "train": [
+            100,
+            9999
+        ],
+        "long_d_bus": [
+            100,
+            9999
+        ]
+    },
+    "destination_choice": {
+        "train": {
+            "attraction": {},
+            "impedance": {
+                "time": -0.0011,
+                "cost": -0.04176
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "hospitality": 47.17622
+            }
+        },
+        "long_d_bus": {
+            "attraction": {},
+            "impedance": {
+                "time": -0.00104,
+                "cost": -0.04176
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "hospitality": 47.17622
+            }
+        },
+        "car_leisure": {
+            "attraction": {},
+            "impedance": {
+                "time": -0.00297,
+                "cost": -0.04176
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "hospitality": 47.17622
+            }
+        },
+        "car_pax": {
+            "attraction": {},
+            "impedance": {
+                "time": -0.01109
+            },
+            "log": {
+                "attraction_size": 1
+            },
+            "attraction_size": {
+                "population": 1,
+                "hospitality": 47.17622
+            }
+        }
+    },
+    "mode_choice": {
+        "train": {
+            "constant": 0,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.57134
+            },
+            "individual_dummy": {}
+        },
+        "long_d_bus": {
+            "constant": 0.89193,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.57134
+            },
+            "individual_dummy": {}
+        },
+        "car_leisure": {
+            "constant": 3.51619,
+            "generation": {
+                "car_density": 1.41492
+            },
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.57134
+            },
+            "individual_dummy": {}
+        },
+        "car_pax": {
+            "constant": 3.27762,
+            "generation": {
+                "car_density": 0.76509
+            },
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.57134
+            },
+            "individual_dummy": {}
+        }
+    },
+    "demand_share": {
+        "car_leisure": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+        },
+        "car_pax": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+        },
+        "airplane": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+        },
+        "train": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+        },
+        "long_d_bus": {
+            "vrk": [
+                1.0,
+                1.0
+              ]
+        }
+    }
+}
