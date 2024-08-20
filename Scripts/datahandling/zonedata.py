@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Sequence, Optional, Union
 from pathlib import Path
 import numpy # type: ignore
 import pandas
-import geopandas as gpd
+import fiona
 import json
 
 import parameters.zone as param
@@ -221,7 +221,10 @@ def read_zonedata(path: Path,
     if not path.exists():
         msg = f"Path {path} not found."
         raise NameError(msg)
-    data: pandas.DataFrame = gpd.read_file(path, ignore_geometry=True)
+    with fiona.open(path, ignore_geometry=True) as colxn:
+        data = pandas.DataFrame(
+            [record["properties"] for record in colxn],
+            columns=list(colxn.schema["properties"]))
     data.set_index("input_zone_id", inplace=True)
     if data.index.hasnans:
         msg = "Row with only spaces or tabs in file {}".format(path)
