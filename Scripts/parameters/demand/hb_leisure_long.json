@@ -148,6 +148,9 @@
     "mode_choice": {
         "airplane": {
             "constant": 0,
+            "calibration": {
+                "constant": 0.139560724
+            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -158,6 +161,9 @@
         },
         "train": {
             "constant": -0.49779,
+            "calibration": {
+                "constant": 0.706851037
+            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -168,6 +174,9 @@
         },
         "long_d_bus": {
             "constant": 0.89891,
+            "calibration": {
+                "constant": 0.456115979
+            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -178,6 +187,9 @@
         },
         "car_leisure": {
             "constant": 1.11932,
+            "calibration": {
+                "constant": -0.170366014
+            },
             "generation": {
                 "car_density": 3.58656
             },
@@ -190,6 +202,9 @@
         },
         "car_pax": {
             "constant": 0.80303,
+            "calibration": {
+                "constant": 0.043026219
+            },
             "generation": {
                 "car_density": 3.25339
             },
