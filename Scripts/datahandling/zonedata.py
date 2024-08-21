@@ -42,10 +42,10 @@ class ZoneData:
         peripheral = param.purpose_areas["peripheral"]
         self.zone_numbers = pandas.Index(
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
-            name="zone_analysis")
+            name="analysis_zone_id")
         Zone.counter = 0
         data = read_zonedata(
-            data_dir / "landuse.gpkg", self.zone_numbers, zone_mapping)
+            data_dir / "zonedata.gpkg", self.zone_numbers, zone_mapping)
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
         agg_keys = [key for key in data if "_agg" in key]
@@ -99,6 +99,11 @@ class ZoneData:
         dummy = self.aggregations.mappings[division_type][bounds] == name
         return dummy
 
+    @property
+    def zone_values(self):
+        return {key: val for key, val in self._values.items()
+            if isinstance(val, pandas.Series)}
+
     def __getitem__(self, key):
         return self._values[key]
 
@@ -130,7 +135,7 @@ class ZoneData:
                         key, val, i).capitalize()
                     log.error(msg)
                     raise ValueError(msg)
-        self._values[key] = data
+        self._values[key] = data.astype(numpy.float32)
 
     def zone_index(self, 
                    zone_number: int) -> int:
@@ -243,16 +248,18 @@ def read_zonedata(path: Path,
             aggs[key] = lambda x: avg(x, data[weight])
     data = data.groupby(zone_mapping).agg(aggs)
     data.index = data.index.astype(int)
+    data.index.name = "analysis_zone_id"
     if data.index.size != zone_numbers.size or (data.index != zone_numbers).any():
         for i in data.index:
             if int(i) not in zone_numbers:
-                msg = "Zone number {} from file {} not found in network".format(
-                    i, path)
+                msg = (f"Zone number {i} from mapping {data.index.name} "
+                       + f"in file {path} not found in network")
                 log.error(msg)
                 raise IndexError(msg)
         for i in zone_numbers:
             if i not in data.index:
-                msg = "Zone number {} not found in file {}".format(i, path)
+                msg = (f"Zone number {i} not found in mapping "
+                       + f"{data.index.name} in file {path}")
                 log.error(msg)
                 raise IndexError(msg)
         msg = "Zone numbers did not match for file {}".format(path)

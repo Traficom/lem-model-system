@@ -279,7 +279,7 @@ class ModelSystem:
         if is_end_assignment:
             self.ass_model.aggregate_results(
                 self.resultdata,
-                self.zdata_base.aggregations.municipality_mapping)
+                self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.calc_gaps()
@@ -348,7 +348,7 @@ class ModelSystem:
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata,
-                self.zdata_base.aggregations.municipality_mapping)
+                self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self._export_accessibility()
 
@@ -396,8 +396,8 @@ class ModelSystem:
     def _calculate_noise_areas(self):
         data = {}
         data["area"] = self.ass_model.calc_noise(
-            self.zdata_base.aggregations.municipality_mapping)
-        pop = self.zdata_base.aggregations.aggregate_array(
+            self.zdata_forecast.aggregations.municipality_mapping)
+        pop = self.zdata_forecast.aggregations.aggregate_array(
             self.zdata_forecast["population"], "county")
         conversion = pandas.Series(zone_param.pop_share_per_noise_area)
         data["population"] = conversion * data["area"] * pop
@@ -412,8 +412,8 @@ class ModelSystem:
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_model_results(self):
-        input_zdata = {var: self.zdata_forecast[var] for var in zone_param.export_zdata}
-        self.resultdata.print_data(input_zdata, "zonedata_input.txt")
+        self.resultdata.print_data(
+            self.zdata_forecast.zone_values, "zonedata_input.txt")
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
@@ -447,7 +447,7 @@ class ModelSystem:
         return int_demand
     
     def _attracted_tours_mode(self, mode):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
+        int_demand = pandas.Series(0, self.zdata_forecast.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
