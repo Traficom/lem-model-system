@@ -87,7 +87,7 @@ def main(args):
             EmmeProject(emme_project_path),
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
-            save_matrices=True,
+            save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id,
             use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,

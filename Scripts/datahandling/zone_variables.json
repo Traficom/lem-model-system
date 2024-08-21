@@ -14,6 +14,7 @@
     "workplaces": "sum",
     "sports_in": "sum",
     "sports_out": "sum",
+    "ski_resort": "max",
     "area_education": "sum",
     "area_leisure": "sum",
     "wrk_sh_service": "weighted_avg_workplaces",

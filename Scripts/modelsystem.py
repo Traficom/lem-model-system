@@ -191,15 +191,19 @@ class ModelSystem:
                 ("Matrices from model run not provided, "
                     + "getting trips from base matrices..."))
             # Long car trips must be in separate file
-            with self.basematrices.open(
-                    "demand", "vrk", zone_numbers,
-                    transport_classes=param.car_classes) as mtx:
-                for ass_class in param.car_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    car_matrices[ass_class] = demand.matrix
+            car_classes = [ass_class for ass_class in long_dist_classes
+                if ass_class in param.car_classes]
             other_classes = [ass_class for ass_class in long_dist_classes
                 if ass_class not in param.car_classes]
+            if car_classes:
+                with self.basematrices.open(
+                        "demand", "vrk", zone_numbers,
+                        transport_classes=car_classes) as mtx:
+                    for ass_class in car_classes:
+                        demand = Demand(
+                            self.em.purpose, ass_class, mtx[ass_class])
+                        self.dtm.add_demand(demand)
+                        car_matrices[ass_class] = demand.matrix
             if other_classes:
                 for ap in self.ass_model.assignment_periods:
                     tp = ap.name
@@ -208,10 +212,11 @@ class ModelSystem:
                             transport_classes=other_classes) as mtx:
                         for ass_class in other_classes:
                             self.dtm.demand[tp][ass_class] = mtx[ass_class]
-        with self.resultmatrices.open(
-                "demand", "vrk", zone_numbers, m='w') as mtx:
-            for ass_class in car_matrices:
-                mtx[ass_class] = car_matrices[ass_class]
+        if car_matrices:
+            with self.resultmatrices.open(
+                    "demand", "vrk", zone_numbers, m='w') as mtx:
+                for ass_class in car_matrices:
+                    mtx[ass_class] = car_matrices[ass_class]
 
     # possibly merge with init
     def assign_base_demand(self, 
@@ -276,6 +281,7 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
                 self.resultdata,
@@ -345,6 +351,7 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if iteration=="last":
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata,
@@ -416,21 +423,29 @@ class ModelSystem:
             self.zdata_forecast.zone_values, "zonedata_input.txt")
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
+        self.resultdata.print_data(
+            gen_tours_purpose, "zone_generation_by_purpose.txt")
         attr_tours_purpose = {purpose.name: purpose.attracted_tours_all
                               for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(attr_tours_purpose, "zone_attraction_by_purpose.txt")
+        self.resultdata.print_data(
+            attr_tours_purpose, "zone_attraction_by_purpose.txt")
         gen_tours_mode = {mode: self._generated_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(gen_tours_mode, "zone_generation_by_mode.txt")
+        self.resultdata.print_data(
+            gen_tours_mode, "zone_generation_by_mode.txt")
         attr_tours_mode = {mode: self._attracted_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(attr_tours_mode, "zone_attraction_by_mode.txt")
+        self.resultdata.print_data(
+            attr_tours_mode, "zone_attraction_by_mode.txt")
         for purpose in self.dm.tour_purposes:
-            self.resultdata.print_concat(purpose.generation_mode_shares, "purpose_mode_shares.txt")
-            self.resultdata.print_concat(purpose.tour_lengths, "tour_lengths.txt")
-            self.resultdata.print_matrices(
-                purpose.aggregates, "aggregated_demand", purpose.name)
+            self.resultdata.print_concat(
+                purpose.generation_mode_shares, "purpose_mode_shares.txt")
+            self.resultdata.print_concat(
+                purpose.tour_lengths, "tour_lengths.txt")
+            for mapping in purpose.aggregates:
+                self.resultdata.print_matrices(
+                    purpose.aggregates[mapping],
+                    f"aggregated_demand_{mapping}", purpose.name)
             for mode in purpose.within_zone_tours:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")

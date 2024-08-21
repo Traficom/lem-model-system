@@ -67,7 +67,7 @@ class ZoneAggregations:
             Matrix aggregated to the selected mapping
         """
         return self.aggregate_array(
-            self.aggregate_array(matrix, area_type).T, area_type)
+            self.aggregate_array(matrix, area_type).T, area_type).T
 
     def aggregate_array(self,
                         array: Union[pandas.Series, pandas.DataFrame],

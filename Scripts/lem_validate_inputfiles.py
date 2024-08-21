@@ -87,9 +87,6 @@ def main(args):
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
-            for scen in emmebank.scenarios():
-                if scen.zone_numbers != zone_numbers:
-                    log.warn("Scenarios with different zones found in EMME bank!")
             scen = emmebank.scenario(first_scenario_ids[i])
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:

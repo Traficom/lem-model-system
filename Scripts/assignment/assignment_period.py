@@ -395,21 +395,31 @@ class AssignmentPeriod(Period):
         transit_modesets = {modes[0]: {network.mode(m) for m in modes[1]}
             for modes in param.transit_delay_funcs}
         for link in network.links():
-            for modeset in param.transit_delay_funcs:
-                # Check that intersection is not empty,
-                # hence that mode is active on link
-                if transit_modesets[modeset[0]] & link.modes:
-                    funcs = param.transit_delay_funcs[modeset]
-                    if modeset[0] == "bus":
-                        if link["#buslane"]:
-                            func = funcs["buslane"]
+            try:
+                next(link.segments())
+            except StopIteration:
+                # Skip the else clause if no transit segments on link
+                pass
+            else:
+                for modeset in param.transit_delay_funcs:
+                    # Check that intersection is not empty,
+                    # hence that mode is active on link
+                    if transit_modesets[modeset[0]] & link.modes:
+                        funcs = param.transit_delay_funcs[modeset]
+                        if modeset[0] == "bus":
+                            if link["#buslane"]:
+                                func = funcs["buslane"]
+                            else:
+                                func = funcs["no_buslane"]
                         else:
-                            func = funcs["no_buslane"]
-                    else:
-                        func = funcs[self.name]
-                    break
-            for segment in link.segments():
-                segment.transit_time_func = func
+                            func = funcs[self.name]
+                        break
+                else:
+                    msg = f"No transit time function for modes on link {link.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
+                for segment in link.segments():
+                    segment.transit_time_func = func
         self.emme_scenario.publish_network(network)
 
     def _init_truck_times(self):
@@ -535,7 +545,7 @@ class AssignmentPeriod(Period):
         boards = self.get_matrix(transit_class, "num_board") > 0
         transfer_penalty = boards * param.transfer_penalty[transit_class]
         gcost = self.get_matrix(transit_class, "gen_cost")
-        cost = (self.get_matrix(transit_class, "cost")
+        cost = (self.get_matrix(transit_class, "inv_cost")
                 + self.get_matrix(transit_class, "board_cost"))
         time = self.get_matrix(transit_class, "time")
         path_found = cost < 999999

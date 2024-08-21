@@ -181,6 +181,7 @@ def new_tour_purpose(specification, zone_data, resultdata):
     resultdata : ResultData
         Writer object for result directory
     """
+    attempt_calibration(specification)
     args = (specification, zone_data, resultdata)
     purpose = (SecDestPurpose(*args) if "sec_dest" in specification
                 else TourPurpose(*args))
@@ -223,9 +224,8 @@ class TourPurpose(Purpose):
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
-        self.mapping = self.zone_data.aggregations.mappings[
-            param.purpose_matrix_aggregation_level]
-        self.aggregates = {}
+        self.mappings = self.zone_data.aggregations.mappings
+        self.aggregates = {name: {} for name in self.mappings}
         self.within_zone_tours = {}
         self.sec_dest_purpose = None
 
@@ -256,12 +256,14 @@ class TourPurpose(Purpose):
         return pandas.concat(lengths, names=["mode", "purpose", "interval"])
 
     def init_sums(self):
-        agg = self.mapping.drop_duplicates()
+        for name in self.aggregates:
+            agg = self.mappings[name].drop_duplicates()
+            for mode in self.modes:
+                self.aggregates[name][mode] = pandas.DataFrame(0, agg, agg)
         for mode in self.modes:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
             self.attracted_tours[mode] = numpy.zeros_like(self.zone_data.zone_numbers)
             self.histograms[mode].__init__(self.name)
-            self.aggregates[mode] = pandas.DataFrame(0, agg, agg)
             self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
@@ -319,10 +321,11 @@ class TourPurpose(Purpose):
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
-            self.aggregates[mode] = agg.aggregate_mtx(
-                pandas.DataFrame(
-                    mtx, self.zone_numbers, self.zone_data.zone_numbers),
-                self.mapping.name)
+            for mapping in self.aggregates:
+                self.aggregates[mapping][mode] = agg.aggregate_mtx(
+                    pandas.DataFrame(
+                        mtx, self.zone_numbers, self.zone_data.zone_numbers),
+                    mapping)
             self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
@@ -444,3 +447,31 @@ class SecDestPurpose(Purpose):
                 sum(self.attracted_tours.values()),
                 self.zone_data.zone_numbers, name=self.name),
             "attraction.txt")
+
+def attempt_calibration(spec: dict):
+    """Check if specification includes "calibration" trees.
+
+    Transform regular parameters to include calibration,
+    remove separate calibration parameters.
+    A calibration (named "calibration") tree can be anywhere in the dict,
+    but must refer to existing adjacent parameters or trees of parameters.
+    """
+    try:
+        param_names = list(spec.keys())
+    except AttributeError:
+        # No calibration parameters in this branch, return up
+        return
+    for param_name in param_names:
+        if param_name == "calibration":
+            calibrate(spec, spec.pop(param_name))
+        else:
+            # Search deeper
+            attempt_calibration(spec[param_name])
+
+def calibrate(spec: dict, calib_spec: dict):
+    for param_name in calib_spec:
+        try:
+            spec[param_name] += calib_spec[param_name]
+        except TypeError:
+            # Search deeper
+            calibrate(spec[param_name], calib_spec[param_name])
