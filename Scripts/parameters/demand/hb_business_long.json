@@ -126,74 +126,76 @@
         }
     },
     "mode_choice": {
-        "airplane": {
-            "constant": 0,
-            "calibration": {
+            "airplane": {
+                "constant": 0,
+                "generation": {},
+                "attraction": {},
+                "impedance": {},
+                "log": {
+                    "logsum": 0.61849
+                    },
+                "individual_dummy": {}
+            },
+            "train": {
+                "constant": -1.19903,
+                "generation": {},
+                "attraction": {},
+                "impedance": {},
+                "log": {
+                    "logsum": 0.61849
+                },
+                "individual_dummy": {}
+            },
+            "long_d_bus": {
+                "constant": -1.63808,
+                "generation": {},
+                "attraction": {},
+                "impedance": {},
+                "log": {
+                    "logsum": 0.61849
+                },
+                "individual_dummy": {}
+            },
+            "car_work": {
+                "constant": -0.14918,
+                "generation": {
+                    "car_density": 3.62549
+                },
+                "attraction": {},
+                "impedance": {},
+                "log": {
+                    "logsum": 0.61849
+                },
+                "individual_dummy": {}
+            },
+            "car_pax": {
+                "constant": -4.24495,
+                "generation": {
+                    "car_density": 6.38694
+                },
+                "attraction": {},
+                "impedance": {},
+                "log": {
+                    "logsum": 0.61849
+                },
+                "individual_dummy": {}
+            },
+        "calibration": {
+            "airplane": {
                 "constant": -0.507445531
             },
-            "generation": {},
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.61849
-            },
-            "individual_dummy": {}
-        },
-        "train": {
-            "constant": -1.19903,
-            "calibration": {
+            "train": {
                 "constant": 0.660411049
             },
-            "generation": {},
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.61849
-            },
-            "individual_dummy": {}
-        },
-        "long_d_bus": {
-            "constant": -1.63808,
-            "calibration": {
+            "long_d_bus": {
                 "constant": 0.553471168
             },
-            "generation": {},
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.61849
-            },
-            "individual_dummy": {}
-        },
-        "car_work": {
-            "constant": -0.14918,
-            "calibration": {
+            "car_work": {
                 "constant": -0.184904336
             },
-            "generation": {
-                "car_density": 3.62549
-            },
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.61849
-            },
-            "individual_dummy": {}
-        },
-        "car_pax": {
-            "constant": -4.24495,
-            "calibration": {
-                "constant": 0.485876623
-            },
-            "generation": {
-                "car_density": 6.38694
-            },
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.61849
-            },
-            "individual_dummy": {}
+            "car_pax": {
+                "constant": 0.485876623    
+            }
         }
     },
     "demand_share": {

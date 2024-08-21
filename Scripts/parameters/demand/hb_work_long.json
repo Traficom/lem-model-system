@@ -125,12 +125,9 @@
             }
         }
     },
-    "mode_choice": {
+   "mode_choice": {
         "airplane": {
             "constant": 0,
-            "calibration": {
-                "constant": -2.347059634
-            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -141,9 +138,6 @@
         },
         "train": {
             "constant": -3.28818,
-            "calibration": {
-                "constant": -0.176550678
-            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -154,9 +148,6 @@
         },
         "long_d_bus": {
             "constant": -4.61672,
-            "calibration": {
-                "constant": 0.181297864
-            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -167,9 +158,6 @@
         },
         "car_work": {
             "constant": -4.12789,
-            "calibration": {
-                "constant": 0.203206573
-            },
             "generation": {
                 "car_density": 3.61899
             },
@@ -182,9 +170,6 @@
         },
         "car_pax": {
             "constant": -5.95346,
-            "calibration": {
-                "constant": 0.454512348
-            },
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -192,8 +177,25 @@
                 "logsum": 0.94668
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "airplane": {
+                "constant": -2.347059634
+            },
+            "train": {
+                "constant": -0.176550678
+            },
+            "long_d_bus": {
+                "constant": 0.181297864
+            },
+            "car_work": {
+                "constant": 0.203206573
+            },
+            "car_pax": {
+                "constant": 0.454512348
+            }
         }
-    },
+   },
     "demand_share": {
         "car_work": {
             "vrk": [
