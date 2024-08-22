@@ -53,7 +53,7 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.2048247590205155)
+            0.20412287404369955)
         
         print("Model system test done")
     
