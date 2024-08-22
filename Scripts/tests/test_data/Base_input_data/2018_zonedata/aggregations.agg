@@ -1,11 +1,11 @@
-data_id	municipality	county		area
-102	Helsinki	Uusimaa		A1
-103	Helsinki	Uusimaa		A1
-244	Helsinki	Uusimaa		A1
-1063	Helsinki	Uusimaa		A1
-1531	Helsinki	Uusimaa		A1
-2703	Espoo		Uusimaa		A1
-2741	Espoo		Uusimaa		A1
-6272	Kirkkonummi	Uusimaa		A2
-6291	Kirkkonummi	Uusimaa		A2
-19071	Lohja		Uusimaa		A2
+data_id	municipality	county		subarea area
+102	Helsinki	Uusimaa		Helsingin_kantakaupunki   A1
+103	Helsinki	Uusimaa		Muut_alueet   A1
+244	Helsinki	Uusimaa		Muut_alueet   A1
+1063	Helsinki	Uusimaa		Muut_alueet   A1
+1531	Helsinki	Uusimaa		Muut_alueet   A1
+2703	Espoo		Uusimaa		Muut_alueet   A1
+2741	Espoo		Uusimaa		Muut_alueet   A1
+6272	Kirkkonummi	Uusimaa		Muut_alueet   A1
+6291	Kirkkonummi	Uusimaa		Muut_alueet   A1
+19071	Lohja		Uusimaa		Tampereen_kantakaupunki   A2
