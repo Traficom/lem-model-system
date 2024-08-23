@@ -149,13 +149,21 @@ tour_generation = {
         "income_80-99": 0.0058,
         "income_100": 0.0068
     },
-    "hb_leisure_long": {
-        "income_0-19": 0.0122,
-        "income_20-39": 0.0147,
-        "income_40-59": 0.0222,
-        "income_60-79": 0.0228,
-        "income_80-99": 0.0264,
-        "income_100": 0.027
+    "hb_leisure_day_long": {
+        "income_0-19": 0.0038,
+        "income_20-39": 0.0056,
+        "income_40-59": 0.0074,
+        "income_60-79": 0.0078,
+        "income_80-99": 0.0094,
+        "income_100": 0.0084
+    },     
+    "hb_leisure_overn_long": {
+        "income_0-19": 0.0107,
+        "income_20-39": 0.0111,
+        "income_40-59": 0.0155,
+        "income_60-79": 0.0167,
+        "income_80-99": 0.0192,
+        "income_100": 0.022
     },
     "truck": {
         "population": 0.01,

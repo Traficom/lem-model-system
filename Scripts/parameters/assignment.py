@@ -469,7 +469,8 @@ assignment_classes = {
     "ob_other": "leisure",
     "hb_work_long": "work",
     "hb_business_long": "work",
-    "hb_leisure_long": "leisure",
+    "hb_leisure_day_long": "leisure",
+    "hb_leisure_overn_long": "leisure",
     "external": "leisure",
 }
 main_mode = 'h'

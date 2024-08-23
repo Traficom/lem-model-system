@@ -1,5 +1,5 @@
 {
-    "name": "hb_leisure_long",
+    "name": "hb_leisure_overn_long",
     "orig": "home",
     "dest": "leisure",
     "area": "all",
@@ -62,86 +62,81 @@
     "destination_choice": {
         "airplane": {
             "attraction": {
-                "ski_resort": 0.55496
+                "ski_resort": 0.61676
             },
             "impedance": {
-                "time": -0.00042,
-                "cost": -0.0131
+                "time": -0.00053,
+                "cost": -0.00864
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population": 1,
-                "hospitality": 202.73709,
-                "area_leisure": 0.37298
+                "area_leisure": 1,
+                "hospitality": 513.45891
             }
         },
         "train": {
             "attraction": {
-                "ski_resort": 0.55496
+                "ski_resort": 0.61676
             },
             "impedance": {
-                "time": -0.00038,
-                "cost": -0.0131
+                "time": -0.00041,
+                "cost": -0.00864
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population": 1,
-                "hospitality": 202.73709,
-                "area_leisure": 0.37298
+                "area_leisure": 1,
+                "hospitality": 513.45891
             }
         },
         "long_d_bus": {
             "attraction": {
-                "ski_resort": 0.55496
+                "ski_resort": 0.61676
             },
             "impedance": {
-                "time": -0.00172,
-                "cost": -0.0131
+                "time": -0.00194,
+                "cost": -0.00864
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population": 1,
-                "hospitality": 202.73709,
-                "area_leisure": 0.37298
+                "area_leisure": 1,
+                "hospitality": 513.45891
             }
         },
         "car_leisure": {
             "attraction": {
-                "ski_resort": 0.55496
+                "ski_resort": 0.61676
             },
             "impedance": {
-                "time": -0.00231,
-                "cost": -0.0131
+                "time": -0.00169,
+                "cost": -0.00864
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population": 1,
-                "hospitality": 202.73709,
-                "area_leisure": 0.37298
+                "area_leisure": 1,
+                "hospitality": 513.45891
             }
         },
         "car_pax": {
             "attraction": {
-                "ski_resort": 0.55496
+                "ski_resort": 0.61676
             },
             "impedance": {
-                "time": -0.00464
+                "time": -0.00349
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "population": 1,
-                "hospitality": 202.73709,
-                "area_leisure": 0.37298
+                "area_leisure": 1,
+                "hospitality": 513.45891
             }
         }
     },
@@ -152,51 +147,51 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64102
+                "logsum": 0.47701
             },
             "individual_dummy": {}
         },
         "train": {
-            "constant": 0.16846,
+            "constant": 0.88945,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64102
+                "logsum": 0.47701
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": 1.50513,
+            "constant": 2.08172,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64102
+                "logsum": 0.47701
             },
             "individual_dummy": {}
         },
         "car_leisure": {
-            "constant": 1.8159,
+            "constant": 2.22122,
             "generation": {
-                "car_density": 3.69343
+                "car_density": 5.14794
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64102
+                "logsum": 0.47701
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": 1.48559,
+            "constant": 1.9137,
             "generation": {
-                "car_density": 3.35771
+                "car_density": 5.01503
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64102
+                "logsum": 0.47701
             },
             "individual_dummy": {}
         }
