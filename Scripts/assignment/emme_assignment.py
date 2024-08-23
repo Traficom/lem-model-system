@@ -302,6 +302,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 area = mapping[link.i_node["#municipality"]]
             except KeyError:
                 faulty_kela_code_nodes.add(link.i_node.id)
+                area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
                 kms[ass_class] += veh_kms
