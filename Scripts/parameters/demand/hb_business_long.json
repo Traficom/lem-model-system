@@ -126,59 +126,59 @@
         }
     },
     "mode_choice": {
-            "airplane": {
-                "constant": 0,
-                "generation": {},
-                "attraction": {},
-                "impedance": {},
-                "log": {
-                    "logsum": 0.61849
-                    },
-                "individual_dummy": {}
+        "airplane": {
+            "constant": 0,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.61849
             },
-            "train": {
-                "constant": -1.19903,
-                "generation": {},
-                "attraction": {},
-                "impedance": {},
-                "log": {
-                    "logsum": 0.61849
-                },
-                "individual_dummy": {}
+            "individual_dummy": {}
+        },
+        "train": {
+            "constant": -1.19903,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.61849
             },
-            "long_d_bus": {
-                "constant": -1.63808,
-                "generation": {},
-                "attraction": {},
-                "impedance": {},
-                "log": {
-                    "logsum": 0.61849
-                },
-                "individual_dummy": {}
+            "individual_dummy": {}
+        },
+        "long_d_bus": {
+            "constant": -1.63808,
+            "generation": {},
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.61849
             },
-            "car_work": {
-                "constant": -0.14918,
-                "generation": {
-                    "car_density": 3.62549
-                },
-                "attraction": {},
-                "impedance": {},
-                "log": {
-                    "logsum": 0.61849
-                },
-                "individual_dummy": {}
+            "individual_dummy": {}
+        },
+        "car_work": {
+            "constant": -0.14918,
+            "generation": {
+                "car_density": 3.62549
             },
-            "car_pax": {
-                "constant": -4.24495,
-                "generation": {
-                    "car_density": 6.38694
-                },
-                "attraction": {},
-                "impedance": {},
-                "log": {
-                    "logsum": 0.61849
-                },
-                "individual_dummy": {}
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.61849
+            },
+            "individual_dummy": {}
+        },
+        "car_pax": {
+            "constant": -4.24495,
+            "generation": {
+                "car_density": 6.38694
+            },
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "logsum": 0.61849
+            },
+            "individual_dummy": {}
             },
         "calibration": {
             "airplane": {

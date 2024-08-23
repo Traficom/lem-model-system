@@ -125,7 +125,7 @@
             }
         }
     },
-   "mode_choice": {
+    "mode_choice": {
         "airplane": {
             "constant": 0,
             "generation": {},
@@ -195,7 +195,7 @@
                 "constant": 0.454512348
             }
         }
-   },
+    },
     "demand_share": {
         "car_work": {
             "vrk": [
