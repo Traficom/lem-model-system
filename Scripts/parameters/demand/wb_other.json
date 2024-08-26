@@ -234,6 +234,23 @@
                 "logsum": 0.59599
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "car_leisure": {
+                "constant": 0.133405965
+            },
+            "car_pax": {
+                "constant": 1.077399858
+            },
+            "transit_leisure": {
+                "constant": 2.901424774
+            },
+            "bike": {
+                "constant": 2.110376569
+            },
+            "walk": {
+                "constant": -0.324531887
+            }
         }
     },
     "demand_share": {
