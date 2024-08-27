@@ -1,6 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
 from pathlib import Path
+import json
 import shutil
 
 import utils.config
@@ -171,28 +172,29 @@ if __name__ == "__main__":
         "--version",
         action="version",
         version="helmet " + str(config.VERSION))
+    parser.add_argument(
+        "--json",
+        type=str,
+        help="Read parameters from file, override command-line and dev-config.json arguments",
+    )
     # Logging
     parser.add_argument(
         "--log-level",
         choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-        default=config.LOG_LEVEL,
     )
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
-        default=config.LOG_FORMAT,
     )
     # HELMET scenario metadata
     parser.add_argument(
         "-o", "--end-assignment-only",
         action="store_true",
-        default=config.END_ASSIGNMENT_ONLY,
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
         "-l", "--long-dist-demand-forecast",
         type=str,
-        default=config.LONG_DIST_DEMAND_FORECAST,
         help=("If 'calc', runs assigment with free-flow speed and "
               + "calculates demand for long-distance trips. "
               + "If 'base', takes long-distance trips from base matrices. "
@@ -201,122 +203,107 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--freight-matrix-path",
         type=str,
-        default=config.FREIGHT_MATRIX_PATH,
         help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",
         action="store_true",
-        default=config.STORED_SPEED_ASSIGNMENT,
         help="Using this flag runs assigment with stored (fixed) speed."
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",
         dest="is_agent_model",
         action="store_true",
-        default=config.RUN_AGENT_SIMULATION,
         help="Using this flag runs agent simulations instead of aggregate model.",
     )
     parser.add_argument(
         "-m", "--do-not-use-emme",
         action="store_true",
-        default=config.DO_NOT_USE_EMME,
         help="Using this flag runs with MockAssignmentModel instead of EmmeAssignmentModel, not requiring EMME.",
     )
     parser.add_argument(
         "-s", "--separate-emme-scenarios",
         action="store_true",
-        default=config.SEPARATE_EMME_SCENARIOS,
         help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them.",
     )
     parser.add_argument(
         "-e", "--save-emme-matrices",
         dest="save_matrices",
         action="store_true",
-        default=config.SAVE_MATRICES_IN_EMME,
         help="Using this flag saves matrices for all time periods to Emme-project Database folder.",
     )
     parser.add_argument(
         "-d", "--del-strat-files",
         action="store_true",
-        default=config.DELETE_STRATEGY_FILES,
         help="Using this flag deletes strategy files from Emme-project Database folder.",
     )
     parser.add_argument(
         "--scenario-name",
         type=str,
-        default=config.SCENARIO_NAME,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
         type=str,
-        default=config.RESULTS_PATH,
         help="Path to folder where result data is saved to."),
     # HELMET scenario input data
     parser.add_argument(
         "--submodel",
         type=str,
-        default=config.SUBMODEL,
         help="Name of submodel, used for choosing appropriate zone mapping"),
     parser.add_argument(
         "--emme-path",
         type=str,
-        default=config.EMME_PROJECT_PATH,
         help="Filepath to .emp EMME-project-file"),
     parser.add_argument(
         "--first-scenario-id",
         type=int,
-        default=config.FIRST_SCENARIO_ID,
         help="First (biking) scenario ID within EMME project (.emp)."),
     parser.add_argument(
         "--first-matrix-id",
         type=int,
-        default=config.FIRST_MATRIX_ID,
         help="First matrix ID within EMME project (.emp). Used only if --save-emme-matrices."),
     parser.add_argument(
         "--baseline-data-path",
         type=str,
-        default=config.BASELINE_DATA_PATH,
         help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
     parser.add_argument(
         "--forecast-data-path",
         type=str,
-        default=config.FORECAST_DATA_PATH,
         help="Path to folder containing forecast zonedata"),
     parser.add_argument(
         "--iterations",
         type=int,
-        default=config.ITERATION_COUNT,
         help="Maximum number of demand model iterations to run (each using re-calculated impedance from traffic and transit assignment)."),
     parser.add_argument(
         "--max-gap",
         type=float,
-        default=config.MAX_GAP,
         help="Car work matrix maximum change between iterations"),
     parser.add_argument(
         "--rel-gap",
         type=float,
-        default=config.REL_GAP,
         help="Car work matrix relative change between iterations"),
     parser.add_argument(
         "-t", "--use-fixed-transit-cost",
         action="store_true",
-        default=config.USE_FIXED_TRANSIT_COST,
         help="Using this flag activates use of pre-calculated (fixed) transit costs."),
     parser.add_argument(
         "--delete-extra-matrices",
         action="store_true",
-        default=config.DELETE_EXTRA_MATRICES,
         help="Using this flag means that only matrices needed in demand calculation will be stored.")
+    parser.set_defaults(
+        **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
+    args_dict = vars(args)
+    if args.json is not None:
+        config = utils.config.read_from_file(args.json)
+        for key, val in config.items():
+            args_dict[key.lower()] = val
 
     log.initialize(args)
     log.debug("helmet_version=" + str(config.VERSION))
     log.debug('sys.version_info=' + str(sys.version_info[0]))
     log.debug('sys.path=' + str(sys.path))
-    args_dict = vars(args)
-    for key in args_dict:
-        log.debug("{}={}".format(key, args_dict[key]))
+    log.debug(utils.config.dump(args_dict))
 
     if sys.version_info.major == 3:
         main(args)
