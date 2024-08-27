@@ -19,31 +19,10 @@ def read_from_file(path=Path(__file__).parent.parent / "dev-config.json"):
     """
     with open(path, 'r', encoding='utf-8') as file:
         config = json.load(file)
-    return create_config(config)
+    return Config(config)
 
 
-def dump(args_dict: dict) -> str:
-    """Dump config parameters to json.
-
-    Parameters
-    ----------
-    args_dict : dict
-        Parameters from argument parsing
-
-    Returns
-    -------
-    str
-        JSON dump that can be read by application
-    """
-    args_dump = {key.upper(): val for key, val in args_dict.items()
-        if not (isinstance(val, bool) or val is None)}
-    args_dump["OPTIONAL_FLAGS"] = [key.upper() for key, val in args_dict.items()
-        if val is True]
-    args_dump["LOG_FORMAT"] = "TEXT"
-    return json.dumps(args_dump, indent=4)
-
-
-def create_config(config: dict):
+class Config:
     """Container for config parameters.
 
     The parameters are object variables with CAPS_LOCK,
@@ -60,42 +39,37 @@ def create_config(config: dict):
         value : str/bool/int/float
             Parameter value
     """
-    c = Config()
-    c.update({
-        "LEM_VERSION": None,
-        "JSON": None,
-        "SCENARIO_NAME": None,
-        "ITERATIONS": None,
-        "MAX_GAP": None,
-        "REL_GAP": None,
-        "LOG_LEVEL": None,
-        "LOG_FORMAT": None,
-        "BASELINE_DATA_PATH": None,
-        "FORECAST_DATA_PATH": None,
-        "RESULTS_PATH": None,
-        "SUBMODEL": None,
-        "EMME_PATH": None,
-        "FIRST_SCENARIO_ID": None,
-        "FIRST_MATRIX_ID": None,
-        "END_ASSIGNMENT_ONLY": False,
-        "LONG_DIST_DEMAND_FORECAST": None,
-        "FREIGHT_MATRIX_PATH": None,
-        "STORED_SPEED_ASSIGNMENT": False,
-        "RUN_AGENT_SIMULATION": False,
-        "DO_NOT_USE_EMME": False,
-        "SEPARATE_EMME_SCENARIOS": False,
-        "SAVE_EMME_MATRICES": False,
-        "DEL_STRAT_FILES": False,
-        "USE_FIXED_TRANSIT_COST": False,
-        "DELETE_EXTRA_MATRICES": False,
-    })
-    for key in config.pop("OPTIONAL_FLAGS"):
-        c[key] = True
-    c.update(config)
-    return c
 
-
-class Config(dict):
+    def __init__(self, config):
+        self.HELMET_VERSION = None
+        self.SCENARIO_NAME = None
+        self.ITERATION_COUNT = None
+        self.MAX_GAP = None
+        self.REL_GAP = None
+        self.LOG_LEVEL = None
+        self.LOG_FORMAT = None
+        self.BASELINE_DATA_PATH = None
+        self.FORECAST_DATA_PATH = None
+        self.RESULTS_PATH = None
+        self.SUBMODEL = None
+        self.EMME_PROJECT_PATH = None
+        self.FIRST_SCENARIO_ID = None
+        self.FIRST_MATRIX_ID = None
+        self.END_ASSIGNMENT_ONLY = False
+        self.LONG_DIST_DEMAND_FORECAST = None
+        self.FREIGHT_MATRIX_PATH = None
+        self.STORED_SPEED_ASSIGNMENT = False
+        self.RUN_AGENT_SIMULATION = False
+        self.DO_NOT_USE_EMME = False
+        self.SEPARATE_EMME_SCENARIOS = False
+        self.SAVE_MATRICES_IN_EMME = False
+        self.DELETE_STRATEGY_FILES = False
+        self.USE_FIXED_TRANSIT_COST = False
+        self.DELETE_EXTRA_MATRICES = False
+        for key in config.pop("OPTIONAL_FLAGS"):
+            self.__dict__[key] = True
+        for key in config:
+            self.__dict__[key] = config[key]
 
     @property
     def VERSION(self):
