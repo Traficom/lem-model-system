@@ -230,19 +230,19 @@
         },
         "calibration": {
             "car_leisure": {
-                "constant": 0.126331901
+                "constant": 0.139642521
             },
             "car_pax": {
-                "constant": 0.447532167
+                "constant": 0.464101386
             },
             "transit_leisure": {
-                "constant": 0.884218864
+                "constant": 0.880939124
             },
             "bike": {
-                "constant": -0.135367697
+                "constant": -0.174888071
             },
             "walk": {
-                "constant": -0.812252308
+                "constant": -0.862729105
             }
         }
     },
