@@ -33,7 +33,7 @@ def dump(args_dict: dict) -> str:
     Returns
     -------
     str
-        JSON dump that can be read by application
+        JSON dump that can be read by `create_config()`
     """
     args_dump = {key.upper(): val for key, val in args_dict.items()
         if not (isinstance(val, bool) or val is None)}
