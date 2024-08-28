@@ -51,8 +51,8 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
-        self.area = cast(str, self.area) #type checker help
         self.name = cast(str, self.name) #type checker help
+        self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
         zone_intervals = param.purpose_areas[self.area]
         self.bounds = slice(*zone_numbers.searchsorted(
