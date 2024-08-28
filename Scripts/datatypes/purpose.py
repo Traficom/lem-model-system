@@ -135,12 +135,10 @@ class Purpose:
                     pass
         # Apply discounts and transformations to LOS matrices
         for mode in day_imp:
-            print("MTX MODE", mode)
             for mtx_type in day_imp[mode]:
                 if mtx_type == "cost":
                     try:
                         day_imp[mode][mtx_type] *= cost.cost_discount[self.name][mode]
-                        print("Discount transit", self.name)
                     except KeyError:
                         pass
                 if mtx_type == "time" and "car" in mode:
@@ -150,7 +148,6 @@ class Purpose:
                         day_imp[mode][mtx_type] += (cost.activity_time[self.name] *
                                                     cost.share_paying[self.name] *
                                                     self.zone_data["park_cost"].values)
-                        print("Parking cost", self.name)
                     except KeyError:
                         pass
                 if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
@@ -158,14 +155,12 @@ class Purpose:
                         day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
                                                     (cost.car_drv_occupancy[self.name] - 1) /
                                                     cost.car_drv_occupancy[self.name])
-                        print("Driver cost sharing cost", self.name)
                     except KeyError:
                         pass
                 if mtx_type == "cost" and mode == "car_pax":
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
                                                     cost.car_drv_occupancy[self.name])
-                        print("Pax cost sharing cost", self.name)
                     except KeyError:
                         pass
         return day_imp
