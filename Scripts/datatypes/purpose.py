@@ -128,7 +128,7 @@ class Purpose:
                     m = row["mode"]
                     p = row["cost_change"]
                     day_imp[m][t] = p * day_imp[m][t]
-                    msg = (f"Demand calculation {self.name}: " 
+                    msg = (f"Purpose {self.name}: " 
                            + f"Added {round(100*(p-1))} % to {t} : {m}.")
                     log.warn(msg)
                 except KeyError:
@@ -163,6 +163,7 @@ class Purpose:
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
+        log.info(f"Matrix transformations completed for {self.name}")
         return day_imp
 
 def new_tour_purpose(specification, zone_data, resultdata):
@@ -342,6 +343,7 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
+        log.info(f"Demand calculated for {self.name}")
         return demand
 
 
