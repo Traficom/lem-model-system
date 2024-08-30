@@ -27,7 +27,7 @@ share_paying = {
     "hb_edu_higher": 0.30,
     "hb_grocery": 1.00,
     "hb_other_shop": 0.15,
-    "hb_leisure": 1.00,
+    "hb_leisure": 0.75,
     "hb_sport": 0.00,
     "hb_visit": 0.75,
     "ob_other": 0.00
@@ -41,7 +41,7 @@ sharing_factor = {
     "hb_other_shop": 1.00,
     "hb_leisure": 1.00,
     "hb_sport": 1.00,
-    "hb_visit": 0.50,
+    "hb_visit": 0.25,
     "ob_other": 1.00,
     "hb_work_long": 0.00,
     "hb_leisure_long": 0.25,
