@@ -2,6 +2,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, cast
 import numpy # type: ignore
 import pandas
+import openmatrix as omx
+from pathlib import Path
 import math
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
@@ -52,7 +54,7 @@ class LogitModel:
             utility = self._add_zone_util(
                 utility.T, b["generation"], generation=True).T
             self._add_zone_util(utility, b["attraction"])
-            self._add_impedance(utility, impedance[mode], b["impedance"])
+            self._add_impedance(utility, impedance[mode], b["impedance"], mode)
             exps = numpy.exp(utility)
             self._add_log_impedance(exps, impedance[mode], b["log"])
             self.mode_exps[mode] = exps
@@ -63,7 +65,7 @@ class LogitModel:
         b = self.dest_choice_param[mode]
         utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
+        self._add_impedance(utility, impedance, b["impedance"], mode)
         self._dest_exps[mode] = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_zone_util(size, b["attraction_size"])
@@ -72,7 +74,7 @@ class LogitModel:
             b_transf = b["transform"]
             transimp = numpy.zeros_like(utility)
             self._add_zone_util(transimp, b_transf["attraction"])
-            self._add_impedance(transimp, impedance, b_transf["impedance"])
+            self._add_impedance(transimp, impedance, b_transf["impedance"], mode)
             impedance["transform"] = transimp
         self._add_log_impedance(self._dest_exps[mode], impedance, b["log"])
         if mode != "logsum":
@@ -80,7 +82,7 @@ class LogitModel:
             dist = self.purpose.dist
             self._dest_exps[mode][(dist < l) | (dist >= u)] = 0
         if mode == "airplane":
-            self._dest_exps[mode][impedance["cost"] < 150] = 0
+            self._dest_exps[mode][impedance["cost"] < 80] = 0
         try:
             return self._dest_exps[mode].sum(1)
         except ValueError:
@@ -90,7 +92,7 @@ class LogitModel:
         b = self.dest_choice_param[mode]
         utility = numpy.zeros_like(next(iter(impedance.values())))
         self._add_sec_zone_util(utility, b["attraction"], orig, dest)
-        self._add_impedance(utility, impedance, b["impedance"])
+        self._add_impedance(utility, impedance, b["impedance"], mode)
         dest_exps = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_sec_zone_util(size, b["attraction_size"])
@@ -123,7 +125,7 @@ class LogitModel:
                 else: # 2-d matrix calculation
                     utility[bounds, :] += b[i]
     
-    def _add_impedance(self, utility, impedance, b):
+    def _add_impedance(self, utility, impedance, b, *args):
         """Adds simple linear impedances to utility.
 
         If parameter in b is tuple of two terms, they will be added for
@@ -139,10 +141,20 @@ class LogitModel:
         b : dict
             The parameters for different impedance matrices.
         """
+        for ar in args:
+            mode = ar
+        logsum_path = Path(__file__) / "logsum.omx"
         for i in b:
             try: # If only one parameter
-                utility += b[i] * impedance[i]
+                if i == "logsum":
+                    omxfile = omx.open_file(logsum_path,"r")
+                    utility += b[i] * numpy.array(omxfile[str(self.purpose.name[3:-4] + mode)])
+                    omxfile.close()
+                else:
+                    utility += b[i] * impedance[i]
+                    
             except ValueError: # Separate sub-region parameters
+                print("value_error")
                 for j, bounds in enumerate(self.sub_bounds):
                     utility[bounds, :] += b[i][j] * impedance[i][bounds, :]
         return utility
@@ -525,7 +537,7 @@ class AccessibilityModel(ModeDestModel):
         except ValueError: # Separate params for cap region and surrounding
             utility += b[0]
 
-    def _add_impedance(self, utility, impedance, b):
+    def _add_impedance(self, utility, impedance, b, *args):
         """Adds simple linear impedances to utility.
 
         If parameter in b is tuple of two terms,
@@ -541,6 +553,7 @@ class AccessibilityModel(ModeDestModel):
         b : dict
             The parameters for different impedance matrices.
         """
+
         for i in b:
             try: # If only one parameter
                 utility += b[i] * impedance[i]

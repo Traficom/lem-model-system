@@ -9,7 +9,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes, vot_inv, vot_classes
+from parameters.assignment import assignment_classes, vot_inv, vot_classes, aux_transit_time
 from pathlib import Path
 import json
 import openmatrix as omx
@@ -110,7 +110,7 @@ class Purpose:
         cols = self.dest_interval
         mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
-        long_dist_modes = {"train": "j_first_mile", "long_d_bus": "e_first_mile", "airplane": "l_first_mile"}
+        intermodals = {"train": "j_first_mile", "long_d_bus": "e_first_mile", "airplane": "l_first_mile"}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
@@ -121,22 +121,24 @@ class Purpose:
                         imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if mode in long_dist_modes:
-                day_imp[long_dist_modes[mode]] = defaultdict(float)
+
+            # For intermodal assignment classes, private-public-sequences' impedance is duplicated and used as round-trip impedance. This way, public-private-sequences need not be assigned in other than end assignments.
+            if mode in intermodals:
+                day_imp[intermodals[mode]] = defaultdict(float)
                 if mode == "train":
-                    day_imp[long_dist_modes[mode].replace("mile", "taxi")] = defaultdict(float)
-                ass_class = [long_dist_modes[mode], long_dist_modes[mode].replace("mile", "taxi")]
+                    day_imp[intermodals[mode].replace("mile", "taxi")] = defaultdict(float)
+                intermodal_ass_class = [intermodals[mode], intermodals[mode].replace("mile", "taxi")] # Intermodal classes are named as "mile" for first-mile, "taxi" is used only for train assignment with no parking costs.
                 for time_period in self.impedance_share[mode]:
                     for mtx_type in impedance[time_period]:
                         if mtx_type != "loc_fboard":
-                            if ass_class[0] in impedance[time_period][mtx_type]:
+                            if intermodal_ass_class[0] in impedance[time_period][mtx_type]:
                                 share = self.impedance_share[mode][time_period]
-                                imp_fm = impedance[time_period][mtx_type][ass_class[0]]
-                                day_imp[long_dist_modes[mode]][mtx_type] += share[0] * imp_fm[rows, cols] *2
-                            if ass_class[1] in impedance[time_period][mtx_type]:
+                                imp_fm = impedance[time_period][mtx_type][intermodal_ass_class[0]]
+                                day_imp[intermodals[mode]][mtx_type] += share[0] * imp_fm[rows, cols] *2
+                            if intermodal_ass_class[1] in impedance[time_period][mtx_type]:
                                 share = self.impedance_share[mode][time_period]
-                                imp_fm = impedance[time_period][mtx_type][ass_class[1]]
-                                day_imp[long_dist_modes[mode].replace("mile", "taxi")][mtx_type] += share[0] * imp_fm[rows, cols] *2
+                                imp_fm = impedance[time_period][mtx_type][intermodal_ass_class[1]]
+                                day_imp[intermodals[mode].replace("mile", "taxi")][mtx_type] += share[0] * imp_fm[rows, cols] *2
             if "vrk" in impedance:
                 for mtx_type in day_imp[mode]:
                     day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
@@ -296,75 +298,78 @@ class TourPurpose(Purpose):
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
                 purpose_impedance)
-            
-        access_modes = {}
-        long_dist_modes = {"train": "j_first_mile", "long_d_bus": "e_first_mile", "airplane": "l_first_mile"}
-
+        
+        #If the trip is long-distance, split the transit probabilities into unimodal/intermodal
         if "long" in self.name:
-            for mode in long_dist_modes:
+            probs_by_ass_class = {}
+            intermodals = {"train": "j_first_mile", "long_d_bus": "e_first_mile", "airplane": "l_first_mile"}
+            for mode in intermodals:
                 utility = numpy.zeros_like(next(iter(next(iter(purpose_impedance.values())).values())))
-                split_probs = self.split_connection_mode(purpose_impedance, self.prob[mode], mode, long_dist_modes[mode], utility)
-                access_modes[long_dist_modes[mode]] = split_probs["car"]
-                access_modes[mode] = split_probs["transit"]
+                probs_by_acc_mode = self.split_connection_mode(purpose_impedance, self.prob[mode], mode, intermodals[mode], utility)
                 if mode == "train":
-                    access_modes["j_first_taxi"] = split_probs["car_pax"]
-        self.prob.update(access_modes)
-        if is_last_iteration and self.name[0] != 's':
-            self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                    probs_by_ass_class[intermodals[mode]] = probs_by_acc_mode["car"]
+                    probs_by_ass_class[intermodals[mode].replace("mile","taxi")] = probs_by_acc_mode["car_pax"]
+                    probs_by_ass_class[intermodals[mode].replace("first","last")] = probs_by_acc_mode["car"]
+                    probs_by_ass_class[intermodals[mode].replace("first","last").replace("mile","taxi")] = probs_by_acc_mode["car_pax"]
+                elif mode == "airplane":
+                    probs_by_ass_class[intermodals[mode]] = probs_by_acc_mode["car"] + probs_by_acc_mode["car_pax"]
+                    probs_by_ass_class[intermodals[mode].replace("first","last")] = probs_by_acc_mode["car"] + probs_by_acc_mode["car_pax"]
+                else:
+                    probs_by_ass_class[intermodals[mode]] = probs_by_acc_mode["car_pax"]
+                    probs_by_ass_class[intermodals[mode].replace("first","last")] = probs_by_acc_mode["car_pax"]
+                probs_by_ass_class[mode] = probs_by_acc_mode["transit"]
+        self.prob.update(probs_by_ass_class)
     
     def split_connection_mode(self, impedance, prob_main_mode, pt_mode, fm_mode, utility):
         expsum = numpy.zeros_like(utility)
         exps = {}
         fm_utils = {}
         split_probs = {}
-        access_modes = ("car", "transit") if pt_mode == "long_d_bus" else ("car", "car_pax", "transit")
+        access_modes = ("car_pax", "transit") if pt_mode == "long_d_bus" else ("car", "car_pax", "transit")
+        print(pt_mode)
         for mode in access_modes:
+            print(mode)
             utility = numpy.zeros_like(expsum)
             parameters = self.get_acc_model_parameters(mode, pt_mode)
-            self._add_impedance(utility, parameters["b"], impedance, mode, pt_mode, fm_mode, parameters["scale_param"], parameters["scale_correction"], parameters["acc_fac"])
-            self._add_constant(utility, parameters["b"], mode, parameters["scale_param"], parameters["scale_correction"])
-            utility = self._add_zone_util(utility.T, parameters["b"], parameters["scale_param"], parameters["scale_correction"], generation=True).T
+            utility = self._add_impedance(utility, parameters["b"], impedance, mode, pt_mode, fm_mode, parameters["avg_time_param_access"], parameters["acc_fac"])
+            self._add_constant(utility, parameters["b"], mode, pt_mode)
+            utility = self._add_zone_util(utility.T, parameters["b"], parameters["avg_time_param_access"], generation=True).T
             fm_utils[mode] = utility
+            utility = utility*0.75 # Utility is scaled down (up) to get more (less) influence from unobserved variables
             exps[mode] = numpy.exp(utility)
-            del utility
+            exps[mode][numpy.isnan(exps[mode])] = 1e-30
+            exps[mode][(exps[mode])==0] = 1e-30
             expsum = expsum + exps[mode]
         
-        #utils_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/utils.omx","a")
-        #shares_file = omx.open_file("C:/Users/kuivavee/Documents/Matrices/shares.omx","a")
-        #for a_mode in access_modes:
-        #    util_ = fm_utils[a_mode]
-        #    utils_file[pt_mode + "_" + a_mode + "_" + self.name][:] = util_
-        #    del util_
-        #    shares_file[pt_mode + "_" + a_mode + "_" + self.name][:] = exps[a_mode]/expsum
-        #    if a_mode == "car_pax" and pt_mode != "train":
-        #        split_probs["car"] = split_probs["car"] + exps[a_mode]/expsum * prob_main_mode
-        #    else:
-        #        split_probs[a_mode] = exps[a_mode]/expsum * prob_main_mode
-        #utils_file.close()
-        #no_local_pt_ratio = numpy.maximum(numpy.zeros_like(impedance[pt_mode]["loc_fboard"]), numpy.ones_like(impedance[pt_mode]["loc_fboard"]) - impedance[pt_mode]["loc_fboard"]/10)#- impedance[pt_mode]["loc_rboard"])/ 5
-        #shares_file[pt_mode + "_" + "walk" + "_" + self.name][:] = no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        #shares_file[pt_mode + "_" + "transit" + "_" + self.name][:] -= no_local_pt_ratio * shares_file[pt_mode + "_" + "transit" + "_" + self.name]
-        #shares_file.close()
+        logsum_path = Path(__file__).parent.parent / "models" / "logsum.omx"
+        try:
+            logsum_file = omx.open_file(logsum_path,"a")
+        except:
+            logsum_file = omx.open_file(logsum_path,"w")
+        try:
+            logsum_file[self.name[3:-5] + "_" + pt_mode][:] = numpy.log(expsum)
+        except:
+            logsum_file[self.name[3:-5] + "_" + pt_mode] = numpy.log(expsum)
+        logsum_file.close()
+        for a_mode in access_modes:
+            split_probs[a_mode] = (exps[a_mode]/expsum).T * prob_main_mode
 
         return split_probs
     
-    def _add_constant(self, utility, b, mode, scale_param, scale_correction):
-        #scale_param = 5
-        nest_param = b["mode_acc"]["log"]["logsum"]
-        if mode == "walk":
-            const = 0
-        else:
-            try:
-                const = b["mode_acc"]["constant"] * scale_param / nest_param
-            except (TypeError, ValueError):
-                const = b["mode_acc"]["constant"][0] * scale_param / nest_param
+    def _add_constant(self, utility, b, mode, pt_mode):
+        const = 0
         if mode == "car":
-            const -= 6
+            if pt_mode == "airplane":
+                const = -1.3
+            if pt_mode == "train":
+                const = -5.875
         if mode == "car_pax":
-            const -= 0
-        if mode == "transit":
-            const += 3
+            if pt_mode == "airplane":
+                const = -1.95
+            if pt_mode == "train":
+                const = -4.85
+            if pt_mode == "long_d_bus":
+                const = -6
         try: # If only one parameter
             utility += const
         except ValueError: # Separate sub-region parameters
@@ -373,79 +378,85 @@ class TourPurpose(Purpose):
                         utility[bounds] += const[i]
                 else: # 2-d matrix calculation
                         utility[bounds, :] += const[i]
+        return utility
     
-    def _add_zone_util(self, utility, b, scale_param_carown, scale_correction, generation=False):
+    def _add_zone_util(self, utility, b, avg_time_param_access, generation=False):
         nest_param = b["mode_acc"]["log"]["logsum"]
         zdata = self.zone_data
         for i in b["mode_acc"]["generation"]:
             try: # If only one parameter
-                utility += b["mode_acc"]["generation"][i] * zdata.get_data(i, self.bounds, generation) * scale_param_carown / nest_param
+                utility += b["mode_acc"]["generation"][i] * zdata.get_data(i, self.bounds, generation) / nest_param
             except ValueError: # Separate sub-region parameters
                 for j, bounds in enumerate(self.sub_bounds):
                     data = zdata.get_data(i, bounds, generation)
                     if utility.ndim == 1: # 1-d array calculation
-                        utility[bounds] += data  * b["mode_acc"]["generation"][i] * scale_param_carown / nest_param
+                        utility[bounds] += data  * b["mode_acc"]["generation"][i] / nest_param
                     else: # 2-d matrix calculation
-                        utility[bounds, :] += data  * b["mode_acc"]["generation"][i] * scale_param_carown / nest_param
+                        utility[bounds, :] += data  * b["mode_acc"]["generation"][i] / nest_param
+            print("carown:_" + str(b["mode_acc"]["generation"][i]))
         return utility
-
     def pnr_cost_by_purpose_duration(self, cost, perc_bcost, actual_bcost, fm_mode, remove_pnr_cost=0):
-        pnr_duration = {"j_first_mile": {"avg": 1.98, "business": 0.99, "leisure": 2.89, "work": 1.22},
-                        "e_first_mile": {"avg": 1.98, "business": 0.99, "leisure": 2.89, "work": 1.22},
-                        "l_first_mile": {"avg": 2.78, "business": 2.65, "leisure": 3.30, "work": 1.27}}
+        pnr_duration = {"j_first_mile": {"avg": 2.18, "business": 1.12, "leisure": 2.64, "work": 1.41},
+                        "e_first_mile": {"avg": 2.62, "business": 2.43, "leisure": 3.06, "work": 0.89},
+                        "l_first_mile": {"avg": 2.39, "business": 2.01, "leisure": 2.51, "work": 1.12}}
         pnr_cost_24h = (perc_bcost-actual_bcost*vot_inv[vot_classes[fm_mode]])/(vot_inv[vot_classes[fm_mode]]*(pnr_duration[fm_mode]["avg"]-2))
-        cost -= pnr_cost_24h
+        cost -= pnr_cost_24h*2
         if not remove_pnr_cost:
             cost += pnr_cost_24h*pnr_duration[fm_mode][self.name[3:-5]]
         return cost
 
-    def _add_impedance(self, utility, b, impedance, acc_mode, pt_mode, fm_mode, scale_param, scale_correction, acc_fac):
+    def _add_impedance(self, utility, b, impedance, acc_mode, pt_mode, fm_mode, avg_time_param_access, acc_fac):
         mode = pt_mode if acc_mode == "transit" else fm_mode
         if acc_mode == "car_pax" and mode == "j_first_mile":
-            mode == "j_first_taxi"
+            mode = "j_first_taxi"
         if acc_mode == "car":
             impedance[mode]["cost"] = self.pnr_cost_by_purpose_duration(impedance[mode]["cost"], impedance[mode]["perc_bcost"], impedance[mode]["board_cost"], mode, 0)
         if acc_mode == "car_pax" and fm_mode == "l_first_mile":
             impedance[mode]["cost"] = self.pnr_cost_by_purpose_duration(impedance[mode]["cost"], impedance[mode]["perc_bcost"], impedance[mode]["board_cost"], mode, 1)
-        
-        b_t_main = b["dest_main"]["impedance"]["time"] * scale_correction * scale_param / acc_fac[pt_mode]
-        b_c_main = b["dest_main"]["impedance"]["cost"] * scale_correction * scale_param
-        b_t_transit = b["dest_transit_acc"]["impedance"]["time"] * scale_param
-        b_t_acc = b["dest_acc"]["impedance"]["time"] * scale_param
+        b_t_main = avg_time_param_access / acc_fac
+        if self.name == "hb_leisure_long":
+            b_c_main = -0.06857 # Cost param from short-trips model parameters
+        else:
+            b_c_main = -0.06237 # Cost param from short-trips model parameters
+        b_t_transit = b["dest_transit_acc"]["impedance"]["time"] 
+        b_t_acc = b["dest_acc"]["impedance"]["time"] 
 
-        utility += b_t_main*(impedance[mode]["total_time"] - impedance[mode]["loc_time"] - impedance[mode]["loc_btime"] - impedance[mode]["aux_time"])
-        aux_time = 1.75*(impedance[mode]["aux_time"]-impedance[mode]["car_time"]) if acc_mode != "transit" else 1.75*impedance[mode]["aux_time"]
+        utility += b_t_main*(impedance[mode]["total_time"] - impedance[mode]["loc_time"] - impedance[mode]["aux_time"])
+        aux_time = aux_transit_time["perception_factor"]*(impedance[mode]["aux_time"]-impedance[mode]["car_time"]) if acc_mode != "transit" else aux_transit_time["perception_factor"]*impedance[mode]["aux_time"]
         utility += b_c_main * impedance[mode]["cost"]
         if acc_mode == "car":
             utility += b_c_main * 0.12 * impedance[mode]["car_dist"]
-        utility += b_t_acc * impedance[mode]["car_time"] / 3 + b_t_transit * (impedance[mode]["loc_btime"] + impedance[mode]["loc_time"] + aux_time)
+            utility += b_t_acc * impedance[mode]["car_time"] / 3 # Car time was given a speed factor of one over three in assignment
+        if acc_mode == "car_pax":
+            utility += b_t_acc * impedance[mode]["car_time"] / 3
+        utility += b_t_transit * (impedance[mode]["loc_time"] + aux_time)
         
         return utility
             
     def get_acc_model_parameters(self, acc_mode, pt_mode):
+        # This function gets parameters for the connection mode choice model. Currently derives from short-trips model parameters, 
+        # but also direct numericals (multiplied by utility scale factor 0.75) are reported in the related master's thesis and could be used.
         parameters_path = Path(__file__).parent.parent / "parameters" / "demand"
         print(self.name)
-        for file in parameters_path.rglob(self.name[:-5] + ".json"):
-            param_short = json.loads(file.read_text("utf-8"))
-        for file in parameters_path.rglob(self.name[:-5].replace('h','w') + ".json"):
+        for file in parameters_path.rglob("hb_leisure.json"):
             param_short = json.loads(file.read_text("utf-8"))
         for file in parameters_path.rglob(self.name + ".json"):
             param_mainmode = json.loads(file.read_text("utf-8"))
-        b_mode_acc: Optional[Dict[str, Dict[str, Any]]] = param_short["mode_choice"][acc_mode + (self.name[2:-5].replace("business", "work") if acc_mode != "car_pax" else "")]
-        b_dest_acc: Dict[str, Dict[str, Any]] = param_short["destination_choice"][acc_mode + (self.name[2:-5].replace("business", "work") if acc_mode != "car_pax" else "")]
-        b_dest_transit_acc: Dict[str, Dict[str, Any]] = param_short["destination_choice"]["transit" + self.name[2:-5].replace("business", "work")]
+        b_mode_acc: Optional[Dict[str, Dict[str, Any]]] = param_short["mode_choice"][acc_mode + ("_leisure" if acc_mode != "car_pax" else "")]
+        b_dest_acc: Dict[str, Dict[str, Any]] = param_short["destination_choice"][acc_mode + ("_leisure" if acc_mode != "car_pax" else "")]
+        b_dest_transit_acc: Dict[str, Dict[str, Any]] = param_short["destination_choice"]["transit_leisure"]
         b_dest_main: Dict[str, Dict[str, Any]] = param_mainmode["destination_choice"][pt_mode]
         b = {"mode_acc": b_mode_acc, "dest_acc":  b_dest_acc, "dest_main": b_dest_main, "dest_transit_acc": b_dest_transit_acc}
-        scale_param = 1
-        if "business" not in self.name:
-            scale_correction = b["dest_transit_acc"]["impedance"]["cost"] / b["dest_main"]["impedance"]["cost"]
-        else:
-            scale_correction = b["dest_transit_acc"]["impedance"]["time"] / b["dest_main"]["impedance"]["time"]
-        if self.name == "hb_business_long":
-            acc_fac = {"train": 1.18, "long_d_bus": 1, "airplane": 1}
-        else:
-            acc_fac = {"train": 1.36, "long_d_bus": 1.36, "airplane": 1.36}
-        return {"b": b, "scale_param": scale_param, "scale_correction": scale_correction, "acc_fac": acc_fac}
+        avg_time_param_access = 0
+        # Get weighted average (WA) of time parameter from short trips model, weight = mode share on purpose.
+        weight = {"train": {"hb_business_long": {"car": 0.16, "car_pax": 0.11, "transit": 0.73}, "hb_leisure_long": {"car": 0, "car_pax": 0.32, "transit": 0.67}, "hb_work_long": {"car": 0.11, "car_pax": 0, "transit": 0.89}},
+                  "long_d_bus": {"hb_business_long": {"car": 0, "car_pax": 0, "transit": 1}, "hb_leisure_long": {"car": 0.01, "car_pax": 0.24, "transit": 0.67}, "hb_work_long": {"car": 0.09, "car_pax": 0, "transit": 0.91}},
+                  "airplane": {"hb_business_long": {"car": 0.23, "car_pax": 0.57, "transit": 0.20}, "hb_leisure_long": {"car": 0.23, "car_pax": 0.57, "transit": 0.20}, "hb_work_long": {"car": 0.23, "car_pax": 0.57, "transit": 0.20}}}
+        for mode in ["car", "car_pax", "transit"]:
+            avg_time_param_access += weight[pt_mode][self.name][mode]*param_short["destination_choice"][mode + ("_leisure" if mode != "car_pax" else "")]["impedance"]["time"]
+        # Access time factor is the multiplier for access travel time wrt. main mode time. Thus, main mode time = WA/acc_fac.
+        acc_fac = 1.36
+        return {"b": b, "avg_time_param_access": avg_time_param_access, "acc_fac": acc_fac}
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -493,6 +504,13 @@ class TourPurpose(Purpose):
             self.own_zone_demand[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
+        for mode in ["j_first_mile", "j_first_taxi", "e_first_mile", "l_first_mile","j_last_mile", "j_last_taxi", "e_last_mile", "l_last_mile"]:
+            mtx = (self.prob.pop(mode) * tours).T
+            try:
+               self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
+            except AttributeError:
+               pass
+            demand[mode] = Demand(self, mode, mtx)
         return demand
 
 
