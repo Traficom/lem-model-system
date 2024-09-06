@@ -113,8 +113,8 @@
                 "cost": -0.42847
             },
             "attraction_size": {
-                "sports_in": 1,
-                "sports_out": 0.13971
+                "sport_facility_indoor": 1,
+                "sport_facility_outdoor": 0.13971
             }
         },
         "car_pax": {
@@ -128,8 +128,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "sports_in": 1,
-                "sports_out": 0.13971
+                "sport_facility_indoor": 1,
+                "sport_facility_outdoor": 0.13971
             }
         },
         "transit_leisure": {
@@ -145,8 +145,8 @@
                 "cost": -0.42847
             },
             "attraction_size": {
-                "sports_in": 1,
-                "sports_out": 0.13971
+                "sport_facility_indoor": 1,
+                "sport_facility_outdoor": 0.13971
             }
         },
         "bike": {
@@ -160,8 +160,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "sports_in": 1,
-                "sports_out": 0.13971
+                "sport_facility_indoor": 1,
+                "sport_facility_outdoor": 0.13971
             }
         },
         "walk": {
@@ -175,8 +175,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "sports_in": 1,
-                "sports_out": 0.13971
+                "sport_facility_indoor": 1,
+                "sport_facility_outdoor": 0.13971
             }
         }
     },

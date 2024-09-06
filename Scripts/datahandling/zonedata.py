@@ -48,8 +48,9 @@ class ZoneData:
             data_dir / "zonedata.gpkg", self.zone_numbers, zone_mapping)
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
-        agg_keys = [key for key in data if "_agg" in key]
-        aggs = data[agg_keys].rename(columns=lambda x : x.replace("_agg", ""))
+        agg_keys = [key for key in data if "aggregate_results_" in key]
+        aggs = data[agg_keys].rename(
+            columns=lambda x : x.replace("aggregate_results_", ""))
         self.aggregations = ZoneAggregations(
             aggs, data["municipality_center"].map(zone_indices))
         self.zones = {number: Zone(number, self.aggregations)
@@ -64,27 +65,29 @@ class ZoneData:
         for col in data:
             if col not in agg_keys:
                 self[col] = data[col]
-            if col.startswith("share_age"):
+            if col.startswith("sh_age"):
                 pop_share = data[col]
                 self.share[col] = pop_share
-                col_name = col.replace("share_", "")
+                col_name = col.replace("sh_", "")
                 self[col_name] = pop_share * pop
                 self[col_name + "_female"] = 0.5 * pop_share * pop
                 self[col_name + "_male"] = 0.5 * pop_share * pop
                 share_7_99 += pop_share
             if col.startswith("sh_income"):
                 self[col.replace("sh_", "")] = data[col] * pop
-            if col.startswith("wrk_sh_"):
-                self[col.replace("wrk_sh_", "")] = data[col] * wp
+            if col.startswith("sh_wrk_"):
+                self[col.replace("sh_wrk_", "")] = data[col] * wp
         self.share["share_age_7-99"] = share_7_99
         self.nr_zones = len(self.zone_numbers)
         # Create diagonal matrix with zone area
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
         # Two-way intrazonal distances from building distances
-        self["within_zone_dist"] = self["within_zone"] * data["building_dist"].values * 2
+        self["within_zone_dist"] = (self["within_zone"] 
+                                    * data["avg_building_distance"].values * 2)
         self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
-        self["within_zone_cost"] = self["within_zone_dist"] * self.car_dist_cost["car_work"]
+        self["within_zone_cost"] = (self["within_zone_dist"]
+                                    * self.car_dist_cost["car_work"])
         # Unavailability of intrazonal tours
         self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf
@@ -94,8 +97,8 @@ class ZoneData:
         within_municipality = municipalities[:, numpy.newaxis] == municipalities
         self["within_municipality"] = within_municipality
         self["outside_municipality"] = ~within_municipality
-        self["Helsingin_kantakaupunki"] = aggregations.mappings["subarea"] == "Helsingin_kantakaupunki"
-        self["Tampereen_kantakaupunki"] = aggregations.mappings["subarea"] == "Tampereen_kantakaupunki"
+        for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
+            self[dummy] = self.dummy("subarea", dummy)
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = self.aggregations.mappings[division_type][bounds] == name

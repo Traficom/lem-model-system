@@ -45,7 +45,7 @@ class Person:
         Person.id_counter += 1
         self.zone = zone
         self.age = random.randint(age_group[0], age_group[1])
-        self.age_group = "age_" + str(age_group[0]) + "-" + str(age_group[1])
+        self.age_group = "age_" + str(age_group[0]) + "_" + str(age_group[1])
         self.sex = random.random() < 0.5
         self.tours: List[Tour] = []
         self.generation_model = generation_model
