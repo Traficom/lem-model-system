@@ -122,7 +122,7 @@ def main(args):
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+                "links": nr_veh_classes + len(param.mixed_mode_classes) + 1,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }

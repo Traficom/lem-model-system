@@ -40,7 +40,7 @@ class MatrixData:
              mtx_type: str,
              time_period: str,
              zone_numbers: Optional[numpy.ndarray] = None,
-             transport_classes: Iterable[str] = param.transport_classes,
+             transport_classes: Iterable[str] = (param.transport_classes + param.car_egress_classes),
              m: str = 'r'):
         file_name = mtx_type+'_'+time_period+".omx"
         with temp_cd(Path(self.path)):
@@ -59,7 +59,7 @@ class MatrixFile:
     def __init__(self,
                  omx_file: omx.File,
                  zone_numbers: numpy.ndarray,
-                 transport_classes: Iterable[str] = param.transport_classes):
+                 transport_classes: Iterable[str] = (param.transport_classes + param.car_egress_classes)):
         self._file = omx_file
         self.missing_zones = []
         if zone_numbers is None:

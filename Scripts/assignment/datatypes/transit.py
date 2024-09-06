@@ -46,7 +46,7 @@ class TransitSpecification:
         }
         modes = (param.local_transit_modes + param.aux_modes
                  + param.long_dist_transit_modes[transit_class])
-        if "e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class:
+        if "e" not in param.long_dist_transit_modes[transit_class]:
             modes = modes + ['e']
         self.transit_spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
@@ -83,14 +83,7 @@ class TransitSpecification:
                 "choices_at_origins": "OPTIMAL_STRATEGY",
             },
             "flow_distribution_at_regular_nodes_with_aux_transit_choices": {
-                "choices_at_regular_nodes": {
-                    "choice_points": "ui2",
-                    "aux_transit_choice_set": "EFFICIENT_LINKS",
-                    "logit_parameters": {
-                        "scale": 0.05,
-                        "truncation": 0.05
-                    }
-                }
+                "choices_at_regular_nodes": "OPTIMAL_STRATEGY",
             },
             "flow_distribution_between_lines": {
                 "consider_total_impedance": True,
@@ -109,6 +102,13 @@ class TransitSpecification:
         self.transit_spec["journey_levels"] = [JourneyLevel(
                 level, transit_class, park_and_ride_results).spec
             for level in range(7)]
+        #### TEST 
+        #if ("l_last_mile" in transit_class or "j_last_mile" in transit_class):
+        #    self.transit_spec["journey_levels"].append(JourneyLevel(
+        #        7, transit_class, park_and_ride_results).spec)
+        #    avg_days = {"j": 2.18, "e": 2.62, "l": 2.39}
+        #    self.transit_spec["aux_transit_cost"] = {"penalty": "@pnrcost","perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]}
+        #### TEST 
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": emme_matrices["demand"],
@@ -125,7 +125,7 @@ class TransitSpecification:
         self.local_result_spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
                 subset: {
-                    "modes": param.local_transit_modes + ['e'] if ("e" not in param.long_dist_transit_modes[transit_class] and "first" not in transit_class) else param.local_transit_modes
+                    "modes": param.local_transit_modes + ['e'] if ("e" not in param.long_dist_transit_modes[transit_class]) else param.local_transit_modes
                 },
             }
         self.park_and_ride_spec = {
@@ -134,14 +134,13 @@ class TransitSpecification:
                     "modes": [param.park_and_ride_mode],
                 },
             }
-        self.transit_result_spec["total_impedance"] = emme_matrices["gen_cost"]
-        icost = "actual_in_vehicle_costs"
-        self.transit_result_spec[subset][icost] = emme_matrices["cost"]
-        for trip_part, matrix_id in emme_matrices["total"].items():
-            self.transit_result_spec[trip_part] = matrix_id
-        for trip_part, matrix_id in emme_matrices[subset].items():
-            self.transit_result_spec[subset][trip_part] = matrix_id
-        for trip_part, matrix_id in emme_matrices["local"].items():
-            self.local_result_spec[subset][trip_part] = matrix_id
-        for trip_part, matrix_id in emme_matrices["park_and_ride"].items():
-            self.park_and_ride_spec[subset][trip_part] = matrix_id
+        if "last" not in transit_class:
+            self.transit_result_spec["total_impedance"] = emme_matrices["gen_cost"]
+            for trip_part, matrix_id in emme_matrices["total"].items():
+                self.transit_result_spec[trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices[subset].items():
+                self.transit_result_spec[subset][trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices["local"].items():
+                self.local_result_spec[subset][trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices["park_and_ride"].items():
+                self.park_and_ride_spec[subset][trip_part] = matrix_id

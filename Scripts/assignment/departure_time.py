@@ -7,7 +7,7 @@ from datatypes.tour import Tour
 import utils.log as log
 from assignment.abstract_assignment import AssignmentModel
 import parameters.departure_time as param
-from parameters.assignment import transport_classes
+from parameters.assignment import transport_classes, car_egress_classes
 
 
 class DepartureTimeModel:
@@ -84,10 +84,17 @@ class DepartureTimeModel:
             Travel demand matrix or number of travellers
         """
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
-        if demand.mode in transport_classes:
+        if demand.mode in transport_classes + car_egress_classes:
             position: Sequence[int] = demand.position
             if len(position) == 2:
-                share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
+                if demand.mode in demand.purpose.demand_share:
+                    share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
+                else:
+                    share = {"vrk": [1,1]}
+                if "first" in demand.mode:
+                    share["vrk"][1] = 0
+                elif "last" in demand.mode:
+                    share["vrk"][0] = 0
                 for time_period in self.time_periods:
                     self._add_2d_demand(
                         share[time_period], demand.mode, time_period,

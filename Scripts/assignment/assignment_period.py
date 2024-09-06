@@ -211,6 +211,7 @@ class AssignmentPeriod(Period):
             self._long_distance_trips_assigned = True
         else:
             self._assign_transit()
+        modes.update({mode: True for mode in param.car_access_classes})
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
@@ -238,9 +239,9 @@ class AssignmentPeriod(Period):
         self._assign_trucks()
         if self.use_free_flow_speeds:
             if not self._long_distance_trips_assigned:
-                self._assign_transit(param.long_distance_transit_classes)
+                self._assign_transit(param.car_egress_classes + param.long_distance_transit_classes)
             self._calc_transit_network_results(
-                param.long_distance_transit_classes)
+                param.car_egress_classes + param.long_distance_transit_classes)
         else:
             self._assign_transit(param.transit_classes)
             self._calc_transit_network_results()
@@ -248,7 +249,7 @@ class AssignmentPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {imp_type: self._get_matrices(imp_type, assignment_classes)
-            for imp_type in ("time", "cost", "dist", "car_time", "loc_time", "car_dist", "loc_btime", "total_time", "aux_time", "board_cost", "num_board", "loc_fboard", "perc_bcost")}
+            for imp_type in ("time", "cost", "dist", "car_time","car_dist", "loc_time", "total_time", "aux_time", "board_cost", "num_board", "perc_bcost")}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -535,16 +536,20 @@ class AssignmentPeriod(Period):
         boards = self.get_matrix(transit_class, "num_board") > 0
         transfer_penalty = boards * param.transfer_penalty[transit_class]
         gcost = self.get_matrix(transit_class, "gen_cost")
-        cost = (self.get_matrix(transit_class, "cost")
+        cost = (self.get_matrix(transit_class, "inv_cost")
                 + self.get_matrix(transit_class, "board_cost"))
-        cost = self.apply_pnr_cost_weighting(cost, self.get_matrix(transit_class, "perc_bcost"), self.get_matrix(transit_class, "board_cost"), transit_class, vot_inv)
+        self.set_matrix(transit_class, cost, "cost")
+        if "first_mile" in transit_class:
+            cost = self.apply_pnr_cost_weighting(cost, self.get_matrix(transit_class, "perc_bcost"), self.get_matrix(transit_class, "board_cost"), transit_class, vot_inv)
         time = self.get_matrix(transit_class, "time")
+        pnr_car_time_weight = 3
+        if "first" in transit_class:
+            time = time - self.get_matrix(transit_class, "car_time")*(pnr_car_time_weight-1)
         path_found = cost < 999999
         time[path_found] = (gcost[path_found]
                             - vot_inv*cost[path_found]
                             - transfer_penalty[path_found])
         self.set_matrix(transit_class, time, "time")
-        self.set_matrix(transit_class, cost, "cost")
         return time
     
     def apply_pnr_cost_weighting(self, cost, perc_bcost, actual_bcost, transit_class, vot_inv):
@@ -552,8 +557,8 @@ class AssignmentPeriod(Period):
         days = 0
         if "first_mile" in transit_class:
             days = avg_days[transit_class[0]]
-        pnr_cost_24h = (perc_bcost-actual_bcost*vot_inv)/(vot_inv*(days-2))
-        cost += pnr_cost_24h*(days-1)
+        pnr_cost_24h = (perc_bcost*2-actual_bcost*2*vot_inv)/(vot_inv*(days-2))
+        cost += pnr_cost_24h*(days/2-1)
         return cost
 
     def _calc_background_traffic(self, include_trucks: bool = False):
@@ -565,7 +570,7 @@ class AssignmentPeriod(Period):
         # calc @bus and data3
         heavy = [self.extra(ass_class) for ass_class in param.truck_classes]
         park_and_ride = [self._park_and_ride_results[direction]
-            for direction in param.park_and_ride_classes]
+            for direction in param.mixed_mode_classes]
         for link in network.links():
             if link.type > 100: # If car or bus link
                 freq = 0
@@ -633,7 +638,7 @@ class AssignmentPeriod(Period):
         self._transit_specs = {tc: TransitSpecification(
                 tc, self._segment_results[tc], self._park_and_ride_results[tc],
                 param.effective_headway_attr, self.emme_matrices[tc])
-            for tc in param.transit_classes}
+            for tc in (param.transit_classes + param.car_egress_classes)}
         self.bike_spec = {
             "type": "STANDARD_TRAFFIC_ASSIGNMENT",
             "classes": [
@@ -789,11 +794,15 @@ class AssignmentPeriod(Period):
             "ut", "data")
         delay_attr = param.transit_delay_attr.replace("us", "data")
         func = param.effective_headway
+        func_long = param.effective_headway_ld
         for line in network.transit_lines():
             hw = line[headway_attr]
             for interval in func:
                 if interval[0] <= hw < interval[1]:
-                    effective_hw = func[interval](hw - interval[0])
+                    if line.vehicle == 6 or line.vehicle == 8 or line.vehicle == 3:
+                        effective_hw = func_long[interval](hw - interval[0])
+                    else:
+                        effective_hw = func[interval](hw - interval[0])
                     break
             line[effective_headway_attr] = effective_hw
             cumulative_length = 0
@@ -865,14 +874,15 @@ class AssignmentPeriod(Period):
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)
-            self.emme_project.matrix_results(
-                spec.transit_result_spec, scenario=self.emme_scenario,
-                class_name=transit_class)
+            if "last" not in transit_class:
+                self.emme_project.matrix_results(
+                    spec.transit_result_spec, scenario=self.emme_scenario,
+                    class_name=transit_class)
             if transit_class in param.long_distance_transit_classes:
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
-            if transit_class in param.park_and_ride_classes:
+            if transit_class in param.car_access_classes:
                 self.emme_project.matrix_results(
                     spec.park_and_ride_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
