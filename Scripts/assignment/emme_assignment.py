@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast
+from collections import defaultdict
 import numpy
 import pandas
 from math import log10
@@ -121,7 +122,8 @@ class EmmeAssignmentModel(AssignmentModel):
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield,
             car_dist_unit_cost)
-        self._create_transit_attributes(self.day_scenario, self._extra)
+        self._segment_results = self._create_transit_attributes(
+            self.day_scenario, self._extra)
         for ap in self.assignment_periods:
             ap.prepare(
                 self._create_attributes(
@@ -302,6 +304,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 area = mapping[link.i_node["#municipality"]]
             except KeyError:
                 faulty_kela_code_nodes.add(link.i_node.id)
+                area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
                 kms[ass_class] += veh_kms
@@ -330,6 +333,18 @@ class EmmeAssignmentModel(AssignmentModel):
         resultdata.print_data(area_kms, "vehicle_kms_county.txt")
         resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_county.txt")
         resultdata.print_data(linklengths, "link_lengths.txt")
+
+        # Print mode boardings per municipality
+        boardings = defaultdict(lambda: defaultdict(float))
+        attrs = [transit_class["total_boardings"]
+            for transit_class in self._segment_results[0].values()]
+        for line in network.transit_lines():
+            mode = line.mode.id
+            for seg in line.segments():
+                for tc in attrs:
+                    boardings[mode][seg.i_node["#municipality"]] += seg[tc]
+        resultdata.print_data(
+            pandas.DataFrame.from_dict(boardings), "municipality_boardings.txt")
 
         # Aggregate and print numbers of stations
         stations = pandas.Series(0, param.station_ids, name="number")

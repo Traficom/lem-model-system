@@ -94,6 +94,8 @@ class ZoneData:
         within_municipality = municipalities[:, numpy.newaxis] == municipalities
         self["within_municipality"] = within_municipality
         self["outside_municipality"] = ~within_municipality
+        self["Helsingin_kantakaupunki"] = aggregations.mappings["subarea"] == "Helsingin_kantakaupunki"
+        self["Tampereen_kantakaupunki"] = aggregations.mappings["subarea"] == "Tampereen_kantakaupunki"
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = self.aggregations.mappings[division_type][bounds] == name

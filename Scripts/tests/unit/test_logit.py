@@ -8,6 +8,7 @@ from pathlib import Path
 
 from datahandling.zonedata import ZoneData
 from models.logit import ModeDestModel
+from datatypes.purpose import attempt_calibration
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PATH
 
@@ -70,6 +71,7 @@ class LogitModelTest(unittest.TestCase):
         parameters_path = Path(__file__).parents[2] / "parameters" / "demand"
         for file in parameters_path.rglob("hb_work.json"):
             parameters = json.loads(file.read_text("utf-8"))
+            attempt_calibration(parameters)
             pur.name = parameters["name"]
             if ("sec_dest" not in parameters
                     and parameters["orig"] != "source"
