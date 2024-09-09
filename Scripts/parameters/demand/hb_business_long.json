@@ -63,7 +63,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00047,
-                "cost": -0.0187
+                "cost": -0.0183
             },
             "log": {
                 "attraction_size": 1
@@ -75,8 +75,8 @@
         "train": {
             "attraction": {},
             "impedance": {
-                "time": -0.00055,
-                "cost": -0.0187
+                "time": -0.00056,
+                "cost": -0.0183
             },
             "log": {
                 "attraction_size": 1
@@ -88,8 +88,8 @@
         "long_d_bus": {
             "attraction": {},
             "impedance": {
-                "time": -0.00202,
-                "cost": -0.0187
+                "time": -0.00205,
+                "cost": -0.0183
             },
             "log": {
                 "attraction_size": 1
@@ -101,8 +101,8 @@
         "car_work": {
             "attraction": {},
             "impedance": {
-                "time": -0.00466,
-                "cost": -0.0187
+                "time": -0.00504,
+                "cost": -0.0183
             },
             "log": {
                 "attraction_size": 1
@@ -114,8 +114,8 @@
         "car_pax": {
             "attraction": {},
             "impedance": {
-                "time": -0.00402,
-                "cost": -0.0187
+                "time": -0.00476,
+                "cost": -0.0183
             },
             "log": {
                 "attraction_size": 1
@@ -132,51 +132,51 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85399
+                "logsum": 0.84323
             },
             "individual_dummy": {}
         },
         "train": {
-            "constant": -1.8876,
+            "constant": -1.83299,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85399
+                "logsum": 0.84323
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": -1.95818,
+            "constant": -1.89822,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85399
+                "logsum": 0.84323
             },
             "individual_dummy": {}
         },
         "car_work": {
-            "constant": -0.91255,
+            "constant": -0.84375,
             "generation": {
-                "car_density": 2.35894
+                "car_density": 2.40849
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85399
+                "logsum": 0.84323
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.94834,
+            "constant": -3.92069,
             "generation": {
-                "car_density": 4.30183
+                "car_density": 4.3915
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85399
+                "logsum": 0.84323
             },
             "individual_dummy": {}
         },
