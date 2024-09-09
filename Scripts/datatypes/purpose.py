@@ -9,7 +9,8 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes, activity_time, share_paying
+from parameters.assignment import assignment_classes
+import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -50,7 +51,6 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
-        self.impedance_transform = specification["impedance_transform"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -133,25 +133,38 @@ class Purpose:
                     log.warn(msg)
                 except KeyError:
                     pass
-        for mode in self.impedance_transform:
-            for mtx_type in self.impedance_transform[mode]:
-                p = self.impedance_transform[mode][mtx_type]
-                day_imp[mode][mtx_type] *= p
+        # Apply discounts and transformations to LOS matrices
         for mode in day_imp:
             for mtx_type in day_imp[mode]:
-                # Add parking time and cost to LOS matrix
+                if mtx_type == "cost":
+                    try:
+                        day_imp[mode][mtx_type] *= cost.cost_discount[self.name][mode]
+                    except KeyError:
+                        pass
                 if mtx_type == "time" and "car" in mode:
                     day_imp[mode][mtx_type] += self.zone_data["park_time"].values
                 if mtx_type == "cost" and "car" in mode:
                     try:
-                        day_imp[mode][mtx_type] += (activity_time[self.name] *
-                                                    share_paying[self.name] *
+                        day_imp[mode][mtx_type] += (cost.activity_time[self.name] *
+                                                    cost.share_paying[self.name] *
                                                     self.zone_data["park_cost"].values)
+                    except KeyError:
+                        pass
+                if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
+                    try:
+                        day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
+                                                    (cost.car_drv_occupancy[self.name] - 1) /
+                                                    cost.car_drv_occupancy[self.name])
+                    except KeyError:
+                        pass
+                if mtx_type == "cost" and mode == "car_pax":
+                    try:
+                        day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
+                                                    cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
         log.info(f"Matrix transformations completed for {self.name}")
         return day_imp
-
 
 def new_tour_purpose(specification, zone_data, resultdata):
     """Create purpose for two-way tour or for secondary destination of tour.
