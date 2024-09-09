@@ -245,12 +245,19 @@ def read_zonedata(path: Path,
     if not data.index.is_monotonic:
         data.sort_index(inplace=True)
         log.warn("File {} is not sorted in ascending order".format(path))
-    aggs = json.loads(
+    zone_variables = json.loads(
         (Path(__file__).parent / "zone_variables.json").read_text("utf-8"))
-    for key in aggs:
-        if aggs[key].startswith("weighted_avg_"):
-            weight = aggs[key].replace("weighted_avg_", "")
-            aggs[key] = lambda x: avg(x, data[weight])
+    aggs = {}
+    for func, cols in zone_variables.items():
+        for col in cols:
+            try:
+                total = col["total"]
+            except TypeError:
+                aggs[col] = func
+            else:
+                aggs[total] = func
+                for share in col["shares"]:
+                    aggs[share] = lambda x: avg(x, weights=data[total])
     data = data.groupby(zone_mapping).agg(aggs)
     data.index = data.index.astype(int)
     data.index.name = "analysis_zone_id"
