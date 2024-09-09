@@ -99,7 +99,7 @@ class Config(dict):
 
     @property
     def VERSION(self):
-        """HELMET version number from git tag or dev_config.json."""
+        """LEM version number from git tag or dev_config.json."""
         os.chdir(Path(__file__).parent)
         try:
             # If model system is in a git repo
@@ -107,5 +107,5 @@ class Config(dict):
                 ["git", "describe", "--tags"], stderr=subprocess.STDOUT,
                 text=True)
         except (subprocess.CalledProcessError, WindowsError):
-            # If model system is downloaded with helmet-ui
-            return self.HELMET_VERSION
+            # If model system is downloaded with lem-ui
+            return self["LEM_VERSION"]

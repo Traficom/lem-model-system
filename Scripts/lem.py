@@ -299,10 +299,14 @@ if __name__ == "__main__":
             args_dict[key.lower()] = val
 
     log.initialize(args)
-    log.debug("helmet_version=" + str(config.VERSION))
+    log.debug("lem_version=" + str(config.VERSION))
     log.debug('sys.version_info=' + str(sys.version_info[0]))
     log.debug('sys.path=' + str(sys.path))
-    log.debug(utils.config.dump(args_dict))
+    json_dump = utils.config.dump(args_dict)
+    log.debug(json_dump)
+    p = Path(args.results_path, args.scenario_name, "runtime_params.json")
+    with open(p, 'w') as file:
+        file.write(json_dump)
 
     if sys.version_info.major == 3:
         main(args)
