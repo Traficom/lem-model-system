@@ -16,7 +16,7 @@ from assignment.abstract_assignment import AssignmentModel, Period
 class MockAssignmentModel(AssignmentModel):
     def __init__(self, matrices: MatrixData,
                  use_free_flow_speeds: bool = False,
-                 time_periods: List[str]=param.time_periods,
+                 time_periods: Dict[str, str]=param.time_periods,
                  delete_extra_matrices: bool = False):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
@@ -30,21 +30,23 @@ class MockAssignmentModel(AssignmentModel):
                 end_assignment_classes -= set(
                     param.long_distance_transit_classes)
         self.time_periods = time_periods
-        self.assignment_periods = [MockPeriod(
+        cls = globals()
+        for tp in time_periods:
+            cl_name = time_periods[tp]
+            time_periods[tp] = cls[cl_name] if cl_name in cls else MockPeriod
+        self.assignment_periods = [time_periods[tp](
                 tp, matrices, end_assignment_classes)
             for tp in time_periods]
 
     @property
     def zone_numbers(self) -> numpy.array:
         """Numpy array of all zone numbers.""" 
-        with self.matrices.open("time", self.time_periods[0]) as mtx:
-            zone_numbers = mtx.zone_numbers
-        return zone_numbers
+        return next(iter(self.assignment_periods)).zone_numbers
 
     @property
     def mapping(self):
         """dict: Dictionary of zone numbers and corresponding indices."""
-        with self.matrices.open("time", self.time_periods[0]) as mtx:
+        with self.matrices.open("time", next(iter(self.assignment_periods))) as mtx:
             mapping = mtx.mapping
         return mapping
 
@@ -90,6 +92,9 @@ class MockPeriod(Period):
         with self.matrices.open("time", self.name) as mtx:
             zone_numbers = mtx.zone_numbers
         return zone_numbers
+
+    def init_assign(self):
+        pass
 
     def assign_trucks_init(self):
         pass
@@ -179,3 +184,38 @@ class MockPeriod(Period):
                     matrix: numpy.ndarray):
         with self.matrices.open("demand", self.name, self.zone_numbers, m='a') as mtx:
             mtx[ass_class] = matrix
+
+
+class TransitAssignmentPeriod(MockPeriod):
+    def assign(self, *args) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """Get local transit impedance matrices for one time period.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (transit_work/transit_leisure) : numpy 2-d matrix
+        """
+        mtxs = self._get_impedances(param.local_transit_classes)
+        del mtxs["dist"]
+        return mtxs
+
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """Get transit impedance matrices for one time period.
+
+        Long-distance mode impedances are included if assignment period
+        was created with delete_extra_matrices option disabled.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (transit_work/...) : numpy 2-d matrix
+        """
+        self._end_assignment_classes -= set(
+            param.private_classes + param.freight_classes)
+        return self._get_impedances(self._end_assignment_classes)
+
+class EndAssignmentOnlyPeriod(MockPeriod):
+    def assign(self, *args) -> None:
+        return None

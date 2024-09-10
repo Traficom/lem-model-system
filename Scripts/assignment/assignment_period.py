@@ -214,6 +214,7 @@ class AssignmentPeriod(Period):
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
+        del mtxs["dist"]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:

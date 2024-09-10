@@ -6,7 +6,8 @@ t network_fields
 #car_time_aht LINK REAL ''
 #car_time_pt LINK REAL ''
 #car_time_iht LINK REAL ''
+#car_time_ilt LINK REAL ''
 #car_time_vrk LINK REAL ''
 #buslane LINK BOOLEAN ''
 end network_fields
-   inode    jnode #hinta_aht #hinta_pt #hinta_iht #hinta_vrk #car_time_aht #car_time_pt #car_time_iht #car_time_vrk #buslane
+   inode    jnode #hinta_aht #hinta_pt #hinta_iht #hinta_vrk #car_time_aht #car_time_pt #car_time_iht #car_time_ilt #car_time_vrk #buslane
