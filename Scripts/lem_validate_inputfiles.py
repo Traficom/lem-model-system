@@ -199,17 +199,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-level",
         choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-        default=config.LOG_LEVEL,
     )
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
-        default=config.LOG_FORMAT,
     )
     parser.add_argument(
         "-f", "--long-dist-demand-forecast",
         type=str,
-        default=config.LONG_DIST_DEMAND_FORECAST,
         help=("If 'calc', runs assigment with free-flow speed and "
               + "calculates demand for long-distance trips. "
               + "If 'base', takes long-distance trips from base matrices. "
@@ -218,30 +215,25 @@ if __name__ == "__main__":
     parser.add_argument(
         "--do-not-use-emme",
         action="store_true",
-        default=config.DO_NOT_USE_EMME,
         help="Using this flag runs with MockAssignmentModel instead of EmmeAssignmentModel, not requiring EMME.",
     )
     parser.add_argument(
         "-s", "--separate-emme-scenarios",
         action="store_true",
-        default=config.SEPARATE_EMME_SCENARIOS,
         help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them.",
     )
     parser.add_argument(
         "--scenario-name",
         type=str,
-        default=config.SCENARIO_NAME,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
         type=str,
-        default=config.RESULTS_PATH,
         help="Path to folder where result data is saved to."),
     # Base input (across all scenarios)
     parser.add_argument(
         "--baseline-data-path",
         type=str,
-        default=config.BASELINE_DATA_PATH,
         help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
     # Scenarios' individual input
     parser.add_argument(
@@ -268,9 +260,12 @@ if __name__ == "__main__":
         nargs="+",
         required=True,
         help="List of paths to folder containing forecast zonedata"),
+    parser.set_defaults(
+        **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
 
     log.initialize(args)
+    log.debug(utils.config.dump(vars(args)))
 
     if sys.version_info.major == 3:
         main(args)
