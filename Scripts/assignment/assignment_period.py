@@ -238,8 +238,7 @@ class AssignmentPeriod(Period):
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
         if self.use_free_flow_speeds:
-            if not self._long_distance_trips_assigned:
-                self._assign_transit(param.car_egress_classes + param.long_distance_transit_classes)
+            self._assign_transit(param.car_egress_classes + param.long_distance_transit_classes)
             self._calc_transit_network_results(
                 param.car_egress_classes + param.long_distance_transit_classes)
         else:

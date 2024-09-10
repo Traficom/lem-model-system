@@ -143,7 +143,7 @@ class LogitModel:
         """
         for ar in args:
             mode = ar
-        logsum_path = Path(__file__) / "logsum.omx"
+        logsum_path = Path(__file__).parent / "logsum.omx"
         for i in b:
             try: # If only one parameter
                 if i == "logsum":
