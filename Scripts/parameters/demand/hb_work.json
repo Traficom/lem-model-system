@@ -4,7 +4,6 @@
     "dest": "work",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {},
     "impedance_share": {
         "car_work": {
             "aht": [
@@ -121,7 +120,8 @@
                 "within_zone_time": -0.06883
             },
             "impedance": {
-                "time": -0.06883
+                "time": -0.06883,
+                "cost": -0.06923
             },
             "log": {
                 "attraction_size": 1

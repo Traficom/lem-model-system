@@ -4,11 +4,6 @@
     "dest": "students_upper_secondary",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {
-        "transit_work": {
-            "cost": 0.5
-        }  
-    },
     "impedance_share": {
         "car_work": {
             "aht": [
@@ -125,7 +120,8 @@
                 "within_zone_time": -0.09899
             },
             "impedance": {
-                "time": -0.09899
+                "time": -0.09899,
+                "cost": -0.37286
             },
             "log": {
                 "attraction_size": 1
