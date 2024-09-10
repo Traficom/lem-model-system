@@ -173,6 +173,7 @@ class ModelSystem:
                 if purpose.dest != "source":
                     for mode in demand:
                         self.dtm.add_demand(demand[mode])
+                    log.info(f"Time period matrices calculated for {purpose.name}")
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,

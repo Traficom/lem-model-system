@@ -4,11 +4,6 @@
     "dest": "higher_education",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {
-        "transit_work": {
-            "cost": 0.5
-        }  
-    },
     "impedance_share": {
         "car_work": {
             "aht": [
@@ -124,7 +119,8 @@
                 "within_zone_time": -0.05397
             },
             "impedance": {
-                "time": -0.05397
+                "time": -0.05397,
+                "cost": -0.28737
             },
             "log": {
                 "attraction_size": 1
@@ -231,6 +227,23 @@
                 "logsum": 1
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "car_work": {
+                "constant": -0.575477154
+            },
+            "car_pax": {
+                "constant": -0.101477862
+            },
+            "transit_work": {
+                "constant": -0.860216469
+            },
+            "bike": {
+                "constant": 0.545121328
+            },
+            "walk": {
+                "constant": 1.379787114
+            }
         }
     },
     "demand_share": {

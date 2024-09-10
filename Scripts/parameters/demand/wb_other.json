@@ -7,7 +7,6 @@
     ],
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {},
     "impedance_share": {
         "car_leisure": {
             "aht": [
@@ -234,6 +233,23 @@
                 "logsum": 0.59599
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "car_leisure": {
+                "constant": 0.175997001
+            },
+            "car_pax": {
+                "constant": 1.117979752
+            },
+            "transit_leisure": {
+                "constant": 2.931169924
+            },
+            "bike": {
+                "constant": 2.125934564
+            },
+            "walk": {
+                "constant": -0.3761015
+            }
         }
     },
     "demand_share": {

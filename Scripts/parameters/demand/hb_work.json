@@ -4,7 +4,6 @@
     "dest": "work",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {},
     "impedance_share": {
         "car_work": {
             "aht": [
@@ -121,7 +120,8 @@
                 "within_zone_time": -0.06883
             },
             "impedance": {
-                "time": -0.06883
+                "time": -0.06883,
+                "cost": -0.06923
             },
             "log": {
                 "attraction_size": 1
@@ -231,6 +231,23 @@
                 "logsum": 0.97354
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "car_work": {
+                "constant": 0.12563628
+            },
+            "car_pax": {
+                "constant": -0.442588256
+            },
+            "transit_work": {
+                "constant": -0.053149633
+            },
+            "bike": {
+                "constant": -0.285432332
+            },
+            "walk": {
+                "constant": -0.242726529
+            }
         }
     },
     "demand_share": {
