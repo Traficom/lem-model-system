@@ -43,7 +43,6 @@
     "first": [
         "aggregate_results_municipality",
         "aggregate_results_county",
-        "aggregate_results_area",
         "aggregate_results_subarea",
         "municipality_center"
     ]

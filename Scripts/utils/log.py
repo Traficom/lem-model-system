@@ -16,7 +16,7 @@ filename = None
 
 def initialize(args):
     # JSON logger for communicating with UI
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
     numeric_level = getattr(logging, args.log_level, 20)
     if args.log_format == 'JSON':
         jsonFormat = logging.Formatter('%(json)s')

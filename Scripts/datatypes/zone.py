@@ -96,5 +96,5 @@ class Zone:
         self.number = number
         self.index = Zone.counter
         Zone.counter += 1
-        self.area = aggregations.mappings["area"][number]
+        self.county = aggregations.mappings["county"][number]
         self.municipality = aggregations.mappings["municipality"][number]

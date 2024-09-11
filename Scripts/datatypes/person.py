@@ -32,7 +32,7 @@ class Person:
     FEMALE = 0
     MALE = 1
     person_attr = ["id", "age_group", "gender", "is_car_user", "income"]
-    zone_attr =  ["number", "area", "municipality"]
+    zone_attr =  ["number", "county", "municipality"]
     attr = person_attr + zone_attr
     
     def __init__(self, 
