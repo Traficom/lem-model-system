@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy # type: ignore
 import pandas
 import fiona
+import logging
 import json
 
 import parameters.zone as param
@@ -231,6 +232,7 @@ def read_zonedata(path: Path,
     if not path.exists():
         msg = f"Path {path} not found."
         raise NameError(msg)
+    logging.getLogger("fiona").setLevel(logging.ERROR)
     with fiona.open(path, ignore_geometry=True) as colxn:
         data = pandas.DataFrame(
             [record["properties"] for record in colxn],
