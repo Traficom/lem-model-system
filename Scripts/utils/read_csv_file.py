@@ -26,6 +26,8 @@ def read_other_data(path: Path, squeeze = False):
     data: pandas.DataFrame = pandas.read_csv(
         path, delim_whitespace=True, keep_default_na=False, 
         na_values="", comment='#', header=header)
+    if "node_label" in data.columns:
+        data = data.set_index("node_label")
     if squeeze:
         data = data.squeeze()
     for i in data.index:
