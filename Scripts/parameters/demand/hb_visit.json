@@ -101,15 +101,15 @@
     "destination_choice": {
         "car_leisure": {
             "attraction": {
-                "within_zone_time": -0.02925
+                "within_zone_time": -0.02836
             },
             "impedance": {
-                "time": -0.02925,
-                "cost": -0.0568
+                "time": -0.02836,
+                "cost": -0.05705
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.48766
+                "cost": -0.48753
             },
             "attraction_size": {
                 "population": 1
@@ -117,11 +117,11 @@
         },
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.03283
+                "within_zone_time": -0.03274
             },
             "impedance": {
-                "time": -0.03283,
-                "cost": -0.0568
+                "time": -0.03274,
+                "cost": -0.05705
             },
             "log": {
                 "attraction_size": 1
@@ -133,16 +133,16 @@
         "transit_leisure": {
             "attraction": {
                 "within_zone_inf": -1,
-                "Helsingin_kantakaupunki": 0.85989,
-                "Tampereen_kantakaupunki": 0.47158
+                "Helsingin_kantakaupunki": 0.85975,
+                "Tampereen_kantakaupunki": 0.47113
             },
             "impedance": {
-                "time": -0.01007,
-                "cost": -0.0568
+                "time": -0.01006,
+                "cost": -0.05705
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.48766
+                "cost": -0.48753
             },
             "attraction_size": {
                 "population": 1
@@ -150,10 +150,10 @@
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.25632
+                "within_zone_dist": -0.2563
             },
             "impedance": {
-                "dist": -0.25632
+                "dist": -0.2563
             },
             "log": {
                 "attraction_size": 1
@@ -164,10 +164,10 @@
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.4349
+                "within_zone_dist": -0.43491
             },
             "impedance": {
-                "dist": -0.4349
+                "dist": -0.43491
             },
             "log": {
                 "attraction_size": 1
@@ -179,42 +179,42 @@
     },
     "mode_choice": {
         "car_leisure": {
-            "constant": -1.46692,
+            "constant": -1.42943,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64606
+                "logsum": 0.64551
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.65276,
+            "constant": -3.60666,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64606
+                "logsum": 0.64551
             },
             "individual_dummy": {}
         },
         "transit_leisure": {
-            "constant": -3.37856,
+            "constant": -3.37875,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64606
+                "logsum": 0.64551
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.68604,
+            "constant": -1.68686,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64606
+                "logsum": 0.64551
             },
             "individual_dummy": {}
         },
@@ -224,7 +224,7 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.64606
+                "logsum": 0.64551
             },
             "individual_dummy": {}
         },
