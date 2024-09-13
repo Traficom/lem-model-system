@@ -143,12 +143,12 @@ class Purpose:
                     except KeyError:
                         pass
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
+                    day_imp[mode][mtx_type] += self.zone_data["avg_park_time"].values
                 if mtx_type == "cost" and "car" in mode:
                     try:
                         day_imp[mode][mtx_type] += (cost.activity_time[self.name] *
                                                     cost.share_paying[self.name] *
-                                                    self.zone_data["park_cost"].values)
+                                                    self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
                 if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:

@@ -48,23 +48,18 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not base_zonedata_path.is_dir():
-        raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
-                base_zonedata_path))
+    # if not base_zonedata_path.is_dir():
+    #     raise NameError(
+    #         "Baseline zonedata directory '{}' does not exist.".format(
+    #             base_zonedata_path))
     if not base_matrices_path.is_dir():
         raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
+            "Baseline matrix directory '{}' does not exist.".format(
                 base_matrices_path))
     if not forecast_zonedata_path.is_dir():
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
-    shutil.rmtree(results_path / BASE_ZONEDATA_DIR, ignore_errors=True)
-    shutil.copytree(base_zonedata_path, results_path / BASE_ZONEDATA_DIR)
-    shutil.rmtree(results_path / forecast_zonedata_path.name, ignore_errors=True)
-    shutil.copytree(
-        forecast_zonedata_path, results_path / forecast_zonedata_path.name)
 
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {

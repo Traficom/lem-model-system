@@ -1,7 +1,7 @@
 {
     "name": "hb_edu_upsec",
     "orig": "home",
-    "dest": "upper_secondary",
+    "dest": "students_upper_secondary",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -112,7 +112,7 @@
                 "cost": -0.21263
             },
             "attraction_size": {
-                "upper_secondary": 1
+                "students_upper_secondary": 1
             }
         },
         "car_pax": {
@@ -127,7 +127,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "upper_secondary": 1
+                "students_upper_secondary": 1
             }
         },
         "transit_work": {
@@ -143,7 +143,7 @@
                 "cost": -0.21263
             },
             "attraction_size": {
-                "upper_secondary": 1
+                "students_upper_secondary": 1
             }
         },
         "bike": {
@@ -157,7 +157,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "upper_secondary": 1
+                "students_upper_secondary": 1
             }
         },
         "walk": {
@@ -171,7 +171,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "upper_secondary": 1
+                "students_upper_secondary": 1
             }
         }
     },

@@ -1,7 +1,7 @@
 {
     "name": "hb_edu_higher",
     "orig": "home",
-    "dest": "higher_education",
+    "dest": "students_higher_education",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -111,7 +111,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "car_pax": {
@@ -126,7 +126,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "transit_work": {
@@ -141,7 +141,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "bike": {
@@ -155,7 +155,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "walk": {
@@ -169,7 +169,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         }
     },

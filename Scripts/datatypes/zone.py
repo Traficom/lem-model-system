@@ -19,8 +19,7 @@ class ZoneAggregations:
         municipality_centre_mapping : pandas.Series
             Mapping between zone id and municipality centre index
         """
-        self.mappings = mappings[mappings.columns[mappings.dtypes == object]]
-        self.dummies = mappings[mappings.columns[mappings.dtypes != object]]
+        self.mappings = mappings
         self.municipality_mapping = mappings.groupby(
             "municipality").agg("first")["county"]
         self.municipality_centre_mapping = municipality_centre_mapping
@@ -97,5 +96,5 @@ class Zone:
         self.number = number
         self.index = Zone.counter
         Zone.counter += 1
-        self.area = aggregations.mappings["area"][number]
+        self.county = aggregations.mappings["county"][number]
         self.municipality = aggregations.mappings["municipality"][number]

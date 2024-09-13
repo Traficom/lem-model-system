@@ -73,7 +73,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 214.72325,
-                "area_leisure": 0.3941
+                "area_leisure_buildings": 0.3941
             }
         },
         "train": {
@@ -90,7 +90,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 214.72325,
-                "area_leisure": 0.3941
+                "area_leisure_buildings": 0.3941
             }
         },
         "long_d_bus": {
@@ -107,7 +107,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 214.72325,
-                "area_leisure": 0.3941
+                "area_leisure_buildings": 0.3941
             }
         },
         "car_leisure": {
@@ -124,7 +124,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 214.72325,
-                "area_leisure": 0.3941
+                "area_leisure_buildings": 0.3941
             }
         },
         "car_pax": {
@@ -141,7 +141,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 214.72325,
-                "area_leisure": 0.3941
+                "area_leisure_buildings": 0.3941
             }
         }
     },

@@ -1,7 +1,7 @@
 {
     "name": "hb_edu_basic",
     "orig": "home",
-    "dest": "comprehensive",
+    "dest": "students_students_comprehensive",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -92,8 +92,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "comprehensive<within_municipality": 1,
-                "comprehensive<outside_municipality": 0.03107
+                "students_comprehensive<within_municipality": 1,
+                "students_comprehensive<outside_municipality": 0.03107
             }
         },
         "transit_work": {
@@ -107,8 +107,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "comprehensive<within_municipality": 1,
-                "comprehensive<outside_municipality": 0.03107
+                "students_comprehensive<within_municipality": 1,
+                "students_comprehensive<outside_municipality": 0.03107
             }
         },
         "bike": {
@@ -122,8 +122,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "comprehensive<within_municipality": 1,
-                "comprehensive<outside_municipality": 0.03107
+                "students_comprehensive<within_municipality": 1,
+                "students_comprehensive<outside_municipality": 0.03107
             }
         },
         "walk": {
@@ -137,8 +137,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "comprehensive<within_municipality": 1,
-                "comprehensive<outside_municipality": 0.03107
+                "students_comprehensive<within_municipality": 1,
+                "students_comprehensive<outside_municipality": 0.03107
             }
         }
     },

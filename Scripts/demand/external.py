@@ -30,7 +30,6 @@ class ExternalModel:
                  zone_numbers: numpy.array):
         self.base_demand = base_demand
         self.all_zone_numbers = zone_numbers
-        self.growth = zone_data.externalgrowth
         spec = {
             "name": "external",
             "orig": None,
