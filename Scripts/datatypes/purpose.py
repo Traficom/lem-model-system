@@ -163,6 +163,16 @@ class Purpose:
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
+        
+        for name in cost.gen_cost:
+            if name == self.name:
+                for mode in cost.gen_cost[name]:
+                    try:
+                        vot = cost.gen_cost[name][mode]
+                        day_imp[mode]["gen_cost"] = (day_imp[mode]["time"] / 60 * vot 
+                                                     + day_imp[mode]["cost"])
+                    except KeyError:
+                        pass
         log.info(f"Matrix transformations completed for {self.name}")
         return day_imp
 
