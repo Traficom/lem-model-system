@@ -2,13 +2,16 @@
 
 The main entry point is `lem.py`.
 Run `python lem.py --help` to see parameter syntax.
+You can also feed parameters from a json file (`lem.py --json your_file_path`).
+The json variable names are the same as `lem.py` parameters,
+but with capital letters, and underscore instead of hyphen.
 If you run `python helmet.py` without parameters,
 all parameters will be taken from `dev-config.json`,
 which can be used to setup the model run in advance.
 
-## Configuring the model run with `dev-config.json`
+## Configuring the model run with json
 
-### `HELMET_VERSION`
+### `LEM_VERSION`
 
 The version number is logged in model runs.
 This should not be changed unless model code is changed.
@@ -47,7 +50,7 @@ you need to initialize temporary result matrices to `RESULT_PATH\\SCENARIO_NAME\
 Name of submodel (e.g., "uusimaa", "koko_suomi"),
 used for choosing appropriate zone mapping and base matrices.
 
-### `EMME_PROJECT_PATH`
+### `EMME_PATH`
 
 If you are using Emme assignment, you need to specify where your `.emp` file is located.
 
@@ -115,7 +118,7 @@ in `2018_zonedata` directory.
 
 If specified, take freight demand matrices from path.
 
-### `ITERATION_COUNT`
+### `ITERATIONS`
 
 Maximum number of demand model iterations to run
 (each using re-calculated impedance from traffic and transit assignment).
@@ -158,12 +161,12 @@ Add this flag if you do not have the Emme license or wish to use the mock assign
 Using this flag creates four new EMME scenarios and saves
 network time-period specific results in them.
 
-#### `SAVE_MATRICES_IN_EMME`
+#### `SAVE_EMME_MATRICES`
 
 If active, demand and skim matrices (including transit trip parts) for all time
 periods will be saved to EMME project Database folder.
 
-#### `DELETE_STRATEGY_FILES`
+#### `DEL_STRAT_FILES`
 
 Transit assignment in EMME stores large files which are used for assignment analyses.
 If activated, these files will be deleted after the model run.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from copy import copy
 from collections import defaultdict
 import numpy # type: ignore
 import pandas
@@ -291,10 +292,10 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.prob = self.model.calc_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.prob = self.model.calc_prob(purpose_impedance)
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -308,10 +309,10 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.model.calc_basic_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.model.calc_basic_prob(purpose_impedance)
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
