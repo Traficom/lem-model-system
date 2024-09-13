@@ -164,7 +164,6 @@ class Purpose:
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
-        log.info(f"Matrix transformations completed for {self.name}")
         return day_imp
 
 def new_tour_purpose(specification, zone_data, resultdata):
@@ -296,6 +295,7 @@ class TourPurpose(Purpose):
             self.accessibility_model.calc_accessibility(
                 copy(purpose_impedance))
         self.prob = self.model.calc_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -313,6 +313,7 @@ class TourPurpose(Purpose):
             self.accessibility_model.calc_accessibility(
                 copy(purpose_impedance))
         self.model.calc_basic_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
