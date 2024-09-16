@@ -72,8 +72,8 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 147.11874,
-                "area_leisure": 0.32877
+                "wrk_hospitality": 147.11874,
+                "area_leisure_buildings": 0.32877
             }
         },
         "train": {
@@ -89,8 +89,8 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 147.11874,
-                "area_leisure": 0.32877
+                "wrk_hospitality": 147.11874,
+                "area_leisure_buildings": 0.32877
             }
         },
         "long_d_bus": {
@@ -106,8 +106,8 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 147.11874,
-                "area_leisure": 0.32877
+                "wrk_hospitality": 147.11874,
+                "area_leisure_buildings": 0.32877
             }
         },
         "car_leisure": {
@@ -123,8 +123,8 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 147.11874,
-                "area_leisure": 0.32877
+                "wrk_hospitality": 147.11874,
+                "area_leisure_buildings": 0.32877
             }
         },
         "car_pax": {
@@ -139,8 +139,8 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 147.11874,
-                "area_leisure": 0.32877
+                "wrk_hospitality": 147.11874,
+                "area_leisure_buildings": 0.32877
             }
         }
     },

@@ -17,12 +17,6 @@
                 1.0
               ]
             },
-        "airplane": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-            },
         "train": {
             "vrk": [
                 1.0,
@@ -45,10 +39,6 @@
             100,
             9999
         ],
-        "airplane": [
-            100,
-            9999
-        ],
         "train": [
             100,
             9999
@@ -59,19 +49,6 @@
         ]
     },
     "destination_choice": {
-        "airplane": {
-            "attraction": {},
-            "impedance": {
-                "gen_cost": -0.00507
-            },
-            "log": {
-                "attraction_size": 1,
-                "gen_cost": -1.72842
-            },
-            "attraction_size": {
-                "workplaces": 1
-            }
-        },
         "train": {
             "attraction": {},
             "impedance": {
@@ -125,18 +102,8 @@
         }
     },
     "mode_choice": {
-        "airplane": {
-            "constant": 0,
-            "generation": {},
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.8009
-            },
-            "individual_dummy": {}
-        },
         "train": {
-            "constant": "T_const",
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -186,12 +153,6 @@
               ]
         },
         "car_pax": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "airplane": {
             "vrk": [
                 1.0,
                 1.0
