@@ -74,7 +74,7 @@
         },
         "train": {
             "attraction": {},
-            "impedance": {t
+            "impedance": {
                 "time": -0.00106,
                 "cost": -0.00192
             },
