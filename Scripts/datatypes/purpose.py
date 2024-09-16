@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from copy import copy
 from collections import defaultdict
 import numpy # type: ignore
 import pandas
@@ -9,7 +10,8 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes, activity_time, share_paying
+from parameters.assignment import assignment_classes
+import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
@@ -50,7 +52,6 @@ class Purpose:
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
-        self.impedance_transform = specification["impedance_transform"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -128,29 +129,42 @@ class Purpose:
                     m = row["mode"]
                     p = row["cost_change"]
                     day_imp[m][t] = p * day_imp[m][t]
-                    msg = (f"Demand calculation {self.name}: " 
+                    msg = (f"Purpose {self.name}: " 
                            + f"Added {round(100*(p-1))} % to {t} : {m}.")
                     log.warn(msg)
                 except KeyError:
                     pass
-        for mode in self.impedance_transform:
-            for mtx_type in self.impedance_transform[mode]:
-                p = self.impedance_transform[mode][mtx_type]
-                day_imp[mode][mtx_type] *= p
+        # Apply discounts and transformations to LOS matrices
         for mode in day_imp:
             for mtx_type in day_imp[mode]:
-                # Add parking time and cost to LOS matrix
+                if mtx_type == "cost":
+                    try:
+                        day_imp[mode][mtx_type] *= cost.cost_discount[self.name][mode]
+                    except KeyError:
+                        pass
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
+                    day_imp[mode][mtx_type] += self.zone_data["avg_park_time"].values
                 if mtx_type == "cost" and "car" in mode:
                     try:
-                        day_imp[mode][mtx_type] += (activity_time[self.name] *
-                                                    share_paying[self.name] *
-                                                    self.zone_data["park_cost"].values)
+                        day_imp[mode][mtx_type] += (cost.activity_time[self.name] *
+                                                    cost.share_paying[self.name] *
+                                                    self.zone_data["avg_park_cost"].values)
+                    except KeyError:
+                        pass
+                if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
+                    try:
+                        day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
+                                                    (cost.car_drv_occupancy[self.name] - 1) /
+                                                    cost.car_drv_occupancy[self.name])
+                    except KeyError:
+                        pass
+                if mtx_type == "cost" and mode == "car_pax":
+                    try:
+                        day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
+                                                    cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
         return day_imp
-
 
 def new_tour_purpose(specification, zone_data, resultdata):
     """Create purpose for two-way tour or for secondary destination of tour.
@@ -181,6 +195,7 @@ def new_tour_purpose(specification, zone_data, resultdata):
     resultdata : ResultData
         Writer object for result directory
     """
+    attempt_calibration(specification)
     args = (specification, zone_data, resultdata)
     purpose = (SecDestPurpose(*args) if "sec_dest" in specification
                 else TourPurpose(*args))
@@ -276,10 +291,11 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.prob = self.model.calc_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.prob = self.model.calc_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -293,10 +309,11 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.model.calc_basic_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.model.calc_basic_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
@@ -328,6 +345,7 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
+        log.info(f"Demand calculated for {self.name}")
         return demand
 
 
@@ -446,3 +464,31 @@ class SecDestPurpose(Purpose):
                 sum(self.attracted_tours.values()),
                 self.zone_data.zone_numbers, name=self.name),
             "attraction.txt")
+
+def attempt_calibration(spec: dict):
+    """Check if specification includes "calibration" trees.
+
+    Transform regular parameters to include calibration,
+    remove separate calibration parameters.
+    A calibration (named "calibration") tree can be anywhere in the dict,
+    but must refer to existing adjacent parameters or trees of parameters.
+    """
+    try:
+        param_names = list(spec.keys())
+    except AttributeError:
+        # No calibration parameters in this branch, return up
+        return
+    for param_name in param_names:
+        if param_name == "calibration":
+            calibrate(spec, spec.pop(param_name))
+        else:
+            # Search deeper
+            attempt_calibration(spec[param_name])
+
+def calibrate(spec: dict, calib_spec: dict):
+    for param_name in calib_spec:
+        try:
+            spec[param_name] += calib_spec[param_name]
+        except TypeError:
+            # Search deeper
+            calibrate(spec[param_name], calib_spec[param_name])

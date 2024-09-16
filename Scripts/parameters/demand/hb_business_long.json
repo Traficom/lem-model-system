@@ -4,7 +4,6 @@
     "dest": "work",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {},
     "impedance_share": {
         "car_work": {
             "vrk": [
@@ -75,7 +74,7 @@
         },
         "train": {
             "attraction": {},
-            "impedance": {
+            "impedance": {t
                 "time": -0.00106,
                 "cost": -0.00192
             },
@@ -179,6 +178,23 @@
                 "logsum": 0.54644
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "airplane": {
+                "constant": -0.507445531
+            },
+            "train": {
+                "constant": 0.660411049
+            },
+            "long_d_bus": {
+                "constant": 0.553471168
+            },
+            "car_work": {
+                "constant": -0.184904336
+            },
+            "car_pax": {
+                "constant": 0.485876623    
+            }
         }
     },
     "demand_share": {

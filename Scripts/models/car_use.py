@@ -43,14 +43,14 @@ class CarUseModel(LogitModel):
 
     def _check(self, dummy):
         try:
-            age_interval = dummy.split('_')[1]
+            age_interval = dummy.split('_')[1:]
         except AttributeError:
             # If the dummy is for a compound segment (age + gender)
-            age_interval = dummy[0].split('_')[1]
+            age_interval = dummy[0].split('_')[1:]
             if dummy[1] not in self.genders:
                 raise AttributeError(
                     "Car use dummy name {} not valid".format(dummy[1]))
-        if tuple(map(int, age_interval.split('-'))) not in self.age_groups:
+        if tuple(map(int, age_interval)) not in self.age_groups:
             raise AttributeError(
                 "Car use dummy name {} not valid".format(age_interval))
 

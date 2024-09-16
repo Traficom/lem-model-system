@@ -44,6 +44,6 @@ class PersonTest(unittest.TestCase):
             [0.3, 0.6, 1.0],
             [0.3, 0.6, 1.0],
         ])
-        probs = {"age_18-29": {True: data}}
+        probs = {"age_18_29": {True: data}}
         p.add_tours(purposes, probs)
         p.add_tours(purposes, probs)
