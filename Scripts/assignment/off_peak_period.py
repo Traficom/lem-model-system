@@ -25,16 +25,11 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(stopping_criteria)
         self._assign_transit(param.transit_classes)
 
-    def assign(self, modes: Iterable[str]) -> Dict[str, Dict[str, ndarray]]:
+    def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Assign cars for one time period.
 
         Get travel impedance matrices for one time period from assignment.
         Transit impedance is fetched from free-flow init assignment.
-
-        Parameters
-        ----------
-        modes : Set of str
-            The assignment classes for which impedance matrices will be returned
 
         Returns
         -------
@@ -45,7 +40,8 @@ class OffPeakPeriod(AssignmentPeriod):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        mtxs = self._get_impedances(modes)
+        mtxs = self._get_impedances(
+            param.car_classes + param.local_transit_classes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         del mtxs["dist"]
