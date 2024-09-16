@@ -124,7 +124,8 @@
                 "cost": -0.15948
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.45311
             },
             "attraction_size": {
                 "shop": 1

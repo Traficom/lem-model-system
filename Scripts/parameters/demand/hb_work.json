@@ -124,7 +124,8 @@
                 "cost": -0.06926
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.12743
             },
             "attraction_size": {
                 "workplaces": 1
