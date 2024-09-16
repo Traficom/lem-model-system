@@ -1,7 +1,7 @@
 {
     "name": "hb_edu_higher",
     "orig": "home",
-    "dest": "higher_education",
+    "dest": "students_higher_education",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -101,32 +101,32 @@
     "destination_choice": {
         "car_work": {
             "attraction": {
-                "within_zone_time": -0.01987
+                "within_zone_time": -0.00609
             },
             "impedance": {
-                "time": -0.01987,
-                "cost": -0.29092
+                "time": -0.00609,
+                "cost": -0.28119
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.05309
+                "within_zone_time": -0.05422
             },
             "impedance": {
-                "time": -0.05309,
-                "cost": -0.29092
+                "time": -0.05422,
+                "cost": -0.28119
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "transit_work": {
@@ -134,50 +134,50 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "time": -0.00894,
-                "cost": -0.29092
+                "time": -0.00944,
+                "cost": -0.28119
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.24553
+                "within_zone_dist": -0.2453
             },
             "impedance": {
-                "dist": -0.24553
+                "dist": -0.2453
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.44062
+                "within_zone_dist": -0.44052
             },
             "impedance": {
-                "dist": -0.44062
+                "dist": -0.44052
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
-                "higher_education": 1
+                "students_higher_education": 1
             }
         }
     },
     "mode_choice": {
         "car_work": {
-            "constant": -3.79547,
+            "constant": -4.02244,
             "generation": {
-                "car_density": 2.87999
+                "car_density": 2.93091
             },
             "attraction": {},
             "impedance": {},
@@ -187,9 +187,9 @@
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.73127,
+            "constant": -3.69237,
             "generation": {
-                "car_density": 0.35298
+                "car_density": 0.30887
             },
             "attraction": {},
             "impedance": {},
@@ -199,7 +199,7 @@
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -1.7212,
+            "constant": -1.68647,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -209,7 +209,7 @@
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.37581,
+            "constant": -1.37647,
             "generation": {},
             "attraction": {},
             "impedance": {},

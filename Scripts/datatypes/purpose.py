@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from copy import copy
 from collections import defaultdict
 import numpy # type: ignore
 import pandas
@@ -142,12 +143,12 @@ class Purpose:
                     except KeyError:
                         pass
                 if mtx_type == "time" and "car" in mode:
-                    day_imp[mode][mtx_type] += self.zone_data["park_time"].values
+                    day_imp[mode][mtx_type] += self.zone_data["avg_park_time"].values
                 if mtx_type == "cost" and "car" in mode:
                     try:
                         day_imp[mode][mtx_type] += (cost.activity_time[self.name] *
                                                     cost.share_paying[self.name] *
-                                                    self.zone_data["park_cost"].values)
+                                                    self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
                 if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
@@ -163,7 +164,6 @@ class Purpose:
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
-        
         for name in cost.gen_cost:
             if name == self.name:
                 for mode in cost.gen_cost[name]:
@@ -173,7 +173,6 @@ class Purpose:
                                                      + day_imp[mode]["cost"])
                     except KeyError:
                         pass
-        log.info(f"Matrix transformations completed for {self.name}")
         return day_imp
 
 def new_tour_purpose(specification, zone_data, resultdata):
@@ -301,10 +300,11 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.prob = self.model.calc_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.prob = self.model.calc_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -318,10 +318,11 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.model.calc_basic_prob(purpose_impedance)
         if is_last_iteration and self.name[0] != 's':
             self.accessibility_model.calc_accessibility(
-                purpose_impedance)
+                copy(purpose_impedance))
+        self.model.calc_basic_prob(purpose_impedance)
+        log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.

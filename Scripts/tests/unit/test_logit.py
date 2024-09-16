@@ -6,7 +6,7 @@ import unittest
 import json
 from pathlib import Path
 
-from datahandling.zonedata import BaseZoneData
+from datahandling.zonedata import ZoneData
 from models.logit import ModeDestModel
 from datatypes.purpose import attempt_calibration
 from datahandling.resultdata import ResultsData
@@ -16,6 +16,7 @@ from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PAT
 METROPOLITAN_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291]
 PERIPHERAL_ZONES = [19071]
 EXTERNAL_ZONES = [36102, 36500]
+ZONE_INDEXES = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
 
 
 class LogitModelTest(unittest.TestCase):
@@ -25,7 +26,7 @@ class LogitModelTest(unittest.TestCase):
             pass
         pur = Purpose()
         zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
-        zd = BaseZoneData(BASE_ZONEDATA_PATH, zi)
+        zd = ZoneData(BASE_ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
         mtx = numpy.arange(90, dtype=numpy.float32)
         mtx.shape = (9, 10)

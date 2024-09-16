@@ -71,7 +71,7 @@ class DemandModel:
 
     def _age_strings(self):
         for age_group in param.age_groups:
-            yield "age_{}-{}".format(*age_group)
+            yield "age_{}_{}".format(*age_group)
 
     def create_population_segments(self):
         """Create population segments.
@@ -86,7 +86,7 @@ class DemandModel:
         self.segments = {}
         pop = self.zone_data["population"][self.bounds]
         for age in self._age_strings():
-            age_pop = self.zone_data["share_" + age][self.bounds] * pop
+            age_pop = self.zone_data["sh_" + age][self.bounds] * pop
             car_share = sum(self.zone_data["share_" + gender][self.bounds]
                             * cm.calc_individual_prob(age, gender)
                 for gender in cm.genders)

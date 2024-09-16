@@ -6,14 +6,13 @@ import numpy
 import pandas
 
 import utils.log as log
-from utils.read_csv_file import read_mapping
 import assignment.emme_assignment as ass
-from datahandling.zonedata import BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import (
     TEST_DATA_PATH,
-    BASE_ZONEDATA_PATH,
+    ZONEDATA_PATH,
 )
 try:
     from assignment.emme_bindings.emme_project import EmmeProject
@@ -129,9 +128,8 @@ class EmmeAssignmentTest:
                         mtx[ass_class] = cost_data
 
     def test_transit_cost(self):
-        zdata = BaseZoneData(
-            BASE_ZONEDATA_PATH, self.ass_model.zone_numbers,
-            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
+        zdata = ZoneData(
+            ZONEDATA_PATH, self.ass_model.zone_numbers, "uusimaa")
         self.ass_model.calc_transit_cost(zdata.transit_zone)
 
 if emme_available:
