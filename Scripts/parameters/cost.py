@@ -44,8 +44,8 @@ sharing_factor = {
     "hb_visit": 0.25,
     "ob_other": 1.00,
     "hb_work_long": 0.00,
-    "hb_leisure_long": 0.25,
-    "hb_business_long": 0.25  
+    "hb_leisure_long": 0.00,
+    "hb_business_long": 0.00
 }
 
 car_drv_occupancy = {
@@ -76,4 +76,24 @@ car_pax_occupancy = {
     "hb_work_long": 2.50,
     "hb_leisure_long": 3.10,
     "hb_business_long": 2.80
+}
+
+gen_cost = {
+    "hb_work_long": {
+        "train": 12.02,
+        "long_d_bus": 8.28, 
+        "car_work": 10.91
+    },
+    "hb_business_long": {
+        "airplane": 57.72,
+        "train": 31.46,
+        "long_d_bus": 16.34, 
+        "car_work": 21.55
+    },
+    "hb_leisure_long": {
+        "airplane": 29.23,
+        "train": 10.58,
+        "long_d_bus": 7.29, 
+        "car_leisure": 9.61
+    },
 }
