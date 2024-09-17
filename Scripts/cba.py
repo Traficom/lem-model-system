@@ -1,18 +1,17 @@
-import os
 from argparse import ArgumentParser
 from collections import defaultdict
 import numpy
 import pandas
+from pathlib import Path
 from openpyxl import load_workbook
 
 import utils.config
 import utils.log as log
 import parameters.assignment as param
-import parameters.zone as zone_param
 from datahandling.matrixdata import MatrixData
 
 
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+SCRIPT_DIR = Path(__file__).parent
 
 VEHICLE_KMS_FILE = "vehicle_kms_vdfs.txt"
 TRANSIT_KMS_FILE = "transit_kms.txt"
@@ -34,7 +33,7 @@ TRANSLATIONS = {
     "airplane": "lento",
     "long_d_bus": "kaukob",
     "train": "juna",
-    "bike_work": "pp_tyo",
+    "bike": "pp_tyo",
     "bike_leisure": "pp_muu",
     "truck": "ka",
     "trailer_truck": "yhd",
@@ -238,8 +237,8 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
     results = defaultdict(float)
     for timeperiod in ["aht", "pt", "iht"]:
         data = {
-            "scen_1": MatrixData(os.path.join(scenario_1, "Matrices", submodel)),
-            "scen_0": MatrixData(os.path.join(scenario_0, "Matrices", submodel)),
+            "scen_1": MatrixData(Path(scenario_1, "Matrices", submodel)),
+            "scen_0": MatrixData(Path(scenario_0, "Matrices", submodel)),
         }
         revenues_transit = 0
         revenues_car = 0
@@ -271,6 +270,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     if transport_class in param.assignment_modes:
                         revenues_car += revenue
                         results["car_revenue"] += vol_fac * revenues_car
+            log.info(f"Mode {transport_class} calculated for {timeperiod}")
         ws = workbook["Tuottajahyodyt"]
         rows = CELL_INDICES["transit_revenue"]["rows"][year]
         ws[cols[timeperiod]+rows] = revenues_transit.sum()
@@ -286,7 +286,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
 def read(file_name, scenario_path):
     """Read data from file."""
     return pandas.read_csv(
-        os.path.join(scenario_path, file_name), delim_whitespace=True)
+        Path(scenario_path, file_name), delim_whitespace=True)
 
 
 def read_costs(matrixdata, time_period, transport_class, mtx_type):
@@ -410,7 +410,7 @@ if __name__ == "__main__":
         help="Name of submodel, used for choosing appropriate zone mapping"),
     args = parser.parse_args()
     log.initialize(args)
-    wb = load_workbook(os.path.join(SCRIPT_DIR, "CBA_kehikko.xlsx"))
+    wb = load_workbook(SCRIPT_DIR / "CBA_kehikko.xlsx")
     results = run_cost_benefit_analysis(
         args.baseline_scenario, args.projected_scenario, 1, wb, args.submodel)
     if (args.baseline_scenario_2 is not None
@@ -418,10 +418,10 @@ if __name__ == "__main__":
         run_cost_benefit_analysis(
             args.baseline_scenario_2, args.projected_scenario_2, 2, wb, args.submodel)
     results_filename = "cba_{}_{}".format(
-        os.path.basename(args.projected_scenario),
-        os.path.basename(args.baseline_scenario))
-    wb.save(os.path.join(args.results_path, results_filename + ".xlsx"))
+        Path(args.projected_scenario).name,
+        Path(args.baseline_scenario).name)
+    wb.save(Path(args.results_path, results_filename + ".xlsx"))
     results.to_csv(
-        os.path.join(args.results_path, results_filename + ".txt"),
+        Path(args.results_path, results_filename + ".txt"),
         sep='\t', float_format="%8.1f")
     log.info("CBA results saved to file: {}".format(results_filename))
