@@ -124,7 +124,8 @@
                 "cost": -0.05705
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.48753
             },
             "attraction_size": {
                 "population": 1

@@ -125,7 +125,8 @@
                 "cost": -0.36007
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.40736
             },
             "attraction_size": {
                 "sport_facility_indoor": 1,

@@ -124,7 +124,8 @@
                 "cost": -0.36088
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "cost": -0.21263
             },
             "attraction_size": {
                 "students_upper_secondary": 1
