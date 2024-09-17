@@ -177,10 +177,10 @@
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.33218
+                "within_zone_dist": -0.33268
             },
             "impedance": {
-                "dist": -0.33218
+                "dist": -0.33268
             },
             "log": {
                 "attraction_size": 1

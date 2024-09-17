@@ -1,7 +1,7 @@
 # Car usage cost [eur/km] 2030
 	dist_cost
-car_work	0.0878
-car_leisure	0.0878
+car_work	0.12
+car_leisure	0.12
 car_electric	0.04
 van		0.20
 truck		0.23
