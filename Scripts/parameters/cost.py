@@ -45,7 +45,7 @@ sharing_factor = {
     "ob_other": 1.00,
     "hb_work_long": 0.00,
     "hb_leisure_long": 0.00,
-    "hb_business_long": 0.00  
+    "hb_business_long": 0.00
 }
 
 car_drv_occupancy = {
@@ -94,6 +94,6 @@ gen_cost = {
         "airplane": 29.23,
         "train": 10.58,
         "long_d_bus": 7.29, 
-        "car_work": 9.61
+        "car_leisure": 9.61
     },
 }
