@@ -12,11 +12,9 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
-from utils.divide_matrices import divide_matrices
-from utils.read_csv_file import read_mapping
 import assignment.departure_time as dt
 from datahandling.resultdata import ResultsData
-from datahandling.zonedata import ZoneData, BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
@@ -25,10 +23,8 @@ from datatypes.purpose import Purpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
-from models.linear import CarDensityModel
 import parameters.assignment as param
 import parameters.zone as zone_param
-import parameters.tour_generation as gen_param
 
 
 class ModelSystem:
@@ -70,17 +66,13 @@ class ModelSystem:
         self.zone_numbers: numpy.array = self.ass_model.zone_numbers
 
         # Input data
-        self.mapping = read_mapping(zone_data_path / f"{submodel}.zmp")
-        self.zdata_base = BaseZoneData(
-            base_zone_data_path, self.zone_numbers, self.mapping)
         self.basematrices = MatrixData(base_matrices_path / submodel)
         self.long_dist_matrices = (MatrixData(long_dist_matrices_path)
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, self.zdata_base.aggregations,
-            self.mapping)
+            zone_data_path, self.zone_numbers, submodel)
 
         # Output data
         self.resultdata = ResultsData(results_path)
@@ -199,15 +191,19 @@ class ModelSystem:
                 ("Matrices from model run not provided, "
                     + "getting trips from base matrices..."))
             # Long car trips must be in separate file
-            with self.basematrices.open(
-                    "demand", "vrk", zone_numbers,
-                    transport_classes=param.car_classes) as mtx:
-                for ass_class in param.car_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    car_matrices[ass_class] = demand.matrix
+            car_classes = [ass_class for ass_class in long_dist_classes
+                if ass_class in param.car_classes]
             other_classes = [ass_class for ass_class in long_dist_classes
                 if ass_class not in param.car_classes]
+            if car_classes:
+                with self.basematrices.open(
+                        "demand", "vrk", zone_numbers,
+                        transport_classes=car_classes) as mtx:
+                    for ass_class in car_classes:
+                        demand = Demand(
+                            self.em.purpose, ass_class, mtx[ass_class])
+                        self.dtm.add_demand(demand)
+                        car_matrices[ass_class] = demand.matrix
             if other_classes:
                 for ap in self.ass_model.assignment_periods:
                     tp = ap.name
@@ -216,10 +212,11 @@ class ModelSystem:
                             transport_classes=other_classes) as mtx:
                         for ass_class in other_classes:
                             self.dtm.demand[tp][ass_class] = mtx[ass_class]
-        with self.resultmatrices.open(
-                "demand", "vrk", zone_numbers, m='w') as mtx:
-            for ass_class in car_matrices:
-                mtx[ass_class] = car_matrices[ass_class]
+        if car_matrices:
+            with self.resultmatrices.open(
+                    "demand", "vrk", zone_numbers, m='w') as mtx:
+                for ass_class in car_matrices:
+                    mtx[ass_class] = car_matrices[ass_class]
 
     # possibly merge with init
     def assign_base_demand(self, 
@@ -284,10 +281,11 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
                 self.resultdata,
-                self.zdata_base.aggregations.municipality_mapping)
+                self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         self.dtm.calc_gaps()
@@ -328,7 +326,7 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         # Update car density
-        prediction = (self.zdata_base["car_density"][:self.zdata_base.nr_zones]
+        prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
                       .clip(upper=1.0))
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
@@ -353,10 +351,11 @@ class ModelSystem:
                              else ap.assign(self.travel_modes))
             if iteration=="last":
                 self._save_to_omx(impedance[tp], tp)
+                impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata,
-                self.zdata_base.aggregations.municipality_mapping)
+                self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self._export_accessibility()
 
@@ -404,8 +403,8 @@ class ModelSystem:
     def _calculate_noise_areas(self):
         data = {}
         data["area"] = self.ass_model.calc_noise(
-            self.zdata_base.aggregations.municipality_mapping)
-        pop = self.zdata_base.aggregations.aggregate_array(
+            self.zdata_forecast.aggregations.municipality_mapping)
+        pop = self.zdata_forecast.aggregations.aggregate_array(
             self.zdata_forecast["population"], "county")
         conversion = pandas.Series(zone_param.pop_share_per_noise_area)
         data["population"] = conversion * data["area"] * pop
@@ -420,29 +419,40 @@ class ModelSystem:
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_model_results(self):
+        self.resultdata.print_data(
+            self.zdata_forecast.zone_values, "zonedata_input.txt")
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(gen_tours_purpose, "zone_generation_by_purpose.txt")
+        self.resultdata.print_data(
+            gen_tours_purpose, "zone_generation_by_purpose.txt")
         attr_tours_purpose = {purpose.name: purpose.attracted_tours_all
                               for purpose in self.dm.tour_purposes}
-        self.resultdata.print_data(attr_tours_purpose, "zone_attraction_by_purpose.txt")
+        self.resultdata.print_data(
+            attr_tours_purpose, "zone_attraction_by_purpose.txt")
         gen_tours_mode = {mode: self._generated_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(gen_tours_mode, "zone_generation_by_mode.txt")
+        self.resultdata.print_data(
+            gen_tours_mode, "zone_generation_by_mode.txt")
         attr_tours_mode = {mode: self._attracted_tours_mode(mode)
                            for mode in self.travel_modes}
-        self.resultdata.print_data(attr_tours_mode, "zone_attraction_by_mode.txt")
+        self.resultdata.print_data(
+            attr_tours_mode, "zone_attraction_by_mode.txt")
         for purpose in self.dm.tour_purposes:
-            self.resultdata.print_concat(purpose.generation_mode_shares, "purpose_mode_shares.txt")
-            self.resultdata.print_concat(purpose.tour_lengths, "tour_lengths.txt")
-            self.resultdata.print_matrices(
-                purpose.aggregates, "aggregated_demand", purpose.name)
+            self.resultdata.print_concat(
+                purpose.generation_mode_shares, "purpose_mode_shares.txt")
+            self.resultdata.print_concat(
+                purpose.tour_lengths, "tour_lengths.txt")
+            for mapping in purpose.aggregates:
+                self.resultdata.print_matrices(
+                    purpose.aggregates[mapping],
+                    f"aggregated_demand_{mapping}", purpose.name)
             for mode in purpose.within_zone_tours:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
     def _generated_tours_mode(self, mode):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
+        int_demand = pandas.Series(
+            0, self.zdata_forecast.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
@@ -452,7 +462,7 @@ class ModelSystem:
         return int_demand
     
     def _attracted_tours_mode(self, mode):
-        int_demand = pandas.Series(0, self.zdata_base.zone_numbers, name=mode)
+        int_demand = pandas.Series(0, self.zdata_forecast.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds
