@@ -20,16 +20,10 @@ LINK_LENGTH_FILE = "link_lengths.txt"
 NOISE_FILE = "noise_areas.txt"
 STATION_FILE = "transit_stations.txt"
 
-TRANSIT_TRIPS_PER_MONTH = {
-    "work_capital_region": 60,
-    "work_surrounding": 44,
-    "leisure": 30,
-}
-
 TRANSIT_AGGREGATIONS = {
-    "bus": ("HSL-bussi", "ValluVakio", "ValluPika"),
-    "train": ("HSL-juna", "muu_juna"),
-    "tram": ("ratikka", "pikaratikk"),
+    "bus": ("Bus", "Long_d_bus", "BRT"),
+    "train": ("Train", "Local_train"),
+    "tram": ("Tram", "Light_rail"),
 }
 
 TRANSLATIONS = {
@@ -37,6 +31,9 @@ TRANSLATIONS = {
     "car_leisure": "ha_muu",
     "transit_work": "jl_tyo",
     "transit_leisure": "jl_muu",
+    "airplane": "lento",
+    "long_d_bus": "kaukob",
+    "train": "juna",
     "bike_work": "pp_tyo",
     "bike_leisure": "pp_muu",
     "truck": "ka",
@@ -165,7 +162,7 @@ CELL_INDICES = {
     },
 }
 
-def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook):
+def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
     """Runs CBA and writes the results to excel file.
 
     Parameters
@@ -241,8 +238,8 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook):
     results = defaultdict(float)
     for timeperiod in ["aht", "pt", "iht"]:
         data = {
-            "scen_1": MatrixData(os.path.join(scenario_1, "Matrices")),
-            "scen_0": MatrixData(os.path.join(scenario_0, "Matrices")),
+            "scen_1": MatrixData(os.path.join(scenario_1, "Matrices", submodel)),
+            "scen_0": MatrixData(os.path.join(scenario_0, "Matrices", submodel)),
         }
         revenues_transit = 0
         revenues_car = 0
@@ -301,16 +298,6 @@ def read_costs(matrixdata, time_period, transport_class, mtx_type):
         with matrixdata.open(mtx_type, time_period) as mtx:
             matrix = mtx[ass_class]
             zone_numbers = mtx.zone_numbers
-    if transport_class == "transit_work" and mtx_type == "cost":
-        nr_trips = numpy.full_like(
-            matrix, TRANSIT_TRIPS_PER_MONTH["work_capital_region"])
-        surrounding = numpy.searchsorted(
-            zone_numbers, zone_param.areas["surrounding"][0])
-        nr_trips[surrounding:, :] = TRANSIT_TRIPS_PER_MONTH["work_surrounding"]
-        nr_trips = 0.5 * (nr_trips+nr_trips.T)
-        matrix /= nr_trips
-    elif transport_class == "transit_leisure" and mtx_type == "cost":
-        matrix /= TRANSIT_TRIPS_PER_MONTH["leisure"]
     return matrix
 
 
@@ -406,25 +393,30 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-level",
         choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-        default=config.LOG_LEVEL,
+        default=config["LOG_LEVEL"],
     )
     parser.add_argument(
         "--scenario-name",
         type=str,
-        default=config.SCENARIO_NAME,
+        default=config["SCENARIO_NAME"],
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path", type=str, required=True,
         help="Path to Results directory.")
+    parser.add_argument(
+        "--submodel",
+        type=str,
+        default=config["SUBMODEL"],
+        help="Name of submodel, used for choosing appropriate zone mapping"),
     args = parser.parse_args()
     log.initialize(args)
     wb = load_workbook(os.path.join(SCRIPT_DIR, "CBA_kehikko.xlsx"))
     results = run_cost_benefit_analysis(
-        args.baseline_scenario, args.projected_scenario, 1, wb)
+        args.baseline_scenario, args.projected_scenario, 1, wb, args.submodel)
     if (args.baseline_scenario_2 is not None
             and args.baseline_scenario_2 != "undefined"):
         run_cost_benefit_analysis(
-            args.baseline_scenario_2, args.projected_scenario_2, 2, wb)
+            args.baseline_scenario_2, args.projected_scenario_2, 2, wb, args.submodel)
     results_filename = "cba_{}_{}".format(
         os.path.basename(args.projected_scenario),
         os.path.basename(args.baseline_scenario))
