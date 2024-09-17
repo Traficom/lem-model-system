@@ -130,32 +130,27 @@ tour_generation = {
         "hb_visit": 0.065
     },
     "hb_work_long": {
-        "age_7-17_female": 0.0005,
-        "age_7-17_male": 0.0001,
-        "age_18-29_female":  0.0044,
-        "age_18-29_male":  0.0071,
-        "age_30-49_female":  0.005,
-        "age_30-49_male":  0.0118,
-        "age_50_64_female":  0.0027,
-        "age_50_64_male":  0.0067,
-        "age_65_99_female":  0.0002,
-        "age_65_99_male":  0.0004
+        "age_7_17": 0.0006,
+        "age_18_29":  0.0115,
+        "age_30_49":  0.0123,
+        "age_50_64":  0.0094,
+        "age_65_99":  0.0006
     },
     "hb_business_long": {
-        "income_0-19": 0.0004,
-        "income_20-39": 0.0011,
-        "income_40-59": 0.0021,
-        "income_60-79": 0.0032,
-        "income_80-99": 0.0058,
-        "income_100": 0.0068
+        "income_0_19": 0.0004,
+        "income_20_39": 0.0011,
+        "income_40_59": 0.0021,
+        "income_60_79": 0.0032,
+        "income_80_99": 0.0058,
+        "income_100_": 0.0068
     },
     "hb_leisure_long": {
-        "income_0-19": 0.0122,
-        "income_20-39": 0.0147,
-        "income_40-59": 0.0222,
-        "income_60-79": 0.0228,
-        "income_80-99": 0.0264,
-        "income_100": 0.027
+        "income_0_19": 0.0122,
+        "income_20_39": 0.0147,
+        "income_40_59": 0.0222,
+        "income_60_79": 0.0228,
+        "income_80_99": 0.0264,
+        "income_100_": 0.027
     },
     "truck": {
         "population": 0.01,
