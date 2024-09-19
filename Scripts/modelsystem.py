@@ -100,7 +100,7 @@ class ModelSystem:
         self.em = ExternalModel(
             self.basematrices, self.zdata_forecast, self.zone_numbers)
         self.mode_share: List[Dict[str,Any]] = []
-        self.convergence = pandas.DataFrame()
+        self.convergence = []
 
     def _init_demand_model(self, tour_purposes: List[Purpose]):
         return DemandModel(
@@ -377,8 +377,8 @@ class ModelSystem:
         gap = self.dtm.calc_gaps()
         log.info("Demand model convergence in iteration {} is {:1.5f}".format(
             iteration, gap["rel_gap"]))
-        self.convergence = self.convergence.append(gap, ignore_index=True)
-        self.resultdata._df_buffer["demand_convergence.txt"] = self.convergence
+        self.convergence.append(gap)
+        self.resultdata._df_buffer["demand_convergence.txt"] = pandas.DataFrame(self.convergence)
         self.resultdata.flush()
         return impedance
 
@@ -452,7 +452,7 @@ class ModelSystem:
 
     def _generated_tours_mode(self, mode):
         int_demand = pandas.Series(
-            0, self.zdata_forecast.zone_numbers, name=mode)
+            0.0, self.zdata_forecast.zone_numbers, name=mode)
         for purpose in self.dm.tour_purposes:
             if mode in purpose.modes and purpose.dest != "source":
                 bounds = (next(iter(purpose.sources)).bounds

@@ -43,7 +43,7 @@ class Tour:
             self.sec_dest_prob = purpose.sec_dest_purpose.gen_model.param[purpose.name]
         except AttributeError:
             self.sec_dest_prob = 0
-        self._mode_draw = random.random()
+        self._mode_draw = numpy.random.gumbel(size=len(self.purpose.modes))
         self._dest_draw = random.random()
         self._sec_dest_gen_draw = random.random()
         self._sec_dest_draw = random.random()
@@ -126,12 +126,12 @@ class Tour:
         is_car_user : bool
             Whether the person is car user or not
         """
-        self.purpose.model = cast(ModeDestModel, self.purpose.model) #type checker help
-        probs, accessibility = self.purpose.model.calc_individual_mode_prob(
-                is_car_user, self.position[0])
-        self._mode_idx = numpy.searchsorted(probs.cumsum(), self._mode_draw)
+        utils = self.purpose.model.calc_individual_mode_prob(
+                is_car_user, self.position[0]) + self._mode_draw
+        self._mode_idx = utils.argmax()
         self.purpose.generated_tours[self.mode][self.position[0]] += 1
-        self.total_access = accessibility
+        self.total_access = (-self.purpose.model.money_utility
+                             * utils[self._mode_idx])
 
     @property
     def sustainable_access(self):
@@ -177,7 +177,7 @@ class Tour:
         if (self.mode not in ("walk", "car_pax") and is_in_area
                 and self._sec_dest_gen_draw < self.sec_dest_prob[self.mode]):
             orig_rel_idx = orig_idx - bounds.start
-            dest_idx =- bounds.start
+            dest_idx -= bounds.start
             sec_dest_tours[self.mode][orig_rel_idx][dest_idx].append(self)
 
     def choose_secondary_destination(self, cumulative_probs: numpy.ndarray):
