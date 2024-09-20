@@ -197,8 +197,14 @@ def new_tour_purpose(specification, zone_data, resultdata):
     """
     attempt_calibration(specification)
     args = (specification, zone_data, resultdata)
-    purpose = (SecDestPurpose(*args) if "sec_dest" in specification
-                else TourPurpose(*args))
+    if "sec_dest" in specification:
+        purpose = SecDestPurpose(*args)
+    elif (specification["area"] == "peripheral"
+          or specification["dest"] == "source"
+          or specification["name"] == "oop"):
+        purpose = SimpleTourPurpose(*args)
+    else:
+        purpose = TourPurpose(*args)
     try:
         purpose.sources = specification["source"]
     except KeyError:
@@ -349,6 +355,13 @@ class TourPurpose(Purpose):
         return demand
 
 
+class SimpleTourPurpose(TourPurpose):
+    def calc_basic_prob(self, impedance, is_last_iteration):
+        self.calc_prob(impedance, is_last_iteration)
+        self.gen_model.init_tours()
+        self.gen_model.add_tours()
+
+
 class SecDestPurpose(Purpose):
     """Purpose for secondary destination of tour.
 
@@ -375,7 +388,7 @@ class SecDestPurpose(Purpose):
     def dest_interval(self):
         return self.bounds
 
-    def init_sums(self):
+    def _init_sums(self):
         for mode in self.model.dest_choice_param:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
         for purpose in self.gen_model.param:
@@ -383,10 +396,17 @@ class SecDestPurpose(Purpose):
                 self.attracted_tours[mode] = numpy.zeros_like(
                     self.zone_data.zone_numbers, float)
 
+    def calc_basic_prob(self, *args):
+        self._init_sums()
+
+    def calc_prob(self, impedance, is_last_iteration):
+        self.gen_model.init_tours()
+        return self.transform_impedance(impedance)
+
     def generate_tours(self):
         """Generate the source tours without secondary destinations."""
         self.tours = {}
-        self.init_sums()
+        self._init_sums()
         for mode in self.model.dest_choice_param:
             self.tours[mode] = self.gen_model.get_tours(mode)
 
@@ -424,13 +444,13 @@ class SecDestPurpose(Purpose):
         else:
             generation[dests] *= generation.sum() / generation[dests].sum()
             generation[~dests] = 0
-        prob = self.calc_prob(mode, impedance, orig, dests)
+        prob = self.calc_sec_dest_prob(mode, impedance, orig, dests)
         demand = numpy.zeros_like(impedance["time"])
         demand[dests, :] = (prob * generation[dests]).T
         self.attracted_tours[mode][self.bounds] += demand.sum(0)
         return Demand(self, mode, demand, orig_offset + orig)
 
-    def calc_prob(self, mode, impedance, orig, dests):
+    def calc_sec_dest_prob(self, mode, impedance, orig, dests):
         """Calculate secondary destination probabilites.
         
         For tours starting in specific zone and ending in some zones.
