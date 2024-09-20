@@ -130,27 +130,22 @@ tour_generation = {
         "hb_visit": 0.065
     },
     "hb_work_long": {
-        "age_7_17": 0.0006,
-        "age_18_29":  0.0115,
-        "age_30_49":  0.0123,
-        "age_50_64":  0.0094,
-        "age_65_99":  0.0006
+        "population_Uusimaa": 0.00268,
+        "population_Lounais-Suomi": 0.00532,
+        "population_Ita-Suomi": 0.00449,
+        "population_Pohjois-Suomi": 0.00472
     },
     "hb_business_long": {
-        "income_0_19": 0.0004,
-        "income_20_39": 0.0011,
-        "income_40_59": 0.0021,
-        "income_60_79": 0.0032,
-        "income_80_99": 0.0058,
-        "income_100_": 0.0068
+        "population_Uusimaa": 0.00129,
+        "population_Lounais-Suomi": 0.00334,
+        "population_Ita-Suomi": 0.00283,
+        "population_Pohjois-Suomi": 0.00185
     },
     "hb_leisure_long": {
-        "income_0_19": 0.0122,
-        "income_20_39": 0.0147,
-        "income_40_59": 0.0222,
-        "income_60_79": 0.0228,
-        "income_80_99": 0.0264,
-        "income_100_": 0.027
+        "population_Uusimaa": 0.01741,
+        "population_Lounais-Suomi": 0.01518,
+        "population_Ita-Suomi": 0.01812,
+        "population_Pohjois-Suomi": 0.01874
     },
     "truck": {
         "population": 0.01,
