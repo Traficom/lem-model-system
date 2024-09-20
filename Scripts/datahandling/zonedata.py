@@ -100,6 +100,8 @@ class ZoneData:
         self["outside_municipality"] = ~within_municipality
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
+        for key in data["aggregate_results_submodel"].unique():
+            self["population_" + key] = (data["aggregate_results_submodel"] == key) * pop
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = self.aggregations.mappings[division_type][bounds] == name
