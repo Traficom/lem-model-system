@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Dict, List, Sequence, Optional, Union
+from typing import Any, List, Sequence, Union
 from pathlib import Path
 import numpy # type: ignore
 import pandas
@@ -8,7 +8,6 @@ import logging
 import json
 
 import parameters.zone as param
-from utils.read_csv_file import read_other_data
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations
 
@@ -18,24 +17,16 @@ class ZoneData:
 
     Parameters
     ----------
-    data_dir : Path
-        Directory where scenario input data files are found
+    data_path : Path
+        File where scenario input data is found
     zone_numbers : list
         Zone numbers to compare with for validation
     zone_mapping : str
             Name of column where mapping between data zones (index)
             and assignment zones
     """
-    def __init__(self, data_dir: Path, zone_numbers: Sequence,
+    def __init__(self, data_path: Path, zone_numbers: Sequence,
                  zone_mapping: str):
-        self.transit_zone = read_other_data(data_dir / "transit_cost.tsv")
-        try:
-            self.mtx_adjustment = read_other_data(
-                data_dir / "matrix_adjustment.tsv")
-        except (NameError, KeyError):
-            self.mtx_adjustment = None
-        car_cost = read_other_data(data_dir / "car_cost.tsv")
-        self.car_dist_cost = car_cost["dist_cost"].to_dict()
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
@@ -45,8 +36,7 @@ class ZoneData:
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
             name="analysis_zone_id")
         Zone.counter = 0
-        data = read_zonedata(
-            data_dir / "zonedata.gpkg", self.zone_numbers, zone_mapping)
+        data = read_zonedata(data_path, self.zone_numbers, zone_mapping)
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
         agg_keys = [key for key in data if "aggregate_results_" in key]
@@ -87,8 +77,6 @@ class ZoneData:
         self["within_zone_dist"] = (self["within_zone"] 
                                     * data["avg_building_distance"].values * 2)
         self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
-        self["within_zone_cost"] = (self["within_zone_dist"]
-                                    * self.car_dist_cost["car_work"])
         # Unavailability of intrazonal tours
         self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf

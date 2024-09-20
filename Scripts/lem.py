@@ -11,7 +11,7 @@ from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
-BASE_ZONEDATA_DIR = "2018_zonedata"
+BASE_ZONEDATA_FILE = "2018_zonedata.gpkg"
 
 
 def main(args):
@@ -28,11 +28,12 @@ def main(args):
     else:
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
     base_matrices_path = Path(args.baseline_data_path, "Matrices")
     freight_matrices_path = (Path(args.freight_matrix_path)
         if args.freight_matrix_path is not None else None)
     forecast_zonedata_path = Path(args.forecast_data_path)
+    cost_data_path = Path(args.cost_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
     log_extra = {
@@ -94,7 +95,7 @@ def main(args):
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
-    model_args = (forecast_zonedata_path, base_zonedata_path,
+    model_args = (forecast_zonedata_path, cost_data_path, base_zonedata_path,
                   base_matrices_path, results_path, ass_model, args.submodel,
                   long_dist_matrices_path, freight_matrices_path)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
@@ -264,6 +265,10 @@ if __name__ == "__main__":
         "--forecast-data-path",
         type=str,
         help="Path to folder containing forecast zonedata"),
+    parser.add_argument(
+        "--cost-data-path",
+        type=str,
+        help="Path to file containing transport cost data"),
     parser.add_argument(
         "--iterations",
         type=int,
