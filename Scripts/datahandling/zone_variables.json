@@ -44,6 +44,7 @@
         "aggregate_results_municipality",
         "aggregate_results_county",
         "aggregate_results_subarea",
+        "aggregate_results_submodel",
         "municipality_center"
     ]
 }
