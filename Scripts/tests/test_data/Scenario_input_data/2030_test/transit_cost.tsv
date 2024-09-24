@@ -1,0 +1,11 @@
+# Transit trip cost 2016
+#
+# firstb: first boarding cost
+# dist: distance cost
+#
+# 0: HSL
+# 1: long-distance train
+#
+node_label	firstb	dist
+0	2.0	0.1
+1	3.0	0.2

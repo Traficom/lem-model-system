@@ -232,6 +232,23 @@
                 "logsum": 0.96491
             },
             "individual_dummy": {}
+        },
+        "calibration": {
+            "airplane": {
+                "constant": -0.507445531
+            },
+            "train": {
+                "constant": 0.660411049
+            },
+            "long_d_bus": {
+                "constant": 0.553471168
+            },
+            "car_work": {
+                "constant": -0.184904336
+            },
+            "car_pax": {
+                "constant": 0.485876623    
+            }
         }
     },
     "demand_share": {

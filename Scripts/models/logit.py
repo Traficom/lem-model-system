@@ -38,7 +38,6 @@ class LogitModel:
         self.bounds = purpose.bounds
         self.sub_bounds = purpose.sub_bounds
         self.zone_data = zone_data
-        self._dest_exps: Dict[str, numpy.array] = {}
         self.mode_exps: Dict[str, numpy.array] = {}
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
@@ -61,12 +60,12 @@ class LogitModel:
             expsum += exps
         return expsum
     
-    def _calc_dest_util(self, mode, impedance):
+    def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
         b = self.dest_choice_param[mode]
         utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(utility, b["attraction"])
         self._add_impedance(utility, impedance, b["impedance"], mode)
-        self._dest_exps[mode] = numpy.exp(utility)
+        dest_exp = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_zone_util(size, b["attraction_size"])
         impedance["attraction_size"] = size
@@ -76,17 +75,14 @@ class LogitModel:
             self._add_zone_util(transimp, b_transf["attraction"])
             self._add_impedance(transimp, impedance, b_transf["impedance"], mode)
             impedance["transform"] = transimp
-        self._add_log_impedance(self._dest_exps[mode], impedance, b["log"])
+        self._add_log_impedance(dest_exp, impedance, b["log"])
         if mode != "logsum":
             l, u = self.distance_boundary[mode]
             dist = self.purpose.dist
-            self._dest_exps[mode][(dist < l) | (dist >= u)] = 0
+            dest_exp[(dist < l) | (dist >= u)] = 0
         if mode == "airplane":
-            self._dest_exps[mode][impedance["cost"] < 80] = 0
-        try:
-            return self._dest_exps[mode].sum(1)
-        except ValueError:
-            return self._dest_exps[mode].sum()
+            dest_exp[impedance["cost"] < 80] = 0
+        return dest_exp
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
         b = self.dest_choice_param[mode]
@@ -285,7 +281,7 @@ class ModeDestModel(LogitModel):
         Writer object to result directory
     """
 
-    def calc_prob(self, impedance):
+    def calc_prob(self, impedance: dict) -> dict:
         """Calculate matrix of choice probabilities.
 
         First calculates basic probabilities. Then inserts individual
@@ -304,7 +300,7 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        prob = self._calc_prob(self._calc_utils(impedance))
+        prob = self._calc_prob(*self._calc_utils(impedance))
         for mod_mode in self.mode_choice_param:
             for i in self.mode_choice_param[mod_mode]["individual_dummy"]:
                 dummy_share = self.zone_data.get_data(
@@ -314,10 +310,9 @@ class ModeDestModel(LogitModel):
                     no_dummy = (1 - dummy_share) * prob[mode]
                     dummy = dummy_share * ind_prob[mode]
                     prob[mode] = no_dummy + dummy
-        self._dest_exps.clear()
         return prob
     
-    def calc_basic_prob(self, impedance):
+    def calc_basic_prob(self, impedance: dict):
         """Calculate utilities and cumulative destination choice probabilities.
 
         Only used in agent simulation.
@@ -330,13 +325,13 @@ class ModeDestModel(LogitModel):
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
         """
-        self._calc_utils(impedance)
+        _, dest_exps, _ = self._calc_utils(impedance)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
-            cumsum = self._dest_exps.pop(mode).T.cumsum(axis=0)
+            cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
     
-    def calc_individual_prob(self, mod_mode, dummy):
+    def calc_individual_prob(self, mod_mode: str, dummy: str) -> dict:
         """Calculate matrix of probabilities with individual dummies.
         
         Calculate matrix of mode and destination choice probabilities
@@ -368,7 +363,7 @@ class ModeDestModel(LogitModel):
     
     def calc_individual_mode_prob(self, 
                                   is_car_user: bool, 
-                                  zone: int) -> Tuple[numpy.array, float]:
+                                  zone: int) -> Tuple[numpy.ndarray, float]:
         """Calculate individual choice probabilities with individual dummies.
         
         Calculate mode choice probabilities for individual
@@ -386,7 +381,7 @@ class ModeDestModel(LogitModel):
         
         Returns
         -------
-        numpy.array
+        numpy.ndarray
             Choice probabilities for purpose modes
         float
             Total accessibility for individual (eur)
@@ -425,34 +420,40 @@ class ModeDestModel(LogitModel):
         accessibility = -money_utility * logsum
         return probs, accessibility
 
-    def _calc_utils(self, impedance):
-        self.dest_expsums = {}
+    def _calc_utils(self, impedance: dict) -> Tuple[numpy.ndarray, dict, dict]:
+        dest_expsums = {}
+        dest_exps = {}
         for mode in self.dest_choice_param:
-            expsum = self._calc_dest_util(mode, impedance[mode])
-            self.dest_expsums[mode] = {}
-            self.dest_expsums[mode]["logsum"] = expsum
-            label = self.purpose.name + "_" + mode[0]
+            dest_exps[mode] = self._calc_dest_util(mode, impedance.pop(mode))
+            try:
+                expsum = dest_exps[mode].sum(1)
+            except ValueError:
+                expsum = dest_exps[mode].sum()
+            dest_expsums[mode] = {"logsum": expsum}
+            label = self.purpose.name + "_" + mode
             logsum = pandas.Series(
                 numpy.log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
-        mode_expsum = self._calc_mode_util(self.dest_expsums)
+        mode_expsum = self._calc_mode_util(dest_expsums)
         logsum = pandas.Series(
             numpy.log(mode_expsum), self.purpose.zone_numbers,
             name=self.purpose.name)
         self.zone_data._values[self.purpose.name] = logsum
-        return mode_expsum
+        return mode_expsum, dest_exps, dest_expsums
 
-    def _calc_prob(self, mode_expsum):
+    def _calc_prob(self, mode_expsum: numpy.ndarray,
+                   dest_exps: dict,
+                   dest_expsums: dict) -> dict:
         prob = {}
         for mode in self.mode_choice_param:
             mode_exps = self.mode_exps[mode]
             mode_prob = numpy.divide(
                 mode_exps, mode_expsum, out=numpy.zeros_like(mode_exps),
                 where=mode_expsum!=0)
-            dest_exps = self._dest_exps[mode].T
-            dest_expsum = self.dest_expsums[mode]["logsum"]
+            dest_exp = dest_exps.pop(mode).T
+            dest_expsum = dest_expsums[mode]["logsum"]
             dest_prob = numpy.divide(
-                dest_exps, dest_expsum, out=numpy.zeros_like(dest_exps),
+                dest_exp, dest_expsum, out=numpy.zeros_like(dest_exp),
                 where=dest_expsum!=0)
             prob[mode] = mode_prob * dest_prob
         return prob
@@ -480,44 +481,27 @@ class AccessibilityModel(ModeDestModel):
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
         """
-        mode_expsum = self._calc_utils(impedance)
-        self._dest_exps.clear()
+        mode_expsum, _, _ = self._calc_utils(impedance)
+        self.accessibility = {}
+        self.accessibility["all"] = self.zone_data[self.purpose.name]
+        self.accessibility["sustainable"] = numpy.zeros_like(mode_expsum)
+        self.accessibility["car"] = numpy.zeros_like(mode_expsum)
+        for mode in self.mode_choice_param:
+            logsum = self.zone_data[f"{self.purpose.name}_{mode}"]
+            self.accessibility[mode] = logsum
+            if mode.split('_')[0] == "car":
+                self.accessibility["car"] += logsum
+            else:
+                self.accessibility["sustainable"] += numpy.log(self.mode_exps[mode])
+        # Scale logsum value to eur
         b = self._get_cost_util_coefficient()
         try:
             money_utility = 1 / b
         except TypeError:  # Separate params for cap region and surrounding
             money_utility = 1 / b[0]
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-
-        logsum = self.zone_data[self.purpose.name]
-        self.resultdata.print_data(logsum, "accessibility.txt")
-        self.access = {}
-        self.access["total"] = money_utility * logsum
-        sustainable_sum = numpy.zeros_like(mode_expsum)
-        for mode in self.mode_choice_param:
-            logsum = self.zone_data[f"{self.purpose.name}_{mode[0]}"]
-            self.resultdata.print_data(logsum, "accessibility.txt")
-            if mode.split('_')[0] == "car":
-                self.access["car"] = money_utility * logsum
-            else:
-                sustainable_sum += self.mode_exps[mode]
-        logsum = pandas.Series(
-            numpy.log(sustainable_sum), self.purpose.zone_numbers,
-            name=self.purpose.name)
-        self.resultdata.print_data(logsum, "sustainable_accessibility.txt")
-        self.access["sustainable"] = money_utility * logsum
-
-        # Calculate workplace-based accessibility
-        if self.purpose.name in ("hw", "wh"):
-            # Transform into person equivalents
-            param = self.mode_choice_param
-            normalization = 1 / sum([param[mode]["constant"][0]
-                for mode in param])
-            workforce = ((normalization*mode_expsum)
-                            **(1/next(iter(param.values()))["log"]["logsum"]))
-            workforce = pandas.Series(
-                workforce, self.purpose.zone_numbers, name=self.purpose.name)
-            self.resultdata.print_data(workforce, "workplace_accessibility.txt")
+        for key in ["all", "sustainable", "car"]:
+            self.accessibility[f"{key}_scaled"] = money_utility * self.accessibility[key]
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.
@@ -661,9 +645,9 @@ class DestModeModel(LogitModel):
         """
         mode_expsum = self._calc_mode_util(impedance)
         logsum = {"logsum": mode_expsum}
-        dest_expsum = self._calc_dest_util("logsum", logsum)
+        dest_expsum, dest_exps = self._calc_dest_util("logsum", logsum)
         prob = {}
-        dest_prob = self._dest_exps["logsum"].T / dest_expsum
+        dest_prob = dest_exps.T / dest_expsum
         for mode in self.mode_choice_param:
             mode_prob = (self.mode_exps[mode] / mode_expsum).T
             prob[mode] = mode_prob * dest_prob

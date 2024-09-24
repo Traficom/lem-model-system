@@ -24,15 +24,22 @@ class EmmeProject:
         Path to emmebank file (if EMME project is not initialized)
     project_name : str (optional)
         For naming project
+    visible : bool (optional)
+        Whether an EMME GUI window should be opened
     """
     def __init__(self,
                  project_path: str,
                  emmebank_path: Optional[str] = None,
-                 project_name: Optional[str] = None):
+                 project_name: Optional[str] = None,
+                 visible: Optional[bool] = False):
         log.info("Starting Emme...")
         if TYPE_CHECKING: self.cm: Optional[ContentManager] = None #type checker hint
-        emme_desktop = _app.start_dedicated(
-            project=project_path, visible=False, user_initials="HSL")
+        kwargs = {
+            "project": project_path,
+            "visible": visible,
+            "user_initials": "TC"}
+        emme_desktop = (_app.start(**kwargs) if visible
+            else _app.start_dedicated(**kwargs))
         if emmebank_path is not None:
             db = emme_desktop.data_explorer().add_database(emmebank_path)
             db.open()
@@ -70,6 +77,8 @@ class EmmeProject:
             "inro.emme.transit_assignment.extended.matrix_results")
         self.network_results = self.modeller.tool(
             "inro.emme.transit_assignment.extended.network_results")
+        self.traversal_analysis = self.modeller.tool(
+            "inro.emme.transit_assignment.extended.traversal_analysis")
         self.create_extra_attribute = self.modeller.tool(
             "inro.emme.data.extra_attribute.create_extra_attribute")
     

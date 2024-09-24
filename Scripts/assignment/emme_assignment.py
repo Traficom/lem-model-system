@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast
+from collections import defaultdict
 import numpy
 import pandas
 from math import log10
@@ -108,9 +109,8 @@ class EmmeAssignmentModel(AssignmentModel):
                     overwrite=True, copy_paths=False, copy_strategies=False)
             else:
                 scen_id = self.mod_scenario.number
-            if i == 0 or self.save_matrices:
-                emme_matrices = self._create_matrices(
-                    tp, i*hundred + self.first_matrix_id, id_ten)
+            emme_matrices = self._create_matrices(
+                tp, i*hundred + self.first_matrix_id, id_ten)
             self.assignment_periods.append(AssignmentPeriod(
                 tp, scen_id, self.emme_project, emme_matrices,
                 separate_emme_scenarios=self.separate_emme_scenarios,
@@ -122,7 +122,8 @@ class EmmeAssignmentModel(AssignmentModel):
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield,
             car_dist_unit_cost)
-        self._create_transit_attributes(self.day_scenario, self._extra)
+        self._segment_results = self._create_transit_attributes(
+            self.day_scenario, self._extra)
         for ap in self.assignment_periods:
             ap.prepare(
                 self._create_attributes(
@@ -299,21 +300,22 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = linktype - 90
             else:
                 vdf = 0
-            #try:
-            #    area = mapping[link.i_node["#municipality"]]
-            #except KeyError:
-            faulty_kela_code_nodes.add(link.i_node.id)
+            try:
+                area = mapping[link.i_node["#municipality"]]
+            except KeyError:
+                faulty_kela_code_nodes.add(link.i_node.id)
+                area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
                 kms[ass_class] += veh_kms
                 if vdf in vdfs:
                     vdf_kms[ass_class][vdf] += veh_kms
-                #if area in areas:
-                #    area_kms[ass_class][area] += veh_kms
-                #if (vdf in vdfs
-                #        and area in vdf_area_kms[vdf]
-                #        and ass_class not in soft_modes):
-                #    vdf_area_kms[vdf][area] += veh_kms
+                if area in areas:
+                    area_kms[ass_class][area] += veh_kms
+                if (vdf in vdfs
+                        and area in vdf_area_kms[vdf]
+                        and ass_class not in soft_modes):
+                    vdf_area_kms[vdf][area] += veh_kms
             if vdf == 0 and linktype in param.railtypes:
                 linklengths[param.railtypes[linktype]] += link.length
             else:
@@ -328,9 +330,21 @@ class EmmeAssignmentModel(AssignmentModel):
             resultdata.print_line(
                 "{}:\t{:1.0f}".format(ass_class, kms[ass_class]),
                 "result_summary")
-        resultdata.print_data(area_kms, "vehicle_kms_areas.txt")
-        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_areas.txt")
+        resultdata.print_data(area_kms, "vehicle_kms_county.txt")
+        resultdata.print_data(vdf_area_kms, "vehicle_kms_vdfs_county.txt")
         resultdata.print_data(linklengths, "link_lengths.txt")
+
+        # Print mode boardings per municipality
+        boardings = defaultdict(lambda: defaultdict(float))
+        attrs = [transit_class["total_boardings"]
+            for transit_class in self._segment_results[0].values()]
+        for line in network.transit_lines():
+            mode = line.mode.id
+            for seg in line.segments():
+                for tc in attrs:
+                    boardings[mode][seg.i_node["#municipality"]] += seg[tc]
+        resultdata.print_data(
+            pandas.DataFrame.from_dict(boardings), "municipality_boardings.txt")
 
         # Aggregate and print numbers of stations
         stations = pandas.Series(0, param.station_ids, name="number")
@@ -470,8 +484,10 @@ class EmmeAssignmentModel(AssignmentModel):
         for i, ass_class in enumerate(param.emme_matrices, start=1):
             matrix_ids = {}
             for mtx_type in param.emme_matrices[ass_class]:
+                _id_hundred = (id_hundred
+                    if self.save_matrices or mtx_type == "demand" else 0)
                 matrix_ids[mtx_type] = "mf{}".format(
-                    id_hundred + id_ten[mtx_type] + i)
+                    _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
                 self.emme_project.create_matrix(
                     matrix_id=matrix_ids[mtx_type],
@@ -483,7 +499,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     matrix_ids[subset] = {}
                     for mtx_type, longer_name in parts.items():
                         j += 1
-                        id = f"mf{id_hundred + id_ten[ass_class] + j}"
+                        id = f"mf{_id_hundred + id_ten[ass_class] + j}"
                         matrix_ids[subset][longer_name] = id
                         matrix_ids[mtx_type] = id
                         self.emme_project.create_matrix(

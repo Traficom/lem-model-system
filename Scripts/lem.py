@@ -1,7 +1,7 @@
 from argparse import ArgumentParser, ArgumentTypeError
 import sys
-import os
-from glob import glob
+from pathlib import Path
+import shutil
 
 import utils.config
 import utils.log as log
@@ -11,21 +11,30 @@ from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
+BASE_ZONEDATA_DIR = "2018_zonedata"
+
+
 def main(args):
+    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
+    long_dist_matrices_path = (None
+        if args.long_dist_demand_forecast in ("calc", "base")
+        else Path(args.long_dist_demand_forecast))
     if args.end_assignment_only:
         iterations = 0
-    elif args.free_flow_assignment or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
     else:
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
-    base_zonedata_path: str = os.path.join(args.baseline_data_path, "2018_zonedata")
-    base_matrices_path: str = os.path.join(args.baseline_data_path, "base_matrices")
-    forecast_zonedata_path: str = args.forecast_data_path
-    results_path: str = args.results_path
-    emme_project_path: str = args.emme_path
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_matrices_path = Path(args.baseline_data_path, "Matrices")
+    freight_matrices_path = (Path(args.freight_matrix_path)
+        if args.freight_matrix_path is not None else None)
+    forecast_zonedata_path = Path(args.forecast_data_path)
+    results_path = Path(args.results_path, args.scenario_name)
+    emme_project_path = Path(args.emme_path)
     log_extra = {
         "status": {
             "name": args.scenario_name,
@@ -39,36 +48,36 @@ def main(args):
         }
     }
     # Check input data folders/files exist
-    if not os.path.exists(base_zonedata_path):
+    # if not base_zonedata_path.is_dir():
+    #     raise NameError(
+    #         "Baseline zonedata directory '{}' does not exist.".format(
+    #             base_zonedata_path))
+    if not base_matrices_path.is_dir():
         raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
-                base_zonedata_path))
-    if not os.path.exists(base_matrices_path):
-        raise NameError(
-            "Baseline zonedata directory '{}' does not exist.".format(
+            "Baseline matrix directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not os.path.exists(forecast_zonedata_path):
+    if not forecast_zonedata_path.is_dir():
         raise NameError(
             "Forecast data directory '{}' does not exist.".format(
                 forecast_zonedata_path))
+
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {
-        "use_free_flow_speeds": args.free_flow_assignment,
+        "use_free_flow_speeds": calculate_long_dist_demand,
         "delete_extra_matrices": args.delete_extra_matrices,
     }
-    if args.free_flow_assignment:
+    if calculate_long_dist_demand:
         kwargs["time_periods"] = ["vrk"]
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
-        mock_result_path = os.path.join(
-            results_path, args.scenario_name, args.submodel, "Matrices")
-        if not os.path.exists(mock_result_path):
+        mock_result_path = results_path / "Matrices" / args.submodel
+        if not mock_result_path.is_dir():
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
                     mock_result_path))
         ass_model = MockAssignmentModel(MatrixData(mock_result_path), **kwargs)
     else:
-        if not os.path.isfile(emme_project_path):
+        if not emme_project_path.is_file():
             raise NameError(
                 ".emp project file not found in given '{}' location.".format(
                     emme_project_path))
@@ -78,7 +87,7 @@ def main(args):
             EmmeProject(emme_project_path),
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
-            save_matrices=True,
+            save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id,
             use_stored_speeds=args.stored_speed_assignment, **kwargs)
     # Initialize model system (wrapping Assignment-model,
@@ -86,8 +95,8 @@ def main(args):
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
     model_args = (forecast_zonedata_path, base_zonedata_path,
-                  base_matrices_path, results_path, ass_model,
-                  args.scenario_name, args.submodel)
+                  base_matrices_path, results_path, ass_model, args.submodel,
+                  long_dist_matrices_path, freight_matrices_path)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
              else ModelSystem(*model_args))
     log_extra["status"]["results"] = model.mode_share
@@ -138,18 +147,13 @@ def main(args):
 
     # delete emme strategy files for scenarios
     if args.del_strat_files:
-        dbase_path = os.path.join(os.path.dirname(emme_project_path), "database")
-        filepath = os.path.join(dbase_path, "STRAT_s{}*")
-        dirpath = os.path.join(dbase_path, "STRATS_s{}", "*")
-        scenario_ids = range(args.first_scenario_id, args.first_scenario_id+5)
-        for s in scenario_ids:
-            strategy_files = glob(filepath.format(s)) + glob(dirpath.format(s))
-            for f in strategy_files:
-                try:
-                    os.remove(f)
-                except:
-                    log.info("Not able to remove file {}.".format(f))
-        log.info("Removed strategy files in {}".format(dbase_path))
+        db_path = emme_project_path.parent / "database"
+        for f in list(db_path.glob("STRAT_s*")) + list(db_path.glob("STRATS_s*/*")):
+            try:
+                f.unlink()
+            except:
+                log.info(f"Not able to remove file {f}.")
+        log.info(f"Removed strategy files in {db_path}")
     log.info("Simulation ended.", extra=log_extra)
 
 
@@ -162,143 +166,142 @@ if __name__ == "__main__":
         "--version",
         action="version",
         version="helmet " + str(config.VERSION))
+    parser.add_argument(
+        "--json",
+        type=str,
+        help="Read parameters from file, override command-line and dev-config.json arguments",
+    )
     # Logging
     parser.add_argument(
         "--log-level",
         choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-        default=config.LOG_LEVEL,
     )
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
-        default=config.LOG_FORMAT,
     )
     # HELMET scenario metadata
     parser.add_argument(
         "-o", "--end-assignment-only",
         action="store_true",
-        default=config.END_ASSIGNMENT_ONLY,
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."
+        "-l", "--long-dist-demand-forecast",
+        type=str,
+        help=("If 'calc', runs assigment with free-flow speed and "
+              + "calculates demand for long-distance trips. "
+              + "If 'base', takes long-distance trips from base matrices. "
+              + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-path",
+        type=str,
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",
         action="store_true",
-        default=config.STORED_SPEED_ASSIGNMENT,
         help="Using this flag runs assigment with stored (fixed) speed."
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",
         dest="is_agent_model",
         action="store_true",
-        default=config.RUN_AGENT_SIMULATION,
         help="Using this flag runs agent simulations instead of aggregate model.",
     )
     parser.add_argument(
         "-m", "--do-not-use-emme",
         action="store_true",
-        default=config.DO_NOT_USE_EMME,
         help="Using this flag runs with MockAssignmentModel instead of EmmeAssignmentModel, not requiring EMME.",
     )
     parser.add_argument(
         "-s", "--separate-emme-scenarios",
         action="store_true",
-        default=config.SEPARATE_EMME_SCENARIOS,
         help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them.",
     )
     parser.add_argument(
         "-e", "--save-emme-matrices",
         dest="save_matrices",
         action="store_true",
-        default=config.SAVE_MATRICES_IN_EMME,
         help="Using this flag saves matrices for all time periods to Emme-project Database folder.",
     )
     parser.add_argument(
         "-d", "--del-strat-files",
         action="store_true",
-        default=config.DELETE_STRATEGY_FILES,
         help="Using this flag deletes strategy files from Emme-project Database folder.",
     )
     parser.add_argument(
         "--scenario-name",
         type=str,
-        default=config.SCENARIO_NAME,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
         type=str,
-        default=config.RESULTS_PATH,
         help="Path to folder where result data is saved to."),
     # HELMET scenario input data
     parser.add_argument(
         "--submodel",
         type=str,
-        default=config.SUBMODEL,
         help="Name of submodel, used for choosing appropriate zone mapping"),
     parser.add_argument(
         "--emme-path",
         type=str,
-        default=config.EMME_PROJECT_PATH,
         help="Filepath to .emp EMME-project-file"),
     parser.add_argument(
         "--first-scenario-id",
         type=int,
-        default=config.FIRST_SCENARIO_ID,
         help="First (biking) scenario ID within EMME project (.emp)."),
     parser.add_argument(
         "--first-matrix-id",
         type=int,
-        default=config.FIRST_MATRIX_ID,
         help="First matrix ID within EMME project (.emp). Used only if --save-emme-matrices."),
     parser.add_argument(
         "--baseline-data-path",
         type=str,
-        default=config.BASELINE_DATA_PATH,
         help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
     parser.add_argument(
         "--forecast-data-path",
         type=str,
-        default=config.FORECAST_DATA_PATH,
         help="Path to folder containing forecast zonedata"),
     parser.add_argument(
         "--iterations",
         type=int,
-        default=config.ITERATION_COUNT,
         help="Maximum number of demand model iterations to run (each using re-calculated impedance from traffic and transit assignment)."),
     parser.add_argument(
         "--max-gap",
         type=float,
-        default=config.MAX_GAP,
         help="Car work matrix maximum change between iterations"),
     parser.add_argument(
         "--rel-gap",
         type=float,
-        default=config.REL_GAP,
         help="Car work matrix relative change between iterations"),
     parser.add_argument(
         "-t", "--use-fixed-transit-cost",
         action="store_true",
-        default=config.USE_FIXED_TRANSIT_COST,
         help="Using this flag activates use of pre-calculated (fixed) transit costs."),
     parser.add_argument(
         "--delete-extra-matrices",
         action="store_true",
-        default=config.DELETE_EXTRA_MATRICES,
         help="Using this flag means that only matrices needed in demand calculation will be stored.")
+    parser.set_defaults(
+        **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
+    args_dict = vars(args)
+    if args.json is not None:
+        config = utils.config.read_from_file(args.json)
+        for key, val in config.items():
+            args_dict[key.lower()] = val
 
     log.initialize(args)
-    log.debug("helmet_version=" + str(config.VERSION))
+    log.debug("lem_version=" + str(config.VERSION))
     log.debug('sys.version_info=' + str(sys.version_info[0]))
     log.debug('sys.path=' + str(sys.path))
-    args_dict = vars(args)
-    for key in args_dict:
-        log.debug("{}={}".format(key, args_dict[key]))
+    json_dump = utils.config.dump(args_dict)
+    log.debug(json_dump)
+    p = Path(args.results_path, args.scenario_name, "runtime_params.json")
+    with open(p, 'w') as file:
+        file.write(json_dump)
 
     if sys.version_info.major == 3:
         main(args)

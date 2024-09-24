@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import os
 import sys
+from pathlib import Path
 import numpy
 from typing import List, Dict, Union
 
@@ -9,13 +10,13 @@ import utils.log as log
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData, BaseZoneData
-from datatypes.zone import ZoneAggregations
+from datahandling.zonedata import ZoneData
 import parameters.assignment as param
+from lem import BASE_ZONEDATA_DIR
 
 
 def main(args):
-    base_zonedata_path = os.path.join(args.baseline_data_path, "2018_zonedata")
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -47,14 +48,16 @@ def main(args):
     # Check basedata input
     log.info("Checking base inputdata...")
     # Check filepaths (& first .emp path for zone_numbers in base zonedata)
-    if not os.path.exists(base_zonedata_path):
+    if not base_zonedata_path.exists():
         msg = "Baseline zonedata directory '{}' does not exist.".format(
             base_zonedata_path)
         log.error(msg)
         raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
-    time_periods = ["vrk"] if args.free_flow_assignment else param.time_periods
+    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
+    time_periods = (["vrk"] if calculate_long_dist_demand
+        else param.time_periods)
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")
@@ -63,17 +66,16 @@ def main(args):
 
         # Check network
         if args.do_not_use_emme:
-            mock_result_path = os.path.join(
-                args.results_path, args.scenario_name, args.submodel[i],
-                "Matrices")
-            if not os.path.exists(mock_result_path):
+            mock_result_path = Path(
+                args.results_path, args.scenario_name, "Matrices",
+                args.submodel[i])
+            if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
                     mock_result_path)
                 log.error(msg)
                 raise NameError(msg)
             assignment_model = MockAssignmentModel(
-                MatrixData(mock_result_path), args.free_flow_assignment,
-                time_periods)
+                MatrixData(mock_result_path), time_periods=time_periods)
             zone_numbers[args.submodel[i]] = assignment_model.zone_numbers
         else:
             if not os.path.isfile(emp_path):
@@ -85,9 +87,6 @@ def main(args):
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
             emmebank = app.data_explorer().active_database().core_emmebank
-            for scen in emmebank.scenarios():
-                if scen.zone_numbers != zone_numbers:
-                    log.warn("Scenarios with different zones found in EMME bank!")
             scen = emmebank.scenario(first_scenario_ids[i])
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
@@ -152,27 +151,21 @@ def main(args):
             validate(scen.get_network(), time_periods)
             app.close()
 
-    aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
-        base_matrices_path = os.path.join(
-            args.baseline_data_path, "base_matrices", submodel)
-        if not os.path.exists(base_matrices_path):
+        base_matrices_path = Path(
+            args.baseline_data_path, "Matrices", submodel)
+        if not base_matrices_path.exists():
             msg = "Baseline matrices' directory '{}' does not exist.".format(
                 base_matrices_path)
             log.error(msg)
             raise ValueError(msg)
-        if not args.free_flow_assignment:
+        if not calculate_long_dist_demand:
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
-
-        # Check base zonedata
-        base_zonedata = BaseZoneData(
-            base_zonedata_path, zone_numbers[submodel], f"{submodel}.zmp")
-        aggregations[submodel] = base_zonedata.aggregations
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
         # Check forecasted zonedata
@@ -182,8 +175,7 @@ def main(args):
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
-            data_path, zone_numbers[submodel], aggregations[submodel],
-            f"{submodel}.zmp")
+            Path(data_path), zone_numbers[submodel], submodel)
 
     log.info("Successfully validated all input files")
 
@@ -197,46 +189,41 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-level",
         choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-        default=config.LOG_LEVEL,
     )
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
-        default=config.LOG_FORMAT,
     )
     parser.add_argument(
-        "-f", "--free-flow-assignment",
-        action="store_true",
-        default=config.FREE_FLOW_ASSIGNMENT,
-        help="Using this flag runs assigment with free flow speed."
+        "-f", "--long-dist-demand-forecast",
+        type=str,
+        help=("If 'calc', runs assigment with free-flow speed and "
+              + "calculates demand for long-distance trips. "
+              + "If 'base', takes long-distance trips from base matrices. "
+              + "If path, takes long-distance trips from that path.")
     )
     parser.add_argument(
         "--do-not-use-emme",
         action="store_true",
-        default=config.DO_NOT_USE_EMME,
         help="Using this flag runs with MockAssignmentModel instead of EmmeAssignmentModel, not requiring EMME.",
     )
     parser.add_argument(
         "-s", "--separate-emme-scenarios",
         action="store_true",
-        default=config.SEPARATE_EMME_SCENARIOS,
         help="Using this flag creates four new EMME scenarios and saves network time-period specific results in them.",
     )
     parser.add_argument(
         "--scenario-name",
         type=str,
-        default=config.SCENARIO_NAME,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
         type=str,
-        default=config.RESULTS_PATH,
         help="Path to folder where result data is saved to."),
     # Base input (across all scenarios)
     parser.add_argument(
         "--baseline-data-path",
         type=str,
-        default=config.BASELINE_DATA_PATH,
         help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
     # Scenarios' individual input
     parser.add_argument(
@@ -263,9 +250,12 @@ if __name__ == "__main__":
         nargs="+",
         required=True,
         help="List of paths to folder containing forecast zonedata"),
+    parser.set_defaults(
+        **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
 
     log.initialize(args)
+    log.debug(utils.config.dump(vars(args)))
 
     if sys.version_info.major == 3:
         main(args)

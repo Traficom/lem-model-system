@@ -4,7 +4,6 @@
     "dest": "leisure",
     "area": "all",
     "struct": "mode>dest",
-    "impedance_transform": {},
     "impedance_share": {
         "car_leisure": {
             "vrk": [
@@ -73,7 +72,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 200.5573,
-                "area_leisure": 0.3688
+                "area_leisure_buildings": 0.3688
             }
         },
         "train": {
@@ -89,7 +88,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 200.5573,
-                "area_leisure": 0.3688
+                "area_leisure_buildings": 0.3688
             }
         },
         "long_d_bus": {
@@ -105,7 +104,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 200.5573,
-                "area_leisure": 0.3688
+                "area_leisure_buildings": 0.3688
             }
         },
         "car_leisure": {
@@ -122,7 +121,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 200.5573,
-                "area_leisure": 0.3688
+                "area_leisure_buildings": 0.3688
             }
         },
         "car_pax": {
@@ -138,7 +137,7 @@
             "attraction_size": {
                 "population": 1,
                 "hospitality": 200.5573,
-                "area_leisure": 0.3688
+                "area_leisure_buildings": 0.3688
             }
         }
     },
@@ -196,7 +195,24 @@
                 "logsum": 0.74082
             },
             "individual_dummy": {}
-        }
+        },
+        "calibration": {
+            "airplane": {
+                "constant": 0.139560724
+            },
+            "train": {
+                "constant": 0.706851037
+            },
+            "long_d_bus": {
+                "constant": 0.456115979
+            },
+            "car_leisure": {
+                "constant": -0.170366014
+            },
+            "car_pax": {
+                "constant": 0.043026219
+            }
+        }  
     },
     "demand_share": {
         "car_leisure": {

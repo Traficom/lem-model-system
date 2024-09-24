@@ -23,11 +23,11 @@ tour_combinations = {
         ("hb_edu_higher",) : {
             "constant":   3.318,
             "individual_dummy": {
-                "age_7-17": 0.0,
-                "age_18-29":  4.996,
-                "age_30-49":  2.735,
-                "age_50-64": 0.0,
-                "age_65-99": 0.0
+                "age_7_17": 0.0,
+                "age_18_29":  4.996,
+                "age_30_49":  2.735,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
             },
             "zone": {
                 "hb_edu_higher_t": .3595
@@ -38,11 +38,11 @@ tour_combinations = {
         ("hb_edu_higher", "hb_edu_higher") : {
             "constant":   0.0,
             "individual_dummy": {
-                "age_7-17": 0.0,
-                "age_18-29":  4.996,
-                "age_30-49":  2.735,
-                "age_50-64": 0.0,
-                "age_65-99": 0.0
+                "age_7_17": 0.0,
+                "age_18_29":  4.996,
+                "age_30_49":  2.735,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
             },
             "zone": {
                 "hb_edu_higher_t": .4302
@@ -55,108 +55,97 @@ tour_conditions = {}
 
 tour_generation = {
     "hb_work": {
-        "age_7-17": 0.0101,
-        "age_18-29": 0.3529,
-        "age_30-49": 0.5299,
-        "age_50-64": 0.4065,
-        "age_65-99": 0.0335
-
+        "age_7_17": 0.0059,
+        "age_18_29": 0.2794,
+        "age_30_49": 0.3671,
+        "age_50_64": 0.2904,
+        "age_65_99": 0.0148
     },
     "hb_edu_basic": {
-        "age_7-17": 0.4412,
-        "age_18-29": 0,
-        "age_30-49": 0,
-        "age_50-64": 0,
-        "age_65-99": 0
+        "age_7_17": 0.3466,
+        "age_18_29": 0,
+        "age_30_49": 0,
+        "age_50_64": 0,
+        "age_65_99": 0
     },
     "hb_edu_upsec": {
-        "age_7-17": 0.0455,
-        "age_18-29": 0.0738,
-        "age_30-49": 0.0072,
-        "age_50-64": 0.0024,
-        "age_65-99": 0
+        "age_7_17": 0.0369,
+        "age_18_29": 0.0556,
+        "age_30_49": 0.0056,
+        "age_50_64": 0.0016,
+        "age_65_99": 0
     },
     "hb_edu_higher": {
-        "age_7-17": 0.0,
-        "age_18-29": 0.0,
-        "age_30-49": 0.0,
-        "age_50-64": 0.0,
-        "age_65-99": 0.0
+        "age_7_17": 0.0,
+        "age_18_29": 0.0,
+        "age_30_49": 0.0,
+        "age_50_64": 0.0,
+        "age_65_99": 0.0
     },
     "hb_grocery": {
-        "age_7-17": 0.0511,
-        "age_18-29": 0.1192,
-        "age_30-49": 0.1185,
-        "age_50-64": 0.1264,
-        "age_65-99": 0.1937
+        "age_7_17": 0.0656,
+        "age_18_29": 0.1293,
+        "age_30_49": 0.1363,
+        "age_50_64": 0.1349,
+        "age_65_99": 0.1964
     },
     "hb_other_shop": {
-        "age_7-17": 0.0526,
-        "age_18-29": 0.0737,
-        "age_30-49": 0.1032,
-        "age_50-64": 0.1429,
-        "age_65-99": 0.2118
+        "age_7_17": 0.0616,
+        "age_18_29": 0.0805,
+        "age_30_49": 0.1209,
+        "age_50_64": 0.1457,
+        "age_65_99": 0.1937
     },
     "hb_leisure": {
-        "age_7-17": 0.137,
-        "age_18-29": 0.0897,
-        "age_30-49": 0.0848,
-        "age_50-64": 0.0888,
-        "age_65-99": 0.11
+        "age_7_17": 0.1404,
+        "age_18_29": 0.087,
+        "age_30_49": 0.0971,
+        "age_50_64": 0.1026,
+        "age_65_99": 0.1161
     },
     "hb_sport": {
-        "age_7-17": 0.1079,
-        "age_18-29": 0.0545,
-        "age_30-49": 0.0671,
-        "age_50-64": 0.0552,
-        "age_65-99": 0.0414
+        "age_7_17": 0.1284,
+        "age_18_29": 0.0566,
+        "age_30_49": 0.0881,
+        "age_50_64": 0.071,
+        "age_65_99": 0.0554
     },
     "hb_visit": {
-        "age_7-17": 0.1184,
-        "age_18-29": 0.1106,
-        "age_30-49": 0.0703,
-        "age_50-64": 0.0784,
-        "age_65-99": 0.0999
+        "age_7_17": 0.1553,
+        "age_18_29": 0.1488,
+        "age_30_49": 0.0946,
+        "age_50_64": 0.089,
+        "age_65_99": 0.0933
     },
     "wb_business": {
         "hb_work": 0.0543
     },
     "wb_other": {
-    "hb_work": 0.0716
+        "hb_work": 0.082
     },
     "ob_other": {
-        "hb_edu_basic": 0.0357,
-        "hb_edu_upsec": 0.0234,
-        "hb_edu_higher": 0.0422,
-        "hb_visit": 0.0066
+        "hb_edu_basic": 0.0353,
+        "hb_edu_upsec": 0.0238,
+        "hb_edu_higher": 0.0405,
+        "hb_visit": 0.065
     },
     "hb_work_long": {
-        "age_7-17_female": 0.0005,
-        "age_7-17_male": 0.0001,
-        "age_18-29_female":  0.0043,
-        "age_18-29_male":  0.0062,
-        "age_30-49_female":  0.0047,
-        "age_30-49_male":  0.0113,
-        "age_50-64_female":  0.0026,
-        "age_50-64_male":  0.0061,
-        "age_65-99_female":  0.0002,
-        "age_65-99_male":  0.0004
+        "population_Uusimaa": 0.00268,
+        "population_Lounais-Suomi": 0.00532,
+        "population_Ita-Suomi": 0.00449,
+        "population_Pohjois-Suomi": 0.00472
     },
     "hb_business_long": {
-        "income_0-19": 0.0004,
-        "income_20-39": 0.0013,
-        "income_40-59": 0.0024,
-        "income_60-79": 0.0031,
-        "income_80-99": 0.0055,
-        "income_100": 0.0064
+        "population_Uusimaa": 0.00129,
+        "population_Lounais-Suomi": 0.00334,
+        "population_Ita-Suomi": 0.00283,
+        "population_Pohjois-Suomi": 0.00185
     },
     "hb_leisure_long": {
-        "income_0-19": 0.0108,
-        "income_20-39": 0.0134,
-        "income_40-59": 0.0187,
-        "income_60-79": 0.0193,
-        "income_80-99": 0.0246,
-        "income_100": 0.02432
+        "population_Uusimaa": 0.01741,
+        "population_Lounais-Suomi": 0.01518,
+        "population_Ita-Suomi": 0.01812,
+        "population_Pohjois-Suomi": 0.01874
     },
     "truck": {
         "population": 0.01,
@@ -172,19 +161,6 @@ tour_generation = {
         "industry": 0.038,
         "shop": 0.005,
     }
-}
-tour_weights = {
-    "hb_work": 1,
-    "hb_edu_basic": 1,
-    "hb_edu_upsec": 1,
-    "hb_edu_higher": 1,
-    "hb_grocery": 1,
-    "hb_other_shop": 1,
-    "hb_sport": 1,
-    "hb_visit": 1,
-    "hb_work_long": 1,
-    "hb_business_long": 1,
-    "hb_leisure_long": 1
 }
 garbage_generation = {
     "population": 0.000125,
