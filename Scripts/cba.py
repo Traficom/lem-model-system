@@ -190,8 +190,11 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
     log.info("Analyse year {}...".format(year))
 
     # Calculate mile differences
-    mile_diff = (read(VEHICLE_KMS_FILE, scenario_1)
-                 - read(VEHICLE_KMS_FILE, scenario_0))
+    miles = []
+    for scen in (scenario_0, scenario_1):
+        df = read(VEHICLE_KMS_FILE, scen).set_index(["class", "v/d-func"])
+        miles.append(df["veh_km"].unstack(level=0))
+    mile_diff = miles[1] - miles[0]
     mile_diff["car"] = mile_diff["car_work"] + mile_diff["car_leisure"]
     ws = workbook["Ulkoisvaikutukset"]
     cols = CELL_INDICES["car_miles"]["cols"]
