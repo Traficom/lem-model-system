@@ -46,8 +46,6 @@ class TransitSpecification:
         }
         modes = (param.local_transit_modes + param.aux_modes
                  + param.long_dist_transit_modes[transit_class])
-        if "e" not in param.long_dist_transit_modes[transit_class]:
-            modes = modes + ['e']
         self.transit_spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
             "modes": modes,
@@ -102,13 +100,6 @@ class TransitSpecification:
         self.transit_spec["journey_levels"] = [JourneyLevel(
                 level, transit_class, park_and_ride_results).spec
             for level in range(7)]
-        #### TEST 
-        #if ("l_last_mile" in transit_class or "j_last_mile" in transit_class):
-        #    self.transit_spec["journey_levels"].append(JourneyLevel(
-        #        7, transit_class, park_and_ride_results).spec)
-        #    avg_days = {"j": 2.18, "e": 2.62, "l": 2.39}
-        #    self.transit_spec["aux_transit_cost"] = {"penalty": "@pnrcost","perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]}
-        #### TEST 
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": emme_matrices["demand"],
@@ -125,7 +116,7 @@ class TransitSpecification:
         self.local_result_spec = {
                 "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
                 subset: {
-                    "modes": param.local_transit_modes + ['e'] if ("e" not in param.long_dist_transit_modes[transit_class]) else param.local_transit_modes
+                    "modes": param.local_transit_modes,
                 },
             }
         self.park_and_ride_spec = {

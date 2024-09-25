@@ -137,7 +137,6 @@ class MockPeriod(Period):
                     f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
-        #assignment_classes.update({"car_pax": True, "car_work": True, "car_leisure": True})
         return mtxs
 
     def _get_matrices(self,
@@ -161,9 +160,6 @@ class MockPeriod(Period):
         """
         matrix_list = [ass_class for ass_class in assignment_classes
             if mtx_type in param.emme_matrices.get(ass_class, [])]
-        #if mtx_type in ["time","cost","dist","gen_cost","demand"]:
-        #    matrix_list.append("car_work")
-        #    matrix_list.append("car_leisure")
         with self.matrices.open(
                 mtx_type, self.name, transport_classes=matrix_list) as mtx:
             matrices = {mode: mtx[mode] for mode in matrix_list}

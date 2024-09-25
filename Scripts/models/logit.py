@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, cast
 import numpy # type: ignore
 import pandas
-import openmatrix as omx
-from pathlib import Path
 import math
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
@@ -53,7 +51,7 @@ class LogitModel:
             utility = self._add_zone_util(
                 utility.T, b["generation"], generation=True).T
             self._add_zone_util(utility, b["attraction"])
-            self._add_impedance(utility, impedance[mode], b["impedance"], mode)
+            self._add_impedance(utility, impedance[mode], b["impedance"])
             exps = numpy.exp(utility)
             self._add_log_impedance(exps, impedance[mode], b["log"])
             self.mode_exps[mode] = exps
@@ -64,7 +62,7 @@ class LogitModel:
         b = self.dest_choice_param[mode]
         utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"], mode)
+        self._add_impedance(utility, impedance, b["impedance"])
         dest_exp = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_zone_util(size, b["attraction_size"])
@@ -73,7 +71,7 @@ class LogitModel:
             b_transf = b["transform"]
             transimp = numpy.zeros_like(utility)
             self._add_zone_util(transimp, b_transf["attraction"])
-            self._add_impedance(transimp, impedance, b_transf["impedance"], mode)
+            self._add_impedance(transimp, impedance, b_transf["impedance"])
             impedance["transform"] = transimp
         self._add_log_impedance(dest_exp, impedance, b["log"])
         if mode != "logsum":
@@ -88,7 +86,7 @@ class LogitModel:
         b = self.dest_choice_param[mode]
         utility = numpy.zeros_like(next(iter(impedance.values())))
         self._add_sec_zone_util(utility, b["attraction"], orig, dest)
-        self._add_impedance(utility, impedance, b["impedance"], mode)
+        self._add_impedance(utility, impedance, b["impedance"])
         dest_exps = numpy.exp(utility)
         size = numpy.zeros_like(utility)
         self._add_sec_zone_util(size, b["attraction_size"])
@@ -121,7 +119,7 @@ class LogitModel:
                 else: # 2-d matrix calculation
                     utility[bounds, :] += b[i]
     
-    def _add_impedance(self, utility, impedance, b, *args):
+    def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
 
         If parameter in b is tuple of two terms, they will be added for
@@ -137,20 +135,10 @@ class LogitModel:
         b : dict
             The parameters for different impedance matrices.
         """
-        for ar in args:
-            mode = ar
-        logsum_path = Path(__file__).parent / "logsum.omx"
         for i in b:
             try: # If only one parameter
-                if i == "logsum":
-                    omxfile = omx.open_file(logsum_path,"r")
-                    utility += b[i] * numpy.array(omxfile[str(self.purpose.name[3:-4] + mode)])
-                    omxfile.close()
-                else:
-                    utility += b[i] * impedance[i]
-                    
+                utility += b[i] * impedance[i]
             except ValueError: # Separate sub-region parameters
-                print("value_error")
                 for j, bounds in enumerate(self.sub_bounds):
                     utility[bounds, :] += b[i][j] * impedance[i][bounds, :]
         return utility
@@ -521,7 +509,7 @@ class AccessibilityModel(ModeDestModel):
         except ValueError: # Separate params for cap region and surrounding
             utility += b[0]
 
-    def _add_impedance(self, utility, impedance, b, *args):
+    def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
 
         If parameter in b is tuple of two terms,
@@ -537,7 +525,6 @@ class AccessibilityModel(ModeDestModel):
         b : dict
             The parameters for different impedance matrices.
         """
-
         for i in b:
             try: # If only one parameter
                 utility += b[i] * impedance[i]

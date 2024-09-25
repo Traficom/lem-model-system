@@ -20,7 +20,6 @@ DESCRIPTION = [
     "Boarded local service at destination",
     "Left transit system",
     "Forbidden",
-    #"Fetching parked car",
 ]
 DESTINATIONS_REACHABLE = {
     NOT_BOARDED: False,
@@ -30,7 +29,6 @@ DESTINATIONS_REACHABLE = {
     BOARDED_DEST: True,
     LEFT: True,
     FORBIDDEN: False,
-    #7: False
 }
 
 
@@ -53,9 +51,8 @@ class JourneyLevel:
     """
     def __init__(self, level: int, transit_class: str,
             park_and_ride: Union[str, bool] = False):
-        local_modes = param.local_transit_modes
-        if "e" not in param.long_dist_transit_modes[transit_class]:
-            local_modes = local_modes + ['e']
+        local_modes = [mode for mode in param.local_transit_modes
+            if mode not in param.long_dist_transit_modes[transit_class]]
         # Boarding transit modes allowed only on levels 0-4
         if level <= BOARDED_LOCAL:
             next = BOARDED_LOCAL
@@ -100,24 +97,6 @@ class JourneyLevel:
                 "mode": mode,
                 "next_journey_level": walk,
             } for mode in param.aux_modes]
-        if level > BOARDED_LOCAL and ("l_last_mile" in transit_class or "j_last_mile" in transit_class):
-            transitions[0]["next_journey_level"] = FORBIDDEN
-            transitions[1]["next_journey_level"] = FORBIDDEN
-            transitions[3]["next_journey_level"] = FORBIDDEN
-            transitions[5]["next_journey_level"] = FORBIDDEN
-
-        #### TEST 
-        #if ("l_last_mile" in transit_class or "j_last_mile" in transit_class):
-        #    if BOARDED_LOCAL < level < FORBIDDEN:
-        #        for mode in transitions:
-        #            if mode["mode"] == param.park_and_ride_mode:
-        #                transitions[mode]["next_journey_level"] == FORBIDDEN
-        #        transitions['x']["next_journey_level"] = 7
-        #    if level == 7:
-        #        transitions[param.park_and_ride_mode]["next_journey_level"] == LEFT
-        #        transitions['a'['a']] == FORBIDDEN
-        #### TEST 
-        
         self.spec = {
             "description": DESCRIPTION[level],
             "destinations_reachable": DESTINATIONS_REACHABLE[level],
@@ -137,14 +116,14 @@ class JourneyLevel:
         }
         avg_days = {"j": 2.18, "e": 2.62, "l": 2.39}
         if level <= PARKED and ("j_first_mile" in transit_class or "l_first_mile" in transit_class):
-            self.spec["boarding_cost"]["at_nodes"] = {"penalty": "@pnr_cost","perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]} # Divided by 2 to convert tour cost to trip cost
+            self.spec["boarding_cost"]["at_nodes"] = {
+                "penalty": "@pnr_cost",
+                "perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]
+            } # Divided by 2 to convert tour cost to trip cost
         if level in (BOARDED_LOCAL, BOARDED_DEST):
             # Free transfers within local transit
             (self.spec["boarding_cost"]
                       ["on_lines"]["penalty"]) =  param.board_long_dist_attr
-        if (transit_class in (param.long_distance_transit_classes + param.car_egress_classes)
+        if (transit_class in param.long_distance_transit_classes
                 and level == BOARDED_LOCAL):
             self.spec["destinations_reachable"] = False
-        ### TEST
-        #if ("l_last_mile" in transit_class or "j_last_mile" in transit_class):
-        #    self.spec["destinations_reachable"] = False if level!=5 else True

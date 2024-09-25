@@ -211,7 +211,6 @@ class AssignmentPeriod(Period):
             self._long_distance_trips_assigned = True
         else:
             self._assign_transit()
-        modes.update({mode: True for mode in param.car_access_classes})
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
@@ -238,9 +237,10 @@ class AssignmentPeriod(Period):
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
         if self.use_free_flow_speeds:
-            self._assign_transit(param.car_egress_classes + param.long_distance_transit_classes)
+            if not self._long_distance_trips_assigned:
+                self._assign_transit(param.long_distance_transit_classes)
             self._calc_transit_network_results(
-                param.car_egress_classes + param.long_distance_transit_classes)
+                param.long_distance_transit_classes)
         else:
             self._assign_transit(param.transit_classes)
             self._calc_transit_network_results()
@@ -647,7 +647,7 @@ class AssignmentPeriod(Period):
         self._transit_specs = {tc: TransitSpecification(
                 tc, self._segment_results[tc], self._park_and_ride_results[tc],
                 param.effective_headway_attr, self.emme_matrices[tc])
-            for tc in (param.transit_classes + param.car_egress_classes)}
+            for tc in param.transit_classes}
         self.bike_spec = {
             "type": "STANDARD_TRAFFIC_ASSIGNMENT",
             "classes": [

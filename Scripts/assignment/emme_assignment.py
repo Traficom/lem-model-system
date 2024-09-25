@@ -97,8 +97,8 @@ class EmmeAssignmentModel(AssignmentModel):
             in param.emme_matrices.values() for mtx_type in ass_class})
         ten = max(10, len(param.emme_matrices))
         id_ten = {result_type: i*ten for i, result_type
-            in enumerate(matrix_types + param.transit_classes + param.car_egress_classes)}
-        hundred = max(100, ten*len(matrix_types + param.transit_classes + param.car_egress_classes))
+            in enumerate(matrix_types + param.transit_classes)}
+        hundred = max(100, ten*len(matrix_types + param.transit_classes))
         self.assignment_periods = []
         for i, tp in enumerate(self.time_periods):
             if self.separate_emme_scenarios:
@@ -493,7 +493,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     matrix_id=matrix_ids[mtx_type],
                     matrix_name=description, matrix_description=description,
                     overwrite=True)
-            if ass_class in param.transit_classes + param.car_egress_classes:
+            if ass_class in param.transit_classes:
                 j = 0
                 for subset, parts in param.transit_impedance_matrices.items():
                     matrix_ids[subset] = {}
@@ -623,7 +623,7 @@ class EmmeAssignmentModel(AssignmentModel):
         attr = param.segment_results
         segment_results = {}
         park_and_ride_results = {}
-        for tc in (param.transit_classes + param.car_egress_classes):
+        for tc in param.transit_classes:
             segment_results[tc] = {}
             for res in param.segment_results:
                 attr_name = extra(tc[:11] + "_" + attr[res])
@@ -635,11 +635,8 @@ class EmmeAssignmentModel(AssignmentModel):
                     self.emme_project.create_extra_attribute(
                         "NODE", extra(tc[:10] + "n_" + attr[res]),
                         tc + " " + res, overwrite=True, scenario=scenario)
-            if tc in (param.mixed_mode_classes):
-                if tc[0]=="c":
-                    attr_name = extra(tc[0] + tc[4:] + "_aux")
-                else:
-                    attr_name = extra(tc[0] + tc[2:] + "_aux")
+            if tc in param.mixed_mode_classes:
+                attr_name = extra(tc[0] + tc[2:] + "_aux")
                 park_and_ride_results[tc] = attr_name
                 self.emme_project.create_extra_attribute(
                     "LINK", attr_name, tc,
@@ -732,10 +729,10 @@ class EmmeAssignmentModel(AssignmentModel):
                     break
 
             # Calculate noise zone area and aggregate to area level
-            #try:
-            #    area = mapping[link.i_node["#municipality"]]
-            #except KeyError:
-            area = None
+            try:
+                area = mapping[link.i_node["#municipality"]]
+            except KeyError:
+                area = None
             if area in noise_areas:
                 noise_areas[area] += 0.001 * zone_width * link.length
         return noise_areas

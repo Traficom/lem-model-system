@@ -518,6 +518,11 @@ truck_classes = (
 )
 freight_classes = truck_classes + ("van",)
 transport_classes = private_classes + transit_classes + freight_classes
+intermodals = {
+    "train": ["j_first_mile", "j_first_taxi"],
+    "long_d_bus": ["e_first_mile"],
+    "airplane": ["l_first_mile"],
+}
 assignment_classes = {
     "hb_work": "work",
     "hb_edu_basic": "work",
@@ -577,6 +582,7 @@ local_transit_modes = [
     'r',
     't',
     'w',
+    'e',
 ]
 long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],

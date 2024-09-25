@@ -164,7 +164,6 @@ class ModelSystem:
                 demand = purpose.calc_demand()
                 if purpose.dest != "source":
                     for mode in demand:
-                        print(purpose.name + " " + mode + " " + str(numpy.sum(demand[mode].matrix))) # For trip count validation
                         self.dtm.add_demand(demand[mode])
         log.info("Demand calculation completed")
 
