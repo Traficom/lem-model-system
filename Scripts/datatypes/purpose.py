@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from typing import Dict, Iterator, Optional, cast
 from copy import copy
 from collections import defaultdict
 import numpy # type: ignore
@@ -329,14 +329,13 @@ class TourPurpose(Purpose):
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 
-    def calc_demand(self):
+    def calc_demand(self) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
               
-        Returns
+        Yields
         -------
-        dict
-            Mode (car/transit/bike) : dict
-                Demand matrix for whole day : Demand
+        Demand
+                Mode-specific demand matrix for whole day
         """
         tours = self.gen_model.get_tours()
         agg = self.zone_data.aggregations
@@ -365,14 +364,13 @@ class TourPurpose(Purpose):
 class SimpleTourPurpose(TourPurpose):
     """Purpose for simplified demand calculation, not part of agent model."""
 
-    def calc_basic_prob(self, impedance, is_last_iteration):
+    def calc_basic_prob(self, impedance, is_last_iteration) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
 
-        Returns
+        Yields
         -------
-        dict
-            Mode (car/transit/bike) : dict
-                Demand matrix for whole day : Demand
+        Demand
+                Mode-specific demand matrix for whole day
         """
         self.calc_prob(impedance, is_last_iteration)
         self.gen_model.init_tours()
