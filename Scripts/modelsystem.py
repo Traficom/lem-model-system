@@ -179,7 +179,7 @@ class ModelSystem:
             # Try getting long-distance trips from separate file
             with long_dist_matrices.open(
                     "demand", "vrk", zone_numbers,
-                    self.mapping, long_dist_classes) as mtx:
+                    self.zdata_forecast.mapping, long_dist_classes) as mtx:
                 log.info("Get matrices from model run...")
                 for ass_class in long_dist_classes:
                     demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
