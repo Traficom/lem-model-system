@@ -250,7 +250,7 @@ def read_zonedata(path: Path,
         raise IndexError(msg)
     if data.index.has_duplicates:
         raise IndexError("Index in file {} has duplicates".format(path))
-    if not data.index.is_monotonic:
+    if not data.index.is_monotonic_increasing:
         data.sort_index(inplace=True)
         log.warn("File {} is not sorted in ascending order".format(path))
     zone_mapping = data[zone_mapping_name]
