@@ -307,12 +307,19 @@ class TourPurpose(Purpose):
         """Calculate mode and destination probabilities.
 
         Individual dummy variables are not included.
+        In `SimpleTourPurpose`, this method is used for calculating demand,
+        but here it returns an empty list.
 
         Parameters
         ----------
         impedance : dict
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
+
+        Returns
+        -------
+        list
+            Empty list
         """
         purpose_impedance = self.transform_impedance(impedance)
         if is_last_iteration and self.name[0] != 's':
@@ -320,6 +327,7 @@ class TourPurpose(Purpose):
                 copy(purpose_impedance))
         self.model.calc_basic_prob(purpose_impedance)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
+        return []
 
     def calc_demand(self):
         """Calculate purpose specific demand matrices.
@@ -331,7 +339,7 @@ class TourPurpose(Purpose):
                 Demand matrix for whole day : Demand
         """
         tours = self.gen_model.get_tours()
-        demand = {}
+        demand = []
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
@@ -339,7 +347,7 @@ class TourPurpose(Purpose):
                 self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
             except AttributeError:
                 pass
-            demand[mode] = Demand(self, mode, mtx)
+            demand.append(Demand(self, mode, mtx))
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
@@ -352,14 +360,25 @@ class TourPurpose(Purpose):
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
         log.info(f"Demand calculated for {self.name}")
-        return demand
+        return [] if self.dest == "source" else demand
 
 
 class SimpleTourPurpose(TourPurpose):
+    """Purpose for simplified demand calculation, not part of agent model."""
+
     def calc_basic_prob(self, impedance, is_last_iteration):
+        """Calculate purpose specific demand matrices.
+
+        Returns
+        -------
+        dict
+            Mode (car/transit/bike) : dict
+                Demand matrix for whole day : Demand
+        """
         self.calc_prob(impedance, is_last_iteration)
         self.gen_model.init_tours()
         self.gen_model.add_tours()
+        return self.calc_demand()
 
 
 class SecDestPurpose(Purpose):

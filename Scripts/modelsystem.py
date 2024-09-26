@@ -19,7 +19,7 @@ from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
 from datatypes.purpose import new_tour_purpose
-from datatypes.purpose import Purpose, SecDestPurpose, SimpleTourPurpose
+from datatypes.purpose import TourPurpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
@@ -102,7 +102,7 @@ class ModelSystem:
         self.mode_share: List[Dict[str,Any]] = []
         self.convergence = pandas.DataFrame()
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         return DemandModel(
             self.zdata_forecast, self.resultdata, tour_purposes,
             is_agent_model=False)
@@ -154,10 +154,8 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                demand = purpose.calc_demand()
-                if purpose.dest != "source":
-                    for mode in demand:
-                        self.dtm.add_demand(demand[mode])
+                for mode_demand in purpose.calc_demand():
+                    self.dtm.add_demand(mode_demand)
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
@@ -553,7 +551,7 @@ class AgentModelSystem(ModelSystem):
         Name of scenario, used for results subfolder
     """
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
         return DemandModel(
@@ -585,13 +583,11 @@ class AgentModelSystem(ModelSystem):
         random.seed(None)
         self.dm.car_use_model.calc_basic_prob()
         for purpose in self.dm.tour_purposes:
-            purpose.calc_basic_prob(
+            demand = purpose.calc_basic_prob(
                         previous_iter_impedance, is_last_iteration)
-            if isinstance(purpose, SimpleTourPurpose):
-                demand = purpose.calc_demand()
-                if purpose.dest != "source":
-                    for mode in demand:
-                        self.dtm.add_demand(demand[mode])
+            for mode_demand in demand:
+                # `demand` contains matrices only for non-agent purposes
+                self.dtm.add_demand(mode_demand)
         tour_probs = self.dm.generate_tour_probs()
         log.info("Assigning mode and destination for {} agents ({} % of total population)".format(
             len(self.dm.population), int(zone_param.agent_demand_fraction*100)))

@@ -5,7 +5,7 @@ import pandas
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
     from datahandling.zonedata import ZoneData
-    from datatypes.purpose import Purpose
+    from datatypes.purpose import TourPurpose
 from datatypes.person import Person
 
 import utils.log as log
@@ -34,7 +34,7 @@ class DemandModel:
     def __init__(self, 
                  zone_data: ZoneData, 
                  resultdata: ResultsData,
-                 tour_purposes: List[Purpose],
+                 tour_purposes: List[TourPurpose],
                  is_agent_model: bool=False):
         self.resultdata = resultdata
         self.zone_data = zone_data
