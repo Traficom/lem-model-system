@@ -19,7 +19,7 @@ from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
 from datatypes.purpose import new_tour_purpose
-from datatypes.purpose import TourPurpose, SecDestPurpose
+from datatypes.purpose import Purpose, TourPurpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
@@ -583,9 +583,8 @@ class AgentModelSystem(ModelSystem):
         random.seed(None)
         self.dm.car_use_model.calc_basic_prob()
         for purpose in self.dm.tour_purposes:
-            demand = purpose.calc_basic_prob(
-                        previous_iter_impedance, is_last_iteration)
-            for mode_demand in demand:
+            for mode_demand in purpose.calc_basic_prob(
+                    previous_iter_impedance, is_last_iteration):
                 # `demand` contains matrices only for non-agent purposes
                 self.dtm.add_demand(mode_demand)
         tour_probs = self.dm.generate_tour_probs()

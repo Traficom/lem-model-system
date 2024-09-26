@@ -339,7 +339,6 @@ class TourPurpose(Purpose):
                 Demand matrix for whole day : Demand
         """
         tours = self.gen_model.get_tours()
-        demand = []
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
@@ -347,7 +346,6 @@ class TourPurpose(Purpose):
                 self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
             except AttributeError:
                 pass
-            demand.append(Demand(self, mode, mtx))
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
@@ -359,8 +357,9 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
+            if self.dest != "source":
+                yield Demand(self, mode, mtx)
         log.info(f"Demand calculated for {self.name}")
-        return [] if self.dest == "source" else demand
 
 
 class SimpleTourPurpose(TourPurpose):
