@@ -45,8 +45,9 @@ class ZoneData:
             all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
             name="analysis_zone_id")
         Zone.counter = 0
-        data = read_zonedata(
+        data, mapping = read_zonedata(
             data_dir / "zonedata.gpkg", self.zone_numbers, zone_mapping)
+        self.mapping = mapping
         zone_indices = pandas.Series(
             range(len(self.zone_numbers)), index=self.zone_numbers)
         agg_keys = [key for key in data if "aggregate_results_" in key]
@@ -100,6 +101,8 @@ class ZoneData:
         self["outside_municipality"] = ~within_municipality
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
+        for key in data["aggregate_results_submodel"].unique():
+            self["population_" + key] = self.dummy("submodel", key) * pop
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = self.aggregations.mappings[division_type][bounds] == name
@@ -212,7 +215,7 @@ class ShareChecker:
 
 def read_zonedata(path: Path,
                   zone_numbers: numpy.ndarray,
-                  zone_mapping: str):
+                  zone_mapping_name: str):
     """Read zone data from space-separated file.
 
     Parameters
@@ -221,13 +224,16 @@ def read_zonedata(path: Path,
         Path to the .gpkg file
     zone_numbers : ndarray
         Zone numbers to compare with for validation
-    zone_mapping : str
+    zone_mapping_name : str
         Name of column where mapping between data zones (index)
         and assignment zones
 
     Returns
     -------
     pandas.DataFrame
+        Zone data
+    pandas.Series
+        Mapping between zones in zone-data file and in network
     """
     if not path.exists():
         msg = f"Path {path} not found."
@@ -244,9 +250,10 @@ def read_zonedata(path: Path,
         raise IndexError(msg)
     if data.index.has_duplicates:
         raise IndexError("Index in file {} has duplicates".format(path))
-    if not data.index.is_monotonic:
+    if not data.index.is_monotonic_increasing:
         data.sort_index(inplace=True)
         log.warn("File {} is not sorted in ascending order".format(path))
+    zone_mapping = data[zone_mapping_name]
     zone_variables = json.loads(
         (Path(__file__).parent / "zone_variables.json").read_text("utf-8"))
     aggs = {}
@@ -260,7 +267,7 @@ def read_zonedata(path: Path,
                 aggs[total] = func
                 for share in col["shares"]:
                     aggs[share] = lambda x: avg(x, weights=data[total])
-    data = data.groupby(zone_mapping).agg(aggs)
+    data = data.groupby(zone_mapping_name).agg(aggs)
     data.index = data.index.astype(int)
     data.index.name = "analysis_zone_id"
     if data.index.size != zone_numbers.size or (data.index != zone_numbers).any():
@@ -279,7 +286,7 @@ def read_zonedata(path: Path,
         msg = "Zone numbers did not match for file {}".format(path)
         log.error(msg)
         raise IndexError(msg)
-    return data
+    return data, zone_mapping
 
 def avg(data, weights):
     try:

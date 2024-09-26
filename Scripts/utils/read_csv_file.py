@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas
-import numpy # type: ignore
+import numpy
 
 import utils.log as log
 
@@ -24,7 +24,7 @@ def read_other_data(path: Path, squeeze = False):
         raise NameError(msg)
     header = None if squeeze else "infer"
     data: pandas.DataFrame = pandas.read_csv(
-        path, delim_whitespace=True, keep_default_na=False, 
+        path, sep='\s+', keep_default_na=False,
         na_values="", comment='#', header=header)
     if "node_label" in data.columns:
         data = data.set_index("node_label")
