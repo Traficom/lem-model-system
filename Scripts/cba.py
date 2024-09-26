@@ -21,7 +21,8 @@ STATION_FILE = "transit_stations.txt"
 
 TRANSIT_AGGREGATIONS = {
     "bus": ("Bus", "Long_d_bus", "BRT"),
-    "train": ("Train", "Local_train"),
+    "metro": ("Metro",),
+    "train": ("Train", "Local_trai"),
     "tram": ("Tram", "Light_rail"),
 }
 
@@ -36,6 +37,7 @@ TRANSLATIONS = {
     "bike": "pp_tyo",
     "bike_leisure": "pp_muu",
     "truck": "ka",
+    "semi_trailer": "puolip",
     "trailer_truck": "yhd",
     "van": "pa",
 }
@@ -113,14 +115,12 @@ CELL_INDICES = {
         "rows": {
             1: {
                 "bus": "8",
-                "HSL-runkob": "9",
                 "tram": "10",
                 "metro": "11",
                 "train": "12",
             },
             2: {
                 "bus": "16",
-                "HSL-runkob": "17",
                 "tram": "18",
                 "metro": "19",
                 "train": "20",
@@ -204,7 +204,10 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
             ws[cols[vdf]+rows[mode]] = mile_diff[mode][vdf]
 
     # Calculate noise effect difference
-    noise_diff = read(NOISE_FILE, scenario_1) - read(NOISE_FILE, scenario_0)
+    noises = []
+    for scen in (scenario_0, scenario_1):
+        noises.append(read(NOISE_FILE, scen).set_index("area"))
+    noise_diff = noises[1] - noises[0]
     ws[CELL_INDICES["noise"][year]] = sum(noise_diff["population"])
 
     # Calculate transit mile differences
