@@ -7,7 +7,7 @@ from datatypes.tour import Tour
 import utils.log as log
 from assignment.abstract_assignment import AssignmentModel
 import parameters.departure_time as param
-from parameters.assignment import transport_classes, car_egress_classes
+from parameters.assignment import transport_classes
 
 
 class DepartureTimeModel:
