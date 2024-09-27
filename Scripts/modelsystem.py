@@ -386,7 +386,7 @@ class ModelSystem:
         zone_numbers = self.ass_model.zone_numbers
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in (param.transport_classes + param.car_egress_classes):
+            for ass_class in param.transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
@@ -682,7 +682,7 @@ class AgentModelSystem(ModelSystem):
         previous_iter_impedance.clear()
         dtm = dt.DepartureTimeModel(
             self.ass_model.nr_zones, self.ass_model.time_periods,
-            self.travel_modes.update({mode: True for mode in param.car_egress_classes}))
+            self.travel_modes)
         for person in self.dm.population:
             for tour in person.tours:
                 dtm.add_demand(tour)

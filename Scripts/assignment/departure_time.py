@@ -84,17 +84,10 @@ class DepartureTimeModel:
             Travel demand matrix or number of travellers
         """
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
-        if demand.mode in transport_classes + car_egress_classes:
+        if demand.mode in transport_classes:
             position: Sequence[int] = demand.position
             if len(position) == 2:
-                if demand.mode in demand.purpose.demand_share:
-                    share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
-                else:
-                    share = {"vrk": [1,1]}
-                if "first" in demand.mode:
-                    share["vrk"][1] = 0
-                elif "last" in demand.mode:
-                    share["vrk"][0] = 0
+                share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
                 for time_period in self.time_periods:
                     self._add_2d_demand(
                         share[time_period], demand.mode, time_period,
