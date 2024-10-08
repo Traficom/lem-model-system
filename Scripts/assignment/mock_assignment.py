@@ -127,9 +127,9 @@ class MockPeriod(Period):
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
-        assignment_classes.update({"j_first_mile": True, "j_first_taxi": True, "l_first_mile": True, "e_first_mile": True})
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
-            for mtx_type in ("time", "cost", "dist","car_time","car_dist", "loc_time", "total_time", "aux_time", "board_cost", "num_board", "perc_bcost")}
+            for mtx_type in ("time", "cost", "dist", "car_time",
+                             "loc_time", "aux_time", "park_cost")}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(

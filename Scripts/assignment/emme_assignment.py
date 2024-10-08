@@ -552,6 +552,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
+            "LINK", param.aux_car_time["time"], "walk time",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
             "LINK", extra("truck_time"), "truck time",
             overwrite=True, scenario=scenario)
         if scenario.network_field("LINK", netfield("hinta")) is not None:
@@ -603,6 +606,12 @@ class EmmeAssignmentModel(AssignmentModel):
         # Create link attributes
         self.emme_project.create_extra_attribute(
             "LINK", extra("aux_transit"), "aux transit volume",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.park_cost_attr_l, "terminal parking cost",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.aux_transit_time["time"], "walk time",
             overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(

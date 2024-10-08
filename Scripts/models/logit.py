@@ -41,6 +41,12 @@ class LogitModel:
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
 
+    def calc_mode_prob(self, impedance):
+        expsum = self._calc_mode_util(impedance)
+        prob = {mode: (self.mode_exps[mode] / expsum).T
+            for mode in self.mode_choice_param}
+        return prob, numpy.log(expsum)
+
     def _calc_mode_util(self, impedance):
         expsum = numpy.zeros_like(
             next(iter(next(iter(impedance.values())).values())))

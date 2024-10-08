@@ -114,12 +114,6 @@ class JourneyLevel:
             },
             "waiting_time": None,
         }
-        avg_days = {"j": 2.18, "e": 2.62, "l": 2.39}
-        if level <= PARKED and ("j_first_mile" in transit_class or "l_first_mile" in transit_class):
-            self.spec["boarding_cost"]["at_nodes"] = {
-                "penalty": "@pnr_cost",
-                "perception_factor": param.vot_inv[param.vot_classes[transit_class]]/2*avg_days[transit_class[0]]
-            } # Divided by 2 to convert tour cost to trip cost
         if level in (BOARDED_LOCAL, BOARDED_DEST):
             # Free transfers within local transit
             (self.spec["boarding_cost"]

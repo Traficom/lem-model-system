@@ -5,62 +5,6 @@
     "area": "all",
     "struct": "mode>dest",
     "impedance_transform": {},
-    "access_modes": {
-        "airplane": {
-            "avg_pnr_time": 2.01,
-            "time_main": 1,
-            "time_acc": {
-                "transit": 1,
-                "car": 1,
-                "car_pax": 1
-            },
-            "cost": 1,
-            "carown": {
-                "car": 1,
-                "car_pax": 1
-            },
-            "const": {
-                "transit": 1,
-                "car": 1,
-                "car_pax": 1
-            }
-        },
-        "train": {
-            "avg_pnr_time": 1.12,
-            "time_main": 1,
-            "time_acc": {
-                "transit": 1,
-                "car": 1,
-                "car_pax": 1
-            },
-            "cost": 1,
-            "carown": {
-                "car": 1,
-                "car_pax": 1
-            },
-            "const": {
-                "transit": 1,
-                "car_pax": 1
-            }
-        },
-        "long_d_bus": {
-            "avg_pnr_time": 2.43,
-            "time_main": 1,
-            "time_acc": {
-                "transit": 1,
-                "car_pax": 1
-            },
-            "cost": 1,
-            "carown": {
-                "car": 1,
-                "car_pax": 1
-            },
-            "const": {
-                "transit": 1,
-                "car_pax": 1
-            }
-        }
-    },
     "impedance_share": {
         "car_work": {
             "vrk": [
@@ -91,7 +35,31 @@
                 1.0,
                 1.0
               ]
-            }
+            },
+            "l_first_mile": {
+                "vrk": [
+                    2.0,
+                    0.0
+                    ]
+                },
+            "j_first_mile": {
+                "vrk": [
+                    2.0,
+                    0.0
+                  ]
+                },
+            "j_first_taxi": {
+                "vrk": [
+                    2.0,
+                    0.0
+                  ]
+                },
+            "e_first_mile": {
+                "vrk": [
+                    2.0,
+                    0.0
+                  ]
+                }
     },
     "distance_boundaries": {
         "car_work": [
@@ -248,6 +216,125 @@
             },
             "car_pax": {
                 "constant": 0.485876623    
+            }
+        }
+    },
+    "access_mode_choice": {
+        "airplane": {
+            "airplane": {
+                "constant": 0,
+                "generation": {},
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.035,
+                    "loc_time": 0.018,
+                    "aux_time": 0.018
+                },
+                "log": {},
+                "individual_dummy": {}
+            },
+            "l_first_mile": {
+                "constant": -0.98,
+                "generation": {
+                    "car_density": 3.44
+                },
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "park_cost": -0.047,
+                    "time": -0.035,
+                    "loc_time": 0.018,
+                    "aux_time": 0.018,
+                    "car_time": -0.524
+                },
+                "log": {},
+                "individual_dummy": {}
+            },
+            "l_first_taxi": {
+                "constant": -1.46,
+                "generation": {
+                    "car_density": 3.23
+                },
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.035,
+                    "loc_time": 0.018,
+                    "aux_time": 0.018,
+                    "car_time": -0.057
+                },
+                "log": {},
+                "individual_dummy": {}
+            }
+        },
+        "train": {
+            "train": {
+                "constant": 0,
+                "generation": {},
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.02
+                },
+                "log": {},
+                "individual_dummy": {}
+            },
+            "j_first_mile": {
+                "constant": -4.41,
+                "generation": {
+                    "car_density": 3.44
+                },
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "park_cost": -0.047,
+                    "time": -0.02,
+                    "car_time": -0.052
+                },
+                "log": {},
+                "individual_dummy": {}
+            },
+            "j_first_taxi": {
+                "constant": -3.64,
+                "generation": {
+                    "car_density": 3.23
+                },
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.02,
+                    "car_time": -0.057
+                },
+                "log": {},
+                "individual_dummy": {}
+            }
+        },
+        "long_d_bus": {
+            "long_d_bus": {
+                "constant": 0,
+                "generation": {},
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.012
+                },
+                "log": {},
+                "individual_dummy": {}
+            },
+            "e_first_mile": {
+                "constant": -4.5,
+                "generation": {
+                    "car_density": 3.23
+                },
+                "attraction": {},
+                "impedance": {
+                    "cost": -0.047,
+                    "time": -0.012,
+                    "car_time": -0.057
+                },
+                "log": {},
+                "individual_dummy": {}
             }
         }
     },

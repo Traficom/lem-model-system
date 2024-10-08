@@ -76,7 +76,6 @@ class TransitSpecification:
                 "perception_factor": (param.vot_inv[param.vot_classes[
                     transit_class]]),
             },
-            "aux_transit_time": param.aux_transit_time,
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
             },
@@ -89,14 +88,33 @@ class TransitSpecification:
             "journey_levels": None,
             "performance_settings": param.performance_settings,
         }
+        aux_transit_times = []
+        aux_transit_time = (param.aux_transit_time
+            if transit_class in param.local_transit_classes
+            else param.aux_transit_time_long)
+        for mode in param.aux_modes:
+            aux_transit_times.append(
+                {
+                    "mode": mode,
+                    "cost": None,
+                    "cost_perception_factor": 1.0,
+                }.update(aux_transit_time)
+            )
         if park_and_ride_results:
             self.transit_spec["modes"].append(param.park_and_ride_mode)
+            aux_transit_times.append(
+                {"mode": param.park_and_ride_mode}.update(param.aux_car_time))
+            for mode_cost in aux_transit_times:
+                mode_cost["cost"] = param.park_cost_attr_l,
+                mode_cost["cost_perception_factor"] = (param.vot_inv[
+                    param.vot_classes[transit_class]])
             self.transit_spec["results"] = {
                 "aux_transit_volumes_by_mode": [{
                     "mode": param.park_and_ride_mode,
                     "volume": park_and_ride_results,
                 }],
             }
+        self.transit_spec["aux_transit_by_mode"] = aux_transit_times
         self.transit_spec["journey_levels"] = [JourneyLevel(
                 level, transit_class, park_and_ride_results).spec
             for level in range(7)]
