@@ -132,6 +132,12 @@ def main(args):
                     link_costs_defined = True
             if link_costs_defined:
                 nr_new_attr["links"] += nr_assignment_modes + 1
+            sc_name = emmebank.scenario(first_scenario_ids[i]).title
+            if len(sc_name)>56:
+                msg = "Scenario name: {} too long, time period extension might exceed Emme's 60 characters limit.".format(
+                    sc_name)
+                log.error(msg)
+                raise ValueError(msg)
             if not args.separate_emme_scenarios:
                 # If results from all time periods are stored in same
                 # EMME scenario

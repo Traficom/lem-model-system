@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 import numpy # type: ignore
 from collections import namedtuple
 import copy
@@ -692,7 +692,6 @@ class Network:
         self._links = {}
         self._vehicles = {}
         self._lines = {}
-        self._segments = []
         self._objects = {
             "NODE": self.nodes,
             "LINK": self.links,
@@ -873,7 +872,7 @@ class Node(NetworkObject):
     @property
     def id(self):
         return str(self.number)
-    
+
     def outgoing_segments(self, include_hidden=False):
         return (s for s in self.network.transit_segments(include_hidden)
             if s.i_node is self)
