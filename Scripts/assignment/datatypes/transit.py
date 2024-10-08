@@ -7,10 +7,10 @@ from assignment.datatypes.journey_level import JourneyLevel
 class TransitSpecification:
     """
     Transit assignment specification.
-    
-    Two journey levels are added at a later stage.
-    At the second level an extra boarding penalty is implemented,
-    hence a transfer penalty. Waiting time length is also different. 
+
+    Journey levels enforce using long-dist mode for such classes.
+    For park-and-ride classes, car mode is allowed either in origin
+    or destination, but prohibited elsewhere.
     Walk only trips are not allowed.
 
     Parameters
@@ -32,16 +32,13 @@ class TransitSpecification:
             Impedance type (time/cost/dist/...)
         value : str
             Emme matrix id
-    count_zone_boardings : bool (optional)
-        Whether assignment is performed only to count fare zone boardings
     """
     def __init__(self, 
                  transit_class: str,
                  segment_results: Dict[str,str],
                  park_and_ride_results: Union[str, bool],
                  headway_attribute: str,
-                 emme_matrices: Dict[str, Union[str, Dict[str, str]]], 
-                 count_zone_boardings: bool = False):
+                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0, 
@@ -79,7 +76,6 @@ class TransitSpecification:
                 "perception_factor": (param.vot_inv[param.vot_classes[
                     transit_class]]),
             },
-            "aux_transit_time": param.aux_transit_time,
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
             },
@@ -92,18 +88,36 @@ class TransitSpecification:
             "journey_levels": None,
             "performance_settings": param.performance_settings,
         }
+        aux_transit_times = []
+        aux_transit_time = (param.aux_transit_time
+            if transit_class in param.local_transit_classes
+            else param.aux_transit_time_long)
+        for mode in param.aux_modes:
+            aux_transit_times.append(
+                {
+                    "mode": mode,
+                    "cost": None,
+                    "cost_perception_factor": 1.0,
+                }.update(aux_transit_time)
+            )
         if park_and_ride_results:
             self.transit_spec["modes"].append(param.park_and_ride_mode)
+            aux_transit_times.append(
+                {"mode": param.park_and_ride_mode}.update(param.aux_car_time))
+            for mode_cost in aux_transit_times:
+                mode_cost["cost"] = param.park_cost_attr_l,
+                mode_cost["cost_perception_factor"] = (param.vot_inv[
+                    param.vot_classes[transit_class]])
             self.transit_spec["results"] = {
                 "aux_transit_volumes_by_mode": [{
                     "mode": param.park_and_ride_mode,
                     "volume": park_and_ride_results,
                 }],
             }
+        self.transit_spec["aux_transit_by_mode"] = aux_transit_times
         self.transit_spec["journey_levels"] = [JourneyLevel(
-                level, transit_class, headway_attribute, park_and_ride_results,
-                count_zone_boardings).spec
-            for level in range(6)]
+                level, transit_class, park_and_ride_results).spec
+            for level in range(7)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": emme_matrices["demand"],
@@ -123,10 +137,13 @@ class TransitSpecification:
                     "modes": param.local_transit_modes,
                 },
             }
-        if count_zone_boardings:
-            bcost = "actual_total_boarding_costs"
-            self.transit_result_spec[subset][bcost] = emme_matrices[bcost]
-        else:
+        self.park_and_ride_spec = {
+                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+                subset: {
+                    "modes": [param.park_and_ride_mode],
+                },
+            }
+        if "last" not in transit_class:
             self.transit_result_spec["total_impedance"] = emme_matrices["gen_cost"]
             for trip_part, matrix_id in emme_matrices["total"].items():
                 self.transit_result_spec[trip_part] = matrix_id
@@ -134,3 +151,5 @@ class TransitSpecification:
                 self.transit_result_spec[subset][trip_part] = matrix_id
             for trip_part, matrix_id in emme_matrices["local"].items():
                 self.local_result_spec[subset][trip_part] = matrix_id
+            for trip_part, matrix_id in emme_matrices["park_and_ride"].items():
+                self.park_and_ride_spec[subset][trip_part] = matrix_id

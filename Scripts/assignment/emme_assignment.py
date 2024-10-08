@@ -552,6 +552,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
+            "LINK", param.aux_car_time["time"], "walk time",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
             "LINK", extra("truck_time"), "truck time",
             overwrite=True, scenario=scenario)
         if scenario.network_field("LINK", netfield("hinta")) is not None:
@@ -604,6 +607,12 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "LINK", extra("aux_transit"), "aux transit volume",
             overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.park_cost_attr_l, "terminal parking cost",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.aux_transit_time["time"], "walk time",
+            overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.dist_fare_attr,
@@ -635,8 +644,8 @@ class EmmeAssignmentModel(AssignmentModel):
                     self.emme_project.create_extra_attribute(
                         "NODE", extra(tc[:10] + "n_" + attr[res]),
                         tc + " " + res, overwrite=True, scenario=scenario)
-            if tc in param.park_and_ride_classes:
-                attr_name = extra(tc[4:] + "_aux")
+            if tc in param.mixed_mode_classes:
+                attr_name = extra(tc[0] + tc[2:] + "_aux")
                 park_and_ride_results[tc] = attr_name
                 self.emme_project.create_extra_attribute(
                     "LINK", attr_name, tc,
