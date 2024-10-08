@@ -190,7 +190,7 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
-        cost_data = json.loads(data_path.read_text("utf-8"))
+        cost_data = json.loads(Path(data_path).read_text("utf-8"))
         for ass_class in cost_data["car_cost"]:
             float(cost_data["car_cost"][ass_class])
         transit_cost = {data.pop("id"): data for data

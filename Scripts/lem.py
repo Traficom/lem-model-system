@@ -57,9 +57,9 @@ def main(args):
         raise NameError(
             "Baseline matrix directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not forecast_zonedata_path.is_dir():
+    if not forecast_zonedata_path.is_file():
         raise NameError(
-            "Forecast data directory '{}' does not exist.".format(
+            "Forecast data file '{}' does not exist.".format(
                 forecast_zonedata_path))
 
     # Choose and initialize the Traffic Assignment (supply)model
