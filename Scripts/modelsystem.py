@@ -19,7 +19,7 @@ from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
 from datatypes.purpose import new_tour_purpose
-from datatypes.purpose import Purpose, SecDestPurpose
+from datatypes.purpose import Purpose, TourPurpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
@@ -102,7 +102,7 @@ class ModelSystem:
         self.mode_share: List[Dict[str,Any]] = []
         self.convergence = []
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         return DemandModel(
             self.zdata_forecast, self.resultdata, tour_purposes,
             is_agent_model=False)
@@ -135,19 +135,12 @@ class ModelSystem:
         # as logsums from probability calculation are used in tour generation.
         self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose.gen_model.init_tours()
-            else:
-                purpose.calc_prob(previous_iter_impedance, is_last_iteration)
-        
+            purpose_impedance = purpose.calc_prob(
+                previous_iter_impedance, is_last_iteration)
+        previous_iter_impedance.clear()
+
         # Tour generation
         self.dm.generate_tours()
-        
-        for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose_impedance = purpose.transform_impedance(
-                    previous_iter_impedance)
-        previous_iter_impedance.clear()
 
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
@@ -161,10 +154,8 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                demand = purpose.calc_demand()
-                if purpose.dest != "source":
-                    for mode in demand:
-                        self.dtm.add_demand(demand[mode])
+                for mode_demand in purpose.calc_demand():
+                    self.dtm.add_demand(mode_demand)
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
@@ -560,7 +551,7 @@ class AgentModelSystem(ModelSystem):
         Name of scenario, used for results subfolder
     """
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
         return DemandModel(
@@ -592,23 +583,10 @@ class AgentModelSystem(ModelSystem):
         random.seed(None)
         self.dm.car_use_model.calc_basic_prob()
         for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose.init_sums()
-            else:
-                if (purpose.area == "peripheral" or purpose.dest == "source"
-                        or purpose.name == "oop"):
-                    purpose.calc_prob(
-                        previous_iter_impedance, is_last_iteration)
-                    purpose.gen_model.init_tours()
-                    purpose.gen_model.add_tours()
-                    demand = purpose.calc_demand()
-                    if purpose.dest != "source":
-                        for mode in demand:
-                            self.dtm.add_demand(demand[mode])
-                else:
-                    purpose.init_sums()
-                    purpose.calc_basic_prob(
-                        previous_iter_impedance, is_last_iteration)
+            for mode_demand in purpose.calc_basic_prob(
+                    previous_iter_impedance, is_last_iteration):
+                # `demand` contains matrices only for non-agent purposes
+                self.dtm.add_demand(mode_demand)
         tour_probs = self.dm.generate_tour_probs()
         log.info("Assigning mode and destination for {} agents ({} % of total population)".format(
             len(self.dm.population), int(zone_param.agent_demand_fraction*100)))
@@ -695,7 +673,7 @@ class AgentModelSystem(ModelSystem):
         sec_dest_purpose = self.dm.purpose_dict["hoo"]
         for orig in origs:
                 dests = list(sec_dest_tours[orig])
-                probs = sec_dest_purpose.calc_prob(
+                probs = sec_dest_purpose.calc_sec_dest_prob(
                     mode, impedance, orig, dests).cumsum(axis=0)
                 for j, dest in enumerate(dests):
                     for tour in sec_dest_tours[orig][dest]:

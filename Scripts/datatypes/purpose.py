@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
+from typing import Dict, Iterator, Optional, cast
 from copy import copy
 from collections import defaultdict
 import numpy # type: ignore
@@ -197,8 +197,14 @@ def new_tour_purpose(specification, zone_data, resultdata):
     """
     attempt_calibration(specification)
     args = (specification, zone_data, resultdata)
-    purpose = (SecDestPurpose(*args) if "sec_dest" in specification
-                else TourPurpose(*args))
+    if "sec_dest" in specification:
+        purpose = SecDestPurpose(*args)
+    elif (specification["area"] == "peripheral"
+          or specification["dest"] == "source"
+          or specification["name"] == "oop"):
+        purpose = SimpleTourPurpose(*args)
+    else:
+        purpose = TourPurpose(*args)
     try:
         purpose.sources = specification["source"]
     except KeyError:
@@ -301,12 +307,19 @@ class TourPurpose(Purpose):
         """Calculate mode and destination probabilities.
 
         Individual dummy variables are not included.
+        In `SimpleTourPurpose`, this method is used for calculating demand,
+        but here it returns an empty list.
 
         Parameters
         ----------
         impedance : dict
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2d matrix
+
+        Returns
+        -------
+        list
+            Empty list
         """
         purpose_impedance = self.transform_impedance(impedance)
         if is_last_iteration and self.name[0] != 's':
@@ -314,18 +327,17 @@ class TourPurpose(Purpose):
                 copy(purpose_impedance))
         self.model.calc_basic_prob(purpose_impedance)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
+        return []
 
-    def calc_demand(self):
+    def calc_demand(self) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
               
-        Returns
+        Yields
         -------
-        dict
-            Mode (car/transit/bike) : dict
-                Demand matrix for whole day : Demand
+        Demand
+                Mode-specific demand matrix for whole day
         """
         tours = self.gen_model.get_tours()
-        demand = {}
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
@@ -333,7 +345,6 @@ class TourPurpose(Purpose):
                 self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
             except AttributeError:
                 pass
-            demand[mode] = Demand(self, mode, mtx)
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
@@ -345,8 +356,26 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 numpy.diag(mtx), self.zone_numbers,
                 name="{}_{}".format(self.name, mode))
+            if self.dest != "source":
+                yield Demand(self, mode, mtx)
         log.info(f"Demand calculated for {self.name}")
-        return demand
+
+
+class SimpleTourPurpose(TourPurpose):
+    """Purpose for simplified demand calculation, not part of agent model."""
+
+    def calc_basic_prob(self, impedance, is_last_iteration) -> Iterator[Demand]:
+        """Calculate purpose specific demand matrices.
+
+        Yields
+        -------
+        Demand
+                Mode-specific demand matrix for whole day
+        """
+        self.calc_prob(impedance, is_last_iteration)
+        self.gen_model.init_tours()
+        self.gen_model.add_tours()
+        return self.calc_demand()
 
 
 class SecDestPurpose(Purpose):
@@ -375,7 +404,7 @@ class SecDestPurpose(Purpose):
     def dest_interval(self):
         return self.bounds
 
-    def init_sums(self):
+    def _init_sums(self):
         for mode in self.model.dest_choice_param:
             self.generated_tours[mode] = numpy.zeros_like(self.zone_numbers)
         for purpose in self.gen_model.param:
@@ -383,10 +412,17 @@ class SecDestPurpose(Purpose):
                 self.attracted_tours[mode] = numpy.zeros_like(
                     self.zone_data.zone_numbers, float)
 
+    def calc_basic_prob(self, *args):
+        self._init_sums()
+
+    def calc_prob(self, impedance, is_last_iteration):
+        self.gen_model.init_tours()
+        return self.transform_impedance(impedance)
+
     def generate_tours(self):
         """Generate the source tours without secondary destinations."""
         self.tours = {}
-        self.init_sums()
+        self._init_sums()
         for mode in self.model.dest_choice_param:
             self.tours[mode] = self.gen_model.get_tours(mode)
 
@@ -424,13 +460,13 @@ class SecDestPurpose(Purpose):
         else:
             generation[dests] *= generation.sum() / generation[dests].sum()
             generation[~dests] = 0
-        prob = self.calc_prob(mode, impedance, orig, dests)
+        prob = self.calc_sec_dest_prob(mode, impedance, orig, dests)
         demand = numpy.zeros_like(impedance["time"])
         demand[dests, :] = (prob * generation[dests]).T
         self.attracted_tours[mode][self.bounds] += demand.sum(0)
         return Demand(self, mode, demand, orig_offset + orig)
 
-    def calc_prob(self, mode, impedance, orig, dests):
+    def calc_sec_dest_prob(self, mode, impedance, orig, dests):
         """Calculate secondary destination probabilites.
         
         For tours starting in specific zone and ending in some zones.
