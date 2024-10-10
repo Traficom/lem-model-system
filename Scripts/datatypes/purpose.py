@@ -39,13 +39,16 @@ class Purpose:
         Data used for all demand calculations
     resultdata : ResultsData (optional)
         Writer object to result directory
+    mtx_adjustment : dict (optional)
+        Dict of matrix adjustments for testing elasticities
     """
     distance: numpy.ndarray
 
     def __init__(self, 
                  specification: Dict[str,Optional[str]], 
                  zone_data: ZoneData, 
-                 resultdata: Optional[ResultsData]=None):
+                 resultdata: Optional[ResultsData] = None,
+                 mtx_adjustment: Optional[Dict] = None):
         self.name = specification["name"]
         self.orig = specification["orig"]
         self.dest = specification["dest"]
@@ -64,6 +67,7 @@ class Purpose:
         self.sub_intervals = sub_intervals[1:]
         self.zone_data = zone_data
         self.resultdata = resultdata
+        self.mtx_adjustment = mtx_adjustment
         self.generated_tours: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
 
@@ -122,18 +126,17 @@ class Purpose:
                 for mtx_type in day_imp[mode]:
                     day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
         # Apply cost change to validate model elasticities
-        if self.zone_data.mtx_adjustment is not None:
-            for idx, row in self.zone_data.mtx_adjustment.iterrows():
-                try:
-                    t = row["mtx_type"]
-                    m = row["mode"]
-                    p = row["cost_change"]
-                    day_imp[m][t] = p * day_imp[m][t]
-                    msg = (f"Purpose {self.name}: " 
-                           + f"Added {round(100*(p-1))} % to {t} : {m}.")
-                    log.warn(msg)
-                except KeyError:
-                    pass
+        if self.mtx_adjustment is not None:
+            for t in self.mtx_adjustment:
+                for m in self.mtx_adjustment[t]:
+                    p = self.mtx_adjustment[t][m]
+                    try:
+                        day_imp[m][t] = p * day_imp[m][t]
+                        msg = (f"Purpose {self.name}: "
+                            + f"Added {round(100*(p-1))} % to {t} : {m}.")
+                        log.warn(msg)
+                    except KeyError:
+                        pass
         # Apply discounts and transformations to LOS matrices
         for mode in day_imp:
             for mtx_type in day_imp[mode]:
@@ -166,7 +169,7 @@ class Purpose:
                         pass
         return day_imp
 
-def new_tour_purpose(specification, zone_data, resultdata):
+def new_tour_purpose(*args):
     """Create purpose for two-way tour or for secondary destination of tour.
 
     Parameters
@@ -194,9 +197,11 @@ def new_tour_purpose(specification, zone_data, resultdata):
         Data used for all demand calculations
     resultdata : ResultData
         Writer object for result directory
+    mtx_adjustment : dict (optional)
+        Dict of matrix adjustments for testing elasticities
     """
+    specification = args[0]
     attempt_calibration(specification)
-    args = (specification, zone_data, resultdata)
     if "sec_dest" in specification:
         purpose = SecDestPurpose(*args)
     elif (specification["area"] == "peripheral"
@@ -223,11 +228,13 @@ class TourPurpose(Purpose):
         Data used for all demand calculations
     resultdata : ResultData
         Writer object for result directory
+    mtx_adjustment : dict (optional)
+        Dict of matrix adjustments for testing elasticities
     """
 
-    def __init__(self, specification, zone_data, resultdata):
+    def __init__(self, specification, zone_data, resultdata, mtx_adjustment):
         args = (self, specification, zone_data, resultdata)
-        Purpose.__init__(*args)
+        Purpose.__init__(*args, mtx_adjustment)
         if self.orig == "source":
             self.gen_model = generation.NonHomeGeneration(self, resultdata)
         else:
@@ -389,11 +396,13 @@ class SecDestPurpose(Purpose):
         Data used for all demand calculations
     resultdata : ResultData
         Writer object to result directory
+    mtx_adjustment : dict (optional)
+        Dict of matrix adjustments for testing elasticities
     """
 
-    def __init__(self, specification, zone_data, resultdata):
+    def __init__(self, specification, zone_data, resultdata, mtx_adjustment):
         args = (self, specification, zone_data, resultdata)
-        Purpose.__init__(*args)
+        Purpose.__init__(*args, mtx_adjustment)
         self.gen_model = generation.SecDestGeneration(self, resultdata)
         self.model = logit.SecDestModel(*args)
         self.modes = list(self.model.dest_choice_param)

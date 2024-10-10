@@ -33,7 +33,9 @@ class ModelSystem:
     Parameters
     ----------
     zone_data_path : Path
-        Directory path where input data for forecast year are found
+        Path where input data for forecast year are found
+    cost_data_path : Path
+        Path where cost data for forecast year are found
     base_zone_data_path : Path
         Directory path where input data for base year are found
     base_matrices_path : Path
@@ -55,6 +57,7 @@ class ModelSystem:
 
     def __init__(self,
                  zone_data_path: Path,
+                 cost_data_path: Path,
                  base_zone_data_path: Path,
                  base_matrices_path: Path,
                  results_path: Path,
@@ -71,8 +74,15 @@ class ModelSystem:
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
+        cost_data = json.loads(cost_data_path.read_text("utf-8"))
+        self.car_dist_cost = cost_data["car_cost"]
+        self.transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, submodel)
+        within_zone_cost = (self.zdata_forecast["within_zone_dist"]
+                            * self.car_dist_cost["car_work"])
+        self.zdata_forecast["within_zone_cost"] = within_zone_cost
 
         # Output data
         self.resultdata = ResultsData(results_path)
@@ -84,7 +94,7 @@ class ModelSystem:
         for file in parameters_path.rglob("*.json"):
             purpose = new_tour_purpose(
                 json.loads(file.read_text("utf-8")), self.zdata_forecast,
-                self.resultdata)
+                self.resultdata, cost_data["cost_changes"])
             if (sorted(next(iter(purpose.impedance_share.values())))
                     == sorted(assignment_model.time_periods)):
                 if isinstance(purpose, SecDestPurpose):
@@ -233,7 +243,7 @@ class ModelSystem:
         impedance = {}
 
         # create attributes and background variables to network
-        self.ass_model.prepare_network(self.zdata_forecast.car_dist_cost)
+        self.ass_model.prepare_network(self.car_dist_cost)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
         if not self.ass_model.use_free_flow_speeds:
@@ -244,7 +254,7 @@ class ModelSystem:
             self._add_external_demand(
                 self.freight_matrices, param.freight_classes)
             log.info("Long-distance and freight matrices imported")
-        self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
+        self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
         with self.resultmatrices.open(
                 "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:

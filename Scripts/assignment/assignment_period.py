@@ -282,11 +282,12 @@ class AssignmentPeriod(Period):
             if network.mode(mode) is None:
                 raise AttributeError(f"Long-dist mode {mode} does not exist.")
         for line in network.transit_lines():
+            fare = fares[line[op_attr]]
             for segment in line.segments():
-                segment[param.dist_fare_attr] = (fares["dist"][line[op_attr]]
+                segment[param.dist_fare_attr] = (fare["dist"]
                                                  * segment.link.length)
                 segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fares["firstb"][line[op_attr]]
+            line[param.board_fare_attr] = fare["firstb"]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)

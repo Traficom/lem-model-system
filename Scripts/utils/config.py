@@ -72,6 +72,7 @@ def create_config(config: dict):
         "LOG_FORMAT": None,
         "BASELINE_DATA_PATH": None,
         "FORECAST_DATA_PATH": None,
+        "COST_DATA_PATH": None,
         "RESULTS_PATH": None,
         "SUBMODEL": None,
         "EMME_PATH": None,
