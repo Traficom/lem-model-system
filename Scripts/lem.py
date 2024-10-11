@@ -7,6 +7,7 @@ import utils.config
 import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
+from assignment.assignment_period import AssignmentPeriod
 from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
@@ -68,7 +69,7 @@ def main(args):
         "delete_extra_matrices": args.delete_extra_matrices,
     }
     if calculate_long_dist_demand:
-        kwargs["time_periods"] = ["vrk"]
+        kwargs["time_periods"] = {"vrk": "AssignmentPeriod"}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = results_path / "Matrices" / args.submodel
