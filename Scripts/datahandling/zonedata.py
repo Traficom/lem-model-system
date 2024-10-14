@@ -262,14 +262,14 @@ def read_zonedata(path: Path,
     if data.index.size != zone_numbers.size or (data.index != zone_numbers).any():
         for i in data.index:
             if int(i) not in zone_numbers:
-                msg = (f"Zone number {i} from mapping {data.index.name} "
+                msg = (f"Zone number {i} from mapping {zone_mapping_name} "
                        + f"in file {path} not found in network")
                 log.error(msg)
                 raise IndexError(msg)
         for i in zone_numbers:
             if i not in data.index:
                 msg = (f"Zone number {i} not found in mapping "
-                       + f"{data.index.name} in file {path}")
+                       + f"{zone_mapping_name} in file {path}")
                 log.error(msg)
                 raise IndexError(msg)
         msg = "Zone numbers did not match for file {}".format(path)
