@@ -336,6 +336,8 @@ class AssignmentPeriod(Period):
             network.mode(param.assignment_modes["truck"])
         }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
+        car_time_zero = []
+        car_time_ok = False
         for link in network.links():
             linktype = link.type % 100
             if link.type > 80 and linktype in param.roadclasses:
@@ -376,9 +378,9 @@ class AssignmentPeriod(Period):
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
+                        car_time_ok = True
                     elif car_time == 0:
-                        msg = f"Car_time attribute on link {link.id} is zero. Free flow speed used on link."
-                        log.warn(msg)
+                        car_time_zero.append(link.id)
                     else:
                         msg = f"Car travel time on link {link.id} is {car_time}"
                         log.error(msg)
@@ -388,6 +390,15 @@ class AssignmentPeriod(Period):
             else:
                 link.modes -= {main_mode, park_and_ride_mode}
         self.emme_scenario.publish_network(network)
+        if car_time_zero and not use_free_flow_speeds:
+            if car_time_ok:
+                links = ", ".join(car_time_zero)
+                log.warn(
+                    f"Car_time attribute on links {links} "
+                     + "is zero. Free flow speed used on these links.")
+            else:
+                log.warn(
+                    "No car times on links. Demand calculation not reliable!")
 
     def _set_transit_vdfs(self):
         log.info("Sets transit functions for scenario {}".format(
