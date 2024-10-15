@@ -9,6 +9,7 @@ from tests.integration.test_data_handling import (
 class Args:
     log_format = None
     log_level = "DEBUG"
+    end_assignment_only = False
     baseline_data_path = TEST_DATA_PATH / "Base_input_data"
     emme_paths = [ZONEDATA_PATH / "2016.cco"]
     first_scenario_ids = ["test"]
