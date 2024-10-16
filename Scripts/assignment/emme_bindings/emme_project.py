@@ -59,6 +59,8 @@ class EmmeProject:
             "inro.emme.data.scenario.copy_scenario")
         self.create_matrix = self.modeller.tool(
             "inro.emme.data.matrix.create_matrix")
+        self.delete_matrix = self.modeller.tool(
+            "inro.emme.data.matrix.delete_matrix")
         self.copy_matrix = self.modeller.tool(
             "inro.emme.data.matrix.copy_matrix")
         self.network_calc = self.modeller.tool(
