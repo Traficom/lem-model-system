@@ -257,10 +257,17 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     demand[scenario] = mtx[transport_class]
                     zone_numbers = mtx.zone_numbers
             vol_fac = param.volume_factors[transport_class][timeperiod]
-            for mtx_type in ["time", "cost", "dist"]:
+            for mtx_type in ["dist", "time", "cost"]:
                 cost = {scenario: read_costs(
                         data[scenario], timeperiod, transport_class, mtx_type)
                     for scenario in data}
+                if transport_class == "train" and mtx_type == "dist":
+                    # Max travel time with fixed 20 kmph speed
+                    # and one-hour start time
+                    maxtime = {scen: 3*cost[scen] + 60 for scen in data}
+                if transport_class == "train" and mtx_type == "time":
+                    for scen in cost:
+                        cost[scen] = numpy.minimum(cost[scen], maxtime[scen])
                 gains_existing, gains_additional = calc_gains(demand, cost)
                 result_type = transport_class + "_" + mtx_type
                 results[result_type] += (vol_fac *
