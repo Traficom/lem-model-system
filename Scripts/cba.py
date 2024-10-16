@@ -251,12 +251,14 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
         cols = CELL_INDICES["gains"]["cols"]
         rows = CELL_INDICES["gains"]["rows"][year]
         for transport_class in param.transport_classes:
+            vol_fac = param.volume_factors[transport_class][timeperiod]
             demand = {}
             for scenario in data:
                 with data[scenario].open("demand", timeperiod) as mtx:
                     demand[scenario] = mtx[transport_class]
                     zone_numbers = mtx.zone_numbers
-            vol_fac = param.volume_factors[transport_class][timeperiod]
+                result_type = f"{transport_class}_demand_{scenario}"
+                results[result_type] += vol_fac * demand[scenario].sum(0)
             for mtx_type in ["dist", "time", "cost"]:
                 cost = {scenario: read_costs(
                         data[scenario], timeperiod, transport_class, mtx_type)
