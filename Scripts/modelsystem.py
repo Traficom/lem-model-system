@@ -252,7 +252,7 @@ class ModelSystem:
             self._add_external_demand(self.long_dist_matrices)
             log.info("Get freight matrices")
             self._add_external_demand(
-                self.freight_matrices, param.freight_classes)
+                self.freight_matrices, param.truck_classes)
             log.info("Long-distance and freight matrices imported")
         self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
@@ -268,7 +268,8 @@ class ModelSystem:
             if is_end_assignment or not self.ass_model.use_free_flow_speeds:
                 if not self.ass_model.use_free_flow_speeds:
                     transport_classes = (param.private_classes
-                                        + param.local_transit_classes)
+                                        + param.local_transit_classes
+                                        + ("van",))
                 else:
                     transport_classes = (param.car_classes
                                          + param.long_distance_transit_classes)
