@@ -14,7 +14,13 @@ tour_combinations = {
     0: {
         () : {
             "constant":   13.75,
-            "individual_dummy": {},
+            "individual_dummy": {
+                "age_7_17": 0.0,
+                "age_18_29":  0.0,
+                "age_30_49":  0.0,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
+            },
             "zone": {}
         }
 # utility function 2
@@ -30,7 +36,7 @@ tour_combinations = {
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher_t": .3595
+                "hb_edu_higher_transit_work": .3595
             }
         }
     },
@@ -45,7 +51,7 @@ tour_combinations = {
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher_t": .4302
+                "hb_edu_higher_transit_work": .4302
             }
         }
     }
