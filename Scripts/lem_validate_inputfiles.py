@@ -48,8 +48,7 @@ def main(args):
 
     # Check basedata input
     log.info("Checking base inputdata...")
-    # Check filepaths (& first .emp path for zone_numbers in base zonedata)
-    if not base_zonedata_path.exists():
+    if not (args.end_assignment_only or base_zonedata_path.exists()):
         msg = "Baseline zonedata file '{}' does not exist.".format(
             base_zonedata_path)
         log.error(msg)
@@ -215,6 +214,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
+    )
+    parser.add_argument(
+        "-o", "--end-assignment-only",
+        action="store_true",
+        help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
         "-f", "--long-dist-demand-forecast",
