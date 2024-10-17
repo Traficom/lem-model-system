@@ -86,9 +86,6 @@ class MockProject:
         mtx.name = matrix_name
         mtx.description = matrix_description
 
-    def delete_matrix(self, matrix=str):
-        self.modeller.emmebank.delete_matrix(matrix)
-
     def create_extra_attribute(self, 
                                extra_attribute_type: str,
                                extra_attribute_name: str,

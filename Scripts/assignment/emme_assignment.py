@@ -521,9 +521,10 @@ class EmmeAssignmentModel(AssignmentModel):
         Due to an issue in Modeller, `create_matrix` with `overwrite=True`
         does not scale well for many large matrices. This is a workaround.
         """
-        if (self.emme_project.modeller.emmebank.matrix(matrix_id) is not None
-                and overwrite):
-            self.emme_project.delete_matrix(matrix=matrix_id)
+        if overwrite:
+            emmebank = self.emme_project.modeller.emmebank
+            if emmebank.matrix(matrix_id) is not None:
+                emmebank.delete_matrix(matrix_id)
         self.emme_project.create_matrix(
             matrix_id, matrix_name, matrix_description, default_value)
 
