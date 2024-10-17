@@ -71,15 +71,9 @@ class TourCombinationModel:
                     b = self.param[nr_tours][tour_combination]
                     util = b["constant"]
                     for i in b["zone"]:
-                        try:
-                            util += b["zone"][i] * self.zone_data[i][zones]
-                        except KeyError:
-                            raise KeyError(f"Zonedata {i} not found.")
+                        util += b["zone"][i] * self.zone_data[i][zones]
                     dummies = b["individual_dummy"]
-                    if age_group in dummies:
-                        util += dummies[age_group]
-                    else:
-                        raise KeyError(f"{age_group} not in generation parameters.")
+                    util += dummies[age_group]
                     if is_car_user and "car_users" in dummies:
                         util += dummies["car_users"]
                     combination_exps[tour_combination] = numpy.exp(util)
