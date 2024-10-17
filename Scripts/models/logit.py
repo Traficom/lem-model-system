@@ -457,7 +457,7 @@ class AccessibilityModel(ModeDestModel):
         mode_expsum, _, _ = self._calc_utils(impedance)
         self.accessibility = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
-        self.accessibility["sustainable"] = numpy.zeros_like(mode_expsum)
+        sustainable_expsum = numpy.zeros_like(mode_expsum)
         self.accessibility["car"] = numpy.zeros_like(mode_expsum)
         for mode in self.mode_choice_param:
             logsum = self.zone_data[f"{self.purpose.name}_{mode}"]
@@ -465,7 +465,8 @@ class AccessibilityModel(ModeDestModel):
             if mode.split('_')[0] == "car":
                 self.accessibility["car"] += logsum
             else:
-                self.accessibility["sustainable"] += numpy.log(self.mode_exps[mode])
+                sustainable_expsum += self.mode_exps[mode]
+        self.accessibility["sustainable"] = numpy.log(sustainable_expsum)
         for key in ["all", "sustainable", "car"]:
             self.accessibility[f"{key}_scaled"] = (self.money_utility
                                                    * self.accessibility[key])

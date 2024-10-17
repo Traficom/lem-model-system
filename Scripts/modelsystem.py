@@ -415,7 +415,7 @@ class ModelSystem:
         for purpose in self.dm.tour_purposes:
             accessibility = purpose.accessibility_model.accessibility
             for key in accessibility:
-                logsum = pandas.Series(numpy.log(accessibility[key]), 
+                logsum = pandas.Series(accessibility[key], 
                     purpose.zone_numbers, name=f"{purpose.name}_{key}")
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
