@@ -878,18 +878,7 @@ class AssignmentPeriod(Period):
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
             if transit_class in param.mixed_mode_classes:
-                network = self.emme_scenario.get_network()
-                avg_days = param.tour_duration[transit_class]["avg"]
-                for node in network.nodes():
-                    parking_cost = node[param.park_cost_attr_n]
-                    if parking_cost > 0:
-                        links = (node.incoming_links()
-                            if transit_class in param.car_access_classes
-                            else node.outgoing_links())
-                        for link in links:
-                            link[param.park_cost_attr_l] = (0.5 * parking_cost
-                                                            * avg_days)
-                self.emme_scenario.publish_network(network)
+                self._set_link_parking_costs(transit_class)
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)
@@ -907,6 +896,25 @@ class AssignmentPeriod(Period):
                     class_name=transit_class)
         log.info("Transit assignment performed for scenario {}".format(
             str(self.emme_scenario.id)))
+
+    def _set_link_parking_costs(self, transit_class):
+        network = self.emme_scenario.get_network()
+        avg_days = param.tour_duration[transit_class]["avg"]
+        for node in network.nodes():
+            parking_cost = node[param.park_cost_attr_n]
+            if parking_cost > 0:
+                parking_cost *= 0.5 * avg_days
+                if transit_class in param.car_access_classes:
+                    parking_links = node.incoming_links()
+                    other_links = node.outgoing_links()
+                else:
+                    other_links = node.incoming_links()
+                    parking_links = node.outgoing_links()
+                for link in parking_links:
+                    link[param.park_cost_attr_l] = parking_cost
+                for link in other_links:
+                    link[param.park_cost_attr_l] = 0
+        self.emme_scenario.publish_network(network)
 
     def _calc_transit_network_results(self,
                                       transit_classes=param.transit_classes):
