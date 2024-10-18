@@ -18,7 +18,7 @@ class TourCombinationModelTest(unittest.TestCase):
     def test_generation(self):
         zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
         zd = ZoneData(BASE_ZONEDATA_PATH, zi, "uusimaa")
-        zd._values["hb_edu_higher_transit_work"] = pandas.Series(0.0, METROPOLITAN_ZONES)
+        zd._values["hb_edu_higher"] = pandas.Series(0.0, METROPOLITAN_ZONES)
         model = TourCombinationModel(zd)
         prob = model.calc_prob("age_50_64", False, 102)
         self.assertIs(type(prob[("hb_edu_higher",)]), numpy.ndarray)
