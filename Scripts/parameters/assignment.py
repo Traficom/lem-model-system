@@ -153,6 +153,7 @@ volume_delay_funcs = {
     ## Escape function, speed 40 km/h
     "ft7": "length/(40/60)",
 }
+walk_speed = 5
 # Network fields defining whether transit mode stops at node
 stop_codes = {
     't': "#transit_stop_t",
@@ -182,6 +183,26 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
+tour_duration = {  # TODO What about last-mile??
+    "j_first_mile": {
+        "avg": 2.18,
+        "business": 1.12,
+        "leisure": 2.64,
+        "work": 1.41,
+    },
+    "e_first_mile": {
+        "avg": 2.62,
+        "business": 2.43,
+        "leisure": 3.06,
+        "work": 0.89,
+    },
+    "l_first_mile": {
+        "avg": 2.39,
+        "business": 2.01,
+        "leisure": 2.51,
+        "work": 1.12,
+    },
+}
 freight_terminal_cost = {
     'd': 0,
     'J': 0,
@@ -201,17 +222,17 @@ boarding_penalty = {
     'r': 2, # Commuter train
     'j': 2, # Long-distance train
 }
-# Boarding penalties for end assignment
-last_boarding_penalty = {
-    'b': 5, # Bus
-    'g': 2, # Trunk bus
+# Boarding penalties for long-distance trips
+long_boarding_penalty = {
+    'b': 0, # Bus
+    'g': 0, # Trunk bus
     'd': 5, # Long-distance bus
-    'e': 5, # Express bus
+    'e': 0, # Express bus
     't': 0, # Tram
     'p': 0, # Light rail
     'm': 0, # Metro
     'w': 0, # Ferry
-    'r': 2, # Commuter train
+    'r': 0, # Commuter train
     'j': 2, # Long-distance train
 }
 # Headway standard deviation function parameters for different transit modes
@@ -280,9 +301,17 @@ transfer_penalty = {
     "car_first_mile": 5,
     "car_last_mile": 5,
     "transit": 5,
-    "train": 10,
-    "long_d_bus": 10,
-    "airplane": 10,
+    "train": 5,
+    "long_d_bus": 5,
+    "airplane": 5,
+    "j_first_mile": 5,
+    "j_first_taxi": 5,
+    "e_first_mile": 5,
+    "l_first_mile": 5,
+    "j_last_mile": 5,
+    "j_last_taxi": 5,
+    "e_last_mile": 5,
+    "l_last_mile": 5,
 }
 extra_waiting_time = {
     "penalty": "@wait_time_dev",
@@ -292,8 +321,18 @@ first_headway_fraction = 0.3
 standard_headway_fraction = 0.5
 waiting_time_perception_factor = 1.5
 aux_transit_time = {
-    "perception_factor": 1.75
+    "time": "@walk_time",
+    "time_perception_factor": 1.75,
 }
+aux_transit_time_long = {
+    "time": "@walk_time",
+    "time_perception_factor": 2.5,
+}
+aux_car_time = {
+    "time": "@car_time",
+    "time_perception_factor": 7.5,
+}
+
 # Stochastic bike assignment distribution
 bike_dist = {
     "type": "UNIFORM", 
@@ -398,6 +437,46 @@ volume_factors = {
         "pt": 1 / 0.090, 
         "iht": 1 / 0.497,
     },
+    "l_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_first_taxi": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "e_first_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "l_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "j_last_taxi": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
+    "e_last_mile": {
+        "aht": 1. / 0.478,
+        "pt": 1. / 0.109,
+        "iht": 1. / 0.405,
+    },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
@@ -413,6 +492,10 @@ effective_headway = {
     (30, 60): lambda x: 29 + 0.5*x,
     (60, 120): lambda x: 44 + 0.3*x,
     (120, float("inf")): lambda x: 62 + 0.2*x,
+}
+effective_headway_ld = {
+    (0, 60): lambda x: 0.5*x,
+    (60, float("inf")): lambda x: 30 + 0.3*x,
 }
 # Noise zone width as function of start noise
 noise_zone_width = {
@@ -433,11 +516,20 @@ car_classes = (
     "car_leisure",
 )
 private_classes = car_classes + ("bike",)
-park_and_ride_classes = (
-    # "car_first_mile",
-    # "car_last_mile",
+car_access_classes = (
+    "j_first_mile",
+    "j_first_taxi",
+    "e_first_mile",
+    "l_first_mile",
 )
-long_distance_transit_classes = park_and_ride_classes + (
+car_egress_classes = (
+    # "j_last_mile",
+    # "e_last_mile",
+    # "j_last_taxi",
+    # "l_last_mile"
+)
+mixed_mode_classes = car_access_classes + car_egress_classes
+long_distance_transit_classes = mixed_mode_classes + (
     "train",
     "long_d_bus",
     "airplane",
@@ -454,6 +546,11 @@ truck_classes = (
 )
 freight_classes = truck_classes + ("van",)
 transport_classes = private_classes + transit_classes + freight_classes
+intermodals = {
+    "train": ["j_first_mile", "j_first_taxi"],
+    "long_d_bus": ["e_first_mile"],
+    "airplane": ["l_first_mile"],
+}
 assignment_classes = {
     "hb_work": "work",
     "hb_edu_basic": "work",
@@ -496,6 +593,14 @@ vot_classes = {
     "train": "work",
     "long_d_bus": "leisure",
     "airplane": "work",
+    "j_first_mile": "work",
+    "j_first_taxi": "work",
+    "e_first_mile": "leisure",
+    "l_first_mile": "work",
+    "j_last_mile": "work",
+    "j_last_taxi": "work",
+    "e_last_mile": "leisure",
+    "l_last_mile": "work",
 }
 local_transit_modes = [
     'b',
@@ -505,18 +610,25 @@ local_transit_modes = [
     'r',
     't',
     'w',
+    'e',
 ]
 long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],
     "transit_leisure": ['e', 'j', 'l'],
-    "car_first_mile": ['e', 'j', 'l'],
-    "car_last_mile": ['e', 'j', 'l'],
     "train": ['j'],
     "long_d_bus": ['e'],
     "airplane": ['l'],
+    "j_first_mile": ['j'],
+    "j_first_taxi": ['j'],
+    "e_first_mile": ['e'],
+    "l_first_mile": ['l'],
+    "j_last_mile": ['j'],
+    "j_last_taxi": ['j'],
+    "e_last_mile": ['e'],
+    "l_last_mile": ['l'],
 }
 aux_modes = [
-    'a',
+    'a'
 ]
 park_and_ride_mode = 'u'
 freight_modes = {
@@ -548,8 +660,6 @@ emme_matrices = {
     "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
     "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    # "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    # "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
     "train": ("demand", "time", "dist", "cost", "gen_cost"),
     "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
     "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -559,6 +669,14 @@ emme_matrices = {
     "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
     "truck": ("demand", "time", "dist", "cost", "gen_cost"),
     "van": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_first_taxi": ("demand", "time", "dist", "cost", "gen_cost"),
+    "e_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "l_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "j_last_taxi": ("demand", "time", "dist", "cost", "gen_cost"),
+    "e_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
+    "l_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
 }
 transit_impedance_matrices = {
     "total": {
@@ -568,16 +686,20 @@ transit_impedance_matrices = {
     },
     "by_mode_subset": {
         "inv_time": "actual_in_vehicle_times",
-        "aux_time": "actual_aux_transit_times",
         "board_time": "actual_total_boarding_times",
         "num_board": "avg_boardings",
         "inv_cost": "actual_in_vehicle_costs",
         "board_cost": "actual_total_boarding_costs",
+        "perc_bcost": "perceived_total_boarding_costs",
     },
     "local": {
-        "loc_bc": "actual_total_boarding_costs",
-        "loc_ic": "actual_in_vehicle_costs",
-        "loc_time": "actual_in_vehicle_times",
+        "aux_time": "preceived_aux_transit_times",
+        "loc_time": "preceived_in_vehicle_times",
+    },
+    "park_and_ride": {
+        "car_time": "actual_aux_transit_times",
+        "park_cost": "actual_aux_transit_cost",
+        "car_dist": "distance",
     },
 }
 freight_matrices = {
@@ -599,6 +721,8 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
+park_cost_attr_n = "#park_cost_n"
+park_cost_attr_l = "@park_cost_l"
 railtypes = {
     2: "tram",
     3: "metro",
