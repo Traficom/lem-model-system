@@ -967,6 +967,7 @@ class TransitSegment(NetworkObject):
         self.allow_boardings = False
         self.transit_time_func = 0
         self.dwell_time = 0.01
+        self.transit_time = 0.1
 
     @property
     def id(self) -> str:
