@@ -540,8 +540,6 @@ segment_results = {
     "total_boardings": "boa",
     "transfer_boardings": "trb",
 }
-# Hard-coded in Emme congested transit assignment
-congestion_cost = "ccost"
 uncongested_transit_time = "base_timtr"
 emme_matrices = {
     "car_work": ("demand", "time", "dist", "cost", "gen_cost"),
