@@ -234,7 +234,7 @@
             "l_first_mile": {
                 "constant": -0.98,
                 "generation": {
-                    "car_density": 3.44
+                    "car_density": 4.83
                 },
                 "attraction": {},
                 "impedance": {
@@ -251,7 +251,7 @@
             "l_first_taxi": {
                 "constant": -1.46,
                 "generation": {
-                    "car_density": 3.23
+                    "car_density": 4.54
                 },
                 "attraction": {},
                 "impedance": {
@@ -280,7 +280,7 @@
             "j_first_mile": {
                 "constant": -4.41,
                 "generation": {
-                    "car_density": 3.44
+                    "car_density": 4.83
                 },
                 "attraction": {},
                 "impedance": {
@@ -295,7 +295,7 @@
             "j_first_taxi": {
                 "constant": -3.64,
                 "generation": {
-                    "car_density": 3.23
+                    "car_density": 4.54
                 },
                 "attraction": {},
                 "impedance": {
@@ -322,7 +322,7 @@
             "e_first_mile": {
                 "constant": -4.5,
                 "generation": {
-                    "car_density": 3.23
+                    "car_density": 4.54
                 },
                 "attraction": {},
                 "impedance": {
