@@ -877,20 +877,19 @@ class AssignmentPeriod(Period):
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
-            if transit_class in param.mixed_mode_classes:
+            if transit_class in param.tour_duration:
                 self._set_link_parking_costs(transit_class)
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)
-            if "last" not in transit_class:
-                self.emme_project.matrix_results(
-                    spec.transit_result_spec, scenario=self.emme_scenario,
-                    class_name=transit_class)
+            self.emme_project.matrix_results(
+                spec.transit_result_spec, scenario=self.emme_scenario,
+                class_name=transit_class)
             if transit_class in param.long_distance_transit_classes:
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
-            if transit_class in param.car_access_classes:
+            if transit_class in param.mixed_mode_classes:
                 self.emme_project.matrix_results(
                     spec.park_and_ride_spec, scenario=self.emme_scenario,
                     class_name=transit_class)

@@ -6,6 +6,7 @@ t network_fields
 #transit_stop_g NODE BOOLEAN ''
 #transit_stop_t NODE BOOLEAN ''
 #transit_stop_p NODE BOOLEAN ''
+#park_cost_n NODE REAL ''
 end network_fields
 inode #subarea #municipality #transit_stop_b #transit_stop_e #transit_stop_g #transit_stop_t #transit_stop_p
 102 2 Helsinki 0 0 0 0 0

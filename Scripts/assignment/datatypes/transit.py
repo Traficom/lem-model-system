@@ -93,17 +93,15 @@ class TransitSpecification:
             if transit_class in param.local_transit_classes
             else param.aux_transit_time_long)
         for mode in param.aux_modes:
-            aux_transit_times.append(
-                {
-                    "mode": mode,
-                    "cost": None,
-                    "cost_perception_factor": 1.0,
-                }.update(aux_transit_time)
-            )
+            aux_transit_times.append({
+                "mode": mode,
+                "cost": None,
+                "cost_perception_factor": 1.0,
+                **aux_transit_time})
         if park_and_ride_results:
             self.transit_spec["modes"].append(param.park_and_ride_mode)
-            aux_transit_times.append(
-                {"mode": param.park_and_ride_mode}.update(param.aux_car_time))
+            aux_transit_times.append({
+                "mode": param.park_and_ride_mode, **param.aux_car_time})
             for mode_cost in aux_transit_times:
                 mode_cost["cost"] = param.park_cost_attr_l,
                 mode_cost["cost_perception_factor"] = (param.vot_inv[
