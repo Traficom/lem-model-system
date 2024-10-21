@@ -8,13 +8,14 @@ import utils.log as log
 from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_DIR
+from lem import BASE_ZONEDATA_FILE
 
 
 TEST_DATA_PATH = Path(__file__).parent.parent / "test_data"
 RESULTS_PATH = TEST_DATA_PATH / "Results" / "test"
-ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test"
-BASE_ZONEDATA_PATH = TEST_DATA_PATH / "Base_input_data" / BASE_ZONEDATA_DIR
+ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "zonedata.gpkg"
+COSTDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "costdata.json"
+BASE_ZONEDATA_PATH = TEST_DATA_PATH / "Base_input_data" / BASE_ZONEDATA_FILE
 BASE_MATRICES_PATH = TEST_DATA_PATH / "Base_input_data" / "Matrices"
 INTERNAL_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291, 19071]
 EXTERNAL_ZONES = [36102, 36500]

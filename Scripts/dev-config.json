@@ -12,6 +12,7 @@
     "FIRST_MATRIX_ID": 100,
     "BASELINE_DATA_PATH": "",
     "FORECAST_DATA_PATH": "",
+    "COST_DATA_PATH": "",
     "LONG_DIST_DEMAND_FORECAST": "base",
     "ITERATIONS": 15,
     "MAX_GAP": 1.0,
