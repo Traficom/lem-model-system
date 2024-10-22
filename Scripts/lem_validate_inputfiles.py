@@ -142,8 +142,6 @@ def main(args):
                 # EMME scenario
                 for key in nr_new_attr:
                     nr_new_attr[key] *= len(time_periods) + 1
-            # Attributes created during congested transit assignment
-            nr_new_attr["transit_segments"] += 3
             dim = emmebank.dimensions
             dim["nodes"] = dim["centroids"] + dim["regular_nodes"]
             attr_space = 0
