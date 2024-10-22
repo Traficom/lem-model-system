@@ -121,7 +121,7 @@ def main(args):
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+                "links": nr_veh_classes + len(param.mixed_mode_classes) + 1,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
@@ -170,7 +170,7 @@ def main(args):
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
-                    for ass_class in param.transport_classes:
+                    for ass_class in param.simple_transport_classes:
                         a = mtx[ass_class]
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):

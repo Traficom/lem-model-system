@@ -38,7 +38,7 @@ class ModelTest(unittest.TestCase):
         for ap in ass_model.assignment_periods:
             tp = ap.name
             print("Validating impedance")
-            self.assertEqual(3, len(impedance[tp]))
+            self.assertEqual(7, len(impedance[tp]))
             self.assertIsNotNone(impedance[tp]["time"])
             self.assertIsNotNone(impedance[tp]["cost"])
             self.assertIsNotNone(impedance[tp]["dist"])
@@ -61,7 +61,7 @@ class ModelTest(unittest.TestCase):
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 3)
+        self.assertEquals(len(impedances), 7)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIsNotNone(impedances["dist"])

@@ -53,7 +53,7 @@ class MatrixDataTest(unittest.TestCase):
         for key in emme_scenarios:
             print("Opening matrix for time period", key)
             with matrix_data.open(matrix_type, key, expanded_zones) as mtx:
-                for ass_class in param.transport_classes:
+                for ass_class in param.simple_transport_classes:
                     a = mtx[ass_class]
 
 
