@@ -380,6 +380,9 @@ class MockProject:
     def network_calc(self, *args, **kwargs):
         pass
 
+    def set_extra_function_parameters(self, *args, **kwargs):
+        pass
+
     def car_assignment(self, *args, **kwargs):
         report = {
             "stopping_criterion": "MAX_ITERATIONS",
