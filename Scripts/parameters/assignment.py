@@ -529,23 +529,29 @@ car_egress_classes = (
     # "l_last_mile"
 )
 mixed_mode_classes = car_access_classes + car_egress_classes
-long_distance_transit_classes = mixed_mode_classes + (
+long_dist_simple_classes = (
     "train",
     "long_d_bus",
     "airplane",
 )
+long_distance_transit_classes = (mixed_mode_classes
+                                 + long_dist_simple_classes)
 local_transit_classes = (
     "transit_work",
     "transit_leisure",
 )
-transit_classes = local_transit_classes + long_distance_transit_classes
+simple_transit_classes = local_transit_classes + long_dist_simple_classes
+transit_classes = simple_transit_classes + mixed_mode_classes
 truck_classes = (
     "truck",
     "semi_trailer",
     "trailer_truck",
 )
 freight_classes = truck_classes + ("van",)
-transport_classes = private_classes + transit_classes + freight_classes
+simple_transport_classes = (private_classes
+                            + simple_transit_classes
+                            + freight_classes)
+transport_classes = simple_transport_classes + mixed_mode_classes
 intermodals = {
     "train": ["j_first_mile", "j_first_taxi"],
     "long_d_bus": ["e_first_mile"],

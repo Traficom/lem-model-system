@@ -355,7 +355,9 @@ class TourPurpose(Purpose):
             if mode in mixed_mode_classes:
                 self.reweight_parking_cost(impedance[mode], tour_duration[mode])
         model = self.connection_models[pt_mode]
-        return model.calc_mode_prob(impedance)
+        prob, logsum = model.calc_mode_prob(impedance)
+        prob["l_first_mile"] += prob.pop("l_first_taxi")
+        return prob, logsum
 
     def reweight_parking_cost(self, impedance, duration):
         impedance["park_cost"] = (impedance["park_cost"]

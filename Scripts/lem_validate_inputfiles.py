@@ -170,7 +170,7 @@ def main(args):
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
-                    for ass_class in param.transport_classes:
+                    for ass_class in param.simple_transport_classes:
                         a = mtx[ass_class]
 
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
