@@ -599,12 +599,16 @@ class AssignmentPeriod(Period):
         self.emme_scenario.publish_network(network)
 
     def _set_walk_time(self):
-        """Set walk time."""
+        """Set walk or ferry time to data3"""
         network = self.emme_scenario.get_network()
+        walk_time = param.aux_transit_time["time"]
         for link in network.links():
-            link[param.aux_transit_time["time"]] = (link.length
-                                                    / param.walk_speed
-                                                    * 60)
+            linktype = link.type % 100
+            if linktype == 44:
+                ferry_travel_time = link.length / link.data2 * 60
+                link[walk_time] = link[param.ferry_wait_attr] + ferry_travel_time
+            else:
+                link[walk_time] = link.length / param.walk_speed * 60
         self.emme_scenario.publish_network(network)
 
     def _calc_road_cost(self, link_cost_attrs: Dict[str, str]):
@@ -798,6 +802,7 @@ class AssignmentPeriod(Period):
 
     def _assign_pedestrians(self):
         """Perform pedestrian assignment for one scenario."""
+        self._set_walk_time()
         log.info("Pedestrian assignment started...")
         self.emme_project.pedestrian_assignment(
             specification=self.walk_spec, scenario=self.emme_scenario)
@@ -886,6 +891,7 @@ class AssignmentPeriod(Period):
     def _assign_transit(self, transit_classes=param.local_transit_classes):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
+        self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
