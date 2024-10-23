@@ -68,19 +68,21 @@ class MockProject:
                 self.import_network_fields(
                     os.path.join(scenario_dir, file_name), scenario=scenario)
 
-    def create_matrix(self, 
-                      matrix_id: int, 
-                      matrix_name, 
-                      matrix_description,
-                      default_value=0, 
-                      overwrite=False):
+    def create_matrix(self,
+                      matrix_id: str,
+                      matrix_name: str,
+                      matrix_description: str,
+                      default_value: float = 0.0,
+                      overwrite: bool = False):
         try:
             mtx = self.modeller.emmebank.create_matrix(
                 matrix_id, default_value)
-        except ExistenceError:
+        except ExistenceError as e:
             if overwrite:
                 mtx = self.modeller.emmebank.matrix(matrix_id)
                 mtx.set_numpy_data(default_value)
+            else:
+                raise e
         mtx.name = matrix_name
         mtx.description = matrix_description
 
@@ -498,14 +500,14 @@ class EmmeBank:
     def delete_scenario(self, idx: int):
         del self._scenarios[idx]
 
-    def matrix(self, idx: int):
+    def matrix(self, idx: str):
         if idx in self._matrices:
             return self._matrices[idx]
 
     def matrices(self):
         return iter(self._matrices.values())
 
-    def create_matrix(self, idx: int, default_value=0.0):
+    def create_matrix(self, idx: str, default_value=0.0):
         if idx in self._matrices:
             raise ExistenceError("Matrix already exists: {}".format(idx))
         else:
@@ -514,7 +516,7 @@ class EmmeBank:
             self._matrices[idx] = matrix
             return matrix
 
-    def delete_matrix(self, idx):
+    def delete_matrix(self, idx: str):
         del self._matrices[idx]
 
     def function(self, idx: int):
