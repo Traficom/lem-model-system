@@ -27,13 +27,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             },
         }))
 
-        # mock_result_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-        #     "..", "test_data", "Results","test")
-        #ass_model = MockAssignmentModel(MatrixData(mock_result_path))
         network0 = context.modeller.emmebank.scenario(scenario_id).get_network()
-        #ass_model.prepare_network(network = network0) #the number is the car cost per km
-
-        #Mode check
         network1 = copy.deepcopy(network0)
         network1.create_mode(MODE_TYPES["3"],"h")
         self.assertRaises(ValueError, validate,
@@ -72,7 +66,7 @@ class EmmeAssignmentTest(unittest.TestCase):
                   "link_modes":"haf",
                   "link_type":999,
                   "link_length":1.0},
-                  ]
+        ]
         node1_id = 800900
         node2_id = 800901
         for case in cases:
@@ -82,92 +76,41 @@ class EmmeAssignmentTest(unittest.TestCase):
                     case["link_modes"],
                     case["link_type"],
                     case["link_length"])
-    
-        # #Link check, link must have VDF if car link
-        # network = copy.deepcopy(network0)
-        # node1 = network.create_node(node1_id, False)
-        # node2 = network.create_node(node2_id, False)
-        # link = network.create_link(node1_id, node2_id, "hc")
-        # #Check if link type equals 1
-        # link.type = 142
-        # link.length = 1.0
-        # link.volume_delay_func = 0
-        # self.assertRaises(ValueError, validate,
-        #     network,
-        #     fares)   
         
         #Segment check, train or metro travel time us1=0 before stopping (noalin=0 or noboan=0)
         # Check line encoding, if row's @ccost=1
         # only if mode is type mr
         network = copy.deepcopy(network0)
-        itinerary = []
-        node1_id = "802118"
-        node2_id = "802119"
-        node3_id = "802120"
-        itinerary.append(node1_id)
-        itinerary.append(node2_id)
-        itinerary.append(node3_id)
-        node1 = network.create_node(node1_id, False)
-        node2 = network.create_node(node2_id, False)
-        node3 = network.create_node(node3_id, False)
-        link = network.create_link(node1_id, node2_id, "mr")
-        link = network.create_link(node2_id, node3_id, "mr")
-        line = network.create_transit_line(
-                            '3002A3', 5, itinerary)
-        hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
-        for hdwy in hdw_attrs:
-            line[hdwy] = 5.0
+        itinerary = ["802118", "802119", "802120"]
+        itinerary = {node: False for node in itinerary}
+        line = self.line_creator(network, itinerary, "mr", '3002A3', 5, 5.0)
         line._segments[0].data1 = 0
         line._segments[1].data1 = 0
         line._segments[0].allow_boardings = 0
         line._segments[0].allow_alightings = 0
         line._segments[1].allow_boardings = 1
         line._segments[1].allow_alightings = 1
-        self.assertRaises(ValueError, validate_loaded,
-            network,
-            fares) 
+        self.assertRaises(ValueError, validate_loaded, network, fares) 
         
         #Segment check, train or metro travel time us1 is not 0 before stopping (noalin=1 and noboan=1)
         # Check line encoding, if row's @ccost=1
         # only if mode is type mr
         network = copy.deepcopy(network0)
-        itinerary = []
-        node1_id = "802121"
-        node2_id = "802122"
-        node3_id = "802123"
-        itinerary.append(node1_id)
-        itinerary.append(node2_id)
-        itinerary.append(node3_id)
-        node1 = network.create_node(node1_id, False)
-        node2 = network.create_node(node2_id, False)
-        node3 = network.create_node(node3_id, False)
-        link = network.create_link(node1_id, node2_id, "mr")
-        link = network.create_link(node2_id, node3_id, "mr")
-        line = network.create_transit_line(
-                            '3002A4', 5, itinerary)
-        hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
-        for hdwy in hdw_attrs:
-            line[hdwy] = 5.0
+        itinerary = ["802121", "802122", "802123"]
+        itinerary = {node: False for node in itinerary}
+        line = self.line_creator(network, itinerary, "mr", '3002A4', 5, 5.0)
         line._segments[0].data1 = 5
         line._segments[1].data1 = 0
         line._segments[0].allow_boardings = 0
         line._segments[0].allow_alightings = 0
         line._segments[1].allow_boardings = 0
         line._segments[1].allow_alightings = 0
-        self.assertRaises(ValueError, validate_loaded,
-            network,
-            fares) 
+        self.assertRaises(ValueError, validate_loaded, network, fares) 
 
         #Line check, headway should not be 0,1
         network = copy.deepcopy(network0)
-        itinerary = []
-        itinerary.append("802113")
-        itinerary.append("802114")
-        line = network.create_transit_line(
-                            '3002A2', 5, itinerary)
-        hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
-        for hdwy in hdw_attrs:
-            line[hdwy] = 0.001
+        itinerary = {"802113": False, "802114": False}
+        line = self.line_creator(network, itinerary, "mr", '3002A5', 5, 0.001)
         self.assertRaises(ValueError, validate, network)
 
     def link_check_network(self, network0, fares, node1_id, 
@@ -184,6 +127,19 @@ class EmmeAssignmentTest(unittest.TestCase):
         self.assertRaises(ValueError, validate,
             network,
             fares)
+
+    def line_creator(self, network, nodelist, modes,
+                     linename, lineid, hdwy_value):
+        for id, iscentroid in nodelist.items():
+            network.create_node(id, iscentroid)
+        nodes = list(nodelist.keys())
+        for i in range(0, len(nodes)-1):
+            network.create_link(nodes[i], nodes[i+1], modes)
+        line = network.create_transit_line(linename, lineid, nodes)
+        hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
+        for hdwy in hdw_attrs:
+            line[hdwy] = hdwy_value
+        return line
 
 if __name__ == "__main__":
     EmmeAssignmentTest().test_assignment()
