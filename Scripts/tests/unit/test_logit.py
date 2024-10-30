@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from datahandling.zonedata import ZoneData
-from models.logit import ModeDestModel
+from models.logit import ModeDestModel, DestModeModel
 from datatypes.purpose import attempt_calibration
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PATH
@@ -69,15 +69,15 @@ class LogitModelTest(unittest.TestCase):
         pur.zone_numbers = METROPOLITAN_ZONES
         pur.dist = mtx
         parameters_path = Path(__file__).parents[2] / "parameters" / "demand"
-        for file in parameters_path.rglob("hb_work.json"):
+        for file in parameters_path.rglob("*.json"):
             parameters = json.loads(file.read_text("utf-8"))
             attempt_calibration(parameters)
             pur.name = parameters["name"]
-            if ("sec_dest" not in parameters
-                    and parameters["orig"] != "source"
-                    and parameters["dest"] not in ("home", "source")
-                    and parameters["area"] != "peripheral"):
-                model = ModeDestModel(pur, parameters, zd, resultdata)
+            if parameters["name"] == "hb_work":
+                args = (pur, parameters, zd, resultdata)
+                model = (DestModeModel(*args)
+                    if parameters["struct"] == "dest>mode"
+                    else ModeDestModel(*args))
                 prob = model.calc_prob(impedance)
                 if parameters["dest"] in ("work"):
                     for mode in ("car_work", "transit_work", "bike", "walk"):

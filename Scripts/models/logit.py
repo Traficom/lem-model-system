@@ -607,8 +607,16 @@ class DestModeModel(LogitModel):
                 Choice probabilities
         """
         mode_expsum = self._calc_mode_util(impedance)
-        logsum = {"logsum": mode_expsum}
-        dest_expsum, dest_exps = self._calc_dest_util("logsum", logsum)
+        dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
+        try:
+            dest_expsum = dest_exps.sum(1)
+        except ValueError:
+            dest_expsum = dest_exps.sum()
+        logsum = pandas.Series(
+            numpy.log(dest_expsum), self.purpose.zone_numbers,
+            name=self.purpose.name)
+        self.accessibility = {"all": logsum}
+        self.zone_data._values[self.purpose.name] = logsum
         prob = {}
         dest_prob = dest_exps.T / dest_expsum
         for mode in self.mode_choice_param:
@@ -616,6 +624,9 @@ class DestModeModel(LogitModel):
             prob[mode] = mode_prob * dest_prob
         return prob
 
+    def calc_accessibility(self, *args):
+        """Placeholder for accessibility measuring"""
+        pass
 
 class SecDestModel(LogitModel):
     """Logit model for secondary destination choice.
