@@ -491,7 +491,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 matrix_ids[mtx_type] = "mf{}".format(
                     _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
-                self.emme_project.create_matrix(
+                self._create_matrix(
                     matrix_id=matrix_ids[mtx_type],
                     matrix_name=description, matrix_description=description,
                     overwrite=True)
@@ -504,13 +504,31 @@ class EmmeAssignmentModel(AssignmentModel):
                         id = f"mf{_id_hundred + id_ten[ass_class] + j}"
                         matrix_ids[subset][longer_name] = id
                         matrix_ids[mtx_type] = id
-                        self.emme_project.create_matrix(
+                        self._create_matrix(
                             matrix_id=id,
                             matrix_name=f"{mtx_type}_{ass_class}_{tag}",
                             matrix_description=longer_name,
                             default_value=999999, overwrite=True)
             emme_matrices[ass_class] = matrix_ids
         return emme_matrices
+
+    def _create_matrix(self,
+                       matrix_id: str,
+                       matrix_name: str,
+                       matrix_description: str,
+                       default_value: float = 0.0,
+                       overwrite: bool = False):
+        """Create matrix in EMME.
+
+        Due to an issue in Modeller, `create_matrix` with `overwrite=True`
+        does not scale well for many large matrices. This is a workaround.
+        """
+        if overwrite:
+            emmebank = self.emme_project.modeller.emmebank
+            if emmebank.matrix(matrix_id) is not None:
+                emmebank.delete_matrix(matrix_id)
+        self.emme_project.create_matrix(
+            matrix_id, matrix_name, matrix_description, default_value)
 
     def _create_attributes(self,
                            scenario: Any,
