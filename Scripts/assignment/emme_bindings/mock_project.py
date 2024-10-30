@@ -259,10 +259,15 @@ class MockProject:
                     # TODO Implement deletion
                     rec = f.readline().replace("'", " ").split()
                 else:
+                    vehicle_id = int(rec[3])
+                    headway = float(rec[4])
+                    line_data = {
+                        "data1": float(rec[7]),
+                        "data2": float(rec[8]),
+                        "data3": float(rec[9]),
+                    }
                     if rec[0] == "a":
                         line_id = rec[1]
-                        vehicle_id = int(rec[3])
-                        headway = float(rec[4])
                         itinerary = []
                         segment_data = []
                         while True:
@@ -290,12 +295,11 @@ class MockProject:
                             segment.__dict__.update(data)
                     elif rec[0] == "m":
                         line = network.transit_line(idx=rec[1])
-                        vehicle_id = int(rec[3])
-                        headway = float(rec[4])
                     else:
                         raise SyntaxError("Unknown update code")
                     line.vehicle = vehicle_id
                     line.headway = headway
+                    line.__dict__.update(line_data)
 
     def import_extra_attributes(self, file_path, revert_on_error=True,
                                 scenario=None, import_definitions=False):

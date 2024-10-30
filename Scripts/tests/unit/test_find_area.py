@@ -8,10 +8,10 @@ import unittest
 class AreaFindTest(unittest.TestCase):
     def test_find_area(self):
         mapping = pandas.Series({
-            101: "Uusimaa",
-            2021: "Uusimaa",
-            5500: "Uusimaa",
-            13561: "Varsinais-Suomi",
+            202: "Uusimaa",
+            2037: "Uusimaa",
+            4101: "Uusimaa",
+            12614: "Varsinais-Suomi",
         })
         agg = mapping.drop_duplicates()
         a = pandas.DataFrame(0, agg, agg)
