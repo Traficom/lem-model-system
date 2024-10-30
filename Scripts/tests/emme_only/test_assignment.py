@@ -83,6 +83,7 @@ class EmmeAssignmentTest:
             "van": 0.2,
         }
         self.ass_model.prepare_network(dist_cost)
+        self.resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
     
     def test_assignment(self):
         nr_zones = self.ass_model.nr_zones
@@ -107,16 +108,15 @@ class EmmeAssignmentTest:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
             travel_cost[ap.name] = ap.end_assign()
-        resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
             "Espoo": "Uusimaa",
             "Lohja": "Uusimaa",
             "Salo": "Varsinais-Suomi",
         })
-        self.ass_model.aggregate_results(resultdata, mapping)
+        self.ass_model.aggregate_results(self.resultdata, mapping)
         self.ass_model.calc_noise(mapping)
-        resultdata.flush()
+        self.resultdata.flush()
         costs_files = MatrixData(
             TEST_DATA_PATH / "Results" / "assignment" / "Matrices")
         for time_period in travel_cost:
@@ -132,6 +132,28 @@ class EmmeAssignmentTest:
             ZONEDATA_PATH, self.ass_model.zone_numbers, "uusimaa")
         self.ass_model.calc_transit_cost(zdata.transit_zone)
 
+def test_freight_assignment(self):
+        dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
+        purposes = ["c1", "c2"]
+        self.ass_model.prepare_freight_network(dist_cost, purposes)
+        temp_impedance = self.ass_model.freight_network.assign()
+        nr_zones = self.ass_model.nr_zones
+        demand = numpy.full((nr_zones, nr_zones), 1.0)
+        for purpose in purposes:
+            for mode in ["truck", "freight_train", "ship"]:
+                self.ass_model.freight_network.set_matrix(mode, demand)
+            self.ass_model.freight_network.save_network_volumes(purpose)
+            self.ass_model.freight_network.output_traversal_matrix(
+                self.resultdata.path)
+
 if emme_available:
     em = EmmeAssignmentTest()
     em.test_assignment()
+    em.test_freight_assignment()
