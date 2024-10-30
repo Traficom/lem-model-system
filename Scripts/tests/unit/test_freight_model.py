@@ -51,7 +51,6 @@ class FreightModelTest(unittest.TestCase):
         omx_file = omx.open_file(resultpath / "freight_demand_tons_year.omx", "w")
         omx_file.create_mapping("zone_number", ZONE_NUMBERS)
         for purpose_key, purpose_value in purposes.items():
-            print("Purpose key being run: ", purpose_key)
             base_comm = comm_conversion[purpose_key]
             impedance = {
                 "truck": {
@@ -81,13 +80,9 @@ class FreightModelTest(unittest.TestCase):
             for mode in demand:
                 new_demand = numpy.nan_to_num(demand[mode])
                 omx_file[f"{purpose_key}_{mode}"] = new_demand
-                try:
-                    ass_model.freight_network.set_matrix(mode, new_demand)
-                except ValueError:
-                    continue
+                ass_model.freight_network.set_matrix(mode, new_demand)
             ass_model.freight_network.save_network_volumes(purpose_key)
             ass_model.freight_network.output_traversal_matrix(resultpath, purpose_key)
-            print(f"----Finished with purpose key: {purpose_key}")
         omx_file.close()
 
     def read_freight_costdata(self, path: Path) -> dict:
