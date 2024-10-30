@@ -132,7 +132,7 @@ class EmmeAssignmentTest:
             ZONEDATA_PATH, self.ass_model.zone_numbers, "uusimaa")
         self.ass_model.calc_transit_cost(zdata.transit_zone)
 
-def test_freight_assignment(self):
+    def test_freight_assignment(self):
         dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
