@@ -243,7 +243,7 @@ a'Finnair-AY285-2' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
    249881         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    249870        lay=0.00
 c 'Finnair-AY285-2' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-1' p   7   8.90  30.00 'Itï¿½keskus-Keilaniemi'      0      0      0
+a'Helsingin-15-1' p   7   8.90  30.00 'Itäkeskus-Keilaniemi'      0      0      0
   path=no
    831111      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249857      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -280,7 +280,7 @@ a'Helsingin-15-1' p   7   8.90  30.00 'Itï¿½keskus-Keilaniemi'      0      0    
    249867      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    249869        lay=0.00
 c 'Helsingin-15-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itï¿½keskus'      0      0      0
+a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itäkeskus'      0      0      0
   path=no
    249869      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249867      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -436,7 +436,7 @@ a'Helsingin-400-2' g  10   9.60  30.00 'Vantaankoski-Martinlaakso-Kamppi'      0
    900152      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    772048        lay=0.00
 c 'Helsingin-400-2' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-719K-1' b   1 450.00  30.00 'Hakunila-Lï¿½nsisalmi-Nybygget'      0      0      0
+a'Helsingin-719K-1' b   1 450.00  30.00 'Hakunila-Länsisalmi-Nybygget'      0      0      0
   path=no
    164712      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    162734      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -460,7 +460,7 @@ a'Helsingin-719K-1' b   1 450.00  30.00 'Hakunila-Lï¿½nsisalmi-Nybygget'      0 
    173819      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    121640        lay=0.00
 c 'Helsingin-719K-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-719K-2' b   1 450.00  30.00 'Nybygget-Lï¿½nsisalmi-Hakunila'      0      0      0
+a'Helsingin-719K-2' b   1 450.00  30.00 'Nybygget-Länsisalmi-Hakunila'      0      0      0
   path=no
    121640      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    173819      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0

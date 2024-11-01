@@ -569,7 +569,6 @@ class FreightPurpose(Purpose):
         self.dist = impedance["truck"]["cost"]
         nr_zones = self.zone_data.nr_zones
         probs = self.model.calc_prob(impedance)
-        self.model._dest_exps.clear()
         generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand

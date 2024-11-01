@@ -14,7 +14,7 @@ from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 
 TEST_PATH = Path(__file__).parent.parent / "test_data"
 TEST_DATA_PATH = TEST_PATH / "Scenario_input_data" / "2030_test"
-TEST_MATRICES = TEST_PATH / "Results" / "test" / "Matrices" / "uusimaa"
+TEST_MATRICES = TEST_PATH / "Base_input_data" / "Matrices" / "uusimaa"
 RESULT_PATH = TEST_PATH / "Results"
 PARAMETERS_PATH = TEST_PATH.parent.parent / "parameters" / "freight"
 ZONE_NUMBERS = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621,
@@ -77,4 +77,4 @@ class FreightModelTest(unittest.TestCase):
             }
             demand = purpose_value.calc_traffic(impedance, purpose_key)
             for mode in demand:
-                demand[mode] = numpy.nan_to_num(demand[mode])
+                self.assertFalse(numpy.isnan(demand[mode]).any())
