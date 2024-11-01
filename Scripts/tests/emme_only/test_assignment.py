@@ -168,7 +168,7 @@ class EmmeAssignmentTest:
             "truck": 0.3,
             "van": 0.2,
         }
-        purposes = ["c1", "c2"]
+        purposes = ["marita", "kalevi"]
         self.ass_model.prepare_freight_network(dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones
@@ -178,7 +178,7 @@ class EmmeAssignmentTest:
                 self.ass_model.freight_network.set_matrix(mode, demand)
             self.ass_model.freight_network.save_network_volumes(purpose)
             self.ass_model.freight_network.output_traversal_matrix(
-                self.resultdata.path)
+                self.resultdata.path, purpose)
 
 if emme_available:
     em = EmmeAssignmentTest()
