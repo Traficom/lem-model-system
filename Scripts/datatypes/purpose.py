@@ -537,3 +537,38 @@ def calibrate(spec: dict, calib_spec: dict):
         except TypeError:
             # Search deeper
             calibrate(spec[param_name], calib_spec[param_name])
+            
+
+class FreightPurpose(Purpose):
+
+    def __init__(self, specification, zone_data, resultdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+
+        if specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+
+    def calc_traffic(self, impedance: dict, purpose_key: str) -> list[Demand]:
+        """Calculate freight traffic matrix.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
+        Return
+        ------
+        datatypes.demand.Demand
+            Freight mode demand matrix for whole day
+        """
+        self.dist = impedance["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
+        probs = self.model.calc_prob(impedance)
+        self.model._dest_exps.clear()
+        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
+        return demand
