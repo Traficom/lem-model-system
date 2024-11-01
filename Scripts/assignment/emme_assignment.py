@@ -370,6 +370,7 @@ class EmmeAssignmentModel(AssignmentModel):
         for ap in self.assignment_periods:
             network = ap.emme_scenario.get_network()
             volume_factor = param.volume_factors["bus"][ap.name]
+            time_attr = ap.extra(param.uncongested_transit_time)
             for line in network.transit_lines():
                 mode = line.vehicle.description
                 headway = line[ap.netfield("hdw")]
@@ -377,8 +378,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
                         miles["dist"][mode] += departures * segment.link.length
-                        miles["time"][mode] += (departures
-                                                * segment[ap.extra("base_timtr")])
+                        miles["time"][mode] += departures * segment[time_attr]
         resultdata.print_data(miles, "transit_kms.txt")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
@@ -671,12 +671,6 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.extra_waiting_time["penalty"],
             "wait time st.dev.", overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", "@" + param.congestion_cost,
-            "transit congestion cost", overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", "@" + param.uncongested_transit_time,
-            "uncongested transit time", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", extra(param.uncongested_transit_time),
             "uncongested transit time", overwrite=True, scenario=scenario)

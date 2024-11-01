@@ -915,4 +915,7 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         for link in network.links():
             link[volax_attr] = link.aux_transit_volume
+        time_attr = self.extra(param.uncongested_transit_time)
+        for segment in network.transit_segments():
+            segment[time_attr] = segment.transit_time
         self.emme_scenario.publish_network(network)
