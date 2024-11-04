@@ -114,9 +114,7 @@
     "mode_choice": {
         "car_leisure": {
             "constant": -2.26071,
-            "generation": {
-                "car_density": 2.5938
-            },
+            "generation": {},
             "attraction": {
                 "within_zone_time": -0.04235
             },
@@ -131,9 +129,7 @@
         },
         "car_pax": {
             "constant": -4.84821,
-            "generation": {
-                "car_density": 3.1182
-            },
+            "generation": {},
             "attraction": {
                 "within_zone_time": -0.04694
             },
