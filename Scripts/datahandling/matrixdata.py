@@ -27,7 +27,7 @@ class MatrixData:
              mapping: Optional[pandas.Series] = None,
              transport_classes: Iterable[str] = param.transport_classes,
              m: str = 'r'):
-        file_name = mtx_type+'_'+time_period+".omx"
+        file_name = self.path / (mtx_type + '_' + time_period + ".omx")
         mtxfile = MatrixFile(
             omx.open_file(file_name, m), zone_numbers, mapping,
             transport_classes)
