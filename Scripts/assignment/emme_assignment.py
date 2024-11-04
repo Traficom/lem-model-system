@@ -88,8 +88,9 @@ class EmmeAssignmentModel(AssignmentModel):
         if car_time_files is not None:
             for path in car_time_files:
                 self.emme_project.import_network_fields(
-                    path, field_separator="TAB", revert_on_error=False,
-                    scenario=self.mod_scenario, has_header=False)
+                    path / "netfield_links.txt", field_separator="TAB",
+                    revert_on_error=False, scenario=self.mod_scenario,
+                    has_header=False)
         self._add_bus_stops()
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
