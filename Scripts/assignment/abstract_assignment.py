@@ -36,7 +36,7 @@ class AssignmentModel:
         pass
 
     @abstractmethod
-    def prepare_network(self, car_dist_unit_cost=None, **kwargs):
+    def prepare_network(self, car_dist_unit_cost=None, *args):
         pass
 
     @abstractmethod
