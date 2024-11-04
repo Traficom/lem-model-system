@@ -221,7 +221,8 @@ class ModelSystem:
 
     # possibly merge with init
     def assign_base_demand(self, 
-            is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
+            is_end_assignment: bool = False,
+            car_time_files: Optional[List[str]] = None) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign base demand to network (before first iteration).
 
         Parameters
@@ -239,11 +240,16 @@ class ModelSystem:
                     Impedance type (time/cost/dist)
                 value : numpy.ndarray
                     Impedance (float 2-d matrix)
+        car_time_files : list (optional)
+            List of paths, where car time data is stored.
+            If set, traffic assignment is all-or-nothing with speeds stored
+            in `#car_time_xxx`. Overrides `use_free_flow_speeds`.
+            List can be empty, if car times are already stored on network.
         """
         impedance = {}
 
         # create attributes and background variables to network
-        self.ass_model.prepare_network(self.car_dist_cost)
+        self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
         if not self.ass_model.use_free_flow_speeds:
