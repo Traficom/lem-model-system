@@ -131,7 +131,10 @@ class Purpose:
                 for m in self.mtx_adjustment[t]:
                     p = self.mtx_adjustment[t][m]
                     try:
-                        day_imp[m][t] = p * day_imp[m][t]
+                        if t == "unweighted_time":
+                            day_imp[m]["time"] += (p-1) * day_imp[m][t]
+                        else:
+                            day_imp[m][t] *= p
                         msg = (f"Purpose {self.name}: "
                             + f"Added {round(100*(p-1))} % to {t} : {m}.")
                         log.warn(msg)
