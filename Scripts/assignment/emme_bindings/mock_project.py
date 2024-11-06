@@ -68,19 +68,21 @@ class MockProject:
                 self.import_network_fields(
                     os.path.join(scenario_dir, file_name), scenario=scenario)
 
-    def create_matrix(self, 
-                      matrix_id: int, 
-                      matrix_name, 
-                      matrix_description,
-                      default_value=0, 
-                      overwrite=False):
+    def create_matrix(self,
+                      matrix_id: str,
+                      matrix_name: str,
+                      matrix_description: str,
+                      default_value: float = 0.0,
+                      overwrite: bool = False):
         try:
             mtx = self.modeller.emmebank.create_matrix(
                 matrix_id, default_value)
-        except ExistenceError:
+        except ExistenceError as e:
             if overwrite:
                 mtx = self.modeller.emmebank.matrix(matrix_id)
                 mtx.set_numpy_data(default_value)
+            else:
+                raise e
         mtx.name = matrix_name
         mtx.description = matrix_description
 
@@ -257,10 +259,15 @@ class MockProject:
                     # TODO Implement deletion
                     rec = f.readline().replace("'", " ").split()
                 else:
+                    vehicle_id = int(rec[3])
+                    headway = float(rec[4])
+                    line_data = {
+                        "data1": float(rec[7]),
+                        "data2": float(rec[8]),
+                        "data3": float(rec[9]),
+                    }
                     if rec[0] == "a":
                         line_id = rec[1]
-                        vehicle_id = int(rec[3])
-                        headway = float(rec[4])
                         itinerary = []
                         segment_data = []
                         while True:
@@ -288,12 +295,11 @@ class MockProject:
                             segment.__dict__.update(data)
                     elif rec[0] == "m":
                         line = network.transit_line(idx=rec[1])
-                        vehicle_id = int(rec[3])
-                        headway = float(rec[4])
                     else:
                         raise SyntaxError("Unknown update code")
                     line.vehicle = vehicle_id
                     line.headway = headway
+                    line.__dict__.update(line_data)
 
     def import_extra_attributes(self, file_path, revert_on_error=True,
                                 scenario=None, import_definitions=False):
@@ -498,14 +504,14 @@ class EmmeBank:
     def delete_scenario(self, idx: int):
         del self._scenarios[idx]
 
-    def matrix(self, idx: int):
+    def matrix(self, idx: str):
         if idx in self._matrices:
             return self._matrices[idx]
 
     def matrices(self):
         return iter(self._matrices.values())
 
-    def create_matrix(self, idx: int, default_value=0.0):
+    def create_matrix(self, idx: str, default_value=0.0):
         if idx in self._matrices:
             raise ExistenceError("Matrix already exists: {}".format(idx))
         else:
@@ -514,7 +520,7 @@ class EmmeBank:
             self._matrices[idx] = matrix
             return matrix
 
-    def delete_matrix(self, idx):
+    def delete_matrix(self, idx: str):
         del self._matrices[idx]
 
     def function(self, idx: int):
@@ -970,6 +976,7 @@ class TransitSegment(NetworkObject):
         self.allow_boardings = False
         self.transit_time_func = 0
         self.dwell_time = 0.01
+        self.transit_time = 0.1
 
     @property
     def id(self) -> str:

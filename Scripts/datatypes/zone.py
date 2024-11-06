@@ -44,8 +44,7 @@ class ZoneAggregations:
         pandas.Series
             Aggregated array
         """
-        avg = lambda a, w: numpy.ma.average(a, weights=w[a.index])
-        agg = array.groupby(self.mappings[area_type]).agg(avg, w=weights)
+        agg = array.groupby(self.mappings[area_type]).agg(avg, weights=weights)
         agg["all"] = avg(array, weights)
         return agg
 
@@ -98,3 +97,10 @@ class Zone:
         Zone.counter += 1
         self.county = aggregations.mappings["county"][number]
         self.municipality = aggregations.mappings["municipality"][number]
+
+
+def avg(data, weights):
+    try:
+        return numpy.average(data, weights=weights[data.index])
+    except ZeroDivisionError:
+        return 0

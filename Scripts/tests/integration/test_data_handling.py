@@ -17,8 +17,10 @@ ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "zonedata
 COSTDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "costdata.json"
 BASE_ZONEDATA_PATH = TEST_DATA_PATH / "Base_input_data" / BASE_ZONEDATA_FILE
 BASE_MATRICES_PATH = TEST_DATA_PATH / "Base_input_data" / "Matrices"
-INTERNAL_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291, 19071]
-EXTERNAL_ZONES = [36102, 36500]
+INTERNAL_ZONES = [
+    202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621, 2707, 2814, 2918,
+    3000, 3003, 3203, 3302, 3416, 3639, 3705, 3800, 4013, 4101, 4202]
+EXTERNAL_ZONES = [7043, 8284, 12614, 17278, 19419, 23678]
 ZONE_INDEXES = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
 
 # Integration tests for validating that we can read the matrices from OMX

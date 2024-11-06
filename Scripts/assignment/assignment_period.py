@@ -323,7 +323,7 @@ class AssignmentPeriod(Period):
         """
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
-        return {link.id.replace('-', '\t'): link[time_attr]
+        return {(link.i_node.id, link.j_node.id): link[time_attr]
             for link in network.links() if link.i_node["#subarea"] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
@@ -946,4 +946,7 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         for link in network.links():
             link[volax_attr] = link.aux_transit_volume
+        time_attr = self.extra(param.uncongested_transit_time)
+        for segment in network.transit_segments():
+            segment[time_attr] = segment.transit_time
         self.emme_scenario.publish_network(network)

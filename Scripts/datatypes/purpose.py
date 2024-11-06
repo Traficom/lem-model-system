@@ -168,7 +168,7 @@ class Purpose:
                 if mtx_type == "cost" and mode == "car_pax":
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
-                                                    cost.car_drv_occupancy[self.name])
+                                                    cost.car_pax_occupancy[self.name])
                     except KeyError:
                         pass
         return day_imp
@@ -247,6 +247,7 @@ class TourPurpose(Purpose):
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
+            self.accessibility_model = self.model
         else:
             self.model = logit.ModeDestModel(*args)
             self.accessibility_model = logit.AccessibilityModel(*args)
@@ -333,7 +334,7 @@ class TourPurpose(Purpose):
 
         # Calculate main mode probability after access mode probability
         # to have access mode logsum as variable
-        if is_last_iteration and self.name[0] != 's':
+        if is_last_iteration:
             self.accessibility_model.calc_accessibility(
                 copy(purpose_impedance))
         self.prob = self.model.calc_prob(purpose_impedance)

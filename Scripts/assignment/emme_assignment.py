@@ -256,7 +256,7 @@ class EmmeAssignmentModel(AssignmentModel):
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
                 for ap in self.assignment_periods})
-        car_times.index.name = "i_node\tj_node"
+        car_times.index.names = ("i_node", "j_node")
         resultdata.print_data(car_times, "netfield_links.txt")
 
         # Aggregate results to 24h
@@ -302,10 +302,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = linktype - 90
             else:
                 vdf = 0
+            municipality = link.i_node["#municipality"]
             try:
-                area = mapping[link.i_node["#municipality"]]
+                area = mapping[municipality]
             except KeyError:
-                faulty_kela_code_nodes.add(link.i_node.id)
+                faulty_kela_code_nodes.add(municipality)
                 area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
@@ -323,8 +324,8 @@ class EmmeAssignmentModel(AssignmentModel):
             else:
                 linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
-            s = "Municipality name not found for nodes: " + ", ".join(
-                faulty_kela_code_nodes)
+            s = ("County not found for #municipality when aggregating link data: "
+                 + ", ".join(faulty_kela_code_nodes))
             log.warn(s)
         resultdata.print_line("\nVehicle kilometres", "result_summary")
         resultdata.print_concat(vdf_kms, "vehicle_kms_vdfs.txt")
@@ -365,6 +366,7 @@ class EmmeAssignmentModel(AssignmentModel):
         for ap in self.assignment_periods:
             network = ap.emme_scenario.get_network()
             volume_factor = param.volume_factors["bus"][ap.name]
+            time_attr = ap.extra(param.uncongested_transit_time)
             for line in network.transit_lines():
                 mode = line.vehicle.description
                 headway = line[ap.netfield("hdw")]
@@ -372,8 +374,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     departures = volume_factor * 60/headway
                     for segment in line.segments():
                         miles["dist"][mode] += departures * segment.link.length
-                        miles["time"][mode] += (departures
-                                                * segment[ap.extra("base_timtr")])
+                        miles["time"][mode] += departures * segment[time_attr]
         resultdata.print_data(miles, "transit_kms.txt")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
@@ -491,7 +492,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 matrix_ids[mtx_type] = "mf{}".format(
                     _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
-                self.emme_project.create_matrix(
+                self._create_matrix(
                     matrix_id=matrix_ids[mtx_type],
                     matrix_name=description, matrix_description=description,
                     overwrite=True)
@@ -504,13 +505,31 @@ class EmmeAssignmentModel(AssignmentModel):
                         id = f"mf{_id_hundred + id_ten[ass_class] + j}"
                         matrix_ids[subset][longer_name] = id
                         matrix_ids[mtx_type] = id
-                        self.emme_project.create_matrix(
+                        self._create_matrix(
                             matrix_id=id,
                             matrix_name=f"{mtx_type}_{ass_class}_{tag}",
                             matrix_description=longer_name,
                             default_value=999999, overwrite=True)
             emme_matrices[ass_class] = matrix_ids
         return emme_matrices
+
+    def _create_matrix(self,
+                       matrix_id: str,
+                       matrix_name: str,
+                       matrix_description: str,
+                       default_value: float = 0.0,
+                       overwrite: bool = False):
+        """Create matrix in EMME.
+
+        Due to an issue in Modeller, `create_matrix` with `overwrite=True`
+        does not scale well for many large matrices. This is a workaround.
+        """
+        if overwrite:
+            emmebank = self.emme_project.modeller.emmebank
+            if emmebank.matrix(matrix_id) is not None:
+                emmebank.delete_matrix(matrix_id)
+        self.emme_project.create_matrix(
+            matrix_id, matrix_name, matrix_description, default_value)
 
     def _create_attributes(self,
                            scenario: Any,
@@ -657,12 +676,6 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.extra_waiting_time["penalty"],
             "wait time st.dev.", overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", "@" + param.congestion_cost,
-            "transit congestion cost", overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", "@" + param.uncongested_transit_time,
-            "uncongested transit time", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", extra(param.uncongested_transit_time),
             "uncongested transit time", overwrite=True, scenario=scenario)

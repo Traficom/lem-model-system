@@ -11,6 +11,13 @@ if TYPE_CHECKING:
 import parameters.zone as param
 
 
+def log(a: numpy.array):
+    with numpy.errstate(divide="ignore"):
+        return numpy.log(a)
+
+def divide(a, b):
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
+
 class LogitModel:
     """Generic logit model with mode/destination choice.
 
@@ -170,13 +177,13 @@ class LogitModel:
         for i in b:
             try: # If only one parameter
                 imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
-                utility += b[i] * numpy.log(imp)
+                utility += b[i] * log(imp)
             except ValueError: # Separate sub-region parameters
                 for j, bounds in enumerate(self.sub_bounds):
                     imp = impedance[i][bounds, :]
                     if b[i][j] < 0:
                         imp += 1
-                    utility[bounds, :] += b[i][j] * numpy.log(imp)
+                    utility[bounds, :] += b[i][j] * log(imp)
         return utility
 
     def _add_zone_util(self, utility, b, generation=False):
@@ -420,11 +427,11 @@ class ModeDestModel(LogitModel):
             dest_expsums[mode] = {"logsum": expsum}
             label = self.purpose.name + "_" + mode
             logsum = pandas.Series(
-                numpy.log(expsum), self.purpose.zone_numbers, name=label)
+                log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
         mode_expsum = self._calc_mode_util(dest_expsums)
         logsum = pandas.Series(
-            numpy.log(mode_expsum), self.purpose.zone_numbers,
+            log(mode_expsum), self.purpose.zone_numbers,
             name=self.purpose.name)
         self.zone_data._values[self.purpose.name] = logsum
         return mode_expsum, dest_exps, dest_expsums
@@ -435,14 +442,10 @@ class ModeDestModel(LogitModel):
         prob = {}
         for mode in self.mode_choice_param:
             mode_exps = self.mode_exps[mode]
-            mode_prob = numpy.divide(
-                mode_exps, mode_expsum, out=numpy.zeros_like(mode_exps),
-                where=mode_expsum!=0)
+            mode_prob = divide(mode_exps, mode_expsum)
             dest_exp = dest_exps.pop(mode).T
             dest_expsum = dest_expsums[mode]["logsum"]
-            dest_prob = numpy.divide(
-                dest_exp, dest_expsum, out=numpy.zeros_like(dest_exp),
-                where=dest_expsum!=0)
+            dest_prob = divide(dest_exp, dest_expsum)
             prob[mode] = mode_prob * dest_prob
         return prob
 
@@ -537,9 +540,9 @@ class AccessibilityModel(ModeDestModel):
         """
         for i in b:
             try: # If only one parameter
-                utility += b[i] * numpy.log(impedance[i] + 1)
+                utility += b[i] * log(impedance[i] + 1)
             except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * numpy.log(impedance[i] + 1)
+                utility += b[i][0] * log(impedance[i] + 1)
         return utility
 
     def _add_zone_util(self, utility, b, generation=False):
@@ -613,15 +616,26 @@ class DestModeModel(LogitModel):
                 Choice probabilities
         """
         mode_expsum = self._calc_mode_util(impedance)
-        logsum = {"logsum": mode_expsum}
-        dest_expsum, dest_exps = self._calc_dest_util("logsum", logsum)
+        dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
+        try:
+            dest_expsum = dest_exps.sum(1)
+        except ValueError:
+            dest_expsum = dest_exps.sum()
+        logsum = pandas.Series(
+            log(dest_expsum), self.purpose.zone_numbers,
+            name=self.purpose.name)
+        self.accessibility = {"all": logsum}
+        self.zone_data._values[self.purpose.name] = logsum
         prob = {}
-        dest_prob = dest_exps.T / dest_expsum
-        for mode in self.mode_choice_param:
-            mode_prob = (self.mode_exps[mode] / mode_expsum).T
+        dest_prob = divide(dest_exps.T, dest_expsum)
+        for mode, mode_exps in self.mode_exps.items():
+            mode_prob = divide(mode_exps, mode_expsum).T
             prob[mode] = mode_prob * dest_prob
         return prob
 
+    def calc_accessibility(self, *args):
+        """Placeholder for accessibility measuring"""
+        pass
 
 class SecDestModel(LogitModel):
     """Logit model for secondary destination choice.
