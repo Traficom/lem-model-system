@@ -110,7 +110,6 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
             day_imp[mode] = defaultdict(float)
@@ -122,9 +121,6 @@ class Purpose:
                         imp = impedance[time_period][mtx_type][ass_class]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if "vrk" in impedance:
-                for mtx_type in day_imp[mode]:
-                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
