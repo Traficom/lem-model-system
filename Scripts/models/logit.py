@@ -87,8 +87,6 @@ class LogitModel:
             l, u = self.distance_boundary[mode]
             dist = self.purpose.dist
             dest_exp[(dist < l) | (dist >= u)] = 0
-        if mode == "airplane":
-            dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
