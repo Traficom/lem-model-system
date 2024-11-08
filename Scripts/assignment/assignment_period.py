@@ -242,8 +242,8 @@ class AssignmentPeriod(Period):
             self._calc_transit_network_results(
                 param.long_distance_transit_classes)
         else:
-            self._assign_transit(param.transit_classes)
-            self._calc_transit_network_results()
+            self._assign_transit(param.simple_transit_classes)
+            self._calc_transit_network_results(param.simple_transit_classes)
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
@@ -601,7 +601,7 @@ class AssignmentPeriod(Period):
     def _set_walk_time(self):
         """Set walk or ferry time to data3"""
         network = self.emme_scenario.get_network()
-        walk_time = param.aux_transit_time["time"]
+        walk_time = param.aux_transit_time_attr
         for link in network.links():
             linktype = link.type % 100
             if linktype == 44:
@@ -737,11 +737,10 @@ class AssignmentPeriod(Period):
             car_spec, self.emme_scenario)
         network = self.emme_scenario.get_network()
         time_attr = self.netfield("car_time")
-        temp_time_attr = param.aux_car_time["time"]
         truck_time_attr = self.extra("truck_time")
         for link in network.links():
             link[time_attr] = link.auto_time
-            link[temp_time_attr] = link.auto_time
+            link[param.aux_car_time_attr] = link.auto_time
             # Truck speed limited to 90 km/h
             link[truck_time_attr] = max(link.auto_time, link.length * 0.67)
         self.emme_scenario.publish_network(network)

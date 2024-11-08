@@ -89,21 +89,28 @@ class TransitSpecification:
             "performance_settings": param.performance_settings,
         }
         aux_transit_times = []
-        aux_transit_time = (param.aux_transit_time
+        aux_perception_factor = (param.aux_time_perception_factor
             if transit_class in param.local_transit_classes
-            else param.aux_transit_time_long)
+            else param.aux_time_perception_factor_long)
         for mode in param.aux_modes:
             aux_transit_times.append({
                 "mode": mode,
                 "cost": None,
                 "cost_perception_factor": 1.0,
-                **aux_transit_time})
+                "time": param.aux_transit_time_attr,
+                "time_perception_factor": aux_perception_factor})
         if park_and_ride_results:
             self.transit_spec["modes"].append(param.park_and_ride_mode)
+            aux_perception_factor = (param.aux_time_perception_factor_long
+                if transit_class == "l_first_mile"
+                else param.aux_time_perception_factor_car)
             aux_transit_times.append({
-                "mode": param.park_and_ride_mode, **param.aux_car_time})
+                "mode": param.park_and_ride_mode,
+                "time": param.aux_car_time_attr,
+                "time_perception_factor": aux_perception_factor,
+            })
             for mode_cost in aux_transit_times:
-                mode_cost["cost"] = param.park_cost_attr_l,
+                mode_cost["cost"] = param.park_cost_attr_l
                 mode_cost["cost_perception_factor"] = (param.vot_inv[
                     param.vot_classes[transit_class]])
             self.transit_spec["results"] = {

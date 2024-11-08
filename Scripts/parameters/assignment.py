@@ -322,18 +322,9 @@ extra_waiting_time = {
 first_headway_fraction = 0.3
 standard_headway_fraction = 0.5
 waiting_time_perception_factor = 1.5
-aux_transit_time = {
-    "time": "@walk_time",
-    "time_perception_factor": 1.75,
-}
-aux_transit_time_long = {
-    "time": "@walk_time",
-    "time_perception_factor": 2.5,
-}
-aux_car_time = {
-    "time": "@car_time",
-    "time_perception_factor": 7.5,
-}
+aux_time_perception_factor = 1.75
+aux_time_perception_factor_long = 2.5
+aux_time_perception_factor_car = 7.5
 
 # Stochastic bike assignment distribution
 bike_dist = {
@@ -699,12 +690,12 @@ transit_impedance_matrices = {
         "perc_bcost": "perceived_total_boarding_costs",
     },
     "local": {
-        "aux_time": "preceived_aux_transit_times",
-        "loc_time": "preceived_in_vehicle_times",
+        "aux_time": "perceived_aux_transit_times",
+        "loc_time": "perceived_in_vehicle_times",
     },
     "park_and_ride": {
         "car_time": "actual_aux_transit_times",
-        "park_cost": "actual_aux_transit_cost",
+        "park_cost": "actual_aux_transit_costs",
         "car_dist": "distance",
     },
 }
@@ -727,6 +718,8 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
+aux_transit_time_attr = "@walk_time"
+aux_car_time_attr = "@car_time"
 park_cost_attr_n = "#park_cost_n"
 park_cost_attr_l = "@park_cost_l"
 ferry_wait_attr = "@ferry_wait_time"
