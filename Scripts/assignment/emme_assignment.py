@@ -261,7 +261,7 @@ class EmmeAssignmentModel(AssignmentModel):
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
                 for ap in self.assignment_periods})
-        car_times.index.name = "i_node\tj_node"
+        car_times.index.names = ("i_node", "j_node")
         resultdata.print_data(car_times, "netfield_links.txt")
 
         # Aggregate results to 24h
@@ -307,10 +307,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = linktype - 90
             else:
                 vdf = 0
+            municipality = link.i_node["#municipality"]
             try:
-                area = mapping[link.i_node["#municipality"]]
+                area = mapping[municipality]
             except KeyError:
-                faulty_kela_code_nodes.add(link.i_node.id)
+                faulty_kela_code_nodes.add(municipality)
                 area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
@@ -328,8 +329,8 @@ class EmmeAssignmentModel(AssignmentModel):
             else:
                 linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
-            s = "Municipality name not found for nodes: " + ", ".join(
-                faulty_kela_code_nodes)
+            s = ("County not found for #municipality when aggregating link data: "
+                 + ", ".join(faulty_kela_code_nodes))
             log.warn(s)
         resultdata.print_line("\nVehicle kilometres", "result_summary")
         resultdata.print_concat(vdf_kms, "vehicle_kms_vdfs.txt")

@@ -23,7 +23,7 @@ class ResultsData:
         for filename in self._df_buffer:
             self._df_buffer[filename].to_csv(
                 self.path / filename, sep='\t', float_format="%1.5f",
-                header=True, quotechar=" ")
+                header=True)
         self._df_buffer = {}
         for filename in self._xlsx_buffer:
             self._xlsx_buffer[filename].close()

@@ -9,7 +9,7 @@ import json
 
 import parameters.zone as param
 import utils.log as log
-from datatypes.zone import Zone, ZoneAggregations
+from datatypes.zone import Zone, ZoneAggregations, avg
 
 
 class ZoneData:
@@ -276,9 +276,3 @@ def read_zonedata(path: Path,
         log.error(msg)
         raise IndexError(msg)
     return data, zone_mapping
-
-def avg(data, weights):
-    try:
-        return numpy.average(data, weights=weights[data.index])
-    except ZeroDivisionError:
-        return 0

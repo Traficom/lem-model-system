@@ -164,7 +164,7 @@ class Purpose:
                 if mtx_type == "cost" and mode == "car_pax":
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
-                                                    cost.car_drv_occupancy[self.name])
+                                                    cost.car_pax_occupancy[self.name])
                     except KeyError:
                         pass
         return day_imp

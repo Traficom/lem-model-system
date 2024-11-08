@@ -19,7 +19,7 @@
         {
             "total": "workplaces",
             "shares": [
-                "sh_wrk_service",
+                "sh_wrk_healthcare",
                 "sh_wrk_shop",
                 "sh_wrk_hospitality",
                 "sh_wrk_recreation"
