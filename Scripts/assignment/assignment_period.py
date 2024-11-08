@@ -167,10 +167,10 @@ class AssignmentPeriod(Period):
         """
         self._segment_results = segment_results
         self._park_and_ride_results = park_and_ride_results
-        # TODO We should probably have only one set of penalties
-        self._calc_boarding_penalties(is_last_iteration=True)
+        self._calc_boarding_penalties()
         self._specify()
         self._set_transit_vdfs()
+        self._set_walk_time()
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
@@ -242,13 +242,14 @@ class AssignmentPeriod(Period):
             self._calc_transit_network_results(
                 param.long_distance_transit_classes)
         else:
-            self._assign_transit(param.transit_classes)
-            self._calc_transit_network_results()
+            self._assign_transit(param.simple_transit_classes)
+            self._calc_transit_network_results(param.simple_transit_classes)
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {imp_type: self._get_matrices(imp_type, assignment_classes)
-            for imp_type in ("time", "cost", "dist")}
+            for imp_type in ("time", "cost", "dist", "car_time",
+                             "loc_time", "aux_time", "park_cost")}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -559,6 +560,9 @@ class AssignmentPeriod(Period):
         gcost = self.get_matrix(transit_class, "gen_cost")
         cost = (self.get_matrix(transit_class, "inv_cost")
                 + self.get_matrix(transit_class, "board_cost"))
+        if transit_class in param.mixed_mode_classes:
+            cost += (self._dist_unit_cost["car_work"]
+                     * self.get_matrix(transit_class, "car_dist"))
         time = self.get_matrix(transit_class, "time")
         path_found = cost < 999999
         time[path_found] = (gcost[path_found]
@@ -577,7 +581,7 @@ class AssignmentPeriod(Period):
         # calc @bus and data3
         heavy = [self.extra(ass_class) for ass_class in param.truck_classes]
         park_and_ride = [self._park_and_ride_results[direction]
-            for direction in param.park_and_ride_classes]
+            for direction in param.mixed_mode_classes]
         for link in network.links():
             if link.type > 100: # If car or bus link
                 freq = 0
@@ -597,7 +601,7 @@ class AssignmentPeriod(Period):
     def _set_walk_time(self):
         """Set walk or ferry time to data3"""
         network = self.emme_scenario.get_network()
-        walk_time = param.background_traffic_attr.replace("ul", "data")
+        walk_time = param.aux_transit_time_attr
         for link in network.links():
             linktype = link.type % 100
             if linktype == 44:
@@ -628,14 +632,12 @@ class AssignmentPeriod(Period):
                 link[link_cost_attrs[ass_class]] = toll_cost + dist_cost
         self.emme_scenario.publish_network(network)
 
-    def _calc_boarding_penalties(self, 
-                                 extra_penalty: int = 0, 
-                                 is_last_iteration: bool = False):
+    def _calc_boarding_penalties(self, extra_penalty: int = 0):
         """Calculate boarding penalties for transit assignment."""
         # Definition of line specific boarding penalties
         network = self.emme_scenario.get_network()
-        if is_last_iteration:
-            penalties = param.last_boarding_penalty
+        if self.use_free_flow_speeds:
+            penalties = param.long_boarding_penalty
         else:
             penalties = param.boarding_penalty
         missing_penalties = set()
@@ -738,6 +740,7 @@ class AssignmentPeriod(Period):
         truck_time_attr = self.extra("truck_time")
         for link in network.links():
             link[time_attr] = link.auto_time
+            link[param.aux_car_time_attr] = link.auto_time
             # Truck speed limited to 90 km/h
             link[truck_time_attr] = max(link.auto_time, link.length * 0.67)
         self.emme_scenario.publish_network(network)
@@ -814,8 +817,10 @@ class AssignmentPeriod(Period):
         effective_headway_attr = param.effective_headway_attr.replace(
             "ut", "data")
         delay_attr = param.transit_delay_attr.replace("us", "data")
-        func = param.effective_headway
         for line in network.transit_lines():
+            func = (param.effective_headway
+                if line.mode.id in param.local_transit_modes
+                else param.effective_headway_ld)
             hw = line[headway_attr]
             for interval in func:
                 if interval[0] <= hw < interval[1]:
@@ -889,6 +894,8 @@ class AssignmentPeriod(Period):
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
+            if transit_class in param.tour_duration:
+                self._set_link_parking_costs(transit_class)
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)
@@ -899,8 +906,31 @@ class AssignmentPeriod(Period):
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
+            if transit_class in param.mixed_mode_classes:
+                self.emme_project.matrix_results(
+                    spec.park_and_ride_spec, scenario=self.emme_scenario,
+                    class_name=transit_class)
         log.info("Transit assignment performed for scenario {}".format(
             str(self.emme_scenario.id)))
+
+    def _set_link_parking_costs(self, transit_class):
+        network = self.emme_scenario.get_network()
+        avg_days = param.tour_duration[transit_class]["avg"]
+        for node in network.nodes():
+            parking_cost = node[param.park_cost_attr_n]
+            if parking_cost > 0:
+                parking_cost *= 0.5 * avg_days
+                if transit_class in param.car_access_classes:
+                    parking_links = node.incoming_links()
+                    other_links = node.outgoing_links()
+                else:
+                    other_links = node.incoming_links()
+                    parking_links = node.outgoing_links()
+                for link in parking_links:
+                    link[param.park_cost_attr_l] = parking_cost
+                for link in other_links:
+                    link[param.park_cost_attr_l] = 0
+        self.emme_scenario.publish_network(network)
 
     def _calc_transit_network_results(self,
                                       transit_classes=param.transit_classes):
