@@ -34,10 +34,10 @@
         "students_comprehensive",
         "students_upper_secondary",
         "students_higher_education",
-		"gen_marita",
-		"gen_kalevi",
-		"att_marita",
-		"att_kalevi"
+        "gen_marita",
+        "gen_kalevi",
+        "att_marita",
+        "att_kalevi"
     ],
     "mean": [
         "avg_park_cost",

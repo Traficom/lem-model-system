@@ -7,15 +7,13 @@ def calc_road_cost(unit_cost_parameters: Dict[str, Dict],
                    time: numpy.ndarray,
                    toll_cost: numpy.ndarray = 0) -> numpy.ndarray:
     mode_cost = {}
-    for mode, parameters in unit_cost_parameters.items():
-        time_cost = time * parameters["time_based_cost"]
-        dist_cost = distance * parameters["distance_based_cost"]
-        road_cost = (time_cost+dist_cost+toll_cost) / parameters["average_load"]
-        mode_cost[mode] = ((parameters["terminal_cost"]*2
-                            + road_cost*parameters["empty_share"])
-                           * parameters["distribution"])
-    road_total_cost = sum(mode_cost.values())
-    return road_total_cost
+    for mode, params in unit_cost_parameters.items():
+        road_cost = (time*params["time"] + distance*params["dist"]
+                     + toll_cost) / params["avg_load"]
+        mode_cost[mode] = ((params["terminal"]*2
+                            + road_cost*params["empty_share"])
+                           * params["distribution"])
+    return sum(mode_cost.values())
 
 
 def calc_rail_cost(rail_unit_costs: Dict[str, Dict],
@@ -26,17 +24,14 @@ def calc_rail_cost(rail_unit_costs: Dict[str, Dict],
                    aux_time: numpy.ndarray,
                    toll_cost: numpy.ndarray = 0) -> numpy.ndarray:
     mode_cost = {}
-    for mode, parameters in rail_unit_costs.items():
-        time_cost =  parameters["time_based_cost"] * time
-        dist_cost = distance * parameters["distance_based_cost"]
-        rail_cost = ((time_cost+dist_cost+toll_cost)
-                     / parameters["average_load"]*2
-                     + parameters["wagon_yearly_cost"])
-        mode_cost[mode] = rail_cost + (parameters["terminal_cost"]*2)
+    for mode, params in rail_unit_costs.items():
+        rail_cost = (time*params["time"] + distance*params["dist"]
+                      + toll_cost) / params["avg_load"] * 2
+        mode_cost[mode] = (rail_cost + params["wagon_annual"]
+                           + params["terminal"]*2)
     rail_cost = mode_cost["diesel_train"]
-    rail_aux_cost = numpy.where(
-        (aux_distance > (distance*2)) | (distance == 0), numpy.inf,
-        calc_road_cost(road_unit_costs, aux_distance, aux_time))
+    rail_aux_cost = get_aux_cost(road_unit_costs, distance,
+                                 aux_distance, aux_time)
     return rail_cost + rail_aux_cost
 
 
@@ -49,16 +44,22 @@ def calc_ship_cost(ship_unit_costs: Dict[str, Dict],
     mode_cost = {}
     for mode in ship_unit_costs:
         mode_cost[mode] = {}
-        for draught, parameters in ship_unit_costs[mode].items():
-            time_cost = (parameters["time_based_cost"] * distance
-                         / parameters["speed"])
-            ship_cost = time_cost * parameters["empty_share"]
-            time_cost + channel_cost + parameters["terminal_cost"]*2
-            ship_cost += (channel_cost + parameters["other_costs"]
-                          + parameters["terminal_cost"])*2
+        for draught, params in ship_unit_costs[mode].items():
+            ship_cost = (params["time"]*distance / params["speed"]
+                         * params["empty_share"])
+            ship_cost += (channel_cost + params["other_costs"]
+                          + params["terminal"])*2
             mode_cost[mode][draught] = ship_cost
     ship_cost = mode_cost["other_dry_cargo"]["4m"]
-    ship_aux_cost = numpy.where(
+    ship_aux_cost = get_aux_cost(road_unit_costs, distance,
+                                 aux_distance, aux_time)
+    return ship_cost + ship_aux_cost
+
+def get_aux_cost(road_unit_costs: Dict[str, Dict],
+                 distance: numpy.ndarray,
+                 aux_distance: numpy.ndarray,
+                 aux_time: numpy.ndarray) -> numpy.ndarray:
+    aux_cost = numpy.where(
         (aux_distance > (distance*2)) | (distance == 0), numpy.inf,
         calc_road_cost(road_unit_costs, aux_distance, aux_time))
-    return ship_cost + ship_aux_cost
+    return aux_cost

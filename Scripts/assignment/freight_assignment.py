@@ -4,7 +4,6 @@ import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
 from assignment.datatypes.freight_specification import FreightSpecification
-from assignment.datatypes.car_specification import CarSpecification
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
@@ -49,13 +48,6 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
-        attr_name = (commodity_class + "truck")[:17]
-        link_costs = {"truck": 1.0, "semi_trailer": 1.0, "trailer_truck": 1.0}
-        carspec = CarSpecification(self.extra, self.emme_matrices, link_costs)
-        carspec._modes["truck"].spec["results"]["link_volumes"] = '@' + attr_name
-        spec = carspec.truck_spec()
-        spec["stopping_criteria"] = param.stopping_criteria["coarse"]
-        self.emme_project.car_assignment(spec, self.emme_scenario)
 
     def output_traversal_matrix(self, output_path: Path, purposekey: str):
         spec = {

@@ -11,6 +11,7 @@ from datahandling.resultdata import ResultsData
 from datatypes.purpose import FreightPurpose
 from datahandling.zonedata import ZoneData
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
+from parameters.commodity import commodity_conversion
 
 TEST_PATH = Path(__file__).parent.parent / "test_data"
 TEST_DATA_PATH = TEST_PATH / "Scenario_input_data" / "2030_test"
@@ -30,47 +31,32 @@ class FreightModelTest(unittest.TestCase):
         purposes = {}
         for file_name in os.listdir(PARAMETERS_PATH):
             with open(os.path.join(PARAMETERS_PATH, file_name), 'r') as file:
-                comm_params = json.load(file)
-                comm = file_name.split("_")[0]
-                purposes[comm] = FreightPurpose(comm_params, zonedata, resultdata)
+                commodity_params = json.load(file)
+                commodity = file_name.split(".")[0]
+                purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
         with open(TEST_DATA_PATH / "costdata.json") as file:
             costdata = json.load(file)
         
         time_impedance = omx.open_file(TEST_MATRICES / "freight_time.omx", "r")
         dist_impedance = omx.open_file(TEST_MATRICES / "freight_dist.omx", "r")
-        comm_map = {"marita": "mameka", "kalevi": "mameka"}
         for purpose_key, purpose_value in purposes.items():
-            base_comm = comm_map[purpose_key]
-            freight_cost = costdata["freight"][base_comm]
-            cost_dict = {
-                "truck": {
-                    "truck": freight_cost["truck"],
-                    "trailer_truck": freight_cost["trailer_truck"],
-                },
-                "freight_train": {
-                    "electric_train": freight_cost["electric_train"],
-                    "diesel_train": freight_cost["diesel_train"]
-                },
-                "ship": {
-                    "other_dry_cargo": {"4m": freight_cost["other_dry_cargo"]["4m"]} 
-                }
-            }
+            commodity_costs = costdata["freight"][commodity_conversion[purpose_key]]
             impedance = {
                 "truck": {
-                    "cost": calc_road_cost(cost_dict["truck"],
+                    "cost": calc_road_cost(commodity_costs["truck"],
                                            numpy.array(dist_impedance["truck"]),
                                            numpy.array(time_impedance["truck"]))
                 },
                 "freight_train": {
-                    "cost": calc_rail_cost(cost_dict["freight_train"],
-                                           cost_dict["truck"],
+                    "cost": calc_rail_cost(commodity_costs["freight_train"],
+                                           commodity_costs["truck"],
                                            numpy.array(dist_impedance["freight_train"]),
                                            numpy.array(time_impedance["freight_train"]),
                                            numpy.array(dist_impedance["freight_train_aux"]),
                                            numpy.array(time_impedance["freight_train_aux"]))
                 },
-                "ship": {"cost": calc_ship_cost(cost_dict["ship"],
-                                                cost_dict["truck"],
+                "ship": {"cost": calc_ship_cost(commodity_costs["ship"],
+                                                commodity_costs["truck"],
                                                 numpy.array(dist_impedance["ship"]),
                                                 numpy.array(dist_impedance["ship_aux"]),
                                                 numpy.array(time_impedance["ship_aux"]))}
