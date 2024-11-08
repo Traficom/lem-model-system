@@ -285,11 +285,12 @@ class AssignmentPeriod(Period):
             if network.mode(mode) is None:
                 raise AttributeError(f"Long-dist mode {mode} does not exist.")
         for line in network.transit_lines():
+            fare = fares[line[op_attr]]
             for segment in line.segments():
-                segment[param.dist_fare_attr] = (fares["dist"][line[op_attr]]
+                segment[param.dist_fare_attr] = (fare["dist"]
                                                  * segment.link.length)
                 segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fares["firstb"][line[op_attr]]
+            line[param.board_fare_attr] = fare["firstb"]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
@@ -324,7 +325,7 @@ class AssignmentPeriod(Period):
         """
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
-        return {link.id.replace('-', '\t'): link[time_attr]
+        return {(link.i_node.id, link.j_node.id): link[time_attr]
             for link in network.links() if link.i_node["#subarea"] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
@@ -338,6 +339,8 @@ class AssignmentPeriod(Period):
             network.mode(param.assignment_modes["truck"])
         }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
+        car_time_zero = []
+        car_time_ok = False
         for link in network.links():
             linktype = link.type % 100
             if link.type > 80 and linktype in param.roadclasses:
@@ -378,9 +381,9 @@ class AssignmentPeriod(Period):
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
+                        car_time_ok = True
                     elif car_time == 0:
-                        msg = f"Car_time attribute on link {link.id} is zero. Free flow speed used on link."
-                        log.warn(msg)
+                        car_time_zero.append(link.id)
                     else:
                         msg = f"Car travel time on link {link.id} is {car_time}"
                         log.error(msg)
@@ -390,6 +393,15 @@ class AssignmentPeriod(Period):
             else:
                 link.modes -= {main_mode, park_and_ride_mode}
         self.emme_scenario.publish_network(network)
+        if car_time_zero and not use_free_flow_speeds:
+            if car_time_ok:
+                links = ", ".join(car_time_zero)
+                log.warn(
+                    f"Car_time attribute on links {links} "
+                     + "is zero. Free flow speed used on these links.")
+            else:
+                log.warn(
+                    "No car times on links. Demand calculation not reliable!")
 
     def _set_transit_vdfs(self):
         log.info("Sets transit functions for scenario {}".format(
@@ -585,6 +597,19 @@ class AssignmentPeriod(Period):
                         link[background_traffic] += link[ass_class]
         self.emme_scenario.publish_network(network)
 
+    def _set_walk_time(self):
+        """Set walk or ferry time to data3"""
+        network = self.emme_scenario.get_network()
+        walk_time = param.background_traffic_attr.replace("ul", "data")
+        for link in network.links():
+            linktype = link.type % 100
+            if linktype == 44:
+                ferry_travel_time = link.length / link.data2 * 60
+                link[walk_time] = link[param.ferry_wait_attr] + ferry_travel_time
+            else:
+                link[walk_time] = link.length / param.walk_speed * 60
+        self.emme_scenario.publish_network(network)
+
     def _calc_road_cost(self, link_cost_attrs: Dict[str, str]):
         """Calculate road charges and driving costs for one scenario.
 
@@ -776,6 +801,7 @@ class AssignmentPeriod(Period):
 
     def _assign_pedestrians(self):
         """Perform pedestrian assignment for one scenario."""
+        self._set_walk_time()
         log.info("Pedestrian assignment started...")
         self.emme_project.pedestrian_assignment(
             specification=self.walk_spec, scenario=self.emme_scenario)
@@ -862,6 +888,7 @@ class AssignmentPeriod(Period):
     def _assign_transit(self, transit_classes=param.local_transit_classes):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
+        self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             spec = self._transit_specs[transit_class]
@@ -891,4 +918,7 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         for link in network.links():
             link[volax_attr] = link.aux_transit_volume
+        time_attr = self.extra(param.uncongested_transit_time)
+        for segment in network.transit_segments():
+            segment[time_attr] = segment.transit_time
         self.emme_scenario.publish_network(network)

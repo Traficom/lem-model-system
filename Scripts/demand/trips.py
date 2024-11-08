@@ -5,7 +5,7 @@ import pandas
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
     from datahandling.zonedata import ZoneData
-    from datatypes.purpose import Purpose
+    from datatypes.purpose import TourPurpose
 from datatypes.person import Person
 
 import utils.log as log
@@ -34,7 +34,7 @@ class DemandModel:
     def __init__(self, 
                  zone_data: ZoneData, 
                  resultdata: ResultsData,
-                 tour_purposes: List[Purpose],
+                 tour_purposes: List[TourPurpose],
                  is_agent_model: bool=False):
         self.resultdata = resultdata
         self.zone_data = zone_data
@@ -71,7 +71,7 @@ class DemandModel:
 
     def _age_strings(self):
         for age_group in param.age_groups:
-            yield "age_{}-{}".format(*age_group)
+            yield "age_{}_{}".format(*age_group)
 
     def create_population_segments(self):
         """Create population segments.
@@ -86,7 +86,7 @@ class DemandModel:
         self.segments = {}
         pop = self.zone_data["population"][self.bounds]
         for age in self._age_strings():
-            age_pop = self.zone_data["share_" + age][self.bounds] * pop
+            age_pop = self.zone_data["sh_" + age][self.bounds] * pop
             car_share = sum(self.zone_data["share_" + gender][self.bounds]
                             * cm.calc_individual_prob(age, gender)
                 for gender in cm.genders)
@@ -144,10 +144,20 @@ class DemandModel:
         Not used in agent-based simulation.
         Result is stored in `purpose.gen_model.tours`.
         """
+        gm = self.tour_generation_model
+        combination_purposes = {purpose for combination in gm.tour_combinations
+            for purpose in combination}
+        use_tour_combination_model = False
         for purpose in self.tour_purposes:
             purpose.gen_model.init_tours()
             if not isinstance(purpose, SecDestPurpose):
                 purpose.gen_model.add_tours()
+            if purpose.name in combination_purposes:
+                use_tour_combination_model = True
+        if use_tour_combination_model:
+            self._generate_tour_combinations()
+
+    def _generate_tour_combinations(self):
         gm = self.tour_generation_model
         for age in self._age_strings():
             segments = self.segments[age]

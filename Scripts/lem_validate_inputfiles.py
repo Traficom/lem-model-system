@@ -1,24 +1,23 @@
 from argparse import ArgumentParser
 import os
 import sys
+import json
 from pathlib import Path
 import numpy
 from typing import List, Dict, Union
 
 import utils.config
 import utils.log as log
-from utils.read_csv_file import read_mapping
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData, BaseZoneData
-from datatypes.zone import ZoneAggregations
+from datahandling.zonedata import ZoneData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_DIR
+from lem import BASE_ZONEDATA_FILE
 
 
 def main(args):
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -49,9 +48,8 @@ def main(args):
 
     # Check basedata input
     log.info("Checking base inputdata...")
-    # Check filepaths (& first .emp path for zone_numbers in base zonedata)
-    if not base_zonedata_path.exists():
-        msg = "Baseline zonedata directory '{}' does not exist.".format(
+    if not (args.end_assignment_only or base_zonedata_path.exists()):
+        msg = "Baseline zonedata file '{}' does not exist.".format(
             base_zonedata_path)
         log.error(msg)
         raise ValueError(msg)
@@ -133,13 +131,17 @@ def main(args):
                     link_costs_defined = True
             if link_costs_defined:
                 nr_new_attr["links"] += nr_assignment_modes + 1
+            sc_name = emmebank.scenario(first_scenario_ids[i]).title
+            if len(sc_name)>56:
+                msg = "Scenario name: {} too long, time period extension might exceed Emme's 60 characters limit.".format(
+                    sc_name)
+                log.error(msg)
+                raise ValueError(msg)
             if not args.separate_emme_scenarios:
                 # If results from all time periods are stored in same
                 # EMME scenario
                 for key in nr_new_attr:
                     nr_new_attr[key] *= len(time_periods) + 1
-            # Attributes created during congested transit assignment
-            nr_new_attr["transit_segments"] += 3
             dim = emmebank.dimensions
             dim["nodes"] = dim["centroids"] + dim["regular_nodes"]
             attr_space = 0
@@ -153,7 +155,6 @@ def main(args):
             validate(scen.get_network(), time_periods)
             app.close()
 
-    aggregations: Dict[str, ZoneAggregations] = {}
     for submodel in zone_numbers:
         # Check base matrices
         base_matrices_path = Path(
@@ -170,22 +171,30 @@ def main(args):
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
 
-        # Check base zonedata
-        base_zonedata = BaseZoneData(
-            Path(base_zonedata_path), zone_numbers[submodel],
-            read_mapping(Path(base_zonedata_path) / f"{submodel}.zmp"))
-        aggregations[submodel] = base_zonedata.aggregations
-
     for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
-            msg = "Forecast data directory '{}' does not exist.".format(
+            msg = "Forecast data file '{}' does not exist.".format(
                 data_path)
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
-            Path(data_path), zone_numbers[submodel], aggregations[submodel],
-            read_mapping(Path(data_path) / f"{submodel}.zmp"))
+            Path(data_path), zone_numbers[submodel], submodel)
+
+    for data_path in args.cost_data_paths:
+        if not os.path.exists(data_path):
+            msg = "Forecast data file '{}' does not exist.".format(
+                data_path)
+            log.error(msg)
+            raise ValueError(msg)
+        cost_data = json.loads(Path(data_path).read_text("utf-8"))
+        for ass_class in cost_data["car_cost"]:
+            float(cost_data["car_cost"][ass_class])
+        transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
+        for operator in transit_cost.values():
+            float(operator["firstb"])
+            float(operator["dist"])
 
     log.info("Successfully validated all input files")
 
@@ -203,6 +212,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
+    )
+    parser.add_argument(
+        "-o", "--end-assignment-only",
+        action="store_true",
+        help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
         "-f", "--long-dist-demand-forecast",
@@ -260,6 +274,12 @@ if __name__ == "__main__":
         nargs="+",
         required=True,
         help="List of paths to folder containing forecast zonedata"),
+    parser.add_argument(
+        "--cost-data-paths",
+        type=str,
+        nargs="+",
+        required=True,
+        help="List of paths to files containing transport cost data"),
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()

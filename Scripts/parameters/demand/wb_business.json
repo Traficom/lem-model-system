@@ -104,10 +104,10 @@
     "destination_choice": {
         "car_work": {
             "attraction": {
-                "within_zone_time": -0.04674
+                "within_zone_time": -0.04536
             },
             "impedance": {
-                "time": -0.04674
+                "time": -0.04536
             },
             "log": {
                 "attraction_size": 1
@@ -118,10 +118,10 @@
         },
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.05054
+                "within_zone_time": -0.04886
             },
             "impedance": {
-                "time": -0.05054
+                "time": -0.04886
             },
             "log": {
                 "attraction_size": 1
@@ -133,11 +133,11 @@
         "transit_work": {
             "attraction": {
                 "within_zone_inf": -1,
-                "Helsingin_kantakaupunki": 1.82268,
-                "Tampereen_kantakaupunki": 0.53354
+                "Helsingin_kantakaupunki": 1.80912,
+                "Tampereen_kantakaupunki": 0.52495
             },
             "impedance": {
-                "time": -0.01744
+                "time": -0.01741
             },
             "log": {
                 "attraction_size": 1
@@ -148,10 +148,10 @@
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.2727
+                "within_zone_dist": -0.26679
             },
             "impedance": {
-                "dist": -0.2727
+                "dist": -0.26679
             },
             "log": {
                 "attraction_size": 1
@@ -162,10 +162,10 @@
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.5956
+                "within_zone_dist": -0.58629
             },
             "impedance": {
-                "dist": -0.5956
+                "dist": -0.58629
             },
             "log": {
                 "attraction_size": 1
@@ -177,42 +177,42 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": 0.21112,
+            "constant": -0.29835,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85769
+                "logsum": 0.89789
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -2.42018,
+            "constant": -2.84599,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85769
+                "logsum": 0.89789
             },
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -2.07807,
+            "constant": -1.98926,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85769
+                "logsum": 0.89789
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.57098,
+            "constant": -1.53971,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85769
+                "logsum": 0.89789
             },
             "individual_dummy": {}
         },
@@ -222,26 +222,9 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.85769
+                "logsum": 0.89789
             },
             "individual_dummy": {}
-        },
-        "calibration": {
-            "car_work": {
-                "constant": 0.07685244
-            },
-            "car_pax": {
-                "constant": 0.567033313
-            },
-            "transit_work": {
-                "constant": -0.858620355
-            },
-            "bike": {
-                "constant": -0.341510991
-            },
-            "walk": {
-                "constant": -0.423168266
-            }
         }
     },
     "demand_share": {

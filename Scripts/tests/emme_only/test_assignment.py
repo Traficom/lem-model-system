@@ -6,14 +6,12 @@ import numpy
 import pandas
 
 import utils.log as log
-from utils.read_csv_file import read_mapping
 import assignment.emme_assignment as ass
-from datahandling.zonedata import BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import (
     TEST_DATA_PATH,
-    BASE_ZONEDATA_PATH,
 )
 try:
     from assignment.emme_bindings.emme_project import EmmeProject
@@ -50,14 +48,14 @@ class EmmeAssignmentTest:
             "destination_matrices": 100,
             "full_matrices": 400,
             "scenarios": 5,
-            "centroids": 20,
-            "regular_nodes": 1000,
-            "links": 2000,
+            "centroids": 30,
+            "regular_nodes": 2000,
+            "links": 6000,
             "turn_entries": 100,
-            "transit_vehicles": 30,
-            "transit_lines": 20,
-            "transit_segments": 2000,
-            "extra_attribute_values": 500000,
+            "transit_vehicles": 35,
+            "transit_lines": 30,
+            "transit_segments": 700,
+            "extra_attribute_values": 700000,
             "functions": 99,
             "operators": 5000,
             "sola_analyses": 240,
@@ -84,6 +82,7 @@ class EmmeAssignmentTest:
             "van": 0.2,
         }
         self.ass_model.prepare_network(dist_cost)
+        self.resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
     
     def test_assignment(self):
         nr_zones = self.ass_model.nr_zones
@@ -108,16 +107,23 @@ class EmmeAssignmentTest:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
             travel_cost[ap.name] = ap.end_assign()
-        resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
             "Espoo": "Uusimaa",
+            "Vantaa": "Uusimaa",
+            "Kauniainen": "Uusimaa",
+            "Hyvinkaa": "Uusimaa",
             "Lohja": "Uusimaa",
-            "Salo": "Varsinais-Suomi",
+            "Hameenlinna": "Kanta-Hame",
+            "Tampere": "Pirkanmaa",
+            "Turku": "Varsinais-Suomi",
+            "Jyvaskyla": "Keski-Suomi",
+            "Kotka": "Kymenlaakso",
+            "Lahti": "Paijat-Hame"
         })
-        self.ass_model.aggregate_results(resultdata, mapping)
+        self.ass_model.aggregate_results(self.resultdata, mapping)
         self.ass_model.calc_noise(mapping)
-        resultdata.flush()
+        self.resultdata.flush()
         costs_files = MatrixData(
             TEST_DATA_PATH / "Results" / "assignment" / "Matrices")
         for time_period in travel_cost:
@@ -129,11 +135,52 @@ class EmmeAssignmentTest:
                         mtx[ass_class] = cost_data
 
     def test_transit_cost(self):
-        zdata = BaseZoneData(
-            BASE_ZONEDATA_PATH, self.ass_model.zone_numbers,
-            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
-        self.ass_model.calc_transit_cost(zdata.transit_zone)
+        fares = pandas.DataFrame({
+            0: {
+                "firstb": 2.0,
+                "dist": 0.1
+            },
+            1: {
+                "firstb": 3.0,
+                "dist": 0.2
+            },
+            2: {
+                "firstb": 5.0,
+                "dist": 0.1
+            },
+            3: {
+                "firstb": 70.0,
+                "dist": 0.3
+            },
+            4: {
+                "firstb": 0.0,
+                "dist": 0.1
+            }
+        })
+        self.ass_model.calc_transit_cost(fares)
+
+    def test_freight_assignment(self):
+        dist_cost = {
+            "car_work": 0.12,
+            "car_leisure": 0.12,
+            "trailer_truck": 0.5,
+            "semi_trailer": 0.4,
+            "truck": 0.3,
+            "van": 0.2,
+        }
+        purposes = ["c1", "c2"]
+        self.ass_model.prepare_freight_network(dist_cost, purposes)
+        temp_impedance = self.ass_model.freight_network.assign()
+        nr_zones = self.ass_model.nr_zones
+        demand = numpy.full((nr_zones, nr_zones), 1.0)
+        for purpose in purposes:
+            for mode in ["truck", "freight_train", "ship"]:
+                self.ass_model.freight_network.set_matrix(mode, demand)
+            self.ass_model.freight_network.save_network_volumes(purpose)
+            self.ass_model.freight_network.output_traversal_matrix(
+                self.resultdata.path)
 
 if emme_available:
     em = EmmeAssignmentTest()
     em.test_assignment()
+    em.test_freight_assignment()

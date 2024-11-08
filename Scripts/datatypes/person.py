@@ -32,7 +32,7 @@ class Person:
     FEMALE = 0
     MALE = 1
     person_attr = ["id", "age_group", "gender", "is_car_user", "income"]
-    zone_attr =  ["number", "area", "municipality"]
+    zone_attr =  ["number", "county", "municipality"]
     attr = person_attr + zone_attr
     
     def __init__(self, 
@@ -45,7 +45,7 @@ class Person:
         Person.id_counter += 1
         self.zone = zone
         self.age = random.randint(age_group[0], age_group[1])
-        self.age_group = "age_" + str(age_group[0]) + "-" + str(age_group[1])
+        self.age_group = "age_" + str(age_group[0]) + "_" + str(age_group[1])
         self.sex = random.random() < 0.5
         self.tours: List[Tour] = []
         self.generation_model = generation_model

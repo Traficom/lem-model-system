@@ -13,24 +13,30 @@ tour_number_increase = {
 tour_combinations = {
     0: {
         () : {
-            "constant":   13.75,
-            "individual_dummy": {},
+            "constant":   15.26,
+            "individual_dummy": {
+                "age_7_17": 0.0,
+                "age_18_29":  0.0,
+                "age_30_49":  0.0,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
+            },
             "zone": {}
         }
 # utility function 2
     },
     1: {
         ("hb_edu_higher",) : {
-            "constant":   3.318,
+            "constant":   1.960,
             "individual_dummy": {
-                "age_7-17": 0.0,
-                "age_18-29":  4.996,
-                "age_30-49":  2.735,
-                "age_50-64": 0.0,
-                "age_65-99": 0.0
+                "age_7_17": 0.0,
+                "age_18_29":  5.045,
+                "age_30_49":  2.663,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher_t": .3595
+                "hb_edu_higher": 0.5232
             }
         }
     },
@@ -38,14 +44,14 @@ tour_combinations = {
         ("hb_edu_higher", "hb_edu_higher") : {
             "constant":   0.0,
             "individual_dummy": {
-                "age_7-17": 0.0,
-                "age_18-29":  4.996,
-                "age_30-49":  2.735,
-                "age_50-64": 0.0,
-                "age_65-99": 0.0
+                "age_7_17": 0.0,
+                "age_18_29":  5.045,
+                "age_30_49":  2.663,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher_t": .4302
+                "hb_edu_higher": .4300
             }
         }
     }
@@ -55,67 +61,67 @@ tour_conditions = {}
 
 tour_generation = {
     "hb_work": {
-        "age_7-17": 0.0059,
-        "age_18-29": 0.2794,
-        "age_30-49": 0.3671,
-        "age_50-64": 0.2904,
-        "age_65-99": 0.0148
+        "age_7_17": 0.0059,
+        "age_18_29": 0.2794,
+        "age_30_49": 0.3671,
+        "age_50_64": 0.2904,
+        "age_65_99": 0.0148
     },
     "hb_edu_basic": {
-        "age_7-17": 0.3466,
-        "age_18-29": 0,
-        "age_30-49": 0,
-        "age_50-64": 0,
-        "age_65-99": 0
+        "age_7_17": 0.3466,
+        "age_18_29": 0,
+        "age_30_49": 0,
+        "age_50_64": 0,
+        "age_65_99": 0
     },
     "hb_edu_upsec": {
-        "age_7-17": 0.0369,
-        "age_18-29": 0.0556,
-        "age_30-49": 0.0056,
-        "age_50-64": 0.0016,
-        "age_65-99": 0
+        "age_7_17": 0.0369,
+        "age_18_29": 0.0556,
+        "age_30_49": 0.0056,
+        "age_50_64": 0.0016,
+        "age_65_99": 0
     },
     "hb_edu_higher": {
-        "age_7-17": 0.0,
-        "age_18-29": 0.0,
-        "age_30-49": 0.0,
-        "age_50-64": 0.0,
-        "age_65-99": 0.0
+        "age_7_17": 0.0,
+        "age_18_29": 0.0,
+        "age_30_49": 0.0,
+        "age_50_64": 0.0,
+        "age_65_99": 0.0
     },
     "hb_grocery": {
-        "age_7-17": 0.0656,
-        "age_18-29": 0.1293,
-        "age_30-49": 0.1363,
-        "age_50-64": 0.1349,
-        "age_65-99": 0.1964
+        "age_7_17": 0.0656,
+        "age_18_29": 0.1293,
+        "age_30_49": 0.1363,
+        "age_50_64": 0.1349,
+        "age_65_99": 0.1964
     },
     "hb_other_shop": {
-        "age_7-17": 0.0616,
-        "age_18-29": 0.0805,
-        "age_30-49": 0.1209,
-        "age_50-64": 0.1457,
-        "age_65-99": 0.1937
+        "age_7_17": 0.0616,
+        "age_18_29": 0.0805,
+        "age_30_49": 0.1209,
+        "age_50_64": 0.1457,
+        "age_65_99": 0.1937
     },
     "hb_leisure": {
-        "age_7-17": 0.1404,
-        "age_18-29": 0.087,
-        "age_30-49": 0.0971,
-        "age_50-64": 0.1026,
-        "age_65-99": 0.1161
+        "age_7_17": 0.1404,
+        "age_18_29": 0.087,
+        "age_30_49": 0.0971,
+        "age_50_64": 0.1026,
+        "age_65_99": 0.1161
     },
     "hb_sport": {
-        "age_7-17": 0.1284,
-        "age_18-29": 0.0566,
-        "age_30-49": 0.0881,
-        "age_50-64": 0.071,
-        "age_65-99": 0.0554
+        "age_7_17": 0.1284,
+        "age_18_29": 0.0566,
+        "age_30_49": 0.0881,
+        "age_50_64": 0.071,
+        "age_65_99": 0.0554
     },
     "hb_visit": {
-        "age_7-17": 0.1553,
-        "age_18-29": 0.1488,
-        "age_30-49": 0.0946,
-        "age_50-64": 0.089,
-        "age_65-99": 0.0933
+        "age_7_17": 0.1553,
+        "age_18_29": 0.1488,
+        "age_30_49": 0.0946,
+        "age_50_64": 0.089,
+        "age_65_99": 0.0933
     },
     "wb_business": {
         "hb_work": 0.0543
@@ -130,32 +136,22 @@ tour_generation = {
         "hb_visit": 0.065
     },
     "hb_work_long": {
-        "age_7-17_female": 0.0005,
-        "age_7-17_male": 0.0001,
-        "age_18-29_female":  0.0044,
-        "age_18-29_male":  0.0071,
-        "age_30-49_female":  0.005,
-        "age_30-49_male":  0.0118,
-        "age_50-64_female":  0.0027,
-        "age_50-64_male":  0.0067,
-        "age_65-99_female":  0.0002,
-        "age_65-99_male":  0.0004
+        "population_Uusimaa": 0.00268,
+        "population_Lounais-Suomi": 0.00532,
+        "population_Ita-Suomi": 0.00449,
+        "population_Pohjois-Suomi": 0.00472
     },
     "hb_business_long": {
-        "income_0-19": 0.0004,
-        "income_20-39": 0.0011,
-        "income_40-59": 0.0021,
-        "income_60-79": 0.0032,
-        "income_80-99": 0.0058,
-        "income_100": 0.0068
+        "population_Uusimaa": 0.00129,
+        "population_Lounais-Suomi": 0.00334,
+        "population_Ita-Suomi": 0.00283,
+        "population_Pohjois-Suomi": 0.00185
     },
     "hb_leisure_long": {
-        "income_0-19": 0.0122,
-        "income_20-39": 0.0147,
-        "income_40-59": 0.0222,
-        "income_60-79": 0.0228,
-        "income_80-99": 0.0264,
-        "income_100": 0.027
+        "population_Uusimaa": 0.01741,
+        "population_Lounais-Suomi": 0.01518,
+        "population_Ita-Suomi": 0.01812,
+        "population_Pohjois-Suomi": 0.01874
     },
     "truck": {
         "population": 0.01,

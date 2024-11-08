@@ -6,16 +6,18 @@ import unittest
 import json
 from pathlib import Path
 
-from datahandling.zonedata import BaseZoneData
-from models.logit import ModeDestModel
+from datahandling.zonedata import ZoneData
+from models.logit import ModeDestModel, DestModeModel
 from datatypes.purpose import attempt_calibration
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PATH
 
 
-METROPOLITAN_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291]
-PERIPHERAL_ZONES = [19071]
-EXTERNAL_ZONES = [36102, 36500]
+INTERNAL_ZONES = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519,
+                  2621, 2707, 2814, 2918, 3000, 3003, 3203, 3302, 3416,
+                  3639, 3705, 3800, 4013, 4101, 4202]
+EXTERNAL_ZONES = [7043, 8284, 12614, 17278, 19419, 23678]
+ZONE_INDEXES = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
 
 
 class LogitModelTest(unittest.TestCase):
@@ -24,12 +26,12 @@ class LogitModelTest(unittest.TestCase):
         class Purpose:
             pass
         pur = Purpose()
-        zi = numpy.array(METROPOLITAN_ZONES + PERIPHERAL_ZONES + EXTERNAL_ZONES)
-        zd = BaseZoneData(BASE_ZONEDATA_PATH, zi)
+        zi = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
+        zd = ZoneData(BASE_ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
-        mtx = numpy.arange(90, dtype=numpy.float32)
-        mtx.shape = (9, 10)
-        mtx[numpy.diag_indices(9)] = 0
+        mtx = numpy.arange(720, dtype=numpy.float32)
+        mtx.shape = (24, 30)
+        mtx[numpy.diag_indices(24)] = 0
         impedance = {
             "car_work": {
                 "time": mtx,
@@ -63,20 +65,20 @@ class LogitModelTest(unittest.TestCase):
                 "dist": mtx,
             },
         }
-        pur.bounds = slice(0, 9)
-        pur.sub_bounds = [slice(0, 7), slice(7, 9)]
-        pur.zone_numbers = METROPOLITAN_ZONES
+        pur.bounds = slice(0, 24)
+        pur.sub_bounds = [slice(0, 20), slice(20, 24)]
+        pur.zone_numbers = INTERNAL_ZONES
         pur.dist = mtx
         parameters_path = Path(__file__).parents[2] / "parameters" / "demand"
-        for file in parameters_path.rglob("hb_work.json"):
+        for file in parameters_path.rglob("*.json"):
             parameters = json.loads(file.read_text("utf-8"))
             attempt_calibration(parameters)
             pur.name = parameters["name"]
-            if ("sec_dest" not in parameters
-                    and parameters["orig"] != "source"
-                    and parameters["dest"] not in ("home", "source")
-                    and parameters["area"] != "peripheral"):
-                model = ModeDestModel(pur, parameters, zd, resultdata)
+            if parameters["name"] == "hb_work":
+                args = (pur, parameters, zd, resultdata)
+                model = (DestModeModel(*args)
+                    if parameters["struct"] == "dest>mode"
+                    else ModeDestModel(*args))
                 prob = model.calc_prob(impedance)
                 if parameters["dest"] in ("work"):
                     for mode in ("car_work", "transit_work", "bike", "walk"):
@@ -88,6 +90,6 @@ class LogitModelTest(unittest.TestCase):
     def _validate(self, prob):
         self.assertIs(type(prob), numpy.ndarray)
         self.assertEquals(prob.ndim, 2)
-        self.assertEquals(prob.shape[1], 9)
+        self.assertEquals(prob.shape[1], 24)
         self.assertNotEquals(prob[1, 0], 0)
         assert numpy.isfinite(prob).all()

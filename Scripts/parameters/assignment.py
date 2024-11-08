@@ -51,6 +51,7 @@ roadclasses = {
     39: RoadClass("local", "any", 5, 700, 20, 1.304),
     40: RoadClass("local", "any", 5, 600, 20, 1.304),
     41: RoadClass("local", "any", 5, 500, 20, 1.304),
+    44: RoadClass("ferry", "any", 11, 500, 20, 1.000),
 }
 connector_link_types = (84, 85, 86, 87, 88, 98, 99)
 connector = RoadClass("connector", "any", 99, 0, 50, 0)
@@ -124,6 +125,7 @@ volume_delay_funcs = {
     "fd8": vdf_temp.format(0.10, buslane, 0.915, 2.08, 0.0110),
     "fd9": vdf_temp.format(0.20, buslane, 0.870, 2.34, 0.0140),
     "fd10": vdf_temp.format(0.3, buslane, 0.810, 2.28, 0.0170),
+    "fd11": "length*(60/ul2)+el1",
     "fd90": "length*(60/ul2)",
     "fd91": "length*(60/ul2)",
     "fd99": "length*(60/ul2)",
@@ -154,6 +156,7 @@ volume_delay_funcs = {
     ## Escape function, speed 40 km/h
     "ft7": "length/(40/60)",
 }
+walk_speed = 5
 # Network fields defining whether transit mode stops at node
 stop_codes = {
     't': "#transit_stop_t",
@@ -345,19 +348,19 @@ volume_factors = {
         "iht": 1. / 0.405,
     },
     "train": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 2.8,
+        "pt": 10,
+        "iht": 3.4,
     },
     "long_d_bus": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 2.8,
+        "pt": 10,
+        "iht": 3.4,
     },
     "airplane": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 2.8,
+        "pt": 10,
+        "iht": 3.4,
     },
     "bike": {
         "aht": 1. / 0.604,
@@ -547,8 +550,6 @@ segment_results = {
     "total_boardings": "boa",
     "transfer_boardings": "trb",
 }
-# Hard-coded in Emme congested transit assignment
-congestion_cost = "ccost"
 uncongested_transit_time = "base_timtr"
 emme_matrices = {
     "car_work": ("demand", "time", "dist", "cost", "gen_cost"),
@@ -606,6 +607,7 @@ board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
 terminal_cost_attr = "@freight_term_cost"
+ferry_wait_attr = "@ferry_wait_time"
 railtypes = {
     2: "tram",
     3: "metro",
@@ -620,6 +622,7 @@ roadtypes = {
     3: "multi-lane",
     4: "single-lane",
     5: "single-lane",
+    11: "ferry",
     99: "connector",
 }
 station_ids = {

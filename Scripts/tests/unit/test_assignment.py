@@ -29,13 +29,25 @@ class EmmeAssignmentTest(unittest.TestCase):
 
     def test_assignment(self):
         fares = pandas.DataFrame({
-            "firstb": {
-                0: 60,
-                1: 80,
+            0: {
+                "firstb": 2.0,
+                "dist": 0.1
             },
-            "dist": {
-                0: 1.0,
-                1: 0.5,
+            1: {
+                "firstb": 3.0,
+                "dist": 0.2
+            },
+            2: {
+                "firstb": 5.0,
+                "dist": 0.1
+            },
+            3: {
+                "firstb": 70.0,
+                "dist": 0.3
+            },
+            4: {
+                "firstb": 0.0,
+                "dist": 0.1
             }
         })
         validate(

@@ -5,20 +5,22 @@ import numpy
 from pathlib import Path
 
 import utils.log as log
-from utils.read_csv_file import read_mapping
-from datahandling.zonedata import ZoneData, BaseZoneData
+from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_DIR
+from lem import BASE_ZONEDATA_FILE
 
 
 TEST_DATA_PATH = Path(__file__).parent.parent / "test_data"
 RESULTS_PATH = TEST_DATA_PATH / "Results" / "test"
-ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test"
-BASE_ZONEDATA_PATH = TEST_DATA_PATH / "Base_input_data" / BASE_ZONEDATA_DIR
+ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "zonedata.gpkg"
+COSTDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "2030_test" / "costdata.json"
+BASE_ZONEDATA_PATH = TEST_DATA_PATH / "Base_input_data" / BASE_ZONEDATA_FILE
 BASE_MATRICES_PATH = TEST_DATA_PATH / "Base_input_data" / "Matrices"
-INTERNAL_ZONES = [102, 103, 244, 1063, 1531, 2703, 2741, 6272, 6291, 19071]
-EXTERNAL_ZONES = [36102, 36500]
+INTERNAL_ZONES = [
+    202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621, 2707, 2814, 2918,
+    3000, 3003, 3203, 3302, 3416, 3639, 3705, 3800, 4013, 4101, 4202]
+EXTERNAL_ZONES = [7043, 8284, 12614, 17278, 19419, 23678]
 ZONE_INDEXES = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
 
 # Integration tests for validating that we can read the matrices from OMX
@@ -60,21 +62,17 @@ class MatrixDataTest(unittest.TestCase):
 class ZoneDataTest(unittest.TestCase):
 
     def _get_freight_data_2016(self):
-        zdata = BaseZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES)
+        zdata = ZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES)
         df = zdata.get_freight_data()
         self.assertIsNotNone(df)
         return df
 
     def test_csv_file_read(self):
-        zdata2016 = BaseZoneData(
-            BASE_ZONEDATA_PATH, ZONE_INDEXES,
-            read_mapping(BASE_ZONEDATA_PATH / "uusimaa.zmp"))
+        zdata2016 = ZoneData(BASE_ZONEDATA_PATH, ZONE_INDEXES, "uusimaa")
         self.assertIsNotNone(zdata2016["population"])
         self.assertIsNotNone(zdata2016["workplaces"])
 
-        zdata2030 = ZoneData(
-            ZONEDATA_PATH, ZONE_INDEXES, zdata2016.aggregations,
-            read_mapping(ZONEDATA_PATH / "uusimaa.zmp"))
+        zdata2030 = ZoneData(ZONEDATA_PATH, ZONE_INDEXES, "uusimaa")
         self.assertIsNotNone(zdata2030["population"])
         self.assertIsNotNone(zdata2030["workplaces"])
 

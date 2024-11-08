@@ -1,13 +1,21 @@
 c Modeller - Vehicle Transaction
+c Date: 2024-10-25 13:11:02
+c Project:        mock_project                                                
+c Scenario 5:     testing
 t vehicles
 c  id description mode fleet_size seated_capacity total_capacity cost_time_coeff cost_distance_coeff energy_time_coeff energy_distance_coeff auto_equivalent
-a   1 'ValluVakio' d      1    49    78   0.00   0.00   0.00   0.00   0.00
-a   2 'ValluPika' e      1    49    78   0.00   0.00   0.00   0.00   0.00
-a   3 'HSL-bussi' b      1    49    78   0.00   0.00   0.00   0.00   0.00
-a   4 'metro'    m      1   260   708   0.00   0.00   0.00   0.00   0.00
-a   5 'HSL-juna' r      1   520   840   0.00   0.00   0.00   0.00   0.00
-a   6 'muu_juna' j      1   500   500   0.00   0.00   0.00   0.00   0.00
-a   7 'ratikka'  t      1    84   151   0.00   0.00   0.00   0.00   0.00
-a   8 'HSL-runkob' g      1    49    78   0.00   0.00   0.00   0.00   0.00
-a   9 'lautta'   w      1   350   350   0.00   0.00   0.00   0.00   0.00
-a  10 'pikaratikk' p      1   110   198   0.00   0.00   0.00   0.00   0.00
+a   1 'Bus'      b      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   2 'Tram'     t      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   3 'Train'    j      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   4 'Metro'    m      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   5 'Ferry'    b      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   6 'Plane'    l      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   7 'Light_rail' p      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   8 'Long_d_bus' e      1   100   150   0.00   0.00   0.00   0.00   1.00
+a   9 'Local_trai' r      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  10 'BRT'      g      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  20 'f_ship4m' W      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  21 'f_ship7m' s      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  22 'f_ship9m' S      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  30 'f_train_d' d      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  31 'f_train_e' J      1   100   150   0.00   0.00   0.00   0.00   1.00

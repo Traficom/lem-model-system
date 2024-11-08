@@ -36,7 +36,7 @@ share_paying = {
 sharing_factor = {
     "hb_work": 0.00,
     "hb_edu_upsec": 0.00,
-    "hb_edu_higher": 0.00,
+    "hb_edu_higher": 0.50,
     "hb_grocery": 1.00,
     "hb_other_shop": 1.00,
     "hb_leisure": 1.00,

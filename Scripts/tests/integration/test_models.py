@@ -11,6 +11,7 @@ from tests.integration.test_data_handling import (
     TEST_DATA_PATH,
     RESULTS_PATH,
     ZONEDATA_PATH,
+    COSTDATA_PATH,
     BASE_ZONEDATA_PATH,
     BASE_MATRICES_PATH,
 )
@@ -31,8 +32,8 @@ class ModelTest(unittest.TestCase):
         ass_model = MockAssignmentModel(MatrixData(
             RESULTS_PATH / "Matrices" / "uusimaa"))
         model = ModelSystem(
-            ZONEDATA_PATH, BASE_ZONEDATA_PATH, BASE_MATRICES_PATH,
-            RESULTS_PATH, ass_model, "uusimaa")
+            ZONEDATA_PATH, COSTDATA_PATH, BASE_ZONEDATA_PATH,
+            BASE_MATRICES_PATH, RESULTS_PATH, ass_model, "uusimaa")
         impedance = model.assign_base_demand()
         for ap in ass_model.assignment_periods:
             tp = ap.name
@@ -53,7 +54,7 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.25445019875164016)
+            0.27293520807660276)
         
         print("Model system test done")
     
@@ -69,7 +70,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
-        self.assertEquals(len(impedances["time"]["transit_work"]), 12)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
 
     def _validate_demand(self, demand):
         self.assertIsNotNone(demand)
