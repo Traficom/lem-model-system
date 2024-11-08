@@ -92,6 +92,13 @@ class DepartureTimeModel:
                     self._add_2d_demand(
                         share[time_period], demand.mode, time_period,
                         demand.matrix, position)
+                if "first" in demand.mode:
+                    mode = demand.mode.replace("first", "last")
+                    share: Dict[str, Any] = demand.purpose.demand_share[mode]
+                    for time_period in self.time_periods:
+                        self._add_2d_demand(
+                            share[time_period], mode, time_period,
+                            demand.matrix, position)
             elif len(position) == 3:
                 for time_period in self.time_periods:
                     self._add_3d_demand(demand, demand.mode, time_period)

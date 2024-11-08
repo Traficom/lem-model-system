@@ -516,10 +516,10 @@ car_access_classes = (
     "l_first_mile",
 )
 car_egress_classes = (
-    # "j_last_mile",
-    # "e_last_mile",
-    # "j_last_taxi",
-    # "l_last_mile"
+    "j_last_mile",
+    "e_last_mile",
+    "j_last_taxi",
+    "l_last_mile",
 )
 mixed_mode_classes = car_access_classes + car_egress_classes
 long_dist_simple_classes = (

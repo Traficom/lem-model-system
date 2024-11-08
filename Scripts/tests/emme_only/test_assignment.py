@@ -149,6 +149,10 @@ class EmmeAssignmentTest:
             "j_first_taxi",
             "e_first_mile",
             "l_first_mile",
+            "j_last_mile",
+            "j_last_taxi",
+            "e_last_mile",
+            "l_last_mile",
         ]
         demand = {ass_class: car_matrix for ass_class in ass_classes}
         for ap in self.long_dist_model.assignment_periods:

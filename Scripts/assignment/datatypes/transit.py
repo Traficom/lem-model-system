@@ -102,7 +102,7 @@ class TransitSpecification:
         if park_and_ride_results:
             self.transit_spec["modes"].append(param.park_and_ride_mode)
             aux_perception_factor = (param.aux_time_perception_factor_long
-                if transit_class == "l_first_mile"
+                if transit_class in ("l_first_mile", "l_last_mile")
                 else param.aux_time_perception_factor_car)
             aux_transit_times.append({
                 "mode": param.park_and_ride_mode,
