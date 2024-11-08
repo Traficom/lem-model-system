@@ -124,7 +124,7 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1,
-                "logsum": 0.38977
+                "logsum": 0.38775
             },
             "attraction_size": {
                 "area_university_buildings": 1
@@ -133,62 +133,62 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": -5.26245,
+            "constant": -5.24837,
             "generation": {
-                "car_density": 5.2255
+                "car_density": 5.18869
             },
             "attraction": {
-                "within_zone_time": -0.06346
+                "within_zone_time": -0.0651
             },
             "impedance": {
-                "time": -0.06346,
-                "cost": -0.25621
+                "time": -0.0651,
+                "cost": -0.25015
             },
             "log": {
-                "cost": -0.78085
+                "cost": -0.78903
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -5.75762,
+            "constant": -5.77418,
             "generation": {},
             "attraction": {
-                "within_zone_time": -0.07771
+                "within_zone_time": -0.07873
             },
             "impedance": {
-                "time": -0.07771,
-                "cost": -0.25621
+                "time": -0.07873,
+                "cost": -0.25015
             },
             "log": {
-                "cost": -0.78085
+                "cost": -0.78903
             },
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -1.43824,
+            "constant": -1.37911,
             "generation": {},
             "attraction": {
                 "within_zone_inf": -1,
-                "Helsingin_kantakaupunki": 1.66471,
-                "Tampereen_kantakaupunki": 0.1544
+                "Helsingin_kantakaupunki": 1.64946,
+                "Tampereen_kantakaupunki": 0.12325
             },
             "impedance": {
-                "time": -0.02845,
-                "cost": -0.25621
+                "time": -0.02925,
+                "cost": -0.25015
             },
             "log": {
-                "cost": -0.78085
+                "cost": -0.78903
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.37363,
+            "constant": -1.3757,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.44572
+                "within_zone_dist": -0.44843
             },
             "impedance": {
-                "dist": -0.44572
+                "dist": -0.44843
             },
             "log": {},
             "individual_dummy": {}
@@ -197,10 +197,10 @@
             "constant": 0,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.67136
+                "within_zone_dist": -0.67453
             },
             "impedance": {
-                "dist": -0.67136
+                "dist": -0.67453
             },
             "log": {},
             "individual_dummy": {}
