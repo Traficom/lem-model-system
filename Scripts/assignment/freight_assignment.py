@@ -49,7 +49,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
 
-    def output_traversal_matrix(self, output_path: Path, purposekey: str):
+    def output_traversal_matrix(self, output_path: Path):
         spec = {
             "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
             "portion_of_path": "COMPLETE",
@@ -58,7 +58,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             },
         }
         for ass_class in param.freight_modes:
-            output_file = output_path / f"{ass_class}_{purposekey}.txt"
+            output_file = output_path / f"{ass_class}.txt"
             spec["analyzed_demand"] = self.emme_matrices[ass_class]["demand"]
             self.emme_project.traversal_analysis(
                 spec, output_file, append_to_output_file=False,

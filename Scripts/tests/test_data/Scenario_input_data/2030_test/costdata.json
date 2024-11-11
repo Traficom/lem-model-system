@@ -26,25 +26,25 @@
             "car_pax": 1.0
         }
     },
-	"freight": {
-		"mameka": {
-			"truck": {
-				"truck": {
-					"terminal": 2.0,
-					"time": 0.5,
-					"dist": 0.55,
-					"avg_load": 7.0,
-					"empty_share": 1.5,
-					"distribution": 0.1
-				},
-				"trailer_truck": {
-					"terminal": 1.5,
-					"time": 0.9,
-					"dist": 0.7,
-					"avg_load": 32,
-					"empty_share": 1.5,
-					"distribution": 0.9
-				}
+    "freight": {
+        "mameka": {
+            "truck": {
+                "truck": {
+                    "terminal": 2.0,
+                    "time": 0.5,
+                    "dist": 0.55,
+                    "avg_load": 7.0,
+                    "empty_share": 1.5,
+                    "distribution": 0.1
+                },
+                "trailer_truck": {
+                    "terminal": 1.5,
+                    "time": 0.9,
+                    "dist": 0.7,
+                    "avg_load": 32,
+                    "empty_share": 1.5,
+                    "distribution": 0.9
+                }
             },
             "freight_train": {
                 "electric_train": {
@@ -74,5 +74,5 @@
                 }
             }
         }
-	}
+    }
 }
