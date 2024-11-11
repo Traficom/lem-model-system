@@ -30,17 +30,17 @@
         "mameka": {
             "truck": {
                 "truck": {
-                    "terminal": 2.0,
-                    "time": 0.5,
-                    "dist": 0.55,
+                    "terminal_cost": 2.0,
+                    "time_cost": 0.5,
+                    "dist_cost": 0.55,
                     "avg_load": 7.0,
                     "empty_share": 1.5,
                     "distribution": 0.1
                 },
                 "trailer_truck": {
-                    "terminal": 1.5,
-                    "time": 0.9,
-                    "dist": 0.7,
+                    "terminal_cost": 1.5,
+                    "time_cost": 0.9,
+                    "dist_cost": 0.7,
                     "avg_load": 32,
                     "empty_share": 1.5,
                     "distribution": 0.9
@@ -48,25 +48,25 @@
             },
             "freight_train": {
                 "electric_train": {
-                    "terminal": 3.0,
-                    "time": 7.0,
-                    "dist": 4.0,
-                    "wagon_annual": 10.0,
+                    "terminal_cost": 3.0,
+                    "time_cost": 7.0,
+                    "dist_cost": 4.0,
+                    "wagon_annual_cost": 10.0,
                     "avg_load": 300
                 },
                 "diesel_train": {
-                    "terminal": 2.5,
-                    "time": 6.0,
-                    "dist": 8.0,
-                    "wagon_annual": 10.0,
+                    "terminal_cost": 2.5,
+                    "time_cost": 6.0,
+                    "dist_cost": 8.0,
+                    "wagon_annual_cost": 10.0,
                     "avg_load": 300
                 }
             },
             "ship": {
                 "other_dry_cargo": {
                     "4m": {
-                        "terminal": 9.0,
-                        "time": 0.001,
+                        "terminal_cost": 9.0,
+                        "time_cost": 0.001,
                         "other_costs": 0.2,
                         "empty_share": 1.9,
                         "speed": 0.3
