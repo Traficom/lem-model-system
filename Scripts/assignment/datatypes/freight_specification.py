@@ -69,7 +69,7 @@ class FreightSpecification:
                 "perception_factor": 1,
             },
             "aux_transit_time": {
-                "perception_factor": 30,
+                "perception_factor": 10,
             },
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
