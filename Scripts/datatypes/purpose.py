@@ -126,10 +126,8 @@ class Purpose:
                         return_sum += share[1]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if abs(outward_sum/len(impedance[time_period]) - 1) > 0.001:
-                raise ValueError(f"False outward impedance shares: {self.name} : {mode}")
-            if abs(return_sum/len(impedance[time_period]) - 1) > 0.001:
-                raise ValueError(f"False return impedance shares: {self.name} : {mode}")
+            if abs((outward_sum + return_sum)/len(day_imp[mode]) - 2) > 0.001:
+                raise ValueError(f"False impedance shares: {self.name} : {mode}")
             if "vrk" in impedance:
                 for mtx_type in day_imp[mode]:
                     day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
