@@ -376,6 +376,38 @@ class EmmeAssignmentModel(AssignmentModel):
                         miles["dist"][mode] += departures * segment.link.length
                         miles["time"][mode] += departures * segment[time_attr]
         resultdata.print_data(miles, "transit_kms.txt")
+        network = self.day_scenario.get_network()
+        attr_names = [attr.name for attr in self.day_scenario.extra_attributes()
+            if attr.type == "LINK"]
+        link_recs = ({
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    (link.i_node.x, link.i_node.y),
+                    (link.j_node.x, link.j_node.y),
+                ]
+            },
+            "properties": {attr: float(link[attr]) for attr in attr_names}
+        } for link in network.links())
+        schema = {
+            "geometry": "LineString",
+            "properties": {attr: "float" for attr in attr_names}
+        }
+        resultdata.print_gpkg(link_recs, "assignment.gpkg", schema, "links")
+        attr_names = [attr.name for attr in self.day_scenario.extra_attributes()
+            if attr.type == "NODE"]
+        node_recs = ({
+            "geometry": {
+                "type": "Point",
+                "coordinates": (node.x, node.y)
+            },
+            "properties": {attr: float(node[attr]) for attr in attr_names}
+        } for node in network.nodes())
+        schema = {
+            "geometry": "Point",
+            "properties": {attr: "float" for attr in attr_names}
+        }
+        resultdata.print_gpkg(node_recs, "assignment.gpkg", schema, "nodes")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.

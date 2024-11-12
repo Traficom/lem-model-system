@@ -1,7 +1,13 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Iterable
+import os
+import fiona
+from fiona.crs import CRS
 import pandas
+
+
+os.environ["PROJ_DATA"] = "%%EMMEPATH%%\\Python311\\Lib\\site-packages\\fiona\\proj_data"
 
 
 class ResultsData:
@@ -119,3 +125,17 @@ class ResultsData:
             names=["purpose", "mode", "orig", "dest"])
         stacked_matrices.name = "nr_tours"
         self.print_concat(stacked_matrices, filename + ".txt")
+
+    def print_gpkg(self,
+                   records: Iterable,
+                   filename: str,
+                   schema: dict,
+                   layer: str):
+        """Save data to layer in GeoPackage file.
+
+        See fiona documentation on format of records and schema.
+        """
+        with fiona.open(
+                self.path / filename, 'w', driver="GPKG", layer=layer,
+                crs=CRS.from_epsg(3879), schema=schema) as colxn:
+            colxn.writerecords(records)
