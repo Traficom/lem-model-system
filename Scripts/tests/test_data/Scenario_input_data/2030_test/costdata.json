@@ -11,13 +11,13 @@
     "transit_cost": {
         "HSL": {
             "id": 0,
-            "firstb": 2.0,
-            "dist": 0.1
+            "firstb_single": 2.0,
+            "dist_single": 0.1
         },
         "long-distance train": {
             "id": 1,
-            "firstb": 2.0,
-            "dist": 0.1
+            "firstb_single": 2.0,
+            "dist_single": 0.1
         }
     },
     "cost_changes": {
