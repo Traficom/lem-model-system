@@ -22,14 +22,12 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
     """
     mode_cost = {}
     for mode, params in unit_costs["truck"].items():
-        road_cost = (impedance["time"]*params["time_cost"]
-                     + impedance["dist"]*params["dist_cost"]
-                     + impedance["toll"]) / params["avg_load"]
+        road_cost = sum(impedance[k] * params[k]
+                        for k in impedance) / params["avg_load"]
         mode_cost[mode] = ((params["terminal_cost"]*2
                             + road_cost*params["empty_share"])
                            * params["distribution"])
     return sum(mode_cost.values())
-
 
 def calc_rail_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray],
@@ -54,9 +52,8 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
     """
     mode_cost = {}
     for mode, params in unit_costs["freight_train"].items():
-        rail_cost = ((impedance["time"]*params["time_cost"]
-                     + impedance["dist"]*params["dist_cost"])
-                     / params["avg_load"] * 2)
+        rail_cost = sum(impedance[k] * params[k]
+                        for k in impedance) / params["avg_load"]*2
         mode_cost[mode] = (rail_cost + params["wagon_annual_cost"]
                            + params["terminal_cost"]*2)
     rail_cost = mode_cost["diesel_train"]
@@ -64,7 +61,6 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
                                  impedance,
                                  impedance_aux)
     return rail_cost + rail_aux_cost
-
 
 def calc_ship_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray],
@@ -92,7 +88,7 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
     for mode in unit_costs["ship"].keys():
         mode_cost[mode] = {}
         for draught, params in unit_costs["ship"][mode].items():
-            ship_cost = (impedance["dist"]*params["time_cost"]
+            ship_cost = (impedance["dist"]*params["time"]
                          / params["speed"] * params["empty_share"])
             ship_cost += (impedance["channel"] + params["other_costs"]
                           + params["terminal_cost"])*2
@@ -106,7 +102,10 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
 def get_aux_cost(unit_costs: Dict[str, Dict],
                  impedance: Dict[str, numpy.ndarray],
                  impedance_aux: Dict[str, numpy.ndarray]):
-    """Returns freight road auxiliary costs.
+    """Cheks whether auxiliary mode distance is over twice as long
+    as main mode distance or if main mode mode has not been used 
+    at all. In such cases, assigns inf for said OD pairs.
+    Otherwise calculates actual auxiliary cost.
 
     Parameters
     ----------

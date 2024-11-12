@@ -66,14 +66,15 @@ class FreightModelTest(unittest.TestCase):
         }
         for purpose_key, purpose_value in purposes.items():
             commodity_costs = costdata["freight"][commodity_conversion[purpose_key]]
-            impedance["truck"]["cost"] = calc_road_cost(commodity_costs,
-                                                        impedance["truck"])
-            impedance["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
-                                                                impedance["freight_train"],
-                                                                impedance["freight_train_aux"])
-            impedance["ship"]["cost"] = calc_ship_cost(commodity_costs,
-                                                       impedance["ship"],
-                                                       impedance["ship_aux"])
-            demand = purpose_value.calc_traffic(impedance, purpose_key)
+            costs = {"truck": {}, "freight_train": {}, "ship": {}}
+            costs["truck"]["cost"] = calc_road_cost(commodity_costs,
+                                                    impedance["truck"])
+            costs["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
+                                                            impedance["freight_train"],
+                                                            impedance["freight_train_aux"])
+            costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
+                                                   impedance["ship"],
+                                                   impedance["ship_aux"])
+            demand = purpose_value.calc_traffic(costs, purpose_key)
             for mode in demand:
                 self.assertFalse(numpy.isnan(demand[mode]).any())
