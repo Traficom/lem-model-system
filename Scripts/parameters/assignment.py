@@ -433,7 +433,7 @@ noise_zone_width = {
 
 ### ASSIGNMENT REFERENCES ###
 time_periods = {
-    "aht": "EndAssignmentOnlyPeriod",
+    "aht": "AssignmentPeriod",
     "pt": "OffPeakPeriod",
     "iht": "AssignmentPeriod",
     "ilt": "TransitAssignmentPeriod",

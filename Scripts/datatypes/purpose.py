@@ -113,15 +113,21 @@ class Purpose:
         mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
+            outward_sum = 0
+            return_sum = 0
             day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
                     if ass_class in impedance[time_period][mtx_type]:
-                        share = self.impedance_share[mode][time_period]
                         imp = impedance[time_period][mtx_type][ass_class]
+                        share = self.impedance_share[mode][time_period]
+                        outward_sum += share[0]
+                        return_sum += share[1]
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
+            if abs((outward_sum + return_sum)/len(day_imp[mode]) - 2) > 0.001:
+                raise ValueError(f"False impedance shares: {self.name} : {mode}")
             if "vrk" in impedance:
                 for mtx_type in day_imp[mode]:
                     day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
