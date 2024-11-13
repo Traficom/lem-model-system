@@ -193,8 +193,8 @@ def main(args):
         transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
         for operator in transit_cost.values():
-            float(operator["firstb"])
-            float(operator["dist"])
+            float(operator["firstb_single"])
+            float(operator["dist_single"])
 
     log.info("Successfully validated all input files")
 
