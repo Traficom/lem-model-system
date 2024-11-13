@@ -113,6 +113,11 @@
                 "shop": 1,
                 "recreation": 1.28455,
                 "hospitality": 4.85821
+            },
+            "scaling": {
+                "log": {
+                    "attraction_size": 0.66469
+                }
             }
         }
     },

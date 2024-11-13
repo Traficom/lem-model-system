@@ -184,6 +184,23 @@
                 "logsum": 0.43111
             },
             "individual_dummy": {}
+        },
+        "scaling": {
+            "car_pax": {
+                "constant": 0.43111,
+                "generation": {
+                    "car_density": 0.43111
+                }
+            },
+            "transit_work": {
+                "constant": 0.43111
+            },
+            "bike": {
+                "constant": 0.43111
+            },
+            "walk": {
+                "constant": 0.43111
+            }
         }
     },
     "demand_share": {

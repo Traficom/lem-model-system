@@ -104,10 +104,15 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1,
-                "logsum":0.70546
+                "logsum": 0.70546
             },
             "attraction_size": {
                 "workplaces": 1
+            },
+            "scaling": {
+                "log": {
+                    "attraction_size": 0.70546
+                }
             }
         }
     },

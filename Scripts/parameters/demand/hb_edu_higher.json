@@ -108,6 +108,11 @@
             },
             "attraction_size": {
                 "area_university_buildings": 1
+            },
+            "scaling": {
+                "log": {
+                    "attraction_size": 0.38977
+                }
             }
         }
     },
