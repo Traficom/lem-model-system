@@ -47,12 +47,12 @@ def main(args):
         raise ValueError(msg)
 
     # Check basedata input
-    log.info("Checking base inputdata...")
-    if not (args.end_assignment_only or base_zonedata_path.exists()):
-        msg = "Baseline zonedata file '{}' does not exist.".format(
-            base_zonedata_path)
-        log.error(msg)
-        raise ValueError(msg)
+    # log.info("Checking base inputdata...")
+    # if not (args.end_assignment_only or base_zonedata_path.exists()):
+    #     msg = "Baseline zonedata file '{}' does not exist.".format(
+    #         base_zonedata_path)
+    #     log.error(msg)
+    #     raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
     calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
