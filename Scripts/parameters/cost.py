@@ -45,7 +45,7 @@ sharing_factor = {
     "ob_other": 1.00,
     "hb_work_long": 0.00,
     "hb_leisure_long": 0.25,
-    "hb_business_long": 0.25  
+    "hb_business_long": 0.50  
 }
 
 car_drv_occupancy = {

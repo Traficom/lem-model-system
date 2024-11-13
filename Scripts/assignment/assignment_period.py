@@ -284,10 +284,10 @@ class AssignmentPeriod(Period):
         for line in network.transit_lines():
             fare = fares[line[op_attr]]
             for segment in line.segments():
-                segment[param.dist_fare_attr] = (fare["dist"]
+                segment[param.dist_fare_attr] = (fare["dist_single"]
                                                  * segment.link.length)
                 segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fare["firstb"]
+            line[param.board_fare_attr] = fare["firstb_single"]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)

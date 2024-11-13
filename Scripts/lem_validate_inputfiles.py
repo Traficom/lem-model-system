@@ -47,12 +47,12 @@ def main(args):
         raise ValueError(msg)
 
     # Check basedata input
-    log.info("Checking base inputdata...")
-    if not (args.end_assignment_only or base_zonedata_path.exists()):
-        msg = "Baseline zonedata file '{}' does not exist.".format(
-            base_zonedata_path)
-        log.error(msg)
-        raise ValueError(msg)
+    # log.info("Checking base inputdata...")
+    # if not (args.end_assignment_only or base_zonedata_path.exists()):
+    #     msg = "Baseline zonedata file '{}' does not exist.".format(
+    #         base_zonedata_path)
+    #     log.error(msg)
+    #     raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
     calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
@@ -193,8 +193,8 @@ def main(args):
         transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
         for operator in transit_cost.values():
-            float(operator["firstb"])
-            float(operator["dist"])
+            float(operator["firstb_single"])
+            float(operator["dist_single"])
 
     log.info("Successfully validated all input files")
 

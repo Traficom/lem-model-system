@@ -44,8 +44,7 @@ class ZoneData:
         agg_keys = [key for key in data if "aggregate_results_" in key]
         aggs = data[agg_keys].rename(
             columns=lambda x : x.replace("aggregate_results_", ""))
-        self.aggregations = ZoneAggregations(
-            aggs, data["municipality_center"].map(zone_indices))
+        self.aggregations = ZoneAggregations(aggs)
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.share["share_female"] = pandas.Series(
