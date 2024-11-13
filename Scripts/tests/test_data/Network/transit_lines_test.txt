@@ -1,7 +1,7 @@
 c Modeller - Transit Line Transaction
-c Date: 2024-10-25 13:11:02
+c Date: 2024-11-13 14:13:15
 c Project:        mock_project                                                
-c Scenario 5:     testing
+c Scenario 5:     test network
 t lines
 c Transit Lines
 c Line  Mod Veh Headwy Speed Description             Data1  Data2  Data3
@@ -243,7 +243,7 @@ a'Finnair-AY285-2' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
    249881         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    249870        lay=0.00
 c 'Finnair-AY285-2' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-1' p   7   8.90  30.00 'Itäkeskus-Keilaniemi'      0      0      0
+a'Helsingin-15-1' p   7   8.90  30.00 'Itï¿½keskus-Keilaniemi'      0      0      0
   path=no
    831111      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249857      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -280,7 +280,7 @@ a'Helsingin-15-1' p   7   8.90  30.00 'Itäkeskus-Keilaniemi'      0      0      
    249867      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    249869        lay=0.00
 c 'Helsingin-15-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itäkeskus'      0      0      0
+a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itï¿½keskus'      0      0      0
   path=no
    249869      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249867      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -436,50 +436,83 @@ a'Helsingin-400-2' g  10   9.60  30.00 'Vantaankoski-Martinlaakso-Kamppi'      0
    900152      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    772048        lay=0.00
 c 'Helsingin-400-2' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-719K-1' b   1 450.00  30.00 'Hakunila-Länsisalmi-Nybygget'      0      0      0
+a'Helsingin-71-1' b   1   8.40  30.00 'Rautatieasema-Malmi'      0      0      0
   path=no
-   164712      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   162734      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   134489      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   202960      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   162467      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   142847      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   178814      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   133436      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   180925      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   150457      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   100097      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   132407      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   746978      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   900125      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   546892      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   546893      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   526501      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   175844      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   183793      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   173819      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
-   121640        lay=0.00
-c 'Helsingin-719K-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-719K-2' b   1 450.00  30.00 'Nybygget-Länsisalmi-Hakunila'      0      0      0
+   483846      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   122319      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   183565      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900136      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   102514      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   474847      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   823845      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   113564      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   113565      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   118583      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900067      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   175473      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   116775      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900220      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900056      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   121001      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   131483      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   123170      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   101776      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   172174      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   141214      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   145072      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   119755      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   156269      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   100618      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900174      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   100753      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   100752      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   103971      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   151362      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   159765      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   140871      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
+   151964        lay=0.00
+c 'Helsingin-71-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
+a'Helsingin-71-2' b   1   8.40  30.00 'Malmi-Rautatieasema'      0      0      0
   path=no
-   121640      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   173819      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   161503      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   573986      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   779553      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   596381      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   135542      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   578165      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   131022      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   143869      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   103929      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   185283      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   106794      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   180971      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   202505      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
-   162734      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
-   164712        lay=0.00
-c 'Helsingin-719K-2' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
+   151964      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   140871      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   132281      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   111394      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   166410      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   114222      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   167521      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900174      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   100618      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   135702      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   182342      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   127273      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   162639      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   185731      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   159475      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   140441      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900056      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900220      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   480382      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   145352      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900016      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   158763      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   139116      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   108073      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   184971      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   152782      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   152280      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   166608      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   103583      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   102514      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   900136      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   183565      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   490941      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   816707      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   173442      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   110993      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
+   110994      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
+   163486        lay=0.00
+c 'Helsingin-71-2' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
 a'Helsingin-M1-1' m   4   4.80  30.00 'Vuosaari-Kivenlahti'      0      0      0
   path=no
    249528      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
