@@ -1,7 +1,7 @@
 c Modeller - Vehicle Transaction
-c Date: 2024-10-25 13:11:02
+c Date: 2024-11-13 14:13:14
 c Project:        mock_project                                                
-c Scenario 5:     testing
+c Scenario 5:     test network
 t vehicles
 c  id description mode fleet_size seated_capacity total_capacity cost_time_coeff cost_distance_coeff energy_time_coeff energy_distance_coeff auto_equivalent
 a   1 'Bus'      b      1   100   150   0.00   0.00   0.00   0.00   1.00
