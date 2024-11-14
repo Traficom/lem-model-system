@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, Union, Iterable
 import os
 import sys
+# Fiona will search for projection data when setting CRS
 os.environ["PROJ_DATA"] = (sys.exec_prefix
                            + "\\Lib\\site-packages\\fiona\\proj_data")
 import fiona
@@ -131,7 +132,7 @@ class ResultsData:
                    filename: str,
                    schema: dict,
                    layer: str):
-        """Save data to layer in GeoPackage file.
+        """Save data to layer in GeoPackage file in ETRS89/GK25FIN projection.
 
         See fiona documentation on format of records and schema.
         """
