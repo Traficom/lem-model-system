@@ -2,12 +2,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Union, Iterable
 import os
+import sys
+os.environ["PROJ_DATA"] = (sys.exec_prefix
+                           + "\\Lib\\site-packages\\fiona\\proj_data")
 import fiona
 from fiona.crs import CRS
 import pandas
-
-
-os.environ["PROJ_DATA"] = "%%EMMEPATH%%\\Python311\\Lib\\site-packages\\fiona\\proj_data"
 
 
 class ResultsData:
