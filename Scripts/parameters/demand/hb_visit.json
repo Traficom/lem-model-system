@@ -108,11 +108,6 @@
             },
             "attraction_size": {
                     "population": 1
-            },
-            "scaling": {
-                "log": {
-                    "attraction_size": 0.66913
-                }
             }
         }
     },
