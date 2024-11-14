@@ -1,7 +1,7 @@
 c Modeller - Mode Transaction
-c Date: 2024-10-25 13:11:01
+c Date: 2024-11-13 14:13:14
 c Project:        mock_project                                                
-c Scenario 5:     testing
+c Scenario 5:     test network
 t modes
 c id description mode_type colour cost_time_coeff cost_distance_coeff energy_time_coeff energy_distance_coeff speed_factor
 a h 'Main'     1   1   0.00   0.00   0.00   0.00

@@ -103,11 +103,8 @@ class ResultsData:
                 self._xlsx_buffer[filename] = pandas.ExcelWriter(
                     self.path / f"{filename}.xlsx")
         except ModuleNotFoundError:
-            # If no openpyxl package available, save data to csv
-            for key, df in data.items():
-                df.to_csv(
-                    self.path / f"{filename}_{description}_{key}.txt",
-                    sep='\t', float_format="%8.1f")
+            # Do not save data if no openpyxl package available
+            pass
         else:
             for key, df in data.items():
                 df.to_excel(

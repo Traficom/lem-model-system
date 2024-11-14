@@ -54,7 +54,7 @@ class EmmeAssignmentTest:
             "turn_entries": 100,
             "transit_vehicles": 35,
             "transit_lines": 30,
-            "transit_segments": 700,
+            "transit_segments": 750,
             "extra_attribute_values": 700000,
             "functions": 99,
             "operators": 5000,
@@ -137,24 +137,24 @@ class EmmeAssignmentTest:
     def test_transit_cost(self):
         fares = pandas.DataFrame({
             0: {
-                "firstb": 2.0,
-                "dist": 0.1
+                "firstb_single": 2.0,
+                "dist_single": 0.1
             },
             1: {
-                "firstb": 3.0,
-                "dist": 0.2
+                "firstb_single": 3.0,
+                "dist_single": 0.2
             },
             2: {
-                "firstb": 5.0,
-                "dist": 0.1
+                "firstb_single": 5.0,
+                "dist_single": 0.1
             },
             3: {
-                "firstb": 70.0,
-                "dist": 0.3
+                "firstb_single": 70.0,
+                "dist_single": 0.3
             },
             4: {
-                "firstb": 0.0,
-                "dist": 0.1
+                "firstb_single": 0.0,
+                "dist_single": 0.1
             }
         })
         self.ass_model.calc_transit_cost(fares)
@@ -168,7 +168,7 @@ class EmmeAssignmentTest:
             "truck": 0.3,
             "van": 0.2,
         }
-        purposes = ["c1", "c2"]
+        purposes = ["mameka", "kalevi"]
         self.ass_model.prepare_freight_network(dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones

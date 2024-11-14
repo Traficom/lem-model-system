@@ -110,7 +110,6 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
             outward_sum = 0
@@ -128,9 +127,6 @@ class Purpose:
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
             if abs((outward_sum + return_sum)/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
-            if "vrk" in impedance:
-                for mtx_type in day_imp[mode]:
-                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
@@ -544,3 +540,39 @@ def calibrate(spec: dict, calib_spec: dict):
         except TypeError:
             # Search deeper
             calibrate(spec[param_name], calib_spec[param_name])
+            
+
+class FreightPurpose(Purpose):
+
+    def __init__(self, specification, zone_data, resultdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+
+        if specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+
+    def calc_traffic(self, impedance: dict, purpose_key: str):
+        """Calculate freight traffic matrix.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+        purpose_key : str
+            freight commodity name
+
+        Return
+        ------
+        dict
+            Mode (truck/train/...) : calculated demand (numpy 2d matrix)
+        """
+        self.dist = impedance["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
+        probs = self.model.calc_prob(impedance)
+        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
+        return demand

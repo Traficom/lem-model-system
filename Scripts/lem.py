@@ -12,7 +12,7 @@ from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
-BASE_ZONEDATA_FILE = "2018_zonedata.gpkg"
+BASE_ZONEDATA_FILE = "2016_zonedata.gpkg"
 
 
 def main(args):

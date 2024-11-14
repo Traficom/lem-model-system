@@ -197,6 +197,7 @@ end network_fields
   109673 'Helsinki'        1        0        0        1        0        0
   109744 'Vihti'          0        0        0        0        0        0
   109833 'Helsinki'        1        0        0        0        0        0
+  109944 'Jyvaskyla'        0        0        0        0        0        0
   109945 'Jyvaskyla'        0        0        1        0        0        0
   110069 'Espoo'          1        0        0        0        0        0
   110151 'Vantaa'         1        1        0        0        0        0
@@ -223,7 +224,6 @@ end network_fields
   111522 'Vantaa'         1        0        0        0        0        0
   111543 'Vantaa'         1        1        1        1        0        0
   111544 'Kerava'         0        0        0        0        0        0
-  111611 'Jyvaskyla'        0        0        0        0        0        0
   111681 'Hameenlinna'        0        0        0        0        0        0
   111682 'Hameenlinna'        0        0        0        0        0        0
   111703 'Vantaa'         1        0        0        0        0        0
@@ -520,6 +520,7 @@ end network_fields
   133017 'Helsinki'        1        0        0        0        0        0
   133044 'Helsinki'        1        0        0        0        0        0
   133051 'Espoo'          1        0        0        0        0        0
+  133158 'Nurmijarvi'        0        0        0        0        0        0
   133159 'Nurmijarvi'        0        0        1        0        0        0
   133237 'Helsinki'        1        0        0        0        0        0
   133248 'Vantaa'         1        0        0        0        0        0
@@ -825,7 +826,6 @@ end network_fields
   154986 'Helsinki'        1        0        0        0        0        0
   155167 'Espoo'          1        0        0        0        0        0
   155271 'Vantaa'         1        0        0        0        0        0
-  155292 'Vantaa'         1        1        0        0        0        0
   155323 'Helsinki'        1        0        0        0        0        0
   155549 'Helsinki'        1        0        0        0        0        0
   155552 'Jamsa'          0        0        1        0        0        0
@@ -925,7 +925,6 @@ end network_fields
   161875 'Vantaa'         1        0        0        0        0        0
   161890 'Lohja'          0        0        0        0        0        0
   161908 'Espoo'          1        0        0        0        0        0
-  161921 'Vantaa'         1        0        0        0        0        0
   162199 'Helsinki'        1        0        0        0        0        0
   162205 'Helsinki'        1        1        0        0        0        0
   162242 'Jamsa'          0        0        0        0        0        0
@@ -1082,7 +1081,6 @@ end network_fields
   172152 'Espoo'          1        0        0        0        0        0
   172169 'Helsinki'        1        1        0        0        0        0
   172174 'Helsinki'        1        0        0        0        0        0
-  172211 'Helsinki'        1        0        0        0        0        0
   172263 'Espoo'          1        0        0        0        0        0
   172495 'Vantaa'         1        0        0        0        0        0
   172579 'Helsinki'        1        0        0        0        0        0
@@ -1102,7 +1100,6 @@ end network_fields
   173412 'Espoo'          1        0        0        0        0        0
   173442 'Helsinki'        1        0        0        0        0        0
   173486 'Vantaa'         1        0        0        0        0        0
-  173536 'Jyvaskyla'        0        0        0        0        0        0
   173537 'Hyvinkaa'        0        0        0        0        0        0
   173602 'Lohja'          0        0        1        0        0        0
   173613 'Muurame'        0        0        1        0        0        0
@@ -1312,7 +1309,6 @@ end network_fields
   202960 'Vantaa'         1        0        0        0        0        0
   202972 'Helsinki'        1        0        0        0        0        0
   203099 'Kauniainen'        2        0        0        0        0        0
-  203746 'Mantsala'        0        0        0        0        0        0
   209739 'Jamsa'          0        0        0        0        0        0
   210001 'Vantaa'         1        0        0        0        0        0
   211215 'Vantaa'         1        1        1        1        0        0
@@ -1325,6 +1321,7 @@ end network_fields
   216923 'Espoo'          1        1        1        1        0        0
   218694 'Vantaa'         1        0        0        0        0        0
   219746 'Mantsala'        0        0        0        0        0        0
+  219747 'Mantsala'        0        0        0        0        0        0
   219926 'Helsinki'        1        0        0        0        0        0
   222351 'Helsinki'        1        0        0        0        0        0
   222521 'Vantaa'         1        0        0        0        0        0
@@ -1595,7 +1592,9 @@ end network_fields
   378686 'Espoo'          1        0        0        0        0        0
   385213 'Jarvenpaa'        0        0        0        0        0        0
   386530 'Vantaa'         1        0        0        0        0        0
+  388237 'Loviisa'        0        0        0        0        0        0
   388238 'Loviisa'        0        0        0        0        0        0
+  389598 'Mantsala'        0        0        0        0        0        0
   389599 'Mantsala'        0        0        0        0        0        0
   392971 'Vantaa'         1        0        0        0        0        0
   393031 'Espoo'          1        0        0        0        0        0
@@ -1608,7 +1607,6 @@ end network_fields
   430123 'Vantaa'         1        1        0        0        0        0
   432990 'Espoo'          1        0        0        0        0        0
   434255 'Vantaa'         1        0        0        0        0        0
-  434445 'Kerava'         0        1        0        0        0        0
   437274 'Vantaa'         1        0        0        0        0        0
   452786 'Espoo'          1        0        0        0        0        0
   453328 'Hanko'          0        0        0        0        0        0
@@ -1620,6 +1618,7 @@ end network_fields
   477634 'Helsinki'        1        0        0        0        0        0
   480382 'Helsinki'        1        1        1        1        0        0
   480505 'Jarvenpaa'        0        0        0        0        0        0
+  480506 'Jarvenpaa'        0        0        0        0        0        0
   483846 'Helsinki'        1        0        0        0        0        0
   490941 'Helsinki'        1        0        0        0        0        0
   492735 'Helsinki'        1        0        0        0        0        0
@@ -1636,21 +1635,20 @@ end network_fields
   538828 'Lohja'          0        0        1        0        0        0
   540317 'Tuusula'        0        1        0        0        0        0
   541744 'Kotka'          0        0        0        0        0        0
+  541745 'Kotka'          0        0        0        0        0        0
   546892 'Porvoo'         0        0        0        0        0        0
   546893 'Porvoo'         0        0        0        0        0        0
   561132 'Espoo'          1        0        0        0        0        0
   570625 'Helsinki'        1        0        0        0        0        0
   573986 'Porvoo'         0        0        0        0        0        0
+  573987 'Porvoo'         0        0        0        0        0        0
   577617 'Vantaa'         1        0        0        0        0        0
   578165 'Sipoo'          0        1        0        0        0        0
   581564 'Helsinki'        1        0        0        0        0        0
   583805 'Helsinki'        1        0        0        0        0        0
   591964 'Helsinki'        1        0        0        0        0        0
   593065 'Helsinki'        1        0        0        0        0        0
-  596381 'Porvoo'         0        0        0        0        0        0
   603077 'Kauniainen'        2        0        0        0        0        0
-  606099 'Lohja'          0        0        1        0        0        0
-  607812 'Mantsala'        0        0        0        0        0        0
   609871 'Vantaa'         1        0        0        0        0        0
   620255 'Lohja'          0        0        0        0        0        0
   623500 'Helsinki'        1        0        0        1        0        0
@@ -1672,6 +1670,7 @@ end network_fields
   673282 'Tampere'        0        0        1        0        0        0
   677329 'Vantaa'         1        0        0        0        0        0
   679451 'Mantsala'        0        0        0        0        0        0
+  679452 'Mantsala'        0        0        0        0        0        0
   686567 'Vantaa'         1        0        0        0        0        0
   686836 'Helsinki'        1        0        0        0        0        0
   687446 'Espoo'          1        0        0        0        0        0
@@ -1682,16 +1681,16 @@ end network_fields
   723640 'Espoo'          1        0        0        0        0        0
   724624 'Hameenlinna'        0        0        0        0        0        0
   726332 'Kerava'         0        0        0        0        0        0
+  726333 'Kerava'         0        0        0        0        0        0
   729971 'Helsinki'        1        0        0        0        0        0
   739263 'Vantaa'         1        1        0        0        0        0
   740234 'Raasepori'        0        0        0        0        0        0
   744726 'Vantaa'         1        0        0        0        0        0
-  746978 'Sipoo'          0        0        0        0        0        0
   748016 'Hameenlinna'        0        0        0        0        0        0
+  748017 'Hameenlinna'        0        0        0        0        0        0
   753230 'Helsinki'        1        1        0        1        0        0
   763714 'Helsinki'        1        1        1        0        0        0
   764160 'Vantaa'         1        1        0        0        0        0
-  767122 'Kerava'         0        1        0        0        0        0
   772048 'Helsinki'        1        0        0        1        0        0
   778071 'Helsinki'        1        0        0        0        0        0
   779553 'Porvoo'         0        0        0        0        0        0
@@ -1789,7 +1788,6 @@ end network_fields
   900056 'Helsinki'        1        1        0        0        0        0
   900057 'Kotka'          0        0        0        0        0        0
   900058 'Helsinki'        1        0        0        0        0        0
-  900059 'Vantaa'         1        0        0        0        0        0
   900060 'Vantaa'         1        0        0        0        0        0
   900064 'Vihti'          0        0        0        0        0        0
   900065 'Vantaa'         1        0        0        0        0        0
