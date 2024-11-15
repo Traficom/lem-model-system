@@ -50,7 +50,7 @@ class ModelTest(unittest.TestCase):
         self._validate_impedances(impedance["aht"])
         self._validate_off_peak_impedances(impedance["pt"])
         self._validate_impedances(impedance["iht"])
-        self._validate_off_peak_impedances(impedance["ilt"])
+        self._validate_off_peak_impedances(impedance["it"])
 
         # Check that model result does not change
         self.assertAlmostEquals(

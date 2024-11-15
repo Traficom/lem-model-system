@@ -96,7 +96,7 @@ transit_delay_funcs = {
         "aht": 6,
         "pt": 6,
         "iht": 6,
-        "ilt": 6,
+        "it": 6,
         "vrk": 6,
     },
 }
@@ -406,7 +406,7 @@ volume_factors = {
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
         volume_factors[mode]["vrk"] = 1
-        volume_factors[mode]["ilt"] = 0
+        volume_factors[mode]["it"] = 0
 # Factor for converting weekday traffic into yearly day average
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
@@ -436,7 +436,7 @@ time_periods = {
     "aht": "AssignmentPeriod",
     "pt": "OffPeakPeriod",
     "iht": "AssignmentPeriod",
-    "ilt": "TransitAssignmentPeriod",
+    "it": "TransitAssignmentPeriod",
 }
 car_classes = (
     "car_work",

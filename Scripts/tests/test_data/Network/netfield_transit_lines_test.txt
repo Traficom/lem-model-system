@@ -3,14 +3,14 @@ t network_fields
 #departures_per_day TRANSIT_LINE REAL 'departures_per_day'
 #hdw_aht TRANSIT_LINE REAL 'hdw_aht'
 #hdw_iht TRANSIT_LINE REAL 'hdw_iht'
-#hdw_ilt TRANSIT_LINE REAL 'hdw_ilt'
+#hdw_it TRANSIT_LINE REAL 'hdw_it'
 #hdw_pt TRANSIT_LINE REAL 'hdw_pt'
 #hdw_vrk TRANSIT_LINE REAL 'hdw_vrk'
 #keep_stops TRANSIT_LINE BOOLEAN 'keep_stops'
 #route_short_name TRANSIT_LINE STRING 'route_short_name'
 #trip_short_name TRANSIT_LINE STRING 'trip_short_name'
 end network_fields
-line #agency_name #departures_per_day #hdw_aht #hdw_iht #hdw_pt #hdw_ilt #hdw_vrk #keep_stops #route_short_name #trip_short_name
+line #agency_name #departures_per_day #hdw_aht #hdw_iht #hdw_pt #hdw_it #hdw_vrk #keep_stops #route_short_name #trip_short_name
 '10000_S' 'None' 1 999.99 999.99 999.99 999.99 999.99 1 'None' 'None'
 '10001_S' 'None' 1 999.99 999.99 999.99 999.99 999.99 1 'None' 'None'
 '10002_W' 'None' 1 999.99 999.99 999.99 999.99 999.99 1 'None' 'None'
