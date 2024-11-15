@@ -922,6 +922,13 @@ class Link(NetworkObject):
         except KeyError:
             return None
 
+    @property
+    def shape(self) -> List[Tuple[float, float]]:
+        return [
+            (self.i_node.x, self.i_node.y),
+            (self.j_node.x, self.j_node.y),
+        ]
+
     def segments(self) -> Iterable:
         return iter(self._segments)
 

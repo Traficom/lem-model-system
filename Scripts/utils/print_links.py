@@ -1,4 +1,56 @@
+from typing import Iterable, Tuple
+from shapely import Point, LineString
+from enum import Enum
+
 from utils.calc_noise import NoiseModel
+
+
+class GeometryType(Enum):
+    NODE = Point
+    LINK = LineString
+
+
+def geometries(scenario,
+               objects: Iterable,
+               geom_type: GeometryType) -> Tuple[Iterable, dict]:
+    """Turn EMME network objects into GeoJSON records.
+
+    Parameters
+    ----------
+    scenario : inro.emme.database.scenario.Scenario
+        Scenario for which extra attributes are exported
+    objects : Iterable
+        Iterator over network objects (links or nodes)
+    geom_type : GeometryType
+        NODE or LINK geometry type
+
+    Returns
+    -------
+    Iterable
+        Iterator of GeoJSON records
+    dict
+        Fiona schema of record types
+    """
+    attr_names = [attr.name for attr in scenario.extra_attributes()
+        if attr.type == geom_type.name]
+    shape = link_shape if geom_type is GeometryType.LINK else node_shape
+    recs = ({
+        "geometry": geom_type.value(shape(obj)),
+        "properties": {attr: float(obj[attr]) for attr in attr_names}
+    } for obj in objects)
+    schema = {
+        "geometry": geom_type.value().geom_type,
+        "properties": {attr: "float" for attr in attr_names}
+    }
+    return recs, schema
+
+
+def link_shape(link):
+    return link.shape
+
+
+def node_shape(node):
+    return node.x, node.y
 
 
 def print_links(network, resultdata):
@@ -20,8 +72,7 @@ def print_links(network, resultdata):
         network, ("@car_work_vrk", "@car_leisure_vrk", "@van_vrk"),
         ("@truck_vrk", "@trailer_truck_vrk"))
     for link in network.links():
-        wkt = "LINESTRING ({} {}, {} {})".format(
-            link.i_node.x, link.i_node.y, link.j_node.x, link.j_node.y)
+        wkt = LineString(link.shape).wkt
         attrs = "\t".join([str(link[attr]) for attr in attr_names])
         noise_zone_width = noisemodel.calc_noise(link)
         resultdata.print_line(

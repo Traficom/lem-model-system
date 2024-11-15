@@ -128,15 +128,15 @@ class ResultsData:
         self.print_concat(stacked_matrices, filename + ".txt")
 
     def print_gpkg(self,
-                   records: Iterable,
-                   filename: str,
+                   records: Iterable[dict],
                    schema: dict,
+                   filename: str,
                    layer: str):
-        """Save data to layer in GeoPackage file in ETRS89/GK25FIN projection.
+        """Save data to layer in GeoPackage file in ETRS-TM35FIN projection.
 
         See fiona documentation on format of records and schema.
         """
         with fiona.open(
                 self.path / filename, 'w', driver="GPKG", layer=layer,
-                crs=CRS.from_epsg(3879), schema=schema) as colxn:
+                crs=CRS.from_epsg(3067), schema=schema) as colxn:
             colxn.writerecords(records)
