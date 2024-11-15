@@ -54,7 +54,7 @@ class EmmeAssignmentTest:
             "turn_entries": 100,
             "transit_vehicles": 35,
             "transit_lines": 30,
-            "transit_segments": 750,
+            "transit_segments": 800,
             "extra_attribute_values": 700000,
             "functions": 99,
             "operators": 5000,
