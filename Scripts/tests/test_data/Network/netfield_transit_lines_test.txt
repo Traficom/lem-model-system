@@ -35,8 +35,8 @@ line #agency_name #departures_per_day #hdw_aht #hdw_iht #hdw_pt #hdw_ilt #hdw_vr
 'Helsingin-M1-2' 'HSL' 16 999.99 15 180 180 59 1 'M1' 'M1'
 'J.Vainion-Helsinki-1' 'J.Vainio' 1 999.99 180 180 180 960 1 'None' 'None'
 'J.Vainion-Helsinki-2' 'J.Vainio' 1 999.99 180 180 180 960 1 'None' 'None'
-VR-I' 'HSL' 28 30 30 30 37 35 1 'I' 'I'
+'VR-I' 'HSL' 28 30 30 30 37 35 1 'I' 'I'
 'VR-IC943-1' 'VR' 1 999.99 999.99 999.99 999.99 960 1 'IC943' 'IC943'
 'VR-IC943-2' 'VR' 1 999.99 999.99 999.99 999.99 960 1 'IC943' 'IC943'
-VR-P' 'HSL' 28 30 30 30 37 35 1 'P' 'P'
+'VR-P' 'HSL' 28 30 30 30 37 35 1 'P' 'P'
 

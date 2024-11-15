@@ -486,13 +486,18 @@ class EmmeAssignmentModel(AssignmentModel):
                 value : str
                     EMME matrix id
         """
-        tag = time_period if self.save_matrices else ""
         emme_matrices = {}
         for i, ass_class in enumerate(param.emme_matrices, start=1):
+            is_off_peak = (ass_class in param.transit_classes
+                           and param.time_periods[time_period] in (
+                               "OffPeakPeriod", "TransitAssignmentPeriod"))
             matrix_ids = {}
             for mtx_type in param.emme_matrices[ass_class]:
-                _id_hundred = (id_hundred
-                    if self.save_matrices or mtx_type == "demand" else 0)
+                save_matrices = (self.save_matrices
+                                 or mtx_type == "demand"
+                                 or is_off_peak)
+                _id_hundred = id_hundred if save_matrices else 0
+                tag = time_period if save_matrices else ""
                 matrix_ids[mtx_type] = "mf{}".format(
                     _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"
