@@ -95,8 +95,9 @@ class ModelSystem:
             purpose = new_tour_purpose(
                 json.loads(file.read_text("utf-8")), self.zdata_forecast,
                 self.resultdata, cost_data["cost_changes"])
-            if (sorted(next(iter(purpose.impedance_share.values())))
-                    == sorted(assignment_model.time_periods)):
+            required_time_periods = sorted(
+                {tp for m in purpose.impedance_share.values() for tp in m})
+            if required_time_periods == sorted(assignment_model.time_periods):
                 if isinstance(purpose, SecDestPurpose):
                     sec_dest_purposes.append(purpose)
                 elif purpose.orig == "home":

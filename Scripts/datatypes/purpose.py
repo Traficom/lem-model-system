@@ -112,8 +112,7 @@ class Purpose:
         cols = self.dest_interval
         day_imp = {}
         for mode in self.impedance_share:
-            outward_sum = 0
-            return_sum = 0
+            share_sum = 0
             day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
@@ -121,11 +120,10 @@ class Purpose:
                     if ass_class in impedance[time_period][mtx_type]:
                         imp = impedance[time_period][mtx_type][ass_class]
                         share = self.impedance_share[mode][time_period]
-                        outward_sum += share[0]
-                        return_sum += share[1]
+                        share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if abs((outward_sum + return_sum)/len(day_imp[mode]) - 2) > 0.001:
+            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
