@@ -27,14 +27,13 @@ class FreightModelTest(unittest.TestCase):
 
     def test_freight_model(self):      
         zonedata = FreightZoneData(
-            TEST_DATA_PATH / "zonedata.gpkg", numpy.array(ZONE_NUMBERS),
+            TEST_DATA_PATH / "freight_zonedata.gpkg", numpy.array(ZONE_NUMBERS),
             "koko_suomi")
         resultdata = ResultsData(RESULT_PATH)
         purposes = {}
-        for file_name in os.listdir(PARAMETERS_PATH):
-            with open(os.path.join(PARAMETERS_PATH, file_name), 'r') as file:
+        for commodity in ("marita", "kalevi"):
+            with open(PARAMETERS_PATH / f"{commodity}.json", 'r') as file:
                 commodity_params = json.load(file)
-                commodity = file_name.split(".")[0]
                 purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
         with open(TEST_DATA_PATH / "costdata.json") as file:
             costdata = json.load(file)
