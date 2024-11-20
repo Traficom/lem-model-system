@@ -183,6 +183,11 @@ class EmmeAssignmentModel(AssignmentModel):
                     "LINK", '@a_' + attr_name,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
+                attr_name = (comm_class + "truck")[:17]
+                self.emme_project.create_extra_attribute(
+                        "LINK", '@' + attr_name,
+                        "commodity flow", overwrite=True,
+                        scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
