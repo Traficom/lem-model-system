@@ -1,5 +1,5 @@
 c Modeller - Vehicle Transaction
-c Date: 2024-11-13 14:13:14
+c Date: 2024-11-21 10:00:32
 c Project:        mock_project                                                
 c Scenario 5:     test network
 t vehicles
@@ -14,6 +14,7 @@ a   7 'Light_rail' p      1   100   150   0.00   0.00   0.00   0.00   1.00
 a   8 'Long_d_bus' e      1   100   150   0.00   0.00   0.00   0.00   1.00
 a   9 'Local_trai' r      1   100   150   0.00   0.00   0.00   0.00   1.00
 a  10 'BRT'      g      1   100   150   0.00   0.00   0.00   0.00   1.00
+a  11 'Ferry'    w      1   100   150   0.00   0.00   0.00   0.00   1.00
 a  20 'f_ship4m' W      1   100   150   0.00   0.00   0.00   0.00   1.00
 a  21 'f_ship7m' s      1   100   150   0.00   0.00   0.00   0.00   1.00
 a  22 'f_ship9m' S      1   100   150   0.00   0.00   0.00   0.00   1.00
