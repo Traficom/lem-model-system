@@ -10,7 +10,8 @@ LENGTH_ATTR = "length"
 
 class Car:
     def __init__(self,
-                 ass_class: str,
+                 perception_factor: float,
+                 assignment_mode: str,
                  extra: Callable,
                  emme_matrices: Dict[str, Union[str, Dict[str, str]]],
                  link_costs: Union[str, float]):
@@ -32,7 +33,6 @@ class Car:
             Extra attribute where link cost is found (str) or length
             multiplier to calculate link cost (float)
         """
-        perception_factor = param.vot_inv[param.vot_classes[ass_class]]
         try:
             perception_factor *= link_costs
         except TypeError:
@@ -40,14 +40,14 @@ class Car:
         else:
             link_costs = LENGTH_ATTR
         self.spec: Dict[str, Any] = {
-            "mode": param.assignment_modes[ass_class],
+            "mode": assignment_mode,
             "demand": emme_matrices["demand"],
             "generalized_cost": {
                 "link_costs": link_costs,
                 "perception_factor": perception_factor,
             },
             "results": {
-                "link_volumes": extra(ass_class),
+                "link_volumes": extra,
                 "od_travel_times": {
                     "shortest_paths": emme_matrices["gen_cost"]
                 }
@@ -56,9 +56,7 @@ class Car:
         }
         self.add_analysis(LENGTH_ATTR, emme_matrices["dist"])
         if link_costs != LENGTH_ATTR:
-            self.add_analysis(extra("toll_cost"), emme_matrices["cost"])
-        if ass_class in param.truck_classes:
-            self.add_analysis(extra("truck_time"), emme_matrices["time"])
+            self.add_analysis(extra("toll_cost"), emme_matrices["toll_cost"])
     
     def add_analysis (self, 
                       link_component: str, 

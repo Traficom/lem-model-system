@@ -116,7 +116,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds,
-                delete_extra_matrices=self.delete_extra_matrices))
+                delete_extra_matrices=self.delete_extra_matrices,
+                car_dist_unit_cost=car_dist_unit_cost))
         ass_classes = list(param.emme_matrices) + ["bus"]
         ass_classes.remove("walk")
         self._create_attributes(
@@ -128,8 +129,7 @@ class EmmeAssignmentModel(AssignmentModel):
             ap.prepare(
                 self._create_attributes(
                     ap.emme_scenario, ass_classes, ap.extra, ap.netfield,
-                    car_dist_unit_cost),
-                car_dist_unit_cost)
+                    car_dist_unit_cost))
             ap.prepare_transit(
                 *self._create_transit_attributes(ap.emme_scenario, ap.extra))
         self._init_functions()

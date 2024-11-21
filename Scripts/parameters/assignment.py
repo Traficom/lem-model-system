@@ -571,9 +571,6 @@ transit_impedance_matrices = {
         "inv_time": "actual_in_vehicle_times",
         "aux_time": "actual_aux_transit_times",
         "board_time": "actual_total_boarding_times",
-        "num_board": "avg_boardings",
-        "inv_cost": "actual_in_vehicle_costs",
-        "board_cost": "actual_total_boarding_costs",
     },
     "local": {
         "loc_bc": "actual_total_boarding_costs",

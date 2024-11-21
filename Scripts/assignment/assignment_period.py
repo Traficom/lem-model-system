@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Iterable
 import utils.log as log
 from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
+from assignment.datatypes.assignment_mode import CarMode, TruckMode, TransitMode
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
 from assignment.datatypes.path_analysis import PathAnalysis
@@ -42,6 +43,11 @@ class AssignmentPeriod(Period):
                     t/dist/...)
                 value : str
                     EMME matrix id
+    dist_unit_cost : dict
+        key : str
+            Assignment class (car_work/truck/...)
+        value : float
+            Length multiplier to calculate link cost
     separate_emme_scenarios : bool (optional)
         Whether separate scenarios have been created in EMME
         for storing time-period specific network results.
@@ -58,6 +64,7 @@ class AssignmentPeriod(Period):
     def __init__(self, name: str, emme_scenario: int,
                  emme_context: EmmeProject,
                  emme_matrices: Dict[str, Dict[str, Any]],
+                 car_dist_unit_cost: Dict[str, float],
                  separate_emme_scenarios: bool = False,
                  use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
@@ -84,6 +91,22 @@ class AssignmentPeriod(Period):
             else:
                 self._end_assignment_classes -= set(
                     param.long_distance_transit_classes)
+        self._init_modes(car_dist_unit_cost)
+
+    def _init_modes(self, dist_unit_cost):
+        include_toll_cost = self.emme_scenario.network_field(
+            "LINK", self.netfield("hinta")) is not None
+        car_modes = [CarMode(
+                mode, self.emme_scenario, self.emme_project, self.name,
+                dist_unit_cost[mode], include_toll_cost)
+            for mode in param.car_classes + ("van",)]
+        truck_modes = [TruckMode(
+                mode, self.emme_scenario, self.emme_project, self.name,
+                dist_unit_cost[mode], include_toll_cost)
+            for mode in param.truck_classes]
+        transit_modes = [TransitMode(mode)
+            for mode in param.transit_classes]
+        self.assignment_modes = car_modes + truck_modes + transit_modes
 
     def extra(self, attr: str) -> str:
         """Add prefix "@" and time-period suffix.
@@ -115,8 +138,7 @@ class AssignmentPeriod(Period):
         """
         return "#{}_{}".format(attr, self.name)
 
-    def prepare(self, link_costs: Dict[str, Union[str, float]],
-                dist_unit_cost: Dict[str, float]):
+    def prepare(self, link_costs: Dict[str, Union[str, float]]):
         """Prepare network for assignment.
 
         Calculate road toll cost and specify car assignment.
@@ -129,13 +151,7 @@ class AssignmentPeriod(Period):
             value : str or float
                 Extra attribute where link cost is found (str) or length
                 multiplier to calculate link cost (float)
-        dist_unit_cost : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : float
-                Length multiplier to calculate link cost
         """
-        self._dist_unit_cost = dist_unit_cost
         if self.emme_scenario.network_field(
                 "LINK", self.netfield("hinta")) is not None:
             self._calc_road_cost(link_costs)
@@ -212,8 +228,6 @@ class AssignmentPeriod(Period):
         else:
             self._assign_transit()
         mtxs = self._get_impedances(modes)
-        for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -263,6 +277,9 @@ class AssignmentPeriod(Period):
             for mtx_class in mtxs[mtx_type]:
                 path_not_found = mtxs["time"][mtx_class] > 999999
                 mtxs[mtx_type][mtx_class][path_not_found] = 999999
+        for ass_cl in param.car_classes:
+            mtxs["cost"][ass_cl] += (self._dist_unit_cost[ass_cl]
+                                     * mtxs["dist"][ass_cl])
         return mtxs
 
     def calc_transit_cost(self, fares: pandas.DataFrame):

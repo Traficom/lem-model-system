@@ -109,11 +109,7 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        mtxs = self._get_impedances(modes)
-        for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
-                                        * mtxs["dist"][ass_cl])
-        return mtxs
+        return self._get_impedances(modes)
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """ Get travel impedance matrices for one time period from files.
