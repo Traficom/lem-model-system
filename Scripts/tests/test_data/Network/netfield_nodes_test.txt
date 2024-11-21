@@ -1852,3 +1852,5 @@ end network_fields
   900220 'Helsinki'        1        1        0        1        0        0
   900223 'Helsinki'        1        1        0        0        0        1
   900235 'Helsinki'        1        1        0        0        0        0
+  900300 'Helsinki'        1        0        0        0        0        0
+  900301 'Espoo'          1        0        0        0        0        0

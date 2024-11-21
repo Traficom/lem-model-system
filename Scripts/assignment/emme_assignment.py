@@ -195,6 +195,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 self._extra, self._netfield, car_dist_unit_cost),
             car_dist_unit_cost)
         self._init_functions()
+        self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
 
     def _init_functions(self):
         for idx in param.volume_delay_funcs:
