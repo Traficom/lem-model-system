@@ -1,32 +1,41 @@
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Tuple
 from shapely import Point, LineString
 
 from utils.calc_noise import NoiseModel
 
 
-class NODE:
+class GeometryType:
+    name: str
+    geom_type: str
+    def __new__(cls, obj):
+        pass
+
+
+class Node(GeometryType):
+    name = "NODE"
     geom_type = "Point"
 
     def __new__(cls, node):
         return Point(node.x, node.y)
 
 
-class LINK:
+class Link(GeometryType):
+    name = "LINK"
     geom_type = "LineString"
 
     def __new__(cls, link):
         return LineString(link.shape)
 
 
-def geometries(scenario,
+def geometries(attr_names: Iterable[str],
                objects: Iterable,
-               geom_type: Union[NODE, LINK]) -> Tuple[Iterable, dict]:
+               geom_type: GeometryType) -> Tuple[Iterable, dict]:
     """Turn EMME network objects into GeoJSON records.
 
     Parameters
     ----------
-    scenario : inro.emme.database.scenario.Scenario
-        Scenario for which extra attributes are exported
+    attr_names : List of str
+        List of extra attributes in network objects
     objects : Iterable
         Iterator over network objects (links or nodes)
     geom_type : NODE or LINK
@@ -39,8 +48,6 @@ def geometries(scenario,
     dict
         Fiona schema of record types
     """
-    attr_names = [attr.name for attr in scenario.extra_attributes()
-        if attr.type == geom_type.__name__]
     recs = ({
         "geometry": geom_type(obj),
         "properties": {attr: float(obj[attr]) for attr in attr_names}
