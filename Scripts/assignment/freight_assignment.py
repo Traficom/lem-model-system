@@ -48,6 +48,10 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
+        spec = self._car_spec.truck_spec()
+        attr_name = (commodity_class + "truck")[:17]
+        spec["classes"][0]["results"]["link_volumes"] = '@' + attr_name
+        self.emme_project.car_assignment(spec, self.emme_scenario)
 
     def output_traversal_matrix(self, output_path: Path):
         spec = {

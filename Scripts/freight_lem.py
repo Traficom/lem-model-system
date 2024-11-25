@@ -14,7 +14,6 @@ from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
 
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
-import parameters.assignment as param
 from parameters.commodity import commodity_conversion
 
 BASE_FOLDER = Path(__file__).parent
@@ -22,6 +21,7 @@ BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
 
 def main(args):
+    log.info("Starting simulation.")
     base_zonedata_path = Path(BASE_FOLDER, args.baseline_data_path, BASE_ZONEDATA_FILE)
     cost_data_path = Path(BASE_FOLDER, args.cost_data_path)
     results_path = Path(BASE_FOLDER, args.results_path)
@@ -45,35 +45,36 @@ def main(args):
             continue
         purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
     ass_model.prepare_freight_network(costdata["car_cost"], list(purposes))
-    imps = ass_model.freight_network.assign()
-    
+    impedance = ass_model.freight_network.assign()
+    log.info("Impedances calculated.")
     impedance = {
         "truck": {
-            "dist": imps["dist"]["truck"],
-            "time": imps["time"]["truck"],
+            "dist": impedance["dist"]["truck"],
+            "time": impedance["time"]["truck"],
             "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
         },
         "freight_train": {
-            "dist": imps["dist"]["freight_train"],
-            "time": imps["time"]["freight_train"],
+            "dist": impedance["dist"]["freight_train"],
+            "time": impedance["time"]["freight_train"],
         },
         "ship": {
-            "dist": imps["dist"]["ship"],
+            "dist": impedance["dist"]["ship"],
             "channel": numpy.zeros([len(zone_numbers), len(zone_numbers)])
         },
         "freight_train_aux": {
-            "dist": imps["aux_dist"]["freight_train"],
-            "time": imps["aux_time"]["freight_train"],
+            "dist": impedance["aux_dist"]["freight_train"],
+            "time": impedance["aux_time"]["freight_train"],
             "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
         },
         "ship_aux": {
-            "dist": imps["aux_dist"]["ship"],
-            "time": imps["aux_time"]["ship"],
+            "dist": impedance["aux_dist"]["ship"],
+            "time": impedance["aux_time"]["ship"],
             "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
         }
     }
-    for purpose_key, purpose_value in purposes.items():
-        commodity_costs = costdata["freight"][commodity_conversion[purpose_key]]
+    matrix_counter = args.first_matrix_id
+    for purpose, purpose_value in purposes.items():
+        commodity_costs = costdata["freight"][commodity_conversion[purpose]]
         costs = {"truck": {}, "freight_train": {}, "ship": {}}
         costs["truck"]["cost"] = calc_road_cost(commodity_costs,
                                                 impedance["truck"])
@@ -83,13 +84,32 @@ def main(args):
         costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
                                                impedance["ship"],
                                                impedance["ship_aux"])
-        demand = purpose_value.calc_traffic(costs, purpose_key)
-    log.info("Simulation ended.")
-
+        demand = purpose_value.calc_traffic(costs, purpose)
+        for mode in demand:
+            if purpose not in args.specify_commodity_names:
+                continue
+            ass_model.freight_network.set_matrix(mode, demand[mode])
+            # Explicitly save commodity
+            matrix_id = f"mf{matrix_counter}"
+            matrix_name = f"{purpose}_{mode}"
+            matrix_type = "demand"
+            ass_model._create_matrix(matrix_id, matrix_name, matrix_type, overwrite=True)
+            matrix_counter += 1
+            ass_model.freight_network.emme_matrices.update(
+                {matrix_name: {matrix_type: matrix_id}})
+            ass_model.freight_network.set_matrix(matrix_name, demand[mode])
+            with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+                mtx[matrix_name] = demand[mode]
+        if purpose in args.specify_commodity_names:
+            ass_model.freight_network.save_network_volumes(purpose)
+    log.info("Simulation ready.")
 
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
     config = {
+        "LOG_LEVEL": "INFO",
+        "LOG_FORMAT": "TEXT",
+        "SCENARIO_NAME": "test",
         "BASELINE_DATA_PATH": "tests/test_data/Scenario_input_data/2030_test/",
         "COST_DATA_PATH": "tests/test_data/Scenario_input_data/2030_test/costdata.json",
         "RESULTS_PATH": "tests/test_data/Results/test/",
@@ -99,10 +119,24 @@ if __name__ == "__main__":
         "FIRST_MATRIX_ID": 200,
         "SPECIFY_COMMODITY_NAMES": ["marita"]
     }
+    
+    parser.add_argument(
+        "--log-level",
+        choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
+    )
+    parser.add_argument(
+        "--log-format",
+        choices={"TEXT", "JSON"},
+    )
+    
+    parser.add_argument(
+        "--scenario-name",
+        type=str,
+        help="Scenario name"),
     parser.add_argument(
         "--baseline-data-path",
         type=str,
-        help="Path to folder containing both baseline zonedata and -matrices (Given privately by project manager)"),
+        help="Path to folder containing both baseline zonedata and -matrices"),
     parser.add_argument(
         "--cost-data-path",
         type=str,
@@ -130,7 +164,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--specify-commodity-names",
         type=List[str],
-        help="Commodity names to be assigned and saved."),
+        help="Commodity names in 29 classification. Assigned and saved as mtx. Currently max 3."),
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
@@ -141,9 +175,12 @@ if __name__ == "__main__":
     for name in args.specify_commodity_names:
         if name not in list(commodity_conversion):
             raise ValueError("Invalid given commodity name.")
+    if len(args.specify_commodity_names) > 3:
+        raise ValueError("Maximum of 3 commodities can be specified.")
     if len(args.specify_commodity_names) == 0:
         args.save_emme_matrices = False
     
+    log.initialize(args)
     if sys.version_info.major == 3:
         main(args)
     else:
