@@ -187,13 +187,13 @@
             "car_pax": {
                 "constant": 0.76674
             },
-            "airplane": {
-                "constant": 0.76674
-            },
             "train": {
                 "constant": 0.76674
             },
             "long_d_bus": {
+                "constant": 0.76674
+            },
+            "airplane": {
                 "constant": 0.76674
             }
         }
