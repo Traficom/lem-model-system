@@ -1,6 +1,13 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, Iterable
+import os
+import sys
+# Fiona will search for projection data when setting CRS
+os.environ["PROJ_DATA"] = (sys.exec_prefix
+                           + "\\Lib\\site-packages\\fiona\\proj_data")
+import fiona
+from fiona.crs import CRS
 import pandas
 
 
@@ -116,3 +123,17 @@ class ResultsData:
             names=["purpose", "mode", "orig", "dest"])
         stacked_matrices.name = "nr_tours"
         self.print_concat(stacked_matrices, filename + ".txt")
+
+    def print_gpkg(self,
+                   records: Iterable[dict],
+                   schema: dict,
+                   filename: str,
+                   layer: str):
+        """Save data to layer in GeoPackage file in ETRS-TM35FIN projection.
+
+        See fiona documentation on format of records and schema.
+        """
+        with fiona.open(
+                self.path / filename, 'w', driver="GPKG", layer=layer,
+                crs=CRS.from_epsg(3067), schema=schema) as colxn:
+            colxn.writerecords(records)

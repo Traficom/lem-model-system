@@ -7,7 +7,6 @@ import pandas
 
 import utils.log as log
 import assignment.emme_assignment as ass
-from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import (
