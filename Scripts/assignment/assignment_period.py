@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Iterable
 import utils.log as log
 from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
-from assignment.datatypes.assignment_mode import CarMode, TruckMode, TransitMode
+from assignment.datatypes.assignment_mode import AssignmentMode, CarMode, TruckMode, TransitMode
 from assignment.datatypes.car_specification import CarSpecification
 from assignment.datatypes.transit import TransitSpecification
 from assignment.datatypes.path_analysis import PathAnalysis
@@ -96,18 +96,18 @@ class AssignmentPeriod(Period):
     def _init_modes(self, dist_unit_cost):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
-        car_modes = [CarMode(
+        car_modes = {mode: CarMode(
                 mode, self.emme_scenario, self.emme_project, self.name,
                 dist_unit_cost[mode], include_toll_cost)
-            for mode in param.car_classes + ("van",)]
-        truck_modes = [TruckMode(
+            for mode in param.car_classes + ("van",)}
+        truck_modes = {mode: TruckMode(
                 mode, self.emme_scenario, self.emme_project, self.name,
                 dist_unit_cost[mode], include_toll_cost)
-            for mode in param.truck_classes]
-        transit_modes = [TransitMode(mode)
-            for mode in param.transit_classes]
-        self.assignment_modes = car_modes + truck_modes + transit_modes
-
+            for mode in param.truck_classes}
+        transit_modes = {mode: TransitMode(mode)
+            for mode in param.transit_classes}
+        self.assignment_modes: Dict[str, AssignmentMode] = {
+            **car_modes, **truck_modes, **transit_modes}
     def extra(self, attr: str) -> str:
         """Add prefix "@" and time-period suffix.
 
@@ -483,17 +483,8 @@ class AssignmentPeriod(Period):
 
     def set_matrix(self,
                     ass_class: str,
-                    matrix: numpy.ndarray,
-                    matrix_type: Optional[str] = "demand"):
-        if numpy.isnan(matrix).any():
-            msg = ("NAs in demand matrix {} ".format(ass_class)
-                   + "would cause infinite loop in Emme assignment.")
-            log.error(msg)
-            raise ValueError(msg)
-        else:
-            self.emme_project.modeller.emmebank.matrix(
-                self.emme_matrices[ass_class][matrix_type]).set_numpy_data(
-                    matrix, scenario_id=self.emme_scenario.id)
+                    matrix: numpy.ndarray):
+        self.assignment_modes[ass_class].demand.set(matrix)
 
     def _get_matrices(self, 
                       mtx_type: str, 

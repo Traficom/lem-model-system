@@ -1,38 +1,39 @@
-from typing import Optional
-import numpy
+from typing import Union
 
 import parameters.assignment as param
-import utils.log as log
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.datatypes.journey_level import JourneyLevel
-from assignment.datatypes.emme_matrix import EmmeMatrix
+from assignment.datatypes.emme_matrix import EmmeMatrix, PermanentEmmeMatrix
 
 
 LENGTH_ATTR = "length"
 
 
 class AssignmentMode:
-    id_counter = 0
-
-    def __init__(self, name, emme_scenario, emme_project, time_period):
-        self.id_counter +=1
-        self.id = self.id_counter
+    def __init__(self, name, emme_scenario, emme_project, time_period, save_matrices=False):
         self.name = name
         self.emme_scenario = emme_scenario
         self.emme_project = emme_project
         self.vot_inv = param.vot_inv[param.vot_classes[name]]
         self.time_period = time_period
-        self.demand = self._create_matrix("demand")
+        self._save_matrices = save_matrices
+        self.demand = PermanentEmmeMatrix(
+            "demand", f"demand_{self.name}_{self.time_period}",
+            self.emme_project, self.emme_scenario.id, default_value=0)
 
-    def _create_matrix(self, mtx_type):
-        return EmmeMatrix(
+    def _create_matrix(self, mtx_type, default_value=999999):
+        args = (
             mtx_type, f"{mtx_type}_{self.name}_{self.time_period}",
-            self.emme_scenario.id)
+            self.emme_project, self.emme_scenario.id, default_value)
+        if self._save_matrices:
+            return PermanentEmmeMatrix(*args)
+        else:
+            return EmmeMatrix(*args)
 
 
 class CarMode(AssignmentMode):
     def __init__(self, name, emme_scenario, emme_project, time_period, link_costs, include_toll_cost):
-        AssignmentMode.__init__(name, emme_scenario, emme_project, time_period)
+        AssignmentMode.__init__(self, name, emme_scenario, emme_project, time_period)
         self.gen_cost = self._create_matrix("gen_cost")
         self.dist = self._create_matrix("dist")
         self.dist_unit_cost = link_costs
@@ -43,7 +44,7 @@ class CarMode(AssignmentMode):
             self.emme_project.create_extra_attribute(
                 "LINK", link_costs, "total cost",
                 overwrite=True, scenario=self.emme_scenario)
-        self.specification = self.specify(link_costs)
+        self.specify(link_costs)
 
     def specify(self, link_costs):
         perception_factor = self.vot_inv
@@ -79,14 +80,23 @@ class CarMode(AssignmentMode):
         analysis = PathAnalysis(link_component, od_values)
         self.spec["path_analyses"].append(analysis.spec)
 
+    def init_matrices(self):
+        self.gen_cost.init()
+        self.dist.init()
+        if self.include_toll_cost:
+            self.toll_cost.init()
+
     def get_matrices(self):
         cost = self.dist_unit_cost * self.dist
         if self.include_toll_cost:
             cost += self.toll_cost
         time = self._get_time(cost)
         m = {"cost": cost, "time": time, **self.dist.item}
+        self.gen_cost.release()
+        self.dist.release()
         if self.include_toll_cost:
             m.update(self.toll_cost.item)
+            self.toll_cost.release()
         # fix the emme path analysis results
         # (dist and cost are zero if path not found but we want it to
         # be the default value 999999)
@@ -100,7 +110,7 @@ class CarMode(AssignmentMode):
 
 class TruckMode(CarMode):
     def __init__(self, *args):
-        CarMode().__init__(*args)
+        CarMode.__init__(self, *args)
         self.time = self._create_matrix("time")
         self.add_analysis(f"@truck_time_{self.time_period}", self.time.id)
 
@@ -109,7 +119,7 @@ class TruckMode(CarMode):
 
 class TransitMode(AssignmentMode):
     def __init__(self, *args):
-        AssignmentMode.__init__(*args)
+        AssignmentMode.__init__(self, *args)
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
         self.inv_cost = self._create_matrix("inv_cost")
@@ -119,8 +129,22 @@ class TransitMode(AssignmentMode):
             self.matrix_ids[subset] = {}
             for mtx_type, longer_name in parts.items():
                 self.matrix_ids[subset][longer_name] = self._create_matrix(mtx_type)
+        self.specify()
 
     def specify(self):
+        segment_results = {}
+        for res, attr in param.segment_results.items():
+            attr_name = f"@{self.name[:11]}_{attr}"
+            segment_results[res] = attr_name
+            self.emme_project.create_extra_attribute(
+                "TRANSIT_SEGMENT", attr_name,
+                f"{self.name} {res}", overwrite=True,
+                scenario=self.emme_scenario)
+            if res != "transit_volumes":
+                self.emme_project.create_extra_attribute(
+                    "NODE", f"@{self.name[:10]}n_{attr}",
+                    f"{self.name} {res}", overwrite=True,
+                    scenario=self.emme_scenario)
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0,
@@ -134,7 +158,7 @@ class TransitMode(AssignmentMode):
             "demand": self.demand.id,
             "waiting_time": {
                 "headway_fraction": 1,
-                "effective_headways": headway_attribute,
+                "effective_headways": param.effective_headway_attr,
                 "spread_factor": 1,
                 "perception_factor": 1,
             },
@@ -170,7 +194,11 @@ class TransitMode(AssignmentMode):
             "journey_levels": None,
             "performance_settings": param.performance_settings,
         }
-        if park_and_ride_results:
+        if self.name in param.park_and_ride_classes:
+            park_and_ride_results = f"@{self.name[4:]}_aux"
+            self.emme_project.create_extra_attribute(
+                "LINK", park_and_ride_results, self.name,
+                overwrite=True, scenario=self.emme_scenario)
             self.transit_spec["modes"].append(param.park_and_ride_mode)
             self.transit_spec["results"] = {
                 "aux_transit_volumes_by_mode": [{
@@ -178,8 +206,10 @@ class TransitMode(AssignmentMode):
                     "volume": park_and_ride_results,
                 }],
             }
+        else:
+            park_and_ride_results = False
         self.transit_spec["journey_levels"] = [JourneyLevel(
-                level, self.name, headway_attribute, park_and_ride_results).spec
+                level, self.name, park_and_ride_results).spec
             for level in range(6)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
@@ -210,10 +240,26 @@ class TransitMode(AssignmentMode):
         for trip_part, matrix in self.matrix_ids["local"].items():
             self.local_result_spec[subset][trip_part] = matrix.id
 
+    def init_matrices(self):
+        self.num_board.init()
+        self.gen_cost.init()
+        self.inv_cost.init()
+        self.board_cost.init()
+        for subset in self.matrix_ids.values():
+            for mtx in subset.values():
+                mtx.init()
+
     def get_matrices(self):
         transfer_penalty = ((self.num_board > 0)
                             * param.transfer_penalty[self.name])
         cost = self.inv_cost + self.board_cost
         time = self.gen_cost - self.vot_inv*cost - transfer_penalty
+        self.num_board.release()
+        self.gen_cost.release()
+        self.inv_cost.release()
+        self.board_cost.release()
+        for subset in self.matrix_ids.values():
+            for mtx in subset.values():
+                mtx.release()
         time[cost > 999999] = 999999
         return {"time": time, "cost": cost}
