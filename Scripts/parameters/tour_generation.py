@@ -147,11 +147,21 @@ tour_generation = {
         "population_Ita-Suomi": 0.00283,
         "population_Pohjois-Suomi": 0.00185
     },
-    "hb_leisure_long": {
-        "population_Uusimaa": 0.01741,
-        "population_Lounais-Suomi": 0.01518,
-        "population_Ita-Suomi": 0.01812,
-        "population_Pohjois-Suomi": 0.01874
+    "hb_private_day": {
+        "income_0_19": 0.00339,
+        "income_20_39": 0.00502,
+        "income_40_59": 0.00708,
+        "income_60_79": 0.00744,
+        "income_80_99": 0.00892,
+        "income_100_": 0.00762
+    },
+    "hb_private_week": {
+        "income_0_19": 0.00786,
+        "income_20_39": 0.00836,
+        "income_40_59": 0.01183,
+        "income_60_79": 0.01246,
+        "income_80_99": 0.0155,
+        "income_100_": 0.01712
     },
     "truck": {
         "population": 0.01,
