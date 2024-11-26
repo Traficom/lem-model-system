@@ -176,6 +176,26 @@
                 "logsum": 0.76674
             },
             "individual_dummy": {}
+        },
+        "scaling": {
+            "car_work": {
+                "constant": 0.76674,
+                "generation": {
+                    "car_density": 0.76674
+                }
+            },
+            "car_pax": {
+                "constant": 0.76674
+            },
+            "airplane": {
+                "constant": 0.76674
+            },
+            "train": {
+                "constant": 0.76674
+            },
+            "long_d_bus": {
+                "constant": 0.76674
+            }
         }
     },
     "demand_share": {
