@@ -6,6 +6,7 @@ import pandas
 from math import log10
 
 import utils.log as log
+from utils.print_links import geometries, Node, Link
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
@@ -377,6 +378,16 @@ class EmmeAssignmentModel(AssignmentModel):
                         miles["dist"][mode] += departures * segment.link.length
                         miles["time"][mode] += departures * segment[time_attr]
         resultdata.print_data(miles, "transit_kms.txt")
+
+        # Export link and node extra attributes to GeoPackage file
+        network = self.day_scenario.get_network()
+        for geom_type, objects in (
+                (Node, network.nodes()), (Link, network.links())):
+            attrs = [attr.name for attr in self.day_scenario.extra_attributes()
+                if attr.type == geom_type.name]
+            resultdata.print_gpkg(
+                *geometries(attrs, objects, geom_type),
+                "assignment_results.gpkg", geom_type.name)
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.

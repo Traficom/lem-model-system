@@ -193,13 +193,13 @@
                     "car_density": 0.49297
                 }
             },
+            "airplane": {
+                "constant": 0.49297
+            },
             "train": {
                 "constant": 0.49297
             },
             "long_d_bus": {
-                "constant": 0.49297
-            },
-            "airplane": {
                 "constant": 0.49297
             }
         }
