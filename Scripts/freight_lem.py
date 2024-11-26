@@ -12,6 +12,7 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
 from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
+from datahandling.traversaldata import transform_traversal_data
 
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
@@ -46,12 +47,12 @@ def main(args):
         purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
     ass_model.prepare_freight_network(costdata["car_cost"], list(purposes))
     impedance = ass_model.freight_network.assign()
-    log.info("Impedances calculated.")
+    zeros = numpy.zeros([len(zone_numbers), len(zone_numbers)])
     impedance = {
         "truck": {
             "dist": impedance["dist"]["truck"],
             "time": impedance["time"]["truck"],
-            "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
+            "toll": zeros
         },
         "freight_train": {
             "dist": impedance["dist"]["freight_train"],
@@ -59,21 +60,22 @@ def main(args):
         },
         "ship": {
             "dist": impedance["dist"]["ship"],
-            "channel": numpy.zeros([len(zone_numbers), len(zone_numbers)])
+            "channel": zeros
         },
         "freight_train_aux": {
             "dist": impedance["aux_dist"]["freight_train"],
             "time": impedance["aux_time"]["freight_train"],
-            "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
+            "toll": zeros
         },
         "ship_aux": {
             "dist": impedance["aux_dist"]["ship"],
             "time": impedance["aux_time"]["ship"],
-            "toll": numpy.zeros([len(zone_numbers), len(zone_numbers)])
+            "toll": zeros
         }
     }
     matrix_counter = args.first_matrix_id
     for purpose, purpose_value in purposes.items():
+        log.info(f"Launching calculations for purpose: {purpose}")
         commodity_costs = costdata["freight"][commodity_conversion[purpose]]
         costs = {"truck": {}, "freight_train": {}, "ship": {}}
         costs["truck"]["cost"] = calc_road_cost(commodity_costs,
@@ -86,9 +88,9 @@ def main(args):
                                                impedance["ship_aux"])
         demand = purpose_value.calc_traffic(costs, purpose)
         for mode in demand:
+            ass_model.freight_network.set_matrix(mode, demand[mode])
             if purpose not in args.specify_commodity_names:
                 continue
-            ass_model.freight_network.set_matrix(mode, demand[mode])
             # Explicitly save commodity
             matrix_id = f"mf{matrix_counter}"
             matrix_name = f"{purpose}_{mode}"
@@ -102,6 +104,9 @@ def main(args):
                 mtx[matrix_name] = demand[mode]
         if purpose in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose)
+            matrix_counter += 7 # Shift to next 10 digit
+        ass_model.freight_network.output_traversal_matrix(resultdata.path)
+        aux_demand = transform_traversal_data(resultdata.path, zone_numbers)
     log.info("Simulation ready.")
 
 if __name__ == "__main__":

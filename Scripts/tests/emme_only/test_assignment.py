@@ -144,7 +144,7 @@ class EmmeAssignmentTest:
         self.ass_model.calc_transit_cost(fares)
 
     def test_freight_assignment(self):
-        purposes = ["mameka", "kalevi"]
+        purposes = ["marita", "kalevi"]
         self.ass_model.prepare_freight_network(self.dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones
