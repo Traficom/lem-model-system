@@ -89,8 +89,5 @@ def parse_cell_value(cell: str):
     for i, char in enumerate(cell):
         if char not in units.keys():
             continue
-        else:
-            decimals = f"{cell[:i]}.{cell[i+1:]}"
-            value = numpy.float32(decimals) * units[char]
-        break
-    return value
+        value = f"{cell[:i]}.{cell[i+1:]}"
+        return numpy.float32(value) * units[char]

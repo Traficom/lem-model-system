@@ -12,8 +12,8 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
 from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
-from datahandling.traversaldata import transform_traversal_data
 
+from datahandling.traversaldata import transform_traversal_data
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
 
@@ -45,7 +45,9 @@ def main(args):
         if commodity not in ("marita", "kalevi"):
             continue
         purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
-    ass_model.prepare_freight_network(costdata["car_cost"], list(purposes))
+    purps_to_assign = list(filter(lambda purposes: purposes[0] in
+                                  list(purposes), args.specify_commodity_names))
+    ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
     impedance = ass_model.freight_network.assign()
     zeros = numpy.zeros([len(zone_numbers), len(zone_numbers)])
     impedance = {
