@@ -108,6 +108,7 @@ class AssignmentPeriod(Period):
             for mode in param.transit_classes}
         self.assignment_modes: Dict[str, AssignmentMode] = {
             **car_modes, **truck_modes, **transit_modes}
+
     def extra(self, attr: str) -> str:
         """Add prefix "@" and time-period suffix.
 
