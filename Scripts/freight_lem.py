@@ -6,6 +6,7 @@ import json
 from typing import List
 
 import utils.log as log
+import utils.config
 from datahandling.zonedata import FreightZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_assignment import EmmeAssignmentModel
@@ -17,17 +18,15 @@ from datahandling.traversaldata import transform_traversal_data
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
 
-BASE_FOLDER = Path(__file__).parent
 BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
 
 def main(args):
-    log.info("Starting simulation.")
-    base_zonedata_path = Path(BASE_FOLDER, args.baseline_data_path, BASE_ZONEDATA_FILE)
-    cost_data_path = Path(BASE_FOLDER, args.cost_data_path)
-    results_path = Path(BASE_FOLDER, args.results_path)
-    emme_project_path = Path(BASE_FOLDER, args.emme_path)
-    parameters_path = BASE_FOLDER / "parameters" / "freight"
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
+    cost_data_path = Path(args.cost_data_path)
+    results_path = Path(args.results_path, args.scenario_name)
+    emme_project_path = Path(args.emme_path)
+    parameters_path = Path(__file__).parent / "parameters" / "freight"
     
     ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
                                     first_scenario_id=args.first_scenario_id,
@@ -47,47 +46,28 @@ def main(args):
         purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
+    
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
     impedance = ass_model.freight_network.assign()
-    zeros = numpy.zeros([len(zone_numbers), len(zone_numbers)])
-    impedance = {
-        "truck": {
-            "dist": impedance["dist"]["truck"],
-            "time": impedance["time"]["truck"],
-            "toll": zeros
-        },
-        "freight_train": {
-            "dist": impedance["dist"]["freight_train"],
-            "time": impedance["time"]["freight_train"],
-        },
-        "ship": {
-            "dist": impedance["dist"]["ship"],
-            "channel": zeros
-        },
-        "freight_train_aux": {
-            "dist": impedance["aux_dist"]["freight_train"],
-            "time": impedance["aux_time"]["freight_train"],
-            "toll": zeros
-        },
-        "ship_aux": {
-            "dist": impedance["aux_dist"]["ship"],
-            "time": impedance["aux_time"]["ship"],
-            "toll": zeros
-        }
-    }
+    impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
+                         for mode in ("truck", "freight_train", "ship")}
+    impedance["channel"] = {"ship" : numpy.zeros([len(zone_numbers), len(zone_numbers)])}
+    del impedance["cost"]
+    impedance = {mode: {mtx_type: impedance[mtx_type][mode] for mtx_type in impedance
+                        if mode in impedance[mtx_type]}
+                        for mode in ("truck", "freight_train", "ship")}
+    
     matrix_counter = args.first_matrix_id
     for purpose, purpose_value in purposes.items():
-        log.info(f"Launching calculations for purpose: {purpose}")
+        log.info(f"Calculating demand for purpose: {purpose}")
         commodity_costs = costdata["freight"][commodity_conversion[purpose]]
         costs = {"truck": {}, "freight_train": {}, "ship": {}}
         costs["truck"]["cost"] = calc_road_cost(commodity_costs,
                                                 impedance["truck"])
         costs["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
-                                                        impedance["freight_train"],
-                                                        impedance["freight_train_aux"])
+                                                        impedance["freight_train"])
         costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
-                                               impedance["ship"],
-                                               impedance["ship_aux"])
+                                               impedance["ship"])
         demand = purpose_value.calc_traffic(costs, purpose)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
@@ -113,29 +93,16 @@ def main(args):
 
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
-    config = {
-        "LOG_LEVEL": "INFO",
-        "LOG_FORMAT": "TEXT",
-        "SCENARIO_NAME": "test",
-        "BASELINE_DATA_PATH": "tests/test_data/Scenario_input_data/2030_test/",
-        "COST_DATA_PATH": "tests/test_data/Scenario_input_data/2030_test/costdata.json",
-        "RESULTS_PATH": "tests/test_data/Results/test/",
-        "EMME_PATH": "tests/test_data/Results/test_assignment/test_assignment.emp",
-        "FIRST_SCENARIO_ID": 19,
-        "SAVE_EMME_MATRICES": True,
-        "FIRST_MATRIX_ID": 200,
-        "SPECIFY_COMMODITY_NAMES": ["marita"]
-    }
+    config = utils.config.read_from_file()
+    config["SAVE_EMME_MATRICES"] = True
+    config["SPECIFY_COMMODITY_NAMES"] = ["marita"]
     
     parser.add_argument(
         "--log-level",
-        choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"},
-    )
+        choices={"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
     parser.add_argument(
         "--log-format",
-        choices={"TEXT", "JSON"},
-    )
-    
+        choices={"TEXT", "JSON"})
     parser.add_argument(
         "--scenario-name",
         type=str,

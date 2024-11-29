@@ -50,13 +50,13 @@ def read_traversal_file(file: Path, zones: numpy.ndarray):
                 int(line.split(" ")[0])
             except ValueError:
                 continue
-            filt_data = list(filter(None, line.split(" ")))
-            row_index = numpy.searchsorted(zones, numpy.int32(filt_data[0]))
-            col_index = numpy.searchsorted(zones, numpy.int32(filt_data[1]))
+            data = list(line.split())
+            row_index = numpy.searchsorted(zones, numpy.int32(data[0]))
+            col_index = numpy.searchsorted(zones, numpy.int32(data[1]))
             try:
-                cell_value = numpy.float32(filt_data[2])
+                cell_value = numpy.float32(data[2])
             except ValueError:
-                cell_value = parse_cell_value(filt_data[2])
+                cell_value = parse_cell_value(data[2])
             traversal_matrix[row_index, col_index] += cell_value
     return traversal_matrix
 
@@ -87,7 +87,6 @@ def parse_cell_value(cell: str):
         "T": 10 ** 12,
     }
     for i, char in enumerate(cell):
-        if char not in units.keys():
-            continue
-        value = f"{cell[:i]}.{cell[i+1:]}"
-        return numpy.float32(value) * units[char]
+        if char in units.keys():
+            value = f"{cell[:i]}.{cell[i+1:]}"
+            return numpy.float32(value) * units[char]
