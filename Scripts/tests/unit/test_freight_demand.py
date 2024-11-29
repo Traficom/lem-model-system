@@ -48,20 +48,16 @@ class FreightModelTest(unittest.TestCase):
             },
             "freight_train": {
                 "time": numpy.array(time_impedance["freight_train"]),
-                "dist": numpy.array(dist_impedance["freight_train"])
-            },
-            "freight_train_aux": {
-                "time": numpy.array(time_impedance["freight_train_aux"]),
-                "dist": numpy.array(dist_impedance["freight_train_aux"]),
+                "dist": numpy.array(dist_impedance["freight_train"]),
+                "aux_time": numpy.array(time_impedance["freight_train_aux"]),
+                "aux_dist": numpy.array(dist_impedance["freight_train_aux"]),
                 "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             },
             "ship": {
                 "dist": numpy.array(dist_impedance["ship"]),
-                "channel": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
-            },
-            "ship_aux": {
-                "time": numpy.array(time_impedance["ship_aux"]),
-                "dist": numpy.array(dist_impedance["ship_aux"]),
+                "channel": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)]),
+                "aux_time": numpy.array(time_impedance["ship_aux"]),
+                "aux_dist": numpy.array(dist_impedance["ship_aux"]),
                 "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             }
         }
@@ -71,11 +67,9 @@ class FreightModelTest(unittest.TestCase):
             costs["truck"]["cost"] = calc_road_cost(commodity_costs,
                                                     impedance["truck"])
             costs["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
-                                                            impedance["freight_train"],
-                                                            impedance["freight_train_aux"])
+                                                            impedance["freight_train"])
             costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
-                                                   impedance["ship"],
-                                                   impedance["ship_aux"])
+                                                   impedance["ship"])
             demand = purpose_value.calc_traffic(costs, purpose_key)
             for mode in demand:
                 self.assertFalse(numpy.isnan(demand[mode]).any())
