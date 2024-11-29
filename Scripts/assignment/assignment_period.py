@@ -33,16 +33,6 @@ class AssignmentPeriod(Period):
         EMME scenario linked to the time period
     emme_context : assignment.emme_bindings.emme_project.EmmeProject
         Emme project to connect to this assignment
-    emme_matrices : dict
-        key : str
-                Assignment class (car_work/transit_leisure/...)
-            value : dict
-                key : str
-                    Matrix type (demand/time/c
-                    
-                    t/dist/...)
-                value : str
-                    EMME matrix id
     separate_emme_scenarios : bool (optional)
         Whether separate scenarios have been created in EMME
         for storing time-period specific network results.
@@ -58,7 +48,6 @@ class AssignmentPeriod(Period):
     """
     def __init__(self, name: str, emme_scenario: int,
                  emme_context: EmmeProject,
-                 emme_matrices: Dict[str, Dict[str, Any]],
                  separate_emme_scenarios: bool = False,
                  use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
@@ -68,7 +57,6 @@ class AssignmentPeriod(Period):
             emme_scenario)
         self.emme_project = emme_context
         self._separate_emme_scenarios = separate_emme_scenarios
-        self.emme_matrices = emme_matrices
         self.use_stored_speeds = use_stored_speeds
         self.use_free_flow_speeds = use_free_flow_speeds
         self.stopping_criteria = copy.deepcopy(
@@ -76,7 +64,7 @@ class AssignmentPeriod(Period):
         if use_free_flow_speeds or use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self._end_assignment_classes = set(self.emme_matrices)
+        self._end_assignment_classes = set(param.transport_classes)
         if delete_extra_matrices:
             self._end_assignment_classes -= set(param.freight_classes)
             if use_free_flow_speeds:
@@ -147,22 +135,31 @@ class AssignmentPeriod(Period):
         self.assignment_modes.update(modes)
         self._car_spec = CarSpecification(modes)
 
-    def prepare_transit(self):
+    def prepare_transit(self, day_scenario: int):
         """Prepare network for transit assignment.
+
+        Parameters
+        ----------
+        day_scenario : int
+            EMME scenario linked to the whole day
 
         Set boarding penalties and attribute names.
         """
         transit_modes = {mode: TransitMode(
-                mode, self.emme_scenario, self.emme_project, self.name)
+                day_scenario, mode, self.emme_scenario, self.emme_project,
+                self.name)
             for mode in param.transit_classes}
         self.assignment_modes.update(transit_modes)
         self.bike_mode = BikeMode(
             "bike", self.emme_scenario, self.emme_project, self.name)
         self.walk_mode = WalkMode(
             "walk", self.emme_scenario, self.emme_project, self.name)
+        self.assignment_modes.update({
+            "bike": self.bike_mode,
+            "walk": self.walk_mode,
+        })
         # TODO We should probably have only one set of penalties
         self._calc_boarding_penalties(is_last_iteration=True)
-        self._specify()
         self._set_transit_vdfs()
         self._long_distance_trips_assigned = False
 
@@ -239,7 +236,7 @@ class AssignmentPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {tc: self.assignment_modes[tc].get_matrices()
-            for tc in assignment_classes}
+            for tc in assignment_classes if tc != "car_pax"}
         for mode in mtxs:
             try:
                 divide_matrices(
@@ -247,8 +244,8 @@ class AssignmentPeriod(Period):
                     f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
-        impedance = {mtx_type: {mode: impedance[mode][mtx_type]
-                for mode in impedance if mtx_type in impedance[mode]}
+        impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
+                for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in ("time", "dist", "cost")}
         return impedance
 
@@ -285,7 +282,7 @@ class AssignmentPeriod(Period):
         """
         network = self.emme_scenario.get_network()
         for tc in param.transit_classes:
-            segres = self.assignment_modes[tc]
+            segres = self.assignment_modes[tc].segment_results
             for res in segres:
                 nodeattr = self.extra(tc[:10]+"n_"+param.segment_results[res])
                 for segment in network.transit_segments():
@@ -579,6 +576,7 @@ class AssignmentPeriod(Period):
 
     def _assign_bikes(self):
         """Perform bike traffic assignment for one scenario."""
+        self.walk_mode.init_matrices()
         scen = self.emme_scenario
         log.info("Bike assignment started...")
         self.emme_project.bike_assignment(
@@ -587,6 +585,7 @@ class AssignmentPeriod(Period):
 
     def _assign_pedestrians(self):
         """Perform pedestrian assignment for one scenario."""
+        self.bike_mode.init_matrices()
         self._set_walk_time()
         log.info("Pedestrian assignment started...")
         self.emme_project.pedestrian_assignment(

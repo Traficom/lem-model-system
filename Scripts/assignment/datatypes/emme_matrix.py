@@ -7,8 +7,8 @@ class EmmeMatrix:
     id_counter = 0
 
     def __init__(self, name, description, emme_project, scenario_id, default_value=99999):
-        id_counter +=1
-        self._id = self.id_counter
+        EmmeMatrix.id_counter +=1
+        self._id = EmmeMatrix.id_counter
         self.name = name
         self.description = description
         self.default_value = default_value
@@ -33,8 +33,8 @@ class EmmeMatrix:
             log.error(msg)
             raise ValueError(msg)
         else:
-            (self.emme_project.modeller.emmebank.matrix(self._id)
-             .set_numpy_data(matrix, scenario_id=self.emme_scenario.id))
+            (self._emme_project.modeller.emmebank.matrix(self.id)
+             .set_numpy_data(matrix, scenario_id=self._scenario_id))
 
     @property
     def data(self):
@@ -46,31 +46,7 @@ class EmmeMatrix:
         return {self.name: self.data}
 
     def release(self):
-        self.emme_project.modeller.emmebank.delete_matrix(self.id)
-
-    def __add__(self, other):
-        return self.data + other
-
-    def __radd__(self, other):
-        return other + self.data
-
-    def __mul__(self, other):
-        return self.data * other
-
-    def __rmul__(self, other):
-        return other * self.data
-
-    def __lt__(self, other):
-        return self.data < other
-
-    def __rlt__(self, other):
-        return other < self.data
-
-    def __gt__(self, other):
-        return self.data > other
-
-    def __rgt__(self, other):
-        return other > self.data
+        self._emme_project.modeller.emmebank.delete_matrix(self.id)
 
 
 class PermanentEmmeMatrix(EmmeMatrix):

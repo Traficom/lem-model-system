@@ -77,6 +77,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         for ass_class in demand:
             ass_model.assignment_periods[0].set_matrix(
                 ass_class, car_matrix)
+        ass_model.assignment_periods[0].assign_trucks_init()
         ass_model.assignment_periods[0].assign(demand + ["car_pax"])
         ass_model.assignment_periods[0].end_assign()
         resultdata = ResultsData(RESULTS_PATH)

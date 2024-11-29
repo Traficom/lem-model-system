@@ -3,7 +3,7 @@ from pathlib import Path
 import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
-from assignment.datatypes.freight_specification import FreightSpecification
+from assignment.datatypes.freight_specification import FreightMode
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
@@ -19,9 +19,9 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     line[cost_attrs[mode]] = cost
                     break
         self.emme_scenario.publish_network(network)
-        self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class])
-            for ass_class in param.freight_modes}
+        self.assignment_modes.update({ass_class: FreightMode(
+                ass_class, self.emme_scenario, self.emme_project, self.name)
+            for ass_class in param.freight_modes})
 
     def assign(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -29,9 +29,12 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         self._assign_trucks()
         self._set_freight_vdfs()
         self._assign_freight()
-        return {imp_type: self._get_matrices(
-                imp_type, list(param.freight_matrices))
-            for imp_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+        mtxs = {tc: self.assignment_modes[tc].get_matrices()
+            for tc in param.freight_matrices}
+        impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
+                for mode in mtxs if mtx_type in mtxs[mode]}
+            for mtx_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+        return impedance
 
     def save_network_volumes(self, commodity_class: str):
         """Save commodity-specific volumes in segment attribute.
@@ -42,7 +45,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             Commodity class name
         """
         for ass_class in param.freight_modes:
-            spec = self._freight_specs[ass_class].ntw_results_spec
+            spec = self.assignment_modes[ass_class].ntw_results_spec
             attr_name = (commodity_class + ass_class)[:17]
             spec["on_segments"]["transit_volumes"] = '@' + attr_name
             spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
@@ -81,7 +84,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                 link.modes -= {park_and_ride_mode}
         self.emme_scenario.publish_network(network)
         for i, ass_class in enumerate(param.freight_modes):
-            spec = self._freight_specs[ass_class]
+            spec = self.assignment_modes[ass_class]
+            spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=ass_class)

@@ -180,9 +180,9 @@ class CarMode(AssignmentMode):
         self.spec["path_analyses"].append(analysis.spec)
 
     def get_matrices(self):
-        cost = self.dist_unit_cost * self.dist
+        cost = self.dist_unit_cost * self.dist.data
         if self.include_toll_cost:
-            cost += self.toll_cost
+            cost += self.toll_cost.data
         time = self._get_time(cost)
         m = {"cost": cost, "time": time, **self.dist.item}
         if self.include_toll_cost:
@@ -197,7 +197,7 @@ class CarMode(AssignmentMode):
         return m
 
     def _get_time(self, cost):
-        return self.gen_cost - self.vot_inv*cost
+        return self.gen_cost.data - self.vot_inv*cost
 
 class TruckMode(CarMode):
     def __init__(self, *args):
@@ -206,10 +206,10 @@ class TruckMode(CarMode):
         self.add_analysis(f"@truck_time_{self.time_period}", self.time.id)
 
     def _get_time(self, *args):
-        return self.time
+        return self.time.data
 
 class TransitMode(AssignmentMode):
-    def __init__(self, *args):
+    def __init__(self, day_scenario, *args):
         AssignmentMode.__init__(self, *args)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.num_board = self._create_matrix("num_board")
@@ -221,22 +221,24 @@ class TransitMode(AssignmentMode):
             self.transit_matrices[subset] = {}
             for mtx_type, longer_name in parts.items():
                 self.transit_matrices[subset][longer_name] = self._create_matrix(mtx_type)
-        self.specify()
+        self.specify(day_scenario)
 
-    def specify(self):
+    def specify(self, day_scenario):
         self.segment_results = {}
-        for res, attr in param.segment_results.items():
-            attr_name = f"@{self.name[:11]}_{attr}"
-            self.segment_results[res] = attr_name
-            self.emme_project.create_extra_attribute(
-                "TRANSIT_SEGMENT", attr_name,
-                f"{self.name} {res}", overwrite=True,
-                scenario=self.emme_scenario)
-            if res != "transit_volumes":
+        for emme_scenario, tp in (
+                (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
+            for res, attr in param.segment_results.items():
+                attr_name = f"@{self.name[:11]}_{attr}_{tp}"
+                self.segment_results[res] = attr_name
                 self.emme_project.create_extra_attribute(
-                    "NODE", f"@{self.name[:10]}n_{attr}",
+                    "TRANSIT_SEGMENT", attr_name,
                     f"{self.name} {res}", overwrite=True,
-                    scenario=self.emme_scenario)
+                    scenario=emme_scenario)
+                if res != "transit_volumes":
+                    self.emme_project.create_extra_attribute(
+                        "NODE", f"@{self.name[:10]}n_{attr}_{tp}",
+                        f"{self.name} {res}", overwrite=True,
+                        scenario=emme_scenario)
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0,
@@ -325,18 +327,18 @@ class TransitMode(AssignmentMode):
                     "modes": param.local_transit_modes,
                 },
             }
-        for trip_part, matrix in self.matrix_ids["total"].items():
+        for trip_part, matrix in self.transit_matrices["total"].items():
             self.transit_result_spec[trip_part] = matrix.id
-        for trip_part, matrix in self.matrix_ids[subset].items():
+        for trip_part, matrix in self.transit_matrices[subset].items():
             self.transit_result_spec[subset][trip_part] = matrix.id
-        for trip_part, matrix in self.matrix_ids["local"].items():
+        for trip_part, matrix in self.transit_matrices["local"].items():
             self.local_result_spec[subset][trip_part] = matrix.id
 
     def get_matrices(self):
-        transfer_penalty = ((self.num_board > 0)
+        transfer_penalty = ((self.num_board.data > 0)
                             * param.transfer_penalty[self.name])
-        cost = self.inv_cost + self.board_cost
-        time = self.gen_cost - self.vot_inv*cost - transfer_penalty
+        cost = self.inv_cost.data + self.board_cost.data
+        time = self.gen_cost.data - self.vot_inv*cost - transfer_penalty
         self._release_matrices()
         time[cost > 999999] = 999999
         return {"time": time, "cost": cost}
