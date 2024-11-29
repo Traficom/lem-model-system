@@ -10,4 +10,4 @@ t network_fields
 #car_time_vrk LINK REAL ''
 #buslane LINK BOOLEAN ''
 end network_fields
-   inode    jnode #hinta_aht #hinta_pt #hinta_iht #hinta_vrk #car_time_aht #car_time_pt #car_time_iht #car_time_it #car_time_vrk #buslane
+   inode    jnode  #buslane #car_time_aht #car_time_iht #car_time_pt #car_time_vrk

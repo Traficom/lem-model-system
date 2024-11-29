@@ -527,6 +527,8 @@ def attempt_calibration(spec: dict):
     for param_name in param_names:
         if param_name == "calibration":
             calibrate(spec, spec.pop(param_name))
+        elif param_name == "scaling":
+            scale(spec, spec.pop(param_name))
         else:
             # Search deeper
             attempt_calibration(spec[param_name])
@@ -538,7 +540,14 @@ def calibrate(spec: dict, calib_spec: dict):
         except TypeError:
             # Search deeper
             calibrate(spec[param_name], calib_spec[param_name])
-            
+
+def scale(spec: dict, calib_spec: dict):
+    for param_name in calib_spec:
+        try:
+            spec[param_name] *= calib_spec[param_name]
+        except TypeError:
+            # Search deeper
+            scale(spec[param_name], calib_spec[param_name])
 
 class FreightPurpose(Purpose):
 

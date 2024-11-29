@@ -1,54 +1,66 @@
 {
-    "sum": [
-        {
-            "total": "population",
-            "shares": [
-                "sh_age_7_17",
-                "sh_age_18_29",
-                "sh_age_30_49",
-                "sh_age_50_64",
-                "sh_age_65_99",
-                "sh_income_0_19",
-                "sh_income_20_39",
-                "sh_income_40_59",
-                "sh_income_60_79",
-                "sh_income_80_99",
-                "sh_income_100_"
-            ]
-        },
-        {
-            "total": "workplaces",
-            "shares": [
-                "sh_wrk_healthcare",
-                "sh_wrk_shop",
-                "sh_wrk_hospitality",
-                "sh_wrk_recreation"
-            ]
-        },
-        "sport_facility_indoor",
-        "sport_facility_outdoor",
-        "ski_resort",
-        "area_education_buildings",
-        "area_leisure_buildings",
-        "area_university_buildings",
-        "students_comprehensive",
-        "students_upper_secondary",
-        "students_higher_education",
-        "gen_marita",
-        "gen_kalevi",
-        "att_marita",
-        "att_kalevi"
-    ],
-    "mean": [
-        "avg_park_cost",
-        "avg_park_time",
-        "car_density",
-        "avg_building_distance"
-    ],
-    "first": [
-        "aggregate_results_municipality",
-        "aggregate_results_county",
-        "aggregate_results_subarea",
-        "aggregate_results_submodel"
-    ]
+    "trips": {
+        "sum": [
+            {
+                "total": "population",
+                "shares": [
+                    "sh_age_7_17",
+                    "sh_age_18_29",
+                    "sh_age_30_49",
+                    "sh_age_50_64",
+                    "sh_age_65_99",
+                    "sh_income_0_19",
+                    "sh_income_20_39",
+                    "sh_income_40_59",
+                    "sh_income_60_79",
+                    "sh_income_80_99",
+                    "sh_income_100_"
+                ]
+            },
+            {
+                "total": "workplaces",
+                "shares": [
+                    "sh_wrk_healthcare",
+                    "sh_wrk_shop",
+                    "sh_wrk_hospitality",
+                    "sh_wrk_recreation"
+                ]
+            },
+            "sport_facility_indoor",
+            "sport_facility_outdoor",
+            "ski_resort",
+            "area_education_buildings",
+            "area_leisure_buildings",
+            "area_university_buildings",
+            "students_comprehensive",
+            "students_upper_secondary",
+            "students_higher_education"
+        ],
+        "mean": [
+            "avg_park_cost",
+            "avg_park_time",
+            "car_density",
+            "avg_building_distance"
+        ],
+        "first": [
+            "aggregate_results_municipality",
+            "aggregate_results_county",
+            "aggregate_results_subarea",
+            "aggregate_results_submodel"
+        ]
+    },
+    "freight": {
+        "sum": [
+            "gen_marita",
+            "gen_kalevi",
+            "att_marita",
+            "att_kalevi"
+        ],
+        "first": [
+            "aggregate_results_municipality",
+            "aggregate_results_county",
+            "aggregate_results_subarea",
+            "aggregate_results_submodel"
+        ]
+    }
 }
