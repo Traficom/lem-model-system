@@ -16,9 +16,24 @@
         },
         "long-distance train": {
             "id": 1,
-            "firstb_single": 2.0,
+            "firstb_single": 3.0,
+            "dist_single": 0.3
+        },
+        "long-distance bus": {
+            "id": 2,
+            "firstb_single": 5.0,
             "dist_single": 0.1
-        }
+        },
+        "airplane": {
+            "id": 3,
+            "firstb_single": 70.0,
+            "dist_single": 0.3
+        },
+        "freight train": {
+            "id": 4,
+            "firstb_single": 0.0,
+            "dist_single": 0.1
+         }
     },
     "cost_changes": {
         "cost": {

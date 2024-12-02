@@ -237,6 +237,46 @@
                 "logsum": 0.61989
             },
             "individual_dummy": {}
+        },
+        "scaling": {
+            "car_leisure": {
+                "constant": 0.61989,
+                "generation": {
+                    "car_density": 0.61989
+                }
+            },
+            "car_pax": {
+                "constant": 0.61989,
+                "generation": {
+                    "car_density": 0.61989
+                }
+            },
+            "transit_leisure": {
+                "constant": 0.61989
+            },
+            "bike": {
+                "constant": 0.61989
+            },
+            "walk": {
+                "constant": 0.61989
+            }
+        },
+        "calibration": {
+            "car_leisure": {
+                "constant": -0.04431
+            },
+            "car_pax": {
+                "constant": 0.21506
+            },
+            "transit_leisure": {
+                "constant": 0.16192
+            },
+            "bike": {
+                "constant": -0.21658
+            },
+            "walk": {
+                "constant": -0.21574
+            }
         }
     },
     "demand_share": {

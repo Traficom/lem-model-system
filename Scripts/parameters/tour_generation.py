@@ -13,7 +13,7 @@ tour_number_increase = {
 tour_combinations = {
     0: {
         () : {
-            "constant":   15.26,
+            "constant":   14.64,
             "individual_dummy": {
                 "age_7_17": 0.0,
                 "age_18_29":  0.0,
@@ -27,16 +27,16 @@ tour_combinations = {
     },
     1: {
         ("hb_edu_higher",) : {
-            "constant":   1.960,
+            "constant":   2.512,
             "individual_dummy": {
                 "age_7_17": 0.0,
-                "age_18_29":  5.045,
-                "age_30_49":  2.663,
+                "age_18_29":  4.958,
+                "age_30_49":  2.652,
                 "age_50_64": 0.0,
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher": 0.5232
+                "hb_edu_higher": .4611
             }
         }
     },
@@ -45,13 +45,13 @@ tour_combinations = {
             "constant":   0.0,
             "individual_dummy": {
                 "age_7_17": 0.0,
-                "age_18_29":  5.045,
-                "age_30_49":  2.663,
+                "age_18_29":  4.958,
+                "age_30_49":  2.652,
                 "age_50_64": 0.0,
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher": .4300
+                "hb_edu_higher": .4166
             }
         }
     }
@@ -147,11 +147,21 @@ tour_generation = {
         "population_Ita-Suomi": 0.00283,
         "population_Pohjois-Suomi": 0.00185
     },
-    "hb_leisure_long": {
-        "population_Uusimaa": 0.01741,
-        "population_Lounais-Suomi": 0.01518,
-        "population_Ita-Suomi": 0.01812,
-        "population_Pohjois-Suomi": 0.01874
+    "hb_private_day": {
+        "income_0_19": 0.00339,
+        "income_20_39": 0.00502,
+        "income_40_59": 0.00708,
+        "income_60_79": 0.00744,
+        "income_80_99": 0.00892,
+        "income_100_": 0.00762
+    },
+    "hb_private_week": {
+        "income_0_19": 0.00786,
+        "income_20_39": 0.00836,
+        "income_40_59": 0.01183,
+        "income_60_79": 0.01246,
+        "income_80_99": 0.0155,
+        "income_100_": 0.01712
     },
     "truck": {
         "population": 0.01,

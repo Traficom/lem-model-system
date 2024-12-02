@@ -5,3 +5,4 @@ t network_fields
 #car_time_pt LINK REAL 'car_time_pt'
 #car_time_vrk LINK REAL 'car_time_vrk'
 end network_fields
+   inode    jnode  #buslane #car_time_aht #car_time_iht #car_time_pt #car_time_vrk

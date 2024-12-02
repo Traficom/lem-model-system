@@ -7,7 +7,6 @@ import pandas
 
 import utils.log as log
 import assignment.emme_assignment as ass
-from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import (
@@ -73,7 +72,7 @@ class EmmeAssignmentTest:
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
-        dist_cost = {
+        self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
             "trailer_truck": 0.5,
@@ -81,10 +80,10 @@ class EmmeAssignmentTest:
             "truck": 0.3,
             "van": 0.2,
         }
-        self.ass_model.prepare_network(dist_cost)
         self.resultdata = ResultsData(TEST_DATA_PATH / "Results" / "assignment")
     
     def test_assignment(self):
+        self.ass_model.prepare_network(self.dist_cost)
         nr_zones = self.ass_model.nr_zones
         car_matrix = numpy.full((nr_zones, nr_zones), 10.0)
         demand = {
@@ -135,41 +134,17 @@ class EmmeAssignmentTest:
                         mtx[ass_class] = cost_data
 
     def test_transit_cost(self):
-        fares = pandas.DataFrame({
-            0: {
-                "firstb_single": 2.0,
-                "dist_single": 0.1
-            },
-            1: {
-                "firstb_single": 3.0,
-                "dist_single": 0.2
-            },
-            2: {
-                "firstb_single": 5.0,
-                "dist_single": 0.1
-            },
-            3: {
-                "firstb_single": 70.0,
-                "dist_single": 0.3
-            },
-            4: {
-                "firstb_single": 0.0,
-                "dist_single": 0.1
-            }
-        })
+        firstb_single = (2, 3, 5, 70, 0, 1.5)
+        dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
+        fares = pandas.DataFrame(
+            {i: {"firstb_single": firstb_single[i],
+                 "dist_single": dist_single[i]}
+             for i in range(0, len(firstb_single))})
         self.ass_model.calc_transit_cost(fares)
 
     def test_freight_assignment(self):
-        dist_cost = {
-            "car_work": 0.12,
-            "car_leisure": 0.12,
-            "trailer_truck": 0.5,
-            "semi_trailer": 0.4,
-            "truck": 0.3,
-            "van": 0.2,
-        }
         purposes = ["mameka", "kalevi"]
-        self.ass_model.prepare_freight_network(dist_cost, purposes)
+        self.ass_model.prepare_freight_network(self.dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones
         demand = numpy.full((nr_zones, nr_zones), 1.0)

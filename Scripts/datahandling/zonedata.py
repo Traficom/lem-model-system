@@ -94,6 +94,7 @@ class ZoneData:
         self["outside_municipality"] = ~within_municipality
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
+        self["Lappi"] = self.dummy("county", "Lappi")
         for key in data["aggregate_results_submodel"].unique():
             self["population_" + key] = self.dummy("submodel", key) * pop
 
