@@ -21,7 +21,7 @@ class MockAssignmentModel(AssignmentModel):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
         self.use_free_flow_speeds = use_free_flow_speeds
-        end_assignment_classes = set(param.emme_matrices)
+        end_assignment_classes = set(param.transport_classes)
         if delete_extra_matrices:
             end_assignment_classes -= set(param.freight_classes)
             if use_free_flow_speeds:
