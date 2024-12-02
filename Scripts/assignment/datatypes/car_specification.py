@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any, Dict
 import parameters.assignment as param
-from assignment.datatypes.assignment_mode import CarMode
+from assignment.datatypes.car import CarMode
 
 class CarSpecification:
 

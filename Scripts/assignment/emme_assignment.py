@@ -109,8 +109,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds,
                 delete_extra_matrices=self.delete_extra_matrices))
-        ass_classes = list(param.emme_matrices) + ["bus"]
-        ass_classes.remove("walk")
+        ass_classes = param.transport_classes + ("bus",)
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield)
         self._segment_results = self._create_transit_attributes(
@@ -139,18 +138,8 @@ class EmmeAssignmentModel(AssignmentModel):
         commodity_classes : list of str
             Class names for which we want extra attributes
         """
-        mtxs = {}
-        for i, ass_class in enumerate(param.freight_matrices, start=1):
-            mtxs[ass_class] = {}
-            for j, mtx_type in enumerate(param.freight_matrices[ass_class]):
-                mtxs[ass_class][mtx_type] = f"mf{i*10 + j}"
-                description = f"{mtx_type}_{ass_class}"
-                self.emme_project.create_matrix(
-                    matrix_id=mtxs[ass_class][mtx_type],
-                    matrix_name=description, matrix_description=description,
-                    overwrite=True)
         self.freight_network = FreightAssignmentPeriod(
-            "vrk", self.mod_scenario.number, self.emme_project, mtxs,
+            "vrk", self.mod_scenario.number, self.emme_project,
             use_free_flow_speeds=True)
         self.assignment_periods = [self.freight_network]
         self.emme_project.create_extra_attribute(
@@ -252,8 +241,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 if res != "transit_volumes":
                     self._node_24h(
                         transit_class, param.segment_results[res])
-        ass_classes = list(param.emme_matrices) + ["bus", "aux_transit"]
-        ass_classes.remove("walk")
+        ass_classes = param.transport_classes + ("bus", "aux_transit")
         for ass_class in ass_classes:
             self._link_24h(ass_class)
 

@@ -3,14 +3,14 @@ import numpy # type: ignore
 import pandas # type: ignore
 import copy
 
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union, Iterable
+from typing import TYPE_CHECKING, Dict, Union, Iterable
 import utils.log as log
 from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
-from assignment.datatypes.assignment_mode import AssignmentMode, BikeMode, WalkMode, CarMode, TruckMode, TransitMode
+from assignment.datatypes.assignment_mode import AssignmentMode, BikeMode, WalkMode
+from assignment.datatypes.car import CarMode, TruckMode
 from assignment.datatypes.car_specification import CarSpecification
-from assignment.datatypes.transit import TransitSpecification
-from assignment.datatypes.path_analysis import PathAnalysis
+from assignment.datatypes.transit import TransitMode
 from assignment.abstract_assignment import Period
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject

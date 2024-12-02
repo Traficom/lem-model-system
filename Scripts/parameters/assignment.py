@@ -544,23 +544,6 @@ segment_results = {
     "transfer_boardings": "trb",
 }
 uncongested_transit_time = "base_timtr"
-emme_matrices = {
-    "car_work": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
-    "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    # "car_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    # "car_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "train": ("demand", "time", "dist", "cost", "gen_cost"),
-    "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
-    "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
-    "bike": ("demand", "time", "dist"),
-    "walk": ("time", "dist"),
-    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
-    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "van": ("demand", "time", "dist", "cost", "gen_cost"),
-}
 transit_impedance_matrices = {
     "total": {
         "total_time": "total_travel_time",
@@ -577,13 +560,6 @@ transit_impedance_matrices = {
         "loc_ic": "actual_in_vehicle_costs",
         "loc_time": "actual_in_vehicle_times",
     },
-}
-freight_matrices = {
-    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
-    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "freight_train": {"demand", "time", "dist", "aux_time", "aux_dist"},
-    "ship": {"demand", "time", "dist", "aux_time", "aux_dist"},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
