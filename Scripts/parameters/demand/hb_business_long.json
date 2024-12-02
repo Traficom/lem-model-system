@@ -202,6 +202,23 @@
             "long_d_bus": {
                 "constant": 0.49297
             }
+        },
+        "calibration": {
+            "airplane": {
+                "constant": -0.15854
+            },
+            "train": {
+                "constant": 0.0497
+            },
+            "long_d_bus": {
+                "constant": -0.09746
+            },
+            "car_work": {
+                "constant": 0.08599
+            },
+            "car_pax": {
+                "constant": -0.35271
+            }
         }
     },
     "demand_share": {
