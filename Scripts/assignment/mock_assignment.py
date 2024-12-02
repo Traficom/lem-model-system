@@ -109,7 +109,15 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        return self._get_impedances(modes)
+        mtxs = self._get_impedances(modes)
+        for ass_cl in param.car_classes:
+            mtxs["cost"][ass_cl] = (self.dist_unit_cost[ass_cl]
+                                    * mtxs["dist"][ass_cl])
+        if "toll_cost" in mtxs:
+            for ass_cl in param.car_classes:
+                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
+            del mtxs["toll_cost"]
+        return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """ Get travel impedance matrices for one time period from files.
@@ -125,6 +133,11 @@ class MockPeriod(Period):
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
             for mtx_type in ("time", "cost", "dist")}
+        try:
+            mtxs["toll_cost"] = self._get_matrices(
+                "toll_cost", assignment_classes)
+        except FileNotFoundError:
+            pass
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -153,10 +166,9 @@ class MockPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        matrix_list = [ass_class for ass_class in assignment_classes
-            if mtx_type in param.emme_matrices.get(ass_class, [])]
         with self.matrices.open(
-                mtx_type, self.name, transport_classes=matrix_list) as mtx:
+                mtx_type, self.name, transport_classes=[]) as mtx:
+            matrix_list = set(assignment_classes) & set(mtx.matrix_list)
             matrices = {mode: mtx[mode] for mode in matrix_list}
         for mode in matrices:
             if numpy.any(matrices[mode] > 1e10):
