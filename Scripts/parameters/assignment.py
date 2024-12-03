@@ -544,7 +544,7 @@ segment_results = {
     "transfer_boardings": "trb",
 }
 uncongested_transit_time = "base_timtr"
-impedance_output = ["time", "cost", "dist", "unweighted_time"]
+impedance_output = ["time", "cost", "dist", "inv_time"]
 emme_matrices = {
     "car_work": ("demand", "time", "dist", "cost", "gen_cost"),
     "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),

@@ -131,10 +131,15 @@ class Purpose:
                 for m in self.mtx_adjustment[t]:
                     p = self.mtx_adjustment[t][m]
                     try:
-                        if t == "unweighted_time":
-                            day_imp[m]["time"] += (p-1) * day_imp[m][t]
-                        else:
-                            day_imp[m][t] *= p
+                        # If `t` is one word (e.g., "time"),
+                        # `los_component` is also that word.
+                        # Then the calculation breaks down to
+                        # `day_imp[m][t] *= p`, where `p` is the relative
+                        # adjustment parameter.
+                        # If t is "inv_time" for instance,
+                        # `los_component` becomes "time".
+                        los_component = t.split('_')[-1]
+                        day_imp[m][los_component] += (p-1) * day_imp[m][t]
                         msg = (f"Purpose {self.name}: "
                             + f"Added {round(100*(p-1))} % to {t} : {m}.")
                         log.warn(msg)
