@@ -248,7 +248,7 @@ class AssignmentPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {imp_type: self._get_matrices(imp_type, assignment_classes)
-            for imp_type in ("time", "cost", "dist")}
+            for imp_type in param.impedance_output}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
