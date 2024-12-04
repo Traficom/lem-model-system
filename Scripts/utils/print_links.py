@@ -1,5 +1,5 @@
 from typing import Iterable, Tuple
-from shapely import Point, LineString
+from shapely.geometry import Point, LineString
 
 from utils.calc_noise import NoiseModel
 
