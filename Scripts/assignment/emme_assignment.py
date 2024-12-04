@@ -10,6 +10,7 @@ from utils.print_links import geometries, Node, Link
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
+import assignment.off_peak_period as periods
 from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
@@ -45,8 +46,11 @@ class EmmeAssignmentModel(AssignmentModel):
     delete_extra_matrices : bool (optional)
         If True, only matrices needed for demand calculation will be
         returned from end assignment.
-    time_periods : list of str (optional)
+    time_periods : dict (optional)
+        key : str
             Time period names, default is aht, pt, iht
+        value : str
+            Name of `AssignmentPeriod` sub-class
     first_matrix_id : int (optional)
         Where to save matrices (if saved),
         300 matrix ids will be reserved, starting from first_matrix_id.
@@ -60,7 +64,7 @@ class EmmeAssignmentModel(AssignmentModel):
                  use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
                  delete_extra_matrices: bool = False,
-                 time_periods: List[str] = param.time_periods, 
+                 time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
@@ -112,7 +116,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 scen_id = self.mod_scenario.number
             emme_matrices = self._create_matrices(
                 tp, i*hundred + self.first_matrix_id, id_ten)
-            self.assignment_periods.append(AssignmentPeriod(
+            self.assignment_periods.append(vars(periods)[self.time_periods[tp]](
                 tp, scen_id, self.emme_project, emme_matrices,
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
@@ -494,13 +498,18 @@ class EmmeAssignmentModel(AssignmentModel):
                 value : str
                     EMME matrix id
         """
-        tag = time_period if self.save_matrices else ""
         emme_matrices = {}
         for i, ass_class in enumerate(param.emme_matrices, start=1):
+            is_off_peak = (ass_class in param.transit_classes
+                           and param.time_periods[time_period] in (
+                               "OffPeakPeriod", "TransitAssignmentPeriod"))
             matrix_ids = {}
             for mtx_type in param.emme_matrices[ass_class]:
-                _id_hundred = (id_hundred
-                    if self.save_matrices or mtx_type == "demand" else 0)
+                save_matrices = (self.save_matrices
+                                 or mtx_type == "demand"
+                                 or is_off_peak)
+                _id_hundred = id_hundred if save_matrices else 0
+                tag = time_period if save_matrices else ""
                 matrix_ids[mtx_type] = "mf{}".format(
                     _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"

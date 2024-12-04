@@ -95,8 +95,9 @@ class ModelSystem:
             purpose = new_tour_purpose(
                 json.loads(file.read_text("utf-8")), self.zdata_forecast,
                 self.resultdata, cost_data["cost_changes"])
-            if (sorted(next(iter(purpose.impedance_share.values())))
-                    == sorted(assignment_model.time_periods)):
+            required_time_periods = sorted(
+                {tp for m in purpose.impedance_share.values() for tp in m})
+            if required_time_periods == sorted(assignment_model.time_periods):
                 if isinstance(purpose, SecDestPurpose):
                     sec_dest_purposes.append(purpose)
                 elif purpose.orig == "home":
@@ -247,7 +248,6 @@ class ModelSystem:
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
         if not self.ass_model.use_free_flow_speeds:
-            self.ass_model.init_assign()
             log.info("Get long-distance trip matrices")
             self._add_external_demand(self.long_dist_matrices)
             log.info("Get freight matrices")
@@ -278,6 +278,8 @@ class ModelSystem:
                         transport_classes=transport_classes) as mtx:
                     for ass_class in transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
+            if not self.ass_model.use_free_flow_speeds:
+                ap.init_assign()
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
