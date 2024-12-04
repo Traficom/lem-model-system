@@ -7,7 +7,7 @@ import sys
 os.environ["PROJ_DATA"] = (sys.exec_prefix
                            + "\\Lib\\site-packages\\fiona\\proj_data")
 import fiona
-from fiona.crs import CRS
+from fiona.crs import from_epsg
 import pandas
 
 
@@ -135,5 +135,5 @@ class ResultsData:
         """
         with fiona.open(
                 self.path / filename, 'w', driver="GPKG", layer=layer,
-                crs=CRS.from_epsg(3067), schema=schema) as colxn:
+                crs=from_epsg(3067), schema=schema) as colxn:
             colxn.writerecords(records)
