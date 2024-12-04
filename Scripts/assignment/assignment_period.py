@@ -130,8 +130,7 @@ class AssignmentPeriod(Period):
             for mode in param.truck_classes}
         modes = {**car_modes, **truck_modes}
         if include_toll_cost:
-            link_costs = {mode: modes[mode].link_cost_attr for mode in modes}
-            self._calc_road_cost(link_costs)
+            self._calc_road_cost(modes.values())
         self.assignment_modes.update(modes)
         self._car_spec = CarSpecification(modes)
 
@@ -202,6 +201,8 @@ class AssignmentPeriod(Period):
         else:
             self._assign_transit()
         mtxs = self._get_impedances(modes)
+        for ass_cl in param.car_classes:
+            del mtxs["dist"][ass_cl]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -492,25 +493,22 @@ class AssignmentPeriod(Period):
                 link[walk_time] = link.length / param.walk_speed * 60
         self.emme_scenario.publish_network(network)
 
-    def _calc_road_cost(self, link_cost_attrs: Dict[str, str]):
+    def _calc_road_cost(self, modes: Iterable[CarMode]):
         """Calculate road charges and driving costs for one scenario.
 
         Parameters
         ----------
-        link_cost_attrs : dict
-            key : str
-                Assignment class (car_work/truck/...)
-            value : str or float
-                Extra attribute where link cost is found
+        modes : Iterable
+            List of car and truck modes for which to calculate link cost
         """
         log.info("Calculates road charges for time period {}...".format(self.name))
         network = self.emme_scenario.get_network()
         for link in network.links():
             toll_cost = link.length * link[self.netfield("hinta")]
             link[self.extra("toll_cost")] = toll_cost
-            for ass_class in link_cost_attrs:
-                dist_cost = self._dist_unit_cost[ass_class] * link.length
-                link[link_cost_attrs[ass_class]] = toll_cost + dist_cost
+            for mode in modes:
+                dist_cost = mode.dist_unit_cost * link.length
+                link[mode.link_cost_attr] = toll_cost + dist_cost
         self.emme_scenario.publish_network(network)
 
     def _calc_boarding_penalties(self, 
