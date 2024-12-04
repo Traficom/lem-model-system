@@ -259,7 +259,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     zone_numbers = mtx.zone_numbers
                 result_type = f"{transport_class}_demand_{scenario}"
                 results[result_type] += vol_fac * demand[scenario].sum(0)
-            for mtx_type in ["dist", "time", "cost"]:
+            for mtx_type in ["dist", "time", "cost", "toll_cost"]:
                 cost = {scenario: read_costs(
                         data[scenario], timeperiod, transport_class, mtx_type)
                     for scenario in data}
@@ -282,6 +282,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     if transport_class in param.transit_classes:
                         revenues_transit += revenue
                         results["transit_revenue"] += vol_fac * revenue
+                if mtx_type == "toll_cost":
                     if transport_class in param.assignment_modes:
                         revenues_car += revenue
                         results["car_revenue"] += vol_fac * revenue
@@ -305,13 +306,11 @@ def read(file_name, scenario_path):
 
 
 def read_costs(matrixdata, time_period, transport_class, mtx_type):
-    mtx_label = transport_class.split('_')[0]
-    ass_class = mtx_label if mtx_label == "bike" else transport_class
-    if mtx_label == "bike" and mtx_type == "cost":
+    if mtx_type == "cost" and transport_class not in param.transit_classes:
         matrix = 0
     else:
         with matrixdata.open(mtx_type, time_period) as mtx:
-            matrix = mtx[ass_class]
+            matrix = mtx[transport_class]
             zone_numbers = mtx.zone_numbers
     return matrix
 
