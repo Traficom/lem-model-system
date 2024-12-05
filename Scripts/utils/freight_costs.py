@@ -54,7 +54,7 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
         mode_cost[mode] = (rail_cost + params["wagon_annual_cost"]
                            + params["terminal_cost"]*2)
     rail_cost = mode_cost["diesel_train"]
-    rail_aux_cost = get_aux_cost(unit_costs, impedance.copy())
+    rail_aux_cost = get_aux_cost(unit_costs, impedance)
     return rail_cost + rail_aux_cost
 
 def calc_ship_cost(unit_costs: Dict[str, Dict],
@@ -86,7 +86,7 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
                           + params["terminal_cost"])*2
             mode_cost[mode][draught] = ship_cost
     ship_cost = mode_cost["other_dry_cargo"]["4m"]
-    ship_aux_cost = get_aux_cost(unit_costs, impedance.copy())
+    ship_aux_cost = get_aux_cost(unit_costs, impedance)
     return ship_cost + ship_aux_cost
 
 def get_aux_cost(unit_costs: Dict[str, Dict],
@@ -108,21 +108,14 @@ def get_aux_cost(unit_costs: Dict[str, Dict],
     auxiliary road cost : numpy.ndarray
         impedance type cost : numpy 2d matrix
     """
-    aux_dist = impedance["aux_dist"]
-    impedance["dist"] = impedance[f"aux_dist"]
-    del impedance[f"aux_dist"]
-    try:
-        impedance["time"] = impedance[f"aux_time"]
-        del impedance[f"aux_time"]
-    except KeyError:
-        pass
-    try:
-        del impedance["channel"]
-    except KeyError:
-        pass
+    impedance_aux = {
+        "dist": impedance["aux_dist"],
+        "time": impedance["aux_time"],
+        "toll": impedance["toll"]
+    }
     aux_cost = numpy.where(
-        (aux_dist > (impedance["dist"]*2))
+        (impedance["aux_dist"] > (impedance["dist"]*2))
         | (impedance["dist"] == 0),
         numpy.inf,
-        calc_road_cost(unit_costs, impedance))
+        calc_road_cost(unit_costs, impedance_aux))
     return aux_cost

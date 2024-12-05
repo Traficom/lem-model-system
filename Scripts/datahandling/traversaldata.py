@@ -45,12 +45,11 @@ def read_traversal_file(file: Path, zones: numpy.ndarray):
     with open(file) as f:
         lines = f.readlines()
         for line in lines:
-            line = line.strip()
+            data = line.split()
             try:
-                int(line.split(" ")[0])
+                int(data[0])
             except ValueError:
                 continue
-            data = list(line.split())
             row_index = numpy.searchsorted(zones, numpy.int32(data[0]))
             col_index = numpy.searchsorted(zones, numpy.int32(data[1]))
             try:

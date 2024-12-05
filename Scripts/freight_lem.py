@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 import numpy
 import json
-from typing import List
 
 import utils.log as log
 import utils.config
@@ -41,8 +40,6 @@ def main(args):
     for file in parameters_path.rglob("*.json"):
         commodity_params = json.loads(file.read_text("utf-8"))
         commodity = commodity_params["name"]
-        if commodity not in ("marita", "kalevi"):
-            continue
         purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
@@ -94,8 +91,6 @@ def main(args):
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
     config = utils.config.read_from_file()
-    config["SAVE_EMME_MATRICES"] = True
-    config["SPECIFY_COMMODITY_NAMES"] = ["marita"]
     
     parser.add_argument(
         "--log-level",
@@ -137,23 +132,13 @@ if __name__ == "__main__":
         help="First matrix ID within EMME project (.emp)."),
     parser.add_argument(
         "--specify-commodity-names",
-        type=List[str],
-        help="Commodity names in 29 classification. Assigned and saved as mtx. Currently max 3."),
+        nargs="*",
+        choices=commodity_conversion,
+        help="Commodity names in 29 classification. Assigned and saved as mtx."),
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
-    
-    if not isinstance(args.specify_commodity_names, list):
-        raise TypeError("Invalid type for save commodity names")
-    for name in args.specify_commodity_names:
-        if name not in list(commodity_conversion):
-            raise ValueError("Invalid given commodity name.")
-    if len(args.specify_commodity_names) > 3:
-        raise ValueError("Maximum of 3 commodities can be specified.")
-    if len(args.specify_commodity_names) == 0:
-        args.save_emme_matrices = False
-    
     log.initialize(args)
     if sys.version_info.major == 3:
         main(args)
