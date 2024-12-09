@@ -58,7 +58,7 @@ class FreightMode(AssignmentMode):
                 "perception_factor": 1,
             },
             "aux_transit_time": {
-                "perception_factor": 10,
+                "perception_factor": 30,
             },
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
