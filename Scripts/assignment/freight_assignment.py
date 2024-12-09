@@ -8,7 +8,7 @@ from assignment.datatypes.freight_specification import FreightMode
 
 class FreightAssignmentPeriod(AssignmentPeriod):
     def prepare(self, *args, **kwargs):
-        AssignmentPeriod.prepare(self, *args, **kwargs)
+        self._prepare_cars(*args, **kwargs)
         network = self.emme_scenario.get_network()
         for line in network.transit_lines():
             mode = line.mode.id

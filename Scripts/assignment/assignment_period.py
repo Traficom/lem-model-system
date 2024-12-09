@@ -105,10 +105,12 @@ class AssignmentPeriod(Period):
         """
         return "#{}_{}".format(attr, self.name)
 
-    def prepare(self, dist_unit_cost: Dict[str, float]):
+    def prepare(self, dist_unit_cost: Dict[str, float],
+                day_scenario: int, save_matrices: bool):
         """Prepare network for assignment.
 
         Calculate road toll cost and specify car assignment.
+        Set boarding penalties and attribute names.
 
         Parameters
         ----------
@@ -117,16 +119,26 @@ class AssignmentPeriod(Period):
                 Assignment class (car_work/truck/...)
             value : float
                 Length multiplier to calculate link cost
+        day_scenario : int
+            EMME scenario linked to the whole day
+        save_matrices : bool
+            Whether matrices will be saved in Emme format for all time periods.
         """
+        self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_walk_and_bike(save_matrices)
+        self._prepare_transit(day_scenario, save_matrices)
+
+    def _prepare_cars(self, dist_unit_cost: Dict[str, float],
+                      save_matrices: bool):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
         car_modes = {mode: CarMode(
                 mode, self.emme_scenario, self.emme_project, self.name,
-                dist_unit_cost[mode], include_toll_cost)
+                dist_unit_cost[mode], include_toll_cost, save_matrices)
             for mode in param.car_classes + ("van",)}
         truck_modes = {mode: TruckMode(
                 mode, self.emme_scenario, self.emme_project, self.name,
-                dist_unit_cost[mode], include_toll_cost)
+                dist_unit_cost[mode], include_toll_cost, save_matrices)
             for mode in param.truck_classes}
         modes = {**car_modes, **truck_modes}
         if include_toll_cost:
@@ -134,29 +146,24 @@ class AssignmentPeriod(Period):
         self.assignment_modes.update(modes)
         self._car_spec = CarSpecification(modes)
 
-    def prepare_transit(self, day_scenario: int):
-        """Prepare network for transit assignment.
-
-        Parameters
-        ----------
-        day_scenario : int
-            EMME scenario linked to the whole day
-
-        Set boarding penalties and attribute names.
-        """
-        transit_modes = {mode: TransitMode(
-                day_scenario, mode, self.emme_scenario, self.emme_project,
-                self.name)
-            for mode in param.transit_classes}
-        self.assignment_modes.update(transit_modes)
+    def _prepare_walk_and_bike(self, save_matrices: bool):
         self.bike_mode = BikeMode(
-            "bike", self.emme_scenario, self.emme_project, self.name)
+            "bike", self.emme_scenario, self.emme_project, self.name,
+            save_matrices)
         self.walk_mode = WalkMode(
-            "walk", self.emme_scenario, self.emme_project, self.name)
+            "walk", self.emme_scenario, self.emme_project, self.name,
+            save_matrices)
         self.assignment_modes.update({
             "bike": self.bike_mode,
             "walk": self.walk_mode,
         })
+
+    def _prepare_transit(self, day_scenario: int, save_matrices: bool):
+        transit_modes = {mode: TransitMode(
+                day_scenario, mode, self.emme_scenario, self.emme_project,
+                self.name, save_matrices)
+            for mode in param.transit_classes}
+        self.assignment_modes.update(transit_modes)
         # TODO We should probably have only one set of penalties
         self._calc_boarding_penalties(is_last_iteration=True)
         self._set_transit_vdfs()

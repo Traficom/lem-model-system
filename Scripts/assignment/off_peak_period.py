@@ -16,6 +16,28 @@ class OffPeakPeriod(AssignmentPeriod):
     Car assignment is performed as usual.
     """
 
+    def prepare(self, dist_unit_cost: Dict[str, float],
+                day_scenario: int, save_matrices: bool):
+        """Prepare network for assignment.
+
+        Calculate road toll cost and specify car assignment.
+        Set boarding penalties and attribute names.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Length multiplier to calculate link cost
+        day_scenario : int
+            EMME scenario linked to the whole day
+        save_matrices : bool
+            Whether matrices will be saved in Emme format for all time periods.
+        """
+        self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_transit(day_scenario, save_matrices=True)
+
     def init_assign(self):
         """Assign transit for one time period with free-flow bus speed."""
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -57,6 +79,28 @@ class TransitAssignmentPeriod(OffPeakPeriod):
 
     Car assignment is not performed at all.
     """
+
+    def prepare(self, dist_unit_cost: Dict[str, float],
+                day_scenario: int, save_matrices: bool):
+        """Prepare network for assignment.
+
+        Calculate road toll cost and specify car assignment.
+        Set boarding penalties and attribute names.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Length multiplier to calculate link cost
+        day_scenario : int
+            EMME scenario linked to the whole day
+        save_matrices : bool
+            Whether matrices will be saved in Emme format for all time periods.
+        """
+        self._prepare_cars(dist_unit_cost, save_matrices=False)
+        self._prepare_transit(day_scenario, save_matrices=True)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Get local transit impedance matrices for one time period.

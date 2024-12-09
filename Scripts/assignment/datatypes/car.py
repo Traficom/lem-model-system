@@ -1,16 +1,25 @@
 from __future__ import annotations
+from typing import TYPE_CHECKING, Union
+
+
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode
 from assignment.datatypes.path_analysis import PathAnalysis
-from typing import Union
+if TYPE_CHECKING:
+    from assignment.emme_bindings.emme_project import EmmeProject
+    from assignment.emme_bindings.mock_project import Scenario
 
 
 LENGTH_ATTR = "length"
 
 
 class CarMode(AssignmentMode):
-    def __init__(self, name, emme_scenario, emme_project, time_period, dist_unit_cost, include_toll_cost):
-        AssignmentMode.__init__(self, name, emme_scenario, emme_project, time_period)
+    def __init__(self, name: str, emme_scenario: Scenario,
+                 emme_project: EmmeProject, time_period: str,
+                 dist_unit_cost, include_toll_cost: bool,
+                 save_matrices: bool = False):
+        AssignmentMode.__init__(
+            self, name, emme_scenario, emme_project, time_period, save_matrices)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.gen_cost = self._create_matrix("gen_cost")
         self.dist = self._create_matrix("dist")

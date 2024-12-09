@@ -122,9 +122,9 @@ class EmmeAssignmentModel(AssignmentModel):
         for ap in self.assignment_periods:
             self._create_attributes(
                 ap.emme_scenario, ass_classes, ap.extra, ap.netfield)
-            ap.prepare(car_dist_unit_cost)
             self._create_transit_attributes(ap.emme_scenario, ap.extra)
-            ap.prepare_transit(self.day_scenario)
+            ap.prepare(
+                car_dist_unit_cost, self.day_scenario, self.save_matrices)
         self._init_functions()
         #add ferry wait time
         self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
@@ -170,7 +170,7 @@ class EmmeAssignmentModel(AssignmentModel):
             self.mod_scenario,
             list(param.truck_classes) + list(param.freight_modes),
             self._extra, self._netfield)
-        self.freight_network.prepare(car_dist_unit_cost)
+        self.freight_network.prepare(car_dist_unit_cost, self.save_matrices)
         self._init_functions()
         self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
 

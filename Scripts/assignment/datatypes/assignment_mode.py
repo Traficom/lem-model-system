@@ -1,15 +1,21 @@
-from typing import Dict
+from __future__ import annotations
+from typing import TYPE_CHECKING, Dict
 
 import parameters.assignment as param
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.datatypes.emme_matrix import EmmeMatrix, PermanentEmmeMatrix
+if TYPE_CHECKING:
+    from assignment.emme_bindings.emme_project import EmmeProject
+    from assignment.emme_bindings.mock_project import Scenario
 
 
 LENGTH_ATTR = "length"
 
 
 class AssignmentMode:
-    def __init__(self, name, emme_scenario, emme_project, time_period, save_matrices=False):
+    def __init__(self, name: str, emme_scenario: Scenario,
+                 emme_project: EmmeProject, time_period: str,
+                 save_matrices: bool = False):
         self.name = name
         self.emme_scenario = emme_scenario
         self.emme_project = emme_project
