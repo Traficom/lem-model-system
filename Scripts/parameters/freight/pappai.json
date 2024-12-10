@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "pappai",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,20 +25,20 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.7019
+                "logsum": 0.04253
             },
             "attraction_size": {
-                "att_pappai": 1.0
+                "att_pappai": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.2758
+                "cost": -3.574
             },
             "log": {},
             "individual_dummy": {}
@@ -48,21 +47,21 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.8137
+                "cost": -11.82
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 8.173
+            "constant": 121.8
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -1.772
+                "cost": -21.37
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 35.57
+            "constant": 440.0
         }
     },
     "demand_share": {}

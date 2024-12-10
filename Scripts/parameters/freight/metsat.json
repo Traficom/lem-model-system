@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "metsat",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,43 +25,45 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.6096
+                "logsum": 0.2307
             },
             "attraction_size": {
-                "att_metsat": 1.0
+                "att_metsat": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.7224
+                "cost": -0.2782
             },
-            "log": {},
+            "log": {
+                "cost": -6.524
+            },
             "individual_dummy": {}
         },
         "freight_train": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.7422
+                "cost": -0.9992
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 1.823
+            "constant": -4.703
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -1.453
+                "cost": -0.5113
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 12.31
+            "constant": -14.13
         }
     },
     "demand_share": {}

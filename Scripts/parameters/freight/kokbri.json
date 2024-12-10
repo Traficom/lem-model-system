@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "kokbri",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,43 +25,33 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.5898
+                "logsum": 2.824
             },
             "attraction_size": {
-                "att_kokbri": 1.0
+                "att_kokbri": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.7333
+                "cost": -0.2065
             },
             "log": {},
             "individual_dummy": {}
-        },
-        "freight_train": {
-            "generation": {},
-            "attraction": {},
-            "impedance": {
-                "cost": -1.802
-            },
-            "log": {},
-            "individual_dummy": {},
-            "constant": -3.254
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.1641
+                "cost": -0.004761
             },
             "log": {},
             "individual_dummy": {},
-            "constant": -8.876
+            "constant": -3.907
         }
     },
     "demand_share": {}
