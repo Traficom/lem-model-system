@@ -761,6 +761,9 @@ class EmmeAssignmentModel(AssignmentModel):
                            + 10*log10(cross_traffic/15/1000)
                            + heavy_correction)
                 if cross_traffic > 0 else 0)
+            if start_noise < 0:
+                log.warn(f"Negative noise level for link {link.id}")
+                start_noise = 0
 
             # Calculate noise zone width
             func = param.noise_zone_width

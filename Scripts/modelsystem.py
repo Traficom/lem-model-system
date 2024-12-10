@@ -335,6 +335,7 @@ class ModelSystem:
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
+        # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
         if not self.ass_model.use_free_flow_speeds:
             self._add_external_demand(
@@ -346,6 +347,29 @@ class ModelSystem:
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap.name)
+
+        # Log mode shares
+        tours_mode = {mode: self._generated_tours_mode(mode) for mode in self.travel_modes}
+        sum_all = sum(tours_mode.values())
+        mode_shares = {}
+        for mode in tours_mode:
+            share = tours_mode[mode].sum() / sum_all.sum()
+            mode_shares[mode] = share
+            log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
+        self.mode_share.append(mode_shares)
+
+        if iteration == "last":
+            self._export_model_results()
+            self._export_accessibility()
+
+        # Calculate convergence and empty result buffer
+        gap = self.dtm.calc_gaps()
+        log.info("Demand model convergence in iteration {} is {:1.5f}".format(
+            iteration, gap["rel_gap"]))
+        self.convergence.append(gap)
+        self.resultdata._df_buffer["demand_convergence.txt"] = pandas.DataFrame(
+            self.convergence)
+        self.resultdata.flush()
 
         # Calculate and return traffic impedance
         for ap in self.ass_model.assignment_periods:
@@ -361,29 +385,7 @@ class ModelSystem:
                 self.resultdata,
                 self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
-            self._export_accessibility()
-
-        # Log mode shares
-        tours_mode = {mode: self._generated_tours_mode(mode) for mode in self.travel_modes}
-        sum_all = sum(tours_mode.values())
-        mode_shares = {}
-        for mode in tours_mode:
-            share = tours_mode[mode].sum() / sum_all.sum()
-            mode_shares[mode] = share
-            log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
-        self.mode_share.append(mode_shares)
-        
-        if iteration == "last":
-            self._export_model_results()
-
-        # Reset time-period specific demand matrices (DTM),
-        # and empty result buffer
-        gap = self.dtm.calc_gaps()
-        log.info("Demand model convergence in iteration {} is {:1.5f}".format(
-            iteration, gap["rel_gap"]))
-        self.convergence.append(gap)
-        self.resultdata._df_buffer["demand_convergence.txt"] = pandas.DataFrame(self.convergence)
-        self.resultdata.flush()
+            self.resultdata.flush()
         return impedance
 
     def _save_demand_to_omx(self, tp):
