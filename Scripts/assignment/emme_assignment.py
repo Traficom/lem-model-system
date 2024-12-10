@@ -6,9 +6,11 @@ import pandas
 from math import log10
 
 import utils.log as log
+from utils.print_links import geometries, Node, Link
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.assignment_period import AssignmentPeriod
+import assignment.off_peak_period as periods
 from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
@@ -44,8 +46,11 @@ class EmmeAssignmentModel(AssignmentModel):
     delete_extra_matrices : bool (optional)
         If True, only matrices needed for demand calculation will be
         returned from end assignment.
-    time_periods : list of str (optional)
+    time_periods : dict (optional)
+        key : str
             Time period names, default is aht, pt, iht
+        value : str
+            Name of `AssignmentPeriod` sub-class
     first_matrix_id : int (optional)
         Where to save matrices (if saved),
         300 matrix ids will be reserved, starting from first_matrix_id.
@@ -59,7 +64,7 @@ class EmmeAssignmentModel(AssignmentModel):
                  use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
                  delete_extra_matrices: bool = False,
-                 time_periods: List[str] = param.time_periods, 
+                 time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
@@ -111,7 +116,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 scen_id = self.mod_scenario.number
             emme_matrices = self._create_matrices(
                 tp, i*hundred + self.first_matrix_id, id_ten)
-            self.assignment_periods.append(AssignmentPeriod(
+            self.assignment_periods.append(vars(periods)[self.time_periods[tp]](
                 tp, scen_id, self.emme_project, emme_matrices,
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_free_flow_speeds=self.use_free_flow_speeds,
@@ -183,6 +188,11 @@ class EmmeAssignmentModel(AssignmentModel):
                     "LINK", '@a_' + attr_name,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
+                attr_name = (comm_class + "truck")[:17]
+                self.emme_project.create_extra_attribute(
+                        "LINK", '@' + attr_name,
+                        "commodity flow", overwrite=True,
+                        scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
@@ -190,6 +200,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 self._extra, self._netfield, car_dist_unit_cost),
             car_dist_unit_cost)
         self._init_functions()
+        self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
 
     def _init_functions(self):
         for idx in param.volume_delay_funcs:
@@ -256,7 +267,7 @@ class EmmeAssignmentModel(AssignmentModel):
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
                 for ap in self.assignment_periods})
-        car_times.index.name = "i_node\tj_node"
+        car_times.index.names = ("i_node", "j_node")
         resultdata.print_data(car_times, "netfield_links.txt")
 
         # Aggregate results to 24h
@@ -302,10 +313,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 vdf = linktype - 90
             else:
                 vdf = 0
+            municipality = link.i_node["#municipality"]
             try:
-                area = mapping[link.i_node["#municipality"]]
+                area = mapping[municipality]
             except KeyError:
-                faulty_kela_code_nodes.add(link.i_node.id)
+                faulty_kela_code_nodes.add(municipality)
                 area = None
             for ass_class in ass_classes:
                 veh_kms = link[self._extra(ass_class)] * link.length
@@ -323,8 +335,8 @@ class EmmeAssignmentModel(AssignmentModel):
             else:
                 linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
-            s = "Municipality name not found for nodes: " + ", ".join(
-                faulty_kela_code_nodes)
+            s = ("County not found for #municipality when aggregating link data: "
+                 + ", ".join(faulty_kela_code_nodes))
             log.warn(s)
         resultdata.print_line("\nVehicle kilometres", "result_summary")
         resultdata.print_concat(vdf_kms, "vehicle_kms_vdfs.txt")
@@ -375,6 +387,16 @@ class EmmeAssignmentModel(AssignmentModel):
                         miles["dist"][mode] += departures * segment.link.length
                         miles["time"][mode] += departures * segment[time_attr]
         resultdata.print_data(miles, "transit_kms.txt")
+
+        # Export link and node extra attributes to GeoPackage file
+        network = self.day_scenario.get_network()
+        for geom_type, objects in (
+                (Node, network.nodes()), (Link, network.links())):
+            attrs = [attr.name for attr in self.day_scenario.extra_attributes()
+                if attr.type == geom_type.name]
+            resultdata.print_gpkg(
+                *geometries(attrs, objects, geom_type),
+                "assignment_results.gpkg", geom_type.name)
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
@@ -481,13 +503,18 @@ class EmmeAssignmentModel(AssignmentModel):
                 value : str
                     EMME matrix id
         """
-        tag = time_period if self.save_matrices else ""
         emme_matrices = {}
         for i, ass_class in enumerate(param.emme_matrices, start=1):
+            is_off_peak = (ass_class in param.transit_classes
+                           and param.time_periods[time_period] in (
+                               "OffPeakPeriod", "TransitAssignmentPeriod"))
             matrix_ids = {}
             for mtx_type in param.emme_matrices[ass_class]:
-                _id_hundred = (id_hundred
-                    if self.save_matrices or mtx_type == "demand" else 0)
+                save_matrices = (self.save_matrices
+                                 or mtx_type == "demand"
+                                 or is_off_peak)
+                _id_hundred = id_hundred if save_matrices else 0
+                tag = time_period if save_matrices else ""
                 matrix_ids[mtx_type] = "mf{}".format(
                     _id_hundred + id_ten[mtx_type] + i)
                 description = f"{mtx_type}_{ass_class}_{tag}"

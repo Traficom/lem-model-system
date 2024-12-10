@@ -44,12 +44,26 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         for ass_class in param.freight_modes:
             spec = self._freight_specs[ass_class].ntw_results_spec
             attr_name = (commodity_class + ass_class)[:17]
-            spec["on_segments"]["transit_volumes"] = '@' + attr_name
-            spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
+            spec["on_segments"]["transit_volumes"] = "@" + attr_name
+            spec["on_links"]["aux_transit_volumes"] = "@a_" + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
+        spec = self._car_spec.truck_spec()
+        attr_name = (commodity_class + "truck")[:17]
+        spec["classes"][0]["results"]["link_volumes"] = "@" + attr_name
+        spec["stopping_criteria"] = self.stopping_criteria["coarse"]
+        self.emme_project.car_assignment(spec, self.emme_scenario)
 
     def output_traversal_matrix(self, output_path: Path):
+        """Save commodity class specific auxiliary tons for freight modes.
+        Result file indicates amount of transported tons with auxiliary 
+        mode between gate pair.
+
+        Parameters
+        ----------
+        output_path : Path
+            Path where traversal matrices are saved
+        """
         spec = {
             "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
             "portion_of_path": "COMPLETE",

@@ -46,7 +46,7 @@ class DepartureTimeModel:
             max_gap : float
                 Maximum gap for OD pair in car work demand matrix
         """
-        car_demand = self.demand[self.time_periods[0]]["car_work"]
+        car_demand = self.demand[next(iter(self.time_periods))]["car_work"]
         max_gap = numpy.abs(car_demand - self.old_car_demand).max()
         try:
             old_sum = self.old_car_demand.sum()

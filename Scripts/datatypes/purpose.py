@@ -110,21 +110,21 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
+            share_sum = 0
             day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
                     if ass_class in impedance[time_period][mtx_type]:
-                        share = self.impedance_share[mode][time_period]
                         imp = impedance[time_period][mtx_type][ass_class]
+                        share = self.impedance_share[mode][time_period]
+                        share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if "vrk" in impedance:
-                for mtx_type in day_imp[mode]:
-                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
+            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
+                raise ValueError(f"False impedance shares: {self.name} : {mode}")
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
@@ -172,7 +172,7 @@ class Purpose:
                 if mtx_type == "cost" and mode == "car_pax":
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
-                                                    cost.car_drv_occupancy[self.name])
+                                                    cost.car_pax_occupancy[self.name])
                     except KeyError:
                         pass
         return day_imp
@@ -535,6 +535,8 @@ def attempt_calibration(spec: dict):
     for param_name in param_names:
         if param_name == "calibration":
             calibrate(spec, spec.pop(param_name))
+        elif param_name == "scaling":
+            scale(spec, spec.pop(param_name))
         else:
             # Search deeper
             attempt_calibration(spec[param_name])
@@ -546,3 +548,46 @@ def calibrate(spec: dict, calib_spec: dict):
         except TypeError:
             # Search deeper
             calibrate(spec[param_name], calib_spec[param_name])
+
+def scale(spec: dict, calib_spec: dict):
+    for param_name in calib_spec:
+        try:
+            spec[param_name] *= calib_spec[param_name]
+        except TypeError:
+            # Search deeper
+            scale(spec[param_name], calib_spec[param_name])
+
+class FreightPurpose(Purpose):
+
+    def __init__(self, specification, zone_data, resultdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+
+        if specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+
+    def calc_traffic(self, impedance: dict, purpose_key: str):
+        """Calculate freight traffic matrix.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+        purpose_key : str
+            freight commodity name
+
+        Return
+        ------
+        dict
+            Mode (truck/train/...) : calculated demand (numpy 2d matrix)
+        """
+        self.dist = impedance["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
+        probs = self.model.calc_prob(impedance)
+        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
+        return demand

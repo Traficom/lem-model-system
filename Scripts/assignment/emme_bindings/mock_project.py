@@ -562,6 +562,11 @@ class Scenario:
             if idx in network._extra_attr[attr_type]:
                 return network._extra_attr[attr_type][idx]
 
+    def extra_attributes(self):
+        network = self.get_network()
+        return (attr for attrs in network._extra_attr.values()
+            for attr in attrs.values())
+
     def network_field(self, obj_type: str, idx: str):
         network = self.get_network()
         if idx in network._netfield[obj_type]:
@@ -916,6 +921,13 @@ class Link(NetworkObject):
             return self.network.link(self.j_node, self.i_node)
         except KeyError:
             return None
+
+    @property
+    def shape(self) -> List[Tuple[float, float]]:
+        return [
+            (self.i_node.x, self.i_node.y),
+            (self.j_node.x, self.j_node.y),
+        ]
 
     def segments(self) -> Iterable:
         return iter(self._segments)

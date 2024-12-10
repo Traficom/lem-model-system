@@ -63,6 +63,11 @@ class LogitModel:
             self._add_log_impedance(utility, impedance[mode], b["log"])
             self.mode_utils[mode] = utility
             exps = numpy.exp(utility)
+            dist = self.purpose.dist
+            if dist.shape == exps.shape:
+                # If this is the lower level in nested model
+                l, u = self.distance_boundary[mode]
+                exps[(dist < l) | (dist >= u)] = 0
             self.mode_exps[mode] = exps
             expsum += exps
         return expsum

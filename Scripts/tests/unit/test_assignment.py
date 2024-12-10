@@ -28,28 +28,12 @@ class EmmeAssignmentTest(unittest.TestCase):
         }
 
     def test_assignment(self):
-        fares = pandas.DataFrame({
-            0: {
-                "firstb": 2.0,
-                "dist": 0.1
-            },
-            1: {
-                "firstb": 3.0,
-                "dist": 0.2
-            },
-            2: {
-                "firstb": 5.0,
-                "dist": 0.1
-            },
-            3: {
-                "firstb": 70.0,
-                "dist": 0.3
-            },
-            4: {
-                "firstb": 0.0,
-                "dist": 0.1
-            }
-        })
+        firstb_single = (2, 3, 5, 70, 0, 1.5)
+        dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
+        fares = pandas.DataFrame(
+            {i: {"firstb_single": firstb_single[i],
+                 "dist_single": dist_single[i]}
+             for i in range(0, len(firstb_single))})
         validate(
             self.context.modeller.emmebank.scenario(
                 self.scenario_id).get_network())

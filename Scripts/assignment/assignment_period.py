@@ -214,6 +214,9 @@ class AssignmentPeriod(Period):
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
+        for ass_cl in param.car_classes + param.transit_classes:
+            if ass_cl in mtxs["dist"]:
+                del mtxs["dist"][ass_cl]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -284,10 +287,10 @@ class AssignmentPeriod(Period):
         for line in network.transit_lines():
             fare = fares[line[op_attr]]
             for segment in line.segments():
-                segment[param.dist_fare_attr] = (fare["dist"]
+                segment[param.dist_fare_attr] = (fare["dist_single"]
                                                  * segment.link.length)
                 segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fare["firstb"]
+            line[param.board_fare_attr] = fare["firstb_single"]
             line[param.board_long_dist_attr] = (line[param.board_fare_attr]
                 if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
@@ -322,7 +325,7 @@ class AssignmentPeriod(Period):
         """
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
-        return {link.id.replace('-', '\t'): link[time_attr]
+        return {(link.i_node.id, link.j_node.id): link[time_attr]
             for link in network.links() if link.i_node["#subarea"] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):

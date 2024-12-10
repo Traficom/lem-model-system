@@ -8,21 +8,17 @@ class ZoneAggregations:
 	aggregating data.
     """
 
-    def __init__(self, mappings: pandas.DataFrame,
-                 municipality_centre_mapping: pandas.Series):
+    def __init__(self, mappings: pandas.DataFrame):
         """Initialize mappings.
 
         Parameters
         ----------
         mapping : pandas.Dataframe
             Zone numbers as index and different zone mappings as columns
-        municipality_centre_mapping : pandas.Series
-            Mapping between zone id and municipality centre index
         """
         self.mappings = mappings
         self.municipality_mapping = mappings.groupby(
             "municipality").agg("first")["county"]
-        self.municipality_centre_mapping = municipality_centre_mapping
 
     def averages(self,
                  array: pandas.Series,

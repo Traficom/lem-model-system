@@ -1,0 +1,68 @@
+{
+    "name": "marita",
+    "orig": "null",
+    "dest": "null",
+    "area": "all",
+    "struct": "dest>mode",
+    "impedance_share": {},
+    "distance_boundaries": {
+        "truck": [
+            0,
+            9999
+        ],
+        "freight_train": [
+            0,
+            9999
+        ],
+        "ship": [
+            0,
+            9999
+        ]
+    },
+    "destination_choice": {
+        "logsum": {
+            "attraction": {},
+            "impedance": {},
+            "log": {
+                "attraction_size": 1.0,
+                "logsum": 0.6204
+            },
+            "attraction_size": {
+                "att_marita": 1.0
+            }
+        }
+    },
+    "mode_choice": {
+        "truck": {
+            "constant": 0.0,
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.3895
+            },
+            "log": {},
+            "individual_dummy": {}
+        },
+        "freight_train": {
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.2503
+            },
+            "log": {},
+            "individual_dummy": {},
+            "constant": -24.47
+        },
+        "ship": {
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -5.116
+            },
+            "log": {},
+            "individual_dummy": {},
+            "constant": 108.5
+        }
+    },
+    "demand_share": {}
+}
