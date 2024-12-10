@@ -136,7 +136,7 @@ class MockPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
-            for mtx_type in ("time", "cost", "dist")}
+            for mtx_type in param.impedance_output}
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -165,10 +165,9 @@ class MockPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        matrix_list = [ass_class for ass_class in assignment_classes
-            if mtx_type in param.emme_matrices.get(ass_class, [])]
         with self.matrices.open(
-                mtx_type, self.name, transport_classes=matrix_list) as mtx:
+                mtx_type, self.name, transport_classes=[]) as mtx:
+            matrix_list = set(assignment_classes) & set(mtx.matrix_list)
             matrices = {mode: mtx[mode] for mode in matrix_list}
         for mode in matrices:
             if numpy.any(matrices[mode] > 1e10):
