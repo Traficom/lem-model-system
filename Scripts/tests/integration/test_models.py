@@ -76,7 +76,7 @@ class ModelTest(unittest.TestCase):
     def _validate_off_peak_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 2)
+        self.assertEquals(len(impedances), 3)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIs(type(impedances["time"]), dict)
