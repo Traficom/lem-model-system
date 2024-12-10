@@ -65,8 +65,6 @@ def main(args):
                                                         impedance["freight_train"])
         costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
                                                impedance["ship"])
-        if commodity_conversion[purpose] == "metsat":
-            costs["truck"]["cost_log"] = numpy.log(costs["truck"]["cost"])
         demand = purpose_value.calc_traffic(costs, purpose)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
