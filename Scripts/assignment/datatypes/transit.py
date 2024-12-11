@@ -108,9 +108,9 @@ class TransitMode(AssignmentMode):
         subset = "by_mode_subset"
         self.transit_result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+            "total_impedance": self.gen_cost.id,
             subset: {
                 "modes": modes,
-                "total_impedance": self.gen_cost.id,
                 "actual_in_vehicle_costs": self.inv_cost.id,
                 "actual_total_boarding_costs": self.board_cost.id,
                 "avg_boardings": self.num_board.id,

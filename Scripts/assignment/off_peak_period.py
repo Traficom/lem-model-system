@@ -36,6 +36,7 @@ class OffPeakPeriod(AssignmentPeriod):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_walk_and_bike(save_matrices=False)
         self._prepare_transit(day_scenario, save_matrices=True)
 
     def init_assign(self):
@@ -100,6 +101,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices=False)
+        self._prepare_walk_and_bike(save_matrices=False)
         self._prepare_transit(day_scenario, save_matrices=True)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:

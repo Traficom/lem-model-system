@@ -76,7 +76,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         }
         for ass_class in param.freight_modes:
             output_file = output_path / f"{ass_class}.txt"
-            spec["analyzed_demand"] = self.emme_matrices[ass_class]["demand"]
+            spec["analyzed_demand"] = self.assignment_modes[ass_class].demand.id
             self.emme_project.traversal_analysis(
                 spec, output_file, append_to_output_file=False,
                 scenario=self.emme_scenario, class_name=ass_class)

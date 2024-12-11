@@ -125,7 +125,7 @@ class AssignmentPeriod(Period):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
-        self._prepare_walk_and_bike(save_matrices)
+        self._prepare_walk_and_bike(save_matrices=True)
         self._prepare_transit(day_scenario, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
@@ -461,6 +461,20 @@ class AssignmentPeriod(Period):
                     matrix: numpy.ndarray):
         self.assignment_modes[ass_class].demand.set(matrix)
 
+    def get_matrix(self, ass_class: str) -> numpy.ndarray:
+        """Get demand matrix with type pair (e.g., demand, car_work).
+        Parameters
+        ----------
+        ass_class : str
+            Assignment class (car_work/transit_leisure/truck/...)
+
+        Return
+        ------
+        numpy 2-d matrix
+            Matrix of the specified type
+        """
+        return self.assignment_modes[ass_class].demand.data
+
     def _calc_background_traffic(self, include_trucks: bool = False):
         """Calculate background traffic (buses)."""
         network = self.emme_scenario.get_network()
@@ -581,7 +595,7 @@ class AssignmentPeriod(Period):
 
     def _assign_bikes(self):
         """Perform bike traffic assignment for one scenario."""
-        self.walk_mode.init_matrices()
+        self.bike_mode.init_matrices()
         scen = self.emme_scenario
         log.info("Bike assignment started...")
         self.emme_project.bike_assignment(
@@ -590,7 +604,7 @@ class AssignmentPeriod(Period):
 
     def _assign_pedestrians(self):
         """Perform pedestrian assignment for one scenario."""
-        self.bike_mode.init_matrices()
+        self.walk_mode.init_matrices()
         self._set_walk_time()
         log.info("Pedestrian assignment started...")
         self.emme_project.pedestrian_assignment(

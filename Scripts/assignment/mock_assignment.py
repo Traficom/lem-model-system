@@ -185,7 +185,7 @@ class MockPeriod(Period):
 
     def get_matrix(self,
                     ass_class: str,
-                    matrix_type: str) -> numpy.ndarray:
+                    matrix_type: str = "demand") -> numpy.ndarray:
         with self.matrices.open(matrix_type, self.name) as mtx:
             matrix = mtx[ass_class]
         return matrix

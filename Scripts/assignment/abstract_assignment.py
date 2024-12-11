@@ -59,9 +59,7 @@ class Period:
         pass
 
     @abstractmethod
-    def get_matrix(self,
-                    ass_class: str,
-                    matrix_type: str) -> numpy.ndarray:
+    def get_matrix(self, ass_class: str) -> numpy.ndarray:
         pass
 
     @abstractmethod

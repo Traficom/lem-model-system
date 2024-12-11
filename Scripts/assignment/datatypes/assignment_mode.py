@@ -44,13 +44,20 @@ class AssignmentMode:
             mtx.release()
 
 
-class BikeMode(AssignmentMode):
+class SoftMode(AssignmentMode):
     def __init__(self, *args):
         AssignmentMode.__init__(self, *args)
         self.dist = self._create_matrix("dist")
         self.time = self._create_matrix("time")
         self.specify()
 
+    def get_matrices(self):
+        mtxs = {**self.dist.item, **self.time.item}
+        self._release_matrices()
+        return mtxs
+
+
+class BikeMode(SoftMode):
     def specify(self):
         self.spec = {
             "type": "STANDARD_TRAFFIC_ASSIGNMENT",
@@ -81,17 +88,8 @@ class BikeMode(AssignmentMode):
             "performance_settings": param.performance_settings
         }
 
-    def get_matrices(self):
-        return {**self.dist.item, **self.time.item}
 
-
-class WalkMode(AssignmentMode):
-    def __init__(self, *args):
-        AssignmentMode.__init__(self, *args)
-        self.dist = self._create_matrix("dist")
-        self.time = self._create_matrix("time")
-        self.specify()
-
+class WalkMode(SoftMode):
     def specify(self):
         self.spec = {
             "type": "STANDARD_TRANSIT_ASSIGNMENT",
@@ -130,6 +128,3 @@ class WalkMode(AssignmentMode):
                 },
             },
         }
-
-    def get_matrices(self):
-        return {**self.dist.item, **self.time.item}
