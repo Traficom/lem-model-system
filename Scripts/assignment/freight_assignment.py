@@ -58,6 +58,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         spec["classes"][0]["results"]["link_volumes"] = "@" + attr_name
         spec["stopping_criteria"] = self.stopping_criteria["coarse"]
         self.emme_project.car_assignment(spec, self.emme_scenario)
+        for tc in param.truck_classes:
+            self.assignment_modes[tc].get_matrices()
 
     def output_traversal_matrix(self, output_path: Path):
         """Save commodity class specific auxiliary tons for freight modes.
