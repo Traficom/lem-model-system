@@ -126,7 +126,7 @@ class AssignmentPeriod(Period):
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
         self._prepare_walk_and_bike(save_matrices=True)
-        self._prepare_transit(day_scenario, save_matrices)
+        self._prepare_transit(day_scenario, save_matrices, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
                       save_matrices: bool):
@@ -158,10 +158,13 @@ class AssignmentPeriod(Period):
             "walk": self.walk_mode,
         })
 
-    def _prepare_transit(self, day_scenario: int, save_matrices: bool):
+    def _prepare_transit(self, day_scenario: int,
+                         save_standard_matrices: bool,
+                         save_extra_matrices: bool):
         transit_modes = {mode: TransitMode(
                 day_scenario, mode, self.emme_scenario, self.emme_project,
-                self.name, save_matrices)
+                self.name, save_standard_matrices,
+                save_extra_matrices=save_extra_matrices)
             for mode in param.transit_classes}
         self.assignment_modes.update(transit_modes)
         # TODO We should probably have only one set of penalties

@@ -36,7 +36,6 @@ class EmmeAssignmentModel(AssignmentModel):
         day, morning rush hour, midday hour and afternoon rush hour.
     save_matrices : bool (optional)
         Whether matrices will be saved in Emme format for all time periods.
-        If false, Emme matrix ids 0-99 will be used for all time periods.
     use_free_flow_speeds : bool (optional)
         Whether traffic assignment is all-or-nothing with free-flow speeds.
     use_stored_speeds : bool (optional)

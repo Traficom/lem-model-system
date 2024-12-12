@@ -96,9 +96,11 @@ class FreightMode(AssignmentMode):
         }
 
     def get_matrices(self):
-        return {
+        mtxs = {
             **self.dist.item,
             **self.aux_dist.item,
             **self.time.item,
             **self.aux_time.item,
         }
+        self._release_matrices()
+        return mtxs

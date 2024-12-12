@@ -37,7 +37,9 @@ class OffPeakPeriod(AssignmentPeriod):
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
         self._prepare_walk_and_bike(save_matrices=False)
-        self._prepare_transit(day_scenario, save_matrices=True)
+        self._prepare_transit(
+            day_scenario, save_standard_matrices=True,
+            save_extra_matrices=save_matrices)
 
     def init_assign(self):
         """Assign transit for one time period with free-flow bus speed."""
@@ -102,7 +104,9 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         """
         self._prepare_cars(dist_unit_cost, save_matrices=False)
         self._prepare_walk_and_bike(save_matrices=False)
-        self._prepare_transit(day_scenario, save_matrices=True)
+        self._prepare_transit(
+            day_scenario, save_standard_matrices=True,
+            save_extra_matrices=save_matrices)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Get local transit impedance matrices for one time period.

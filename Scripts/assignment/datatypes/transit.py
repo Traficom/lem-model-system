@@ -4,18 +4,20 @@ from assignment.datatypes.journey_level import JourneyLevel
 
 
 class TransitMode(AssignmentMode):
-    def __init__(self, day_scenario, *args):
+    def __init__(self, day_scenario, *args, save_extra_matrices: bool):
         AssignmentMode.__init__(self, *args)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
         self.inv_cost = self._create_matrix("inv_cost")
         self.board_cost = self._create_matrix("board_cost")
-        self.transit_matrices = {}
-        for subset, parts in param.transit_impedance_matrices.items():
-            self.transit_matrices[subset] = {}
-            for mtx_type, longer_name in parts.items():
-                self.transit_matrices[subset][longer_name] = self._create_matrix(mtx_type)
+        self._save_extra_matrices = save_extra_matrices
+        if save_extra_matrices:
+            self.transit_matrices = {}
+            for subset, parts in param.transit_impedance_matrices.items():
+                self.transit_matrices[subset] = {}
+                for mtx_type, longer_name in parts.items():
+                    self.transit_matrices[subset][longer_name] = self._create_matrix(mtx_type)
         self.specify(day_scenario)
 
     def specify(self, day_scenario):
@@ -122,12 +124,13 @@ class TransitMode(AssignmentMode):
                     "modes": param.local_transit_modes,
                 },
             }
-        for trip_part, matrix in self.transit_matrices["total"].items():
-            self.transit_result_spec[trip_part] = matrix.id
-        for trip_part, matrix in self.transit_matrices[subset].items():
-            self.transit_result_spec[subset][trip_part] = matrix.id
-        for trip_part, matrix in self.transit_matrices["local"].items():
-            self.local_result_spec[subset][trip_part] = matrix.id
+        if self._save_extra_matrices:
+            for trip_part, matrix in self.transit_matrices["total"].items():
+                self.transit_result_spec[trip_part] = matrix.id
+            for trip_part, matrix in self.transit_matrices[subset].items():
+                self.transit_result_spec[subset][trip_part] = matrix.id
+            for trip_part, matrix in self.transit_matrices["local"].items():
+                self.local_result_spec[subset][trip_part] = matrix.id
 
     def get_matrices(self):
         transfer_penalty = ((self.num_board.data > 0)

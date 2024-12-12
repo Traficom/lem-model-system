@@ -1,3 +1,4 @@
+from typing import Dict
 from pathlib import Path
 
 import utils.log as log
@@ -7,8 +8,8 @@ from assignment.datatypes.freight_specification import FreightMode
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
-    def prepare(self, *args, **kwargs):
-        self._prepare_cars(*args, **kwargs)
+    def prepare(self, dist_unit_cost: Dict[str, float], save_matrices: bool):
+        self._prepare_cars(dist_unit_cost, save_matrices)
         network = self.emme_scenario.get_network()
         for line in network.transit_lines():
             mode = line.mode.id
@@ -20,7 +21,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     break
         self.emme_scenario.publish_network(network)
         self.assignment_modes.update({ass_class: FreightMode(
-                ass_class, self.emme_scenario, self.emme_project, self.name)
+                ass_class, self.emme_scenario, self.emme_project, self.name,
+                save_matrices)
             for ass_class in param.freight_modes})
 
     def assign(self):
