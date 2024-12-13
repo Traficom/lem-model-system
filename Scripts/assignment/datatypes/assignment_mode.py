@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict
+from abc import ABC, abstractmethod
+import numpy
 
 import parameters.assignment as param
 from assignment.datatypes.path_analysis import PathAnalysis
@@ -12,10 +14,25 @@ if TYPE_CHECKING:
 LENGTH_ATTR = "length"
 
 
-class AssignmentMode:
+class AssignmentMode(ABC):
     def __init__(self, name: str, emme_scenario: Scenario,
                  emme_project: EmmeProject, time_period: str,
                  save_matrices: bool = False):
+        """Initialize mode.
+
+        Parameters
+        ----------
+        name : str
+            Mode name
+        emme_scenario : Scenario
+            EMME scenario linked to the time period
+        emme_project : assignment.emme_bindings.emme_project.EmmeProject
+            Emme project connected to this assignment
+        time_period : str
+            Name of assignment period
+        save_matrices : bool (optional)
+            Whether matrices will be saved in Emme format for all time periods
+        """
         self.name = name
         self.emme_scenario = emme_scenario
         self.emme_project = emme_project
@@ -26,7 +43,7 @@ class AssignmentMode:
             "demand", f"demand_{self.name}_{self.time_period}",
             self.emme_project, self.emme_scenario.id, default_value=0)
 
-    def _create_matrix(self, mtx_type, default_value=999999):
+    def _create_matrix(self, mtx_type: str, default_value: float = 999999):
         args = (
             mtx_type, f"{mtx_type}_{self.name}_{self.time_period}",
             self.emme_project, self.emme_scenario.id, default_value)
@@ -43,13 +60,30 @@ class AssignmentMode:
         for mtx in self._matrices.values():
             mtx.release()
 
+    @abstractmethod
+    def get_matrices(self) -> Dict[str, numpy.ndarray]:
+        """Get all LOS matrices.
+
+        Return
+        ------
+        dict
+            key : str
+                LOS type (time/cost/...)
+            value : numpy.ndarray
+                2-D matrix in float32
+        """
+        pass
+
 
 class SoftMode(AssignmentMode):
-    def __init__(self, *args):
-        AssignmentMode.__init__(self, *args)
+    def __init__(self, *args, **kwargs):
+        AssignmentMode.__init__(self, *args, **kwargs)
         self.dist = self._create_matrix("dist")
         self.time = self._create_matrix("time")
-        self.specify()
+        self._specify()
+
+    def _specify(self):
+        pass
 
     def get_matrices(self):
         mtxs = {**self.dist.item, **self.time.item}
@@ -58,7 +92,7 @@ class SoftMode(AssignmentMode):
 
 
 class BikeMode(SoftMode):
-    def specify(self):
+    def _specify(self):
         self.spec = {
             "type": "STANDARD_TRAFFIC_ASSIGNMENT",
             "classes": [
@@ -90,7 +124,7 @@ class BikeMode(SoftMode):
 
 
 class WalkMode(SoftMode):
-    def specify(self):
+    def _specify(self):
         self.spec = {
             "type": "STANDARD_TRANSIT_ASSIGNMENT",
             "modes": param.aux_modes,

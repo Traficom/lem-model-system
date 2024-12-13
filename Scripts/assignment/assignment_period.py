@@ -122,7 +122,7 @@ class AssignmentPeriod(Period):
         day_scenario : int
             EMME scenario linked to the whole day
         save_matrices : bool
-            Whether matrices will be saved in Emme format for all time periods.
+            Whether matrices will be saved in Emme format for all time periods
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
         self._prepare_walk_and_bike(save_matrices=True)
@@ -162,9 +162,8 @@ class AssignmentPeriod(Period):
                          save_standard_matrices: bool,
                          save_extra_matrices: bool):
         transit_modes = {mode: TransitMode(
-                day_scenario, mode, self.emme_scenario, self.emme_project,
-                self.name, save_standard_matrices,
-                save_extra_matrices=save_extra_matrices)
+                mode, self.emme_scenario, day_scenario, self.emme_project,
+                self.name, save_standard_matrices, save_extra_matrices)
             for mode in param.transit_classes}
         self.assignment_modes.update(transit_modes)
         # TODO We should probably have only one set of penalties

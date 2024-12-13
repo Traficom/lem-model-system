@@ -6,8 +6,8 @@ from assignment.datatypes.assignment_mode import AssignmentMode
 
 
 class FreightMode(AssignmentMode):
-    def __init__(self, *args):
-        AssignmentMode.__init__(self, *args)
+    def __init__(self, *args, **kwargs):
+        AssignmentMode.__init__(self, *args, **kwargs)
         self.dist = self._create_matrix("dist")
         self.aux_dist = self._create_matrix("aux_dist")
         self.time = self._create_matrix("time")

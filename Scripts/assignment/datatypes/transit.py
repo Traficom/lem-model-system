@@ -1,43 +1,65 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode
 from assignment.datatypes.journey_level import JourneyLevel
+if TYPE_CHECKING:
+    from assignment.emme_bindings.emme_project import EmmeProject
+    from assignment.emme_bindings.mock_project import Scenario
 
 
 class TransitMode(AssignmentMode):
-    def __init__(self, day_scenario, *args, save_extra_matrices: bool):
-        AssignmentMode.__init__(self, *args)
+    def __init__(self, name: str, emme_scenario: Scenario,
+                 day_scenario: Scenario, emme_project: EmmeProject,
+                 time_period: str, save_matrices: bool = False,
+                 save_extra_matrices: bool = False):
+        """Initialize transit mode.
+
+        Parameters
+        ----------
+        name : str
+            Mode name
+        emme_scenario : Scenario
+            EMME scenario linked to the time period
+        day_scenario : Scenario
+            EMME scenario linked to whole-day time period
+        emme_project : assignment.emme_bindings.emme_project.EmmeProject
+            Emme project connected to this assignment
+        time_period : str
+            Name of assignment period
+        save_matrices : bool (optional)
+            Whether matrices will be saved in Emme format for all time periods
+        save_extra_matrices : bool (optional)
+            Whether extra LOS-component matrices will be saved in Emme format
+        """
+        AssignmentMode.__init__(
+            self, name, emme_scenario, emme_project, time_period, save_matrices)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
         self.inv_cost = self._create_matrix("inv_cost")
         self.board_cost = self._create_matrix("board_cost")
-        self._save_extra_matrices = save_extra_matrices
-        if save_extra_matrices:
-            self.transit_matrices = {}
-            for subset, parts in param.transit_impedance_matrices.items():
-                self.transit_matrices[subset] = {}
-                for mtx_type, longer_name in parts.items():
-                    mtx = self._create_matrix(mtx_type)
-                    self.transit_matrices[subset][longer_name] = mtx
-        self.specify(day_scenario)
 
-    def specify(self, day_scenario):
+        # Create extra attributes
         self.segment_results = {}
         self.node_results = {}
-        for emme_scenario, tp in (
-                (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
+        for scenario, tp in (
+                (emme_scenario, self.time_period), (day_scenario, "vrk")):
             for res, attr in param.segment_results.items():
                 attr_name = f"@{self.name[:11]}_{attr}_{tp}"
                 self.segment_results[res] = attr_name
-                self.emme_project.create_extra_attribute(
+                emme_project.create_extra_attribute(
                     "TRANSIT_SEGMENT", attr_name, f"{self.name} {res}",
-                    overwrite=True, scenario=emme_scenario)
+                    overwrite=True, scenario=scenario)
                 if res != "transit_volumes":
                     attr_name = f"@{self.name[:10]}n_{attr}_{tp}"
                     self.node_results[res] = attr_name
-                    self.emme_project.create_extra_attribute(
+                    emme_project.create_extra_attribute(
                         "NODE", attr_name, f"{self.name} {res}",
-                        overwrite=True, scenario=emme_scenario)
+                        overwrite=True, scenario=scenario)
+
+        # Specify
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0,
@@ -91,7 +113,7 @@ class TransitMode(AssignmentMode):
             self.park_and_ride_results = f"@{self.name[4:]}_aux"
             self.emme_project.create_extra_attribute(
                 "LINK", self.park_and_ride_results, self.name,
-                overwrite=True, scenario=self.emme_scenario)
+                overwrite=True, scenario=emme_scenario)
             self.transit_spec["modes"].append(param.park_and_ride_mode)
             self.transit_spec["results"] = {
                 "aux_transit_volumes_by_mode": [{
@@ -126,13 +148,17 @@ class TransitMode(AssignmentMode):
                     "modes": param.local_transit_modes,
                 },
             }
-        if self._save_extra_matrices:
-            for trip_part, matrix in self.transit_matrices["total"].items():
-                self.transit_result_spec[trip_part] = matrix.id
-            for trip_part, matrix in self.transit_matrices[subset].items():
-                self.transit_result_spec[subset][trip_part] = matrix.id
-            for trip_part, matrix in self.transit_matrices["local"].items():
-                self.local_result_spec[subset][trip_part] = matrix.id
+        if save_extra_matrices:
+            matrices = param.transit_impedance_matrices
+            for mtx_type, longer_name in matrices["total"].items():
+                mtx = self._create_matrix(mtx_type)
+                self.transit_result_spec[longer_name] = mtx.id
+            for mtx_type, longer_name in matrices[subset].items():
+                mtx = self._create_matrix(mtx_type)
+                self.transit_result_spec[subset][longer_name] = mtx.id
+            for mtx_type, longer_name in matrices["local"].items():
+                mtx = self._create_matrix(mtx_type)
+                self.local_result_spec[subset][longer_name] = mtx.id
 
     def get_matrices(self):
         transfer_penalty = ((self.num_board.data > 0)

@@ -16,24 +16,42 @@ LENGTH_ATTR = "length"
 class CarMode(AssignmentMode):
     def __init__(self, name: str, emme_scenario: Scenario,
                  emme_project: EmmeProject, time_period: str,
-                 dist_unit_cost, include_toll_cost: bool,
+                 dist_unit_cost: float, include_toll_cost: bool,
                  save_matrices: bool = False):
+        """Initialize car mode.
+
+        Parameters
+        ----------
+        name : str
+            Mode name
+        emme_scenario : Scenario
+            EMME scenario linked to the time period
+        emme_project : assignment.emme_bindings.emme_project.EmmeProject
+            Emme project connected to this assignment
+        time_period : str
+            Name of assignment period
+        dist_unit_cost : float
+            Length multiplier to calculate link cost
+        include_toll_cost : bool
+            Whether network links have "hinta" attribute defined
+        save_matrices : bool (optional)
+            Whether matrices will be saved in Emme format for all time periods
+        """
         AssignmentMode.__init__(
             self, name, emme_scenario, emme_project, time_period, save_matrices)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.gen_cost = self._create_matrix("gen_cost")
         self.dist = self._create_matrix("dist")
         self.dist_unit_cost = dist_unit_cost
-        self.include_toll_cost = include_toll_cost
+        self._include_toll_cost = include_toll_cost
         if include_toll_cost:
             self.toll_cost = self._create_matrix("toll_cost")
             self.link_cost_attr = f"@cost_{self.name[:10]}_{self.time_period}"
             self.emme_project.create_extra_attribute(
                 "LINK", self.link_cost_attr, "total cost",
                 overwrite=True, scenario=self.emme_scenario)
-        self.specify()
 
-    def specify(self):
+        # Specify
         perception_factor = self.vot_inv
         try:
             link_cost_attr = self.link_cost_attr
@@ -56,7 +74,7 @@ class CarMode(AssignmentMode):
             "path_analyses": []
         }
         self.add_analysis(LENGTH_ATTR, self.dist.id)
-        if self.include_toll_cost:
+        if self._include_toll_cost:
             self.add_analysis(
                 f"@toll_cost_{self.time_period}", self.toll_cost.id)
 
@@ -68,11 +86,11 @@ class CarMode(AssignmentMode):
 
     def get_matrices(self):
         cost = self.dist_unit_cost * self.dist.data
-        if self.include_toll_cost:
+        if self._include_toll_cost:
             cost += self.toll_cost.data
         time = self._get_time(cost)
         m = {"cost": cost, "time": time, **self.dist.item}
-        if self.include_toll_cost:
+        if self._include_toll_cost:
             m.update(self.toll_cost.item)
         self._release_matrices()
         # fix the emme path analysis results
@@ -87,8 +105,8 @@ class CarMode(AssignmentMode):
         return self.gen_cost.data - self.vot_inv*cost
 
 class TruckMode(CarMode):
-    def __init__(self, *args):
-        CarMode.__init__(self, *args)
+    def __init__(self, *args, **kwargs):
+        CarMode.__init__(self, *args, **kwargs)
         self.time = self._create_matrix("time")
         self.add_analysis(f"@truck_time_{self.time_period}", self.time.id)
 
