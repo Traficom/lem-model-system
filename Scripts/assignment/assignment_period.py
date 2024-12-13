@@ -295,12 +295,13 @@ class AssignmentPeriod(Period):
         for tc in param.transit_classes:
             segres = self.assignment_modes[tc].segment_results
             for res in segres:
-                nodeattr = self.extra(tc[:10]+"n_"+param.segment_results[res])
-                for segment in network.transit_segments():
-                    if res == "transit_volumes":
+                if res == "transit_volumes":
+                    for segment in network.transit_segments():
                         if segment.link is not None:
                             segment.link[self.extra(tc)] += segment[segres[res]]
-                    else:
+                else:
+                    nodeattr = self.assignment_modes[tc].node_results[res]
+                    for segment in network.transit_segments():
                         segment.i_node[nodeattr] += segment[segres[res]]
         self.emme_scenario.publish_network(network)
 
@@ -698,8 +699,8 @@ class AssignmentPeriod(Period):
         self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
-            self.assignment_modes[transit_class].init_matrices()
-            spec = self.assignment_modes[transit_class]
+            spec: TransitMode = self.assignment_modes[transit_class]
+            spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)

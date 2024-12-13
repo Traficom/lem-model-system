@@ -17,25 +17,27 @@ class TransitMode(AssignmentMode):
             for subset, parts in param.transit_impedance_matrices.items():
                 self.transit_matrices[subset] = {}
                 for mtx_type, longer_name in parts.items():
-                    self.transit_matrices[subset][longer_name] = self._create_matrix(mtx_type)
+                    mtx = self._create_matrix(mtx_type)
+                    self.transit_matrices[subset][longer_name] = mtx
         self.specify(day_scenario)
 
     def specify(self, day_scenario):
         self.segment_results = {}
+        self.node_results = {}
         for emme_scenario, tp in (
                 (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
             for res, attr in param.segment_results.items():
                 attr_name = f"@{self.name[:11]}_{attr}_{tp}"
                 self.segment_results[res] = attr_name
                 self.emme_project.create_extra_attribute(
-                    "TRANSIT_SEGMENT", attr_name,
-                    f"{self.name} {res}", overwrite=True,
-                    scenario=emme_scenario)
+                    "TRANSIT_SEGMENT", attr_name, f"{self.name} {res}",
+                    overwrite=True, scenario=emme_scenario)
                 if res != "transit_volumes":
+                    attr_name = f"@{self.name[:10]}n_{attr}_{tp}"
+                    self.node_results[res] = attr_name
                     self.emme_project.create_extra_attribute(
-                        "NODE", f"@{self.name[:10]}n_{attr}_{tp}",
-                        f"{self.name} {res}", overwrite=True,
-                        scenario=emme_scenario)
+                        "NODE", attr_name, f"{self.name} {res}",
+                        overwrite=True, scenario=emme_scenario)
         no_penalty = dict.fromkeys(["at_nodes", "on_lines", "on_segments"])
         no_penalty["global"] = {
             "penalty": 0,
