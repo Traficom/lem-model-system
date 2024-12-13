@@ -257,7 +257,7 @@ class AssignmentPeriod(Period):
                 pass
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
                 for mode in mtxs if mtx_type in mtxs[mode]}
-            for mtx_type in ("time", "dist", "cost")}
+            for mtx_type in param.impedance_output}
         return impedance
 
     def calc_transit_cost(self, fares: pandas.DataFrame):

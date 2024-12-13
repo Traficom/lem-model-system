@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "jate",
     "orig": "null",
     "dest": "null",
     "area": "all",
-    "struct": "dest>mode",
-    "impedance_transform": {},
+    "struct": "mode>dest",
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -21,38 +20,29 @@
         ]
     },
     "destination_choice": {
-        "logsum": {
+        "truck": {
             "attraction": {},
-            "impedance": {},
+            "impedance": {
+                "cost": -0.2116
+            },
             "log": {
-                "attraction_size": 1.0,
-                "logsum": 0.5605
+                "attraction_size": 1
             },
             "attraction_size": {
-                "att_jate": 1.0
+                "att_jate": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
-            "impedance": {
-                "cost": -0.3669
+            "impedance": {},
+            "log": {
+                "logsum": 1
             },
-            "log": {},
             "individual_dummy": {}
-        },
-        "freight_train": {
-            "generation": {},
-            "attraction": {},
-            "impedance": {
-                "cost": -0.4592
-            },
-            "log": {},
-            "individual_dummy": {},
-            "constant": -14.33
         }
     },
     "demand_share": {}

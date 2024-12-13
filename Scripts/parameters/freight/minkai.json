@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "minkai",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,20 +25,20 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.6783
+                "logsum": 0.6227
             },
             "attraction_size": {
-                "att_minkai": 1.0
+                "att_minkai": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.3343
+                "cost": -0.1924
             },
             "log": {},
             "individual_dummy": {}
@@ -48,21 +47,21 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -1.096
+                "cost": -0.715
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 6.962
+            "constant": 3.856
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.3125
+                "cost": -0.03039
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 0.458
+            "constant": -5.821
         }
     },
     "demand_share": {}
