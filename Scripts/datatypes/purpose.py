@@ -583,3 +583,26 @@ class FreightPurpose(Purpose):
         generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
+
+    def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str, args: dict):
+        """Calculate vehicle matrix from ton matrix using ton-to-vehicles 
+        conversion values.
+
+        Parameters
+        ----------
+        matrix : numpy.ndarray
+            ton matrix
+        ass_class : str
+            truck assignment class
+        args : dict
+            conversion variable : float
+
+        Returns
+        -------
+        numpy.ndarray
+            assignment class specific vehicle matrix
+        """
+        vehicles = (matrix * args[f"{ass_class}_share"] 
+                    / args[f"{ass_class}_avg_load"] * 1.02 / 365)
+        vehicles += vehicles.T * args["empty_share"]
+        return vehicles

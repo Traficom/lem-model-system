@@ -6,6 +6,7 @@ import json
 
 import utils.log as log
 import utils.config
+import parameters.assignment as param
 from datahandling.zonedata import FreightZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_assignment import EmmeAssignmentModel
@@ -16,6 +17,7 @@ from datahandling.matrixdata import MatrixData
 from datahandling.traversaldata import transform_traversal_data
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
+from parameters.vehicle_conversion import vehicle_conversion
 
 BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
@@ -54,6 +56,8 @@ def main(args):
                         if mode in impedance[mtx_type]}
                         for mode in ("truck", "freight_train", "ship")}
     
+    total_demand = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)])
+                    for mode in param.truck_classes}
     matrix_counter = args.first_matrix_id
     for purpose, purpose_value in purposes.items():
         log.info(f"Calculating demand for purpose: {purpose}")
@@ -86,6 +90,15 @@ def main(args):
             matrix_counter += 7 # Shift to next 10 digit
         ass_model.freight_network.output_traversal_matrix(resultdata.path)
         aux_demand = transform_traversal_data(resultdata.path, zone_numbers)
+        truck_demand = demand["truck"] + aux_demand
+        for mode in ("truck", "trailer_truck"):
+            total_demand[mode] += purpose_value.calc_vehicles(truck_demand,
+                                                              mode,
+                                                              vehicle_conversion[purpose])
+    for ass_class in total_demand:
+        ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
+    ass_model.emme_project.car_assignment(ass_model.freight_network._car_spec._spec,
+                                          ass_model.freight_network.emme_scenario)
     log.info("Simulation ready.")
 
 if __name__ == "__main__":
