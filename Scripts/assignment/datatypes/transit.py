@@ -148,23 +148,27 @@ class TransitMode(AssignmentMode):
                     "modes": param.local_transit_modes,
                 },
             }
-        if save_extra_matrices:
-            matrices = param.transit_impedance_matrices
-            for mtx_type, longer_name in matrices["total"].items():
-                mtx = self._create_matrix(mtx_type)
-                self.transit_result_spec[longer_name] = mtx.id
-            for mtx_type, longer_name in matrices[subset].items():
-                mtx = self._create_matrix(mtx_type)
-                self.transit_result_spec[subset][longer_name] = mtx.id
-            for mtx_type, longer_name in matrices["local"].items():
-                mtx = self._create_matrix(mtx_type)
-                self.local_result_spec[subset][longer_name] = mtx.id
+        result_specs = (
+            self.transit_result_spec,
+            self.transit_result_spec[subset],
+            self.local_result_spec[subset],
+        )
+        for matrix_subset, spec in zip(
+                param.transit_impedance_matrices.values(), result_specs):
+            for mtx_type, longer_name in matrix_subset.items():
+                if save_extra_matrices or mtx_type in param.impedance_output:
+                    mtx = self._create_matrix(mtx_type)
+                    spec[longer_name] = mtx.id
 
     def get_matrices(self):
         transfer_penalty = ((self.num_board.data > 0)
                             * param.transfer_penalty[self.name])
         cost = self.inv_cost.data + self.board_cost.data
         time = self.gen_cost.data - self.vot_inv*cost - transfer_penalty
-        self._release_matrices()
         time[cost > 999999] = 999999
-        return {"time": time, "cost": cost}
+        mtxs = {"time": time, "cost": cost}
+        for mtx_name in param.impedance_output:
+            if mtx_name in self._matrices:
+                mtxs[mtx_name] = self._matrices[mtx_name].data
+        self._release_matrices()
+        return mtxs

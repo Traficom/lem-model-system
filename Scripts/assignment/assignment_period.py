@@ -212,6 +212,7 @@ class AssignmentPeriod(Period):
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
+        del mtxs["toll_cost"]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:

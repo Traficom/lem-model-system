@@ -552,7 +552,7 @@ segment_results = {
     "transfer_boardings": "trb",
 }
 uncongested_transit_time = "base_timtr"
-impedance_output = ["time", "cost", "dist", "inv_time"]
+impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time"]
 transit_impedance_matrices = {
     "total": {
         "unweighted_time": "total_travel_time",
