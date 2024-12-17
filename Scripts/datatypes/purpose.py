@@ -551,9 +551,10 @@ def scale(spec: dict, calib_spec: dict):
 
 class FreightPurpose(Purpose):
 
-    def __init__(self, specification, zone_data, resultdata):
+    def __init__(self, specification, zone_data, resultdata, costdata):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
+        self.costdata = costdata
 
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
@@ -584,7 +585,7 @@ class FreightPurpose(Purpose):
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
 
-    def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str, args: dict):
+    def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
         """Calculate vehicle matrix from ton matrix using ton-to-vehicles 
         conversion values.
 
@@ -594,15 +595,13 @@ class FreightPurpose(Purpose):
             ton matrix
         ass_class : str
             truck assignment class
-        args : dict
-            conversion variable : float
 
         Returns
         -------
         numpy.ndarray
-            assignment class specific vehicle matrix
+            vehicle matrix
         """
-        vehicles = (matrix * args[f"{ass_class}_share"] 
-                    / args[f"{ass_class}_avg_load"] * 1.02 / 365)
-        vehicles += vehicles.T * args["empty_share"]
+        costdata = self.costdata["truck"][ass_class]
+        vehicles = matrix * costdata["distribution"] / costdata["avg_load"] / 365
+        vehicles += vehicles.T * (costdata["empty_share"] - 1)
         return vehicles

@@ -17,7 +17,6 @@ from datahandling.matrixdata import MatrixData
 from datahandling.traversaldata import transform_traversal_data
 from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
-from parameters.vehicle_conversion import vehicle_conversion
 
 BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
@@ -42,7 +41,10 @@ def main(args):
     for file in parameters_path.rglob("*.json"):
         commodity_params = json.loads(file.read_text("utf-8"))
         commodity = commodity_params["name"]
-        purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
+        purposes[commodity] = FreightPurpose(commodity_params,
+                                             zonedata,
+                                             resultdata,
+                                             costdata["freight"][commodity_conversion[commodity]])
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
     
@@ -61,13 +63,12 @@ def main(args):
     matrix_counter = args.first_matrix_id
     for purpose, purpose_value in purposes.items():
         log.info(f"Calculating demand for purpose: {purpose}")
-        commodity_costs = costdata["freight"][commodity_conversion[purpose]]
         costs = {"truck": {}, "freight_train": {}, "ship": {}}
-        costs["truck"]["cost"] = calc_road_cost(commodity_costs,
+        costs["truck"]["cost"] = calc_road_cost(purpose_value.costdata,
                                                 impedance["truck"])
-        costs["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
+        costs["freight_train"]["cost"] = calc_rail_cost(purpose_value.costdata,
                                                         impedance["freight_train"])
-        costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
+        costs["ship"]["cost"] = calc_ship_cost(purpose_value.costdata,
                                                impedance["ship"])
         demand = purpose_value.calc_traffic(costs, purpose)
         for mode in demand:
@@ -89,16 +90,12 @@ def main(args):
             ass_model.freight_network.save_network_volumes(purpose)
             matrix_counter += 7 # Shift to next 10 digit
         ass_model.freight_network.output_traversal_matrix(resultdata.path)
-        aux_demand = transform_traversal_data(resultdata.path, zone_numbers)
-        truck_demand = demand["truck"] + aux_demand
+        demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
-            total_demand[mode] += purpose_value.calc_vehicles(truck_demand,
-                                                              mode,
-                                                              vehicle_conversion[purpose])
+            total_demand[mode] += purpose_value.calc_vehicles(demand["truck"], mode)
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
-    ass_model.emme_project.car_assignment(ass_model.freight_network._car_spec._spec,
-                                          ass_model.freight_network.emme_scenario)
+    ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
 if __name__ == "__main__":
