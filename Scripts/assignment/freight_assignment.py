@@ -21,8 +21,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     break
         self.emme_scenario.publish_network(network)
         self.assignment_modes.update({ass_class: FreightMode(
-                ass_class, self.emme_scenario, self.emme_project, self.name,
-                save_matrices)
+                ass_class, self, save_matrices)
             for ass_class in param.freight_modes})
 
     def assign(self):

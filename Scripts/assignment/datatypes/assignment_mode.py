@@ -7,16 +7,24 @@ import parameters.assignment as param
 from assignment.datatypes.path_analysis import PathAnalysis
 from assignment.datatypes.emme_matrix import EmmeMatrix, PermanentEmmeMatrix
 if TYPE_CHECKING:
-    from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.emme_bindings.mock_project import Scenario
+    from assignment.assignment_period import AssignmentPeriod
 
 
 LENGTH_ATTR = "length"
 
 
 class AssignmentMode(ABC):
-    def __init__(self, name: str, emme_scenario: Scenario,
-                 emme_project: EmmeProject, time_period: str,
+    """Abstract base class for specifying mode assignment and matrices.
+
+    A mode is assignment-period-specific, so that each mode-period
+    combination has its own matrices.
+
+    All modes have one demand matrix, which is "permanent".
+    This means that it cannot be initialized or deleted after creation,
+    so that additional demand can safely be added to it at any time.
+    Demand initialisation is done by setting matrix to zero.
+    """
+    def __init__(self, name: str, assignment_period: AssignmentPeriod,
                  save_matrices: bool = False):
         """Initialize mode.
 
@@ -24,19 +32,15 @@ class AssignmentMode(ABC):
         ----------
         name : str
             Mode name
-        emme_scenario : Scenario
-            EMME scenario linked to the time period
-        emme_project : assignment.emme_bindings.emme_project.EmmeProject
-            Emme project connected to this assignment
-        time_period : str
-            Name of assignment period
+        assignment_period : AssignmentPeriod
+            Assignment period to link to the mode
         save_matrices : bool (optional)
             Whether matrices will be saved in Emme format for all time periods
         """
         self.name = name
-        self.emme_scenario = emme_scenario
-        self.emme_project = emme_project
-        self.time_period = time_period
+        self.emme_scenario = assignment_period.emme_scenario
+        self.emme_project = assignment_period.emme_project
+        self.time_period = assignment_period.name
         self._save_matrices = save_matrices
         self._matrices: Dict[str, EmmeMatrix] = {}
         self.demand = PermanentEmmeMatrix(

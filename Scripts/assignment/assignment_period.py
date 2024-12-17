@@ -133,12 +133,12 @@ class AssignmentPeriod(Period):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
         car_modes = {mode: CarMode(
-                mode, self.emme_scenario, self.emme_project, self.name,
-                dist_unit_cost[mode], include_toll_cost, save_matrices)
+                mode, self, dist_unit_cost[mode], include_toll_cost,
+                save_matrices)
             for mode in param.car_classes + ("van",)}
         truck_modes = {mode: TruckMode(
-                mode, self.emme_scenario, self.emme_project, self.name,
-                dist_unit_cost[mode], include_toll_cost, save_matrices)
+                mode, self, dist_unit_cost[mode], include_toll_cost,
+                save_matrices)
             for mode in param.truck_classes}
         modes = {**car_modes, **truck_modes}
         if include_toll_cost:
@@ -147,12 +147,8 @@ class AssignmentPeriod(Period):
         self._car_spec = CarSpecification(modes)
 
     def _prepare_walk_and_bike(self, save_matrices: bool):
-        self.bike_mode = BikeMode(
-            "bike", self.emme_scenario, self.emme_project, self.name,
-            save_matrices)
-        self.walk_mode = WalkMode(
-            "walk", self.emme_scenario, self.emme_project, self.name,
-            save_matrices)
+        self.bike_mode = BikeMode("bike", self, save_matrices)
+        self.walk_mode = WalkMode("walk", self, save_matrices)
         self.assignment_modes.update({
             "bike": self.bike_mode,
             "walk": self.walk_mode,
@@ -162,8 +158,8 @@ class AssignmentPeriod(Period):
                          save_standard_matrices: bool,
                          save_extra_matrices: bool):
         transit_modes = {mode: TransitMode(
-                mode, self.emme_scenario, day_scenario, self.emme_project,
-                self.name, save_standard_matrices, save_extra_matrices)
+                mode, self, day_scenario, save_standard_matrices,
+                save_extra_matrices)
             for mode in param.transit_classes}
         self.assignment_modes.update(transit_modes)
         # TODO We should probably have only one set of penalties

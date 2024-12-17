@@ -3,19 +3,14 @@ from typing import TYPE_CHECKING, Union
 
 
 import parameters.assignment as param
-from assignment.datatypes.assignment_mode import AssignmentMode
+from assignment.datatypes.assignment_mode import AssignmentMode, LENGTH_ATTR
 from assignment.datatypes.path_analysis import PathAnalysis
 if TYPE_CHECKING:
-    from assignment.emme_bindings.emme_project import EmmeProject
-    from assignment.emme_bindings.mock_project import Scenario
-
-
-LENGTH_ATTR = "length"
+    from assignment.assignment_period import AssignmentPeriod
 
 
 class CarMode(AssignmentMode):
-    def __init__(self, name: str, emme_scenario: Scenario,
-                 emme_project: EmmeProject, time_period: str,
+    def __init__(self, name: str, assignment_period: AssignmentPeriod,
                  dist_unit_cost: float, include_toll_cost: bool,
                  save_matrices: bool = False):
         """Initialize car mode.
@@ -24,12 +19,8 @@ class CarMode(AssignmentMode):
         ----------
         name : str
             Mode name
-        emme_scenario : Scenario
-            EMME scenario linked to the time period
-        emme_project : assignment.emme_bindings.emme_project.EmmeProject
-            Emme project connected to this assignment
-        time_period : str
-            Name of assignment period
+        assignment_period : AssignmentPeriod
+            Assignment period to link to the mode
         dist_unit_cost : float
             Length multiplier to calculate link cost
         include_toll_cost : bool
@@ -37,8 +28,7 @@ class CarMode(AssignmentMode):
         save_matrices : bool (optional)
             Whether matrices will be saved in Emme format for all time periods
         """
-        AssignmentMode.__init__(
-            self, name, emme_scenario, emme_project, time_period, save_matrices)
+        AssignmentMode.__init__(self, name, assignment_period, save_matrices)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.gen_cost = self._create_matrix("gen_cost")
         self.dist = self._create_matrix("dist")

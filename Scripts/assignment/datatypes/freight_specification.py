@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode

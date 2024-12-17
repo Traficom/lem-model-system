@@ -5,14 +5,13 @@ import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode
 from assignment.datatypes.journey_level import JourneyLevel
 if TYPE_CHECKING:
-    from assignment.emme_bindings.emme_project import EmmeProject
+    from assignment.assignment_period import AssignmentPeriod
     from assignment.emme_bindings.mock_project import Scenario
 
 
 class TransitMode(AssignmentMode):
-    def __init__(self, name: str, emme_scenario: Scenario,
-                 day_scenario: Scenario, emme_project: EmmeProject,
-                 time_period: str, save_matrices: bool = False,
+    def __init__(self, name: str, assignment_period: AssignmentPeriod,
+                 day_scenario: Scenario, save_matrices: bool = False,
                  save_extra_matrices: bool = False):
         """Initialize transit mode.
 
@@ -20,21 +19,16 @@ class TransitMode(AssignmentMode):
         ----------
         name : str
             Mode name
-        emme_scenario : Scenario
-            EMME scenario linked to the time period
+        assignment_period : AssignmentPeriod
+            Assignment period to link to the mode
         day_scenario : Scenario
             EMME scenario linked to whole-day time period
-        emme_project : assignment.emme_bindings.emme_project.EmmeProject
-            Emme project connected to this assignment
-        time_period : str
-            Name of assignment period
         save_matrices : bool (optional)
             Whether matrices will be saved in Emme format for all time periods
         save_extra_matrices : bool (optional)
             Whether extra LOS-component matrices will be saved in Emme format
         """
-        AssignmentMode.__init__(
-            self, name, emme_scenario, emme_project, time_period, save_matrices)
+        AssignmentMode.__init__(self, name, assignment_period, save_matrices)
         self.vot_inv = param.vot_inv[param.vot_classes[self.name]]
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
@@ -45,17 +39,17 @@ class TransitMode(AssignmentMode):
         self.segment_results = {}
         self.node_results = {}
         for scenario, tp in (
-                (emme_scenario, self.time_period), (day_scenario, "vrk")):
+                (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
             for res, attr in param.segment_results.items():
                 attr_name = f"@{self.name[:11]}_{attr}_{tp}"
                 self.segment_results[res] = attr_name
-                emme_project.create_extra_attribute(
+                self.emme_project.create_extra_attribute(
                     "TRANSIT_SEGMENT", attr_name, f"{self.name} {res}",
                     overwrite=True, scenario=scenario)
                 if res != "transit_volumes":
                     attr_name = f"@{self.name[:10]}n_{attr}_{tp}"
                     self.node_results[res] = attr_name
-                    emme_project.create_extra_attribute(
+                    self.emme_project.create_extra_attribute(
                         "NODE", attr_name, f"{self.name} {res}",
                         overwrite=True, scenario=scenario)
 
@@ -113,7 +107,7 @@ class TransitMode(AssignmentMode):
             self.park_and_ride_results = f"@{self.name[4:]}_aux"
             self.emme_project.create_extra_attribute(
                 "LINK", self.park_and_ride_results, self.name,
-                overwrite=True, scenario=emme_scenario)
+                overwrite=True, scenario=self.emme_scenario)
             self.transit_spec["modes"].append(param.park_and_ride_mode)
             self.transit_spec["results"] = {
                 "aux_transit_volumes_by_mode": [{
