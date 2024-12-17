@@ -31,13 +31,16 @@ class FreightModelTest(unittest.TestCase):
             "koko_suomi")
         resultdata = ResultsData(RESULT_PATH)
         purposes = {}
+        with open(TEST_DATA_PATH / "costdata.json") as file:
+            costdata = json.load(file)
         for commodity in ("marita", "kalevi"):
             with open(PARAMETERS_PATH / f"{commodity}.json", 'r') as file:
                 commodity_params = json.load(file)
-                purposes[commodity] = FreightPurpose(commodity_params, zonedata, resultdata)
-        with open(TEST_DATA_PATH / "costdata.json") as file:
-            costdata = json.load(file)
-        
+                purposes[commodity] = FreightPurpose(commodity_params,
+                                                     zonedata,
+                                                     resultdata,
+                                                     costdata["freight"][commodity_conversion[commodity]])
+
         time_impedance = omx.open_file(TEST_MATRICES / "freight_time.omx", "r")
         dist_impedance = omx.open_file(TEST_MATRICES / "freight_dist.omx", "r")
         impedance = {
@@ -62,13 +65,12 @@ class FreightModelTest(unittest.TestCase):
             }
         }
         for purpose_key, purpose_value in purposes.items():
-            commodity_costs = costdata["freight"][commodity_conversion[purpose_key]]
             costs = {"truck": {}, "freight_train": {}, "ship": {}}
-            costs["truck"]["cost"] = calc_road_cost(commodity_costs,
+            costs["truck"]["cost"] = calc_road_cost(purpose_value.costdata,
                                                     impedance["truck"])
-            costs["freight_train"]["cost"] = calc_rail_cost(commodity_costs,
+            costs["freight_train"]["cost"] = calc_rail_cost(purpose_value.costdata,
                                                             impedance["freight_train"])
-            costs["ship"]["cost"] = calc_ship_cost(commodity_costs,
+            costs["ship"]["cost"] = calc_ship_cost(purpose_value.costdata,
                                                    impedance["ship"])
             demand = purpose_value.calc_traffic(costs, purpose_key)
             for mode in demand:
