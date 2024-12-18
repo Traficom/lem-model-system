@@ -9,7 +9,7 @@ import utils.log as log
 from utils.print_links import geometries, Node, Link
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
-from assignment.assignment_period import AssignmentPeriod
+from assignment.datatypes.emme_matrix import EmmeMatrix
 import assignment.off_peak_period as periods
 from assignment.freight_assignment import FreightAssignmentPeriod
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.use_stored_speeds = use_stored_speeds
         self.delete_extra_matrices = delete_extra_matrices
         self.time_periods = time_periods
-        self.first_matrix_id = first_matrix_id if save_matrices else 0
+        EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
         self.emme_project = emme_context
         self.mod_scenario = self.emme_project.modeller.emmebank.scenario(
             first_scenario_id)
