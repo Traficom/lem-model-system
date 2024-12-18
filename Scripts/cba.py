@@ -4,6 +4,7 @@ import numpy
 import pandas
 from pathlib import Path
 from openpyxl import load_workbook
+from tables.exceptions import NoSuchNodeError
 
 import utils.config
 import utils.log as log
@@ -259,10 +260,17 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     zone_numbers = mtx.zone_numbers
                 result_type = f"{transport_class}_demand_{scenario}"
                 results[result_type] += vol_fac * demand[scenario].sum(0)
-            for mtx_type in ["dist", "time", "cost"]:
-                cost = {scenario: read_costs(
-                        data[scenario], timeperiod, transport_class, mtx_type)
-                    for scenario in data}
+            for mtx_type in ["dist", "time", "cost", "toll_cost"]:
+                cost = {}
+                for scenario in data:
+                    with data[scenario].open(mtx_type, timeperiod) as mtx:
+                        try:
+                            cost[scenario] = mtx[transport_class]
+                            matrices_found = True
+                        except NoSuchNodeError:
+                            matrices_found = False
+                if not matrices_found:
+                    break
                 if transport_class == "train" and mtx_type == "dist":
                     # Max travel time with fixed 20 kmph speed
                     # and one-hour start time
@@ -274,17 +282,18 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                 result_type = transport_class + "_" + mtx_type
                 results[result_type] += (vol_fac *
                                          (gains_existing+gains_additional))
-                ws = workbook[TRANSLATIONS[transport_class]]
-                ws[cols[timeperiod]+rows[mtx_type][0]] = gains_existing.sum()
-                ws[cols[timeperiod]+rows[mtx_type][1]] = gains_additional.sum()
                 if mtx_type == "cost":
                     revenue = calc_revenue(demand, cost)
-                    if transport_class in param.transit_classes:
-                        revenues_transit += revenue
-                        results["transit_revenue"] += vol_fac * revenue
-                    if transport_class in param.assignment_modes:
-                        revenues_car += revenue
-                        results["car_revenue"] += vol_fac * revenue
+                    revenues_transit += revenue
+                    results["transit_revenue"] += vol_fac * revenue
+                if mtx_type == "toll_cost":
+                    revenue = calc_revenue(demand, cost)
+                    revenues_car += revenue
+                    results["car_revenue"] += vol_fac * revenue
+                ws = workbook[TRANSLATIONS[transport_class]]
+                row_type = "cost" if mtx_type == "toll_cost" else mtx_type
+                ws[cols[timeperiod]+rows[row_type][0]] = gains_existing.sum()
+                ws[cols[timeperiod]+rows[row_type][1]] = gains_additional.sum()
             log.info(f"Mode {transport_class} calculated for {timeperiod}")
         ws = workbook["Tuottajahyodyt"]
         rows = CELL_INDICES["transit_revenue"]["rows"][year]
@@ -302,18 +311,6 @@ def read(file_name, scenario_path):
     """Read data from file."""
     return pandas.read_csv(
         Path(scenario_path, file_name), delim_whitespace=True)
-
-
-def read_costs(matrixdata, time_period, transport_class, mtx_type):
-    mtx_label = transport_class.split('_')[0]
-    ass_class = mtx_label if mtx_label == "bike" else transport_class
-    if mtx_label == "bike" and mtx_type == "cost":
-        matrix = 0
-    else:
-        with matrixdata.open(mtx_type, time_period) as mtx:
-            matrix = mtx[ass_class]
-            zone_numbers = mtx.zone_numbers
-    return matrix
 
 
 def calc_gains(demands, costs):

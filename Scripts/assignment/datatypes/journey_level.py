@@ -27,17 +27,12 @@ class JourneyLevel:
         3 - left transit system, 4 - forbidden (virtual level)
     transit_class : str
         Name of transit class (transit_work/transit_leisure/...)
-    headway_attribute : str
-        Line attribute where headway is stored
     park_and_ride : str or False (optional)
         Extra attribute name for park-and-ride aux volume if
         this is park-and-ride assignment, else False
-    count_zone_boardings : bool (optional)
-        Whether assignment is performed only to count fare zone boardings
     """
-    def __init__(self, level: int, transit_class: str, headway_attribute: str,
-            park_and_ride: Union[str, bool] = False,
-            count_zone_boardings: bool = False):
+    def __init__(self, level: int, transit_class: str,
+                 park_and_ride: Union[str, bool] = False):
         # Boarding transit modes allowed only on levels 0-3
         next = BOARDED_LOCAL if level <= BOARDED_LONG_D else FORBIDDEN
         transitions = [{
@@ -98,9 +93,3 @@ class JourneyLevel:
             # Free transfers within local transit
             (self.spec["boarding_cost"]
                       ["on_lines"]["penalty"]) =  param.board_long_dist_attr
-        if count_zone_boardings:
-            self.spec["boarding_cost"]["at_nodes"] = {
-                "penalty": param.is_in_transit_zone_attr,
-                "perception_factor": 0,
-            }
-

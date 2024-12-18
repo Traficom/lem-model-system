@@ -1,32 +1,21 @@
 from __future__ import annotations
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 import parameters.assignment as param
+from assignment.datatypes.assignment_mode import AssignmentMode
 
 
-class FreightSpecification:
-    """
-    Freight assignment specification.
-
-    Parameters
-    ----------
-    modes : dict
-        key : str
-            One-letter mode ID
-        value : str
-            Terminal cost attribute name
-    emme_matrices : dict
-        key : str
-            Impedance type (time/cost/dist/...)
-        value : str
-            Emme matrix id
-    """
-    def __init__(self,
-                 modes: Dict[str, str],
-                 emme_matrices: Dict[str, Union[str, Dict[str, str]]]):
+class FreightMode(AssignmentMode):
+    def __init__(self, *args, **kwargs):
+        AssignmentMode.__init__(self, *args, **kwargs)
+        self.dist = self._create_matrix("dist")
+        self.aux_dist = self._create_matrix("aux_dist")
+        self.time = self._create_matrix("time")
+        self.aux_time = self._create_matrix("aux_time")
         no_penalty = dict.fromkeys(
             ["global", "at_nodes", "on_lines", "on_segments"])
         all_modes = {param.park_and_ride_mode: "truck access"}
+        modes = param.freight_modes[self.name]
         all_modes.update(modes)
         transitions = [{
             "mode": mode,
@@ -56,7 +45,7 @@ class FreightSpecification:
         self.spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
             "modes": list(all_modes),
-            "demand": emme_matrices["demand"],
+            "demand": self.demand.id,
             "waiting_time": {
                 "headway_fraction": 0.1,
                 "effective_headways": "hdw",
@@ -87,21 +76,31 @@ class FreightSpecification:
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
                 "modes": list(modes),
-                "distance": emme_matrices["dist"],
-                "actual_in_vehicle_times": emme_matrices["time"],
+                "distance": self.dist.id,
+                "actual_in_vehicle_times": self.time.id,
             },
         }
         self.local_result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             "by_mode_subset": {
                 "modes": [param.park_and_ride_mode],
-                "distance": emme_matrices["aux_dist"],
-                "actual_aux_transit_times": emme_matrices["aux_time"],
+                "distance": self.aux_dist.id,
+                "actual_aux_transit_times": self.aux_time.id,
             },
         }
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
-            "analyzed_demand": emme_matrices["demand"],
+            "analyzed_demand": self.demand.id,
             "on_links": {},
             "on_segments": {},
         }
+
+    def get_matrices(self):
+        mtxs = {
+            **self.dist.item,
+            **self.aux_dist.item,
+            **self.time.item,
+            **self.aux_time.item,
+        }
+        self._release_matrices()
+        return mtxs
