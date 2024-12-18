@@ -1,6 +1,39 @@
 import numpy
 from typing import Dict
 
+import utils.log as log
+
+
+def calc_cost(mode: str, unit_costs: Dict[str, Dict],
+              impedance: Dict[str, numpy.ndarray]):
+    """Calculate freight costs.
+
+    Parameters
+    ----------
+    unit_costs : Dict[str, Dict]
+        Freight mode (truck/freight_train/ship) : mode
+            Mode (truck/trailer_truck) : unit cost name
+                unit cost name : unit cost value
+    impedance : Dict[str, numpy.ndarray]
+        Type (time/dist/toll) : numpy 2d matrix
+
+    Returns
+    ----------
+    road_cost : numpy.ndarray
+        impedance type cost : numpy 2d matrix
+    """
+    match mode:
+        case "truck":
+            return calc_road_cost(unit_costs, impedance)
+        case "freight_train":
+            return calc_rail_cost(unit_costs, impedance)
+        case "ship":
+            return calc_ship_cost(unit_costs, impedance)
+        case _:
+            msg = f"Unknown mode {mode}"
+            log.error(msg)
+            raise ValueError(msg)
+
 
 def calc_road_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray]):
@@ -29,6 +62,7 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
                            * params["distribution"])
     return sum(mode_cost.values())
 
+
 def calc_rail_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray]):
     """Calculate freight rail based costs.
@@ -56,6 +90,7 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
     rail_cost = mode_cost["diesel_train"]
     rail_aux_cost = get_aux_cost(unit_costs, impedance)
     return rail_cost + rail_aux_cost
+
 
 def calc_ship_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray]):
@@ -89,9 +124,10 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
     ship_aux_cost = get_aux_cost(unit_costs, impedance)
     return ship_cost + ship_aux_cost
 
+
 def get_aux_cost(unit_costs: Dict[str, Dict],
                  impedance: Dict[str, numpy.ndarray]):
-    """Cheks whether auxiliary mode distance is over twice as long
+    """Checks whether auxiliary mode distance is over twice as long
     as main mode distance or if main mode mode has not been used 
     at all. In such cases, assigns inf for said OD pairs.
     Otherwise calculates actual auxiliary cost.
