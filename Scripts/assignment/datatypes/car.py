@@ -34,25 +34,23 @@ class CarMode(AssignmentMode):
         self.dist = self._create_matrix("dist")
         self.dist_unit_cost = dist_unit_cost
         self._include_toll_cost = include_toll_cost
+        perception_factor = self.vot_inv
         if include_toll_cost:
             self.toll_cost = self._create_matrix("toll_cost")
             self.link_cost_attr = f"@cost_{self.name[:10]}_{self.time_period}"
             self.emme_project.create_extra_attribute(
                 "LINK", self.link_cost_attr, "total cost",
                 overwrite=True, scenario=self.emme_scenario)
+        else:
+            perception_factor *= self.dist_unit_cost
+            self.link_cost_attr = LENGTH_ATTR
 
         # Specify
-        perception_factor = self.vot_inv
-        try:
-            link_cost_attr = self.link_cost_attr
-        except AttributeError:
-            perception_factor *= self.dist_unit_cost
-            link_cost_attr = LENGTH_ATTR
         self.spec = {
             "mode": param.assignment_modes[self.name],
             "demand": self.demand.id,
             "generalized_cost": {
-                "link_costs": link_cost_attr,
+                "link_costs": self.link_cost_attr,
                 "perception_factor": perception_factor,
             },
             "results": {
