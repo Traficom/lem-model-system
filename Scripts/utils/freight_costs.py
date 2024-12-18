@@ -10,6 +10,8 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
 
     Parameters
     ----------
+    mode : str
+        Freight mode (truck/freight_train/ship)
     unit_costs : Dict[str, Dict]
         Freight mode (truck/freight_train/ship) : mode
             Mode (truck/trailer_truck) : unit cost name
