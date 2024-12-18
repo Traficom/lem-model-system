@@ -20,7 +20,7 @@ class AssignmentMode(ABC):
     combination has its own matrices.
 
     All modes have one demand matrix, which is "permanent".
-    This means that it cannot be initialized or deleted after creation,
+    This means that it cannot be initialized or cleared after creation,
     so that additional demand can safely be added to it at any time.
     Demand initialisation is done by setting matrix to zero.
     """

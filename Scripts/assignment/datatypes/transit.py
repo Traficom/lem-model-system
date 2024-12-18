@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict
 
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode
@@ -36,8 +36,8 @@ class TransitMode(AssignmentMode):
         self.board_cost = self._create_matrix("board_cost")
 
         # Create extra attributes
-        self.segment_results = {}
-        self.node_results = {}
+        self.segment_results: Dict[str, str] = {}
+        self.node_results: Dict[str, str] = {}
         for scenario, tp in (
                 (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
             for res, attr in param.segment_results.items():

@@ -188,7 +188,6 @@ class EmmeAssignmentModel(AssignmentModel):
                 idx, param.volume_delay_funcs[idx])
 
     def init_assign(self):
-        # TODO Come up with new way of doing this
         for ap in self.assignment_periods:
             ap.init_assign()
 

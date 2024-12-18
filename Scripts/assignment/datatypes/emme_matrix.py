@@ -13,6 +13,7 @@ class EmmeMatrix:
     To actually create the EMME matrix (which is a file),
     `init` method must be called.
     Disk storage can be released by calling `release`.
+    After release, `init` must be called again to be able to set the matrix.
     """
 
     id_counter = 0
