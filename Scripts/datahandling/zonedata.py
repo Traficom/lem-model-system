@@ -177,7 +177,8 @@ class ZoneData:
             val = self._values[key]
         except KeyError as err:
             keyl: List[str] = key.split('<')
-            if keyl[1] in ("within_municipality", "outside_municipality"):
+            if (len(keyl) == 2 and keyl[1] in (
+                    "within_municipality", "outside_municipality")):
                 # If parameter is only for own municipality or for all
                 # municipalities except own, array is multiplied by
                 # bool matrix
