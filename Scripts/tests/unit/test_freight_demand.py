@@ -10,7 +10,6 @@ import openmatrix as omx
 from datahandling.resultdata import ResultsData
 from datatypes.purpose import FreightPurpose
 from datahandling.zonedata import FreightZoneData
-from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
 
 TEST_PATH = Path(__file__).parent.parent / "test_data"
@@ -64,14 +63,7 @@ class FreightModelTest(unittest.TestCase):
                 "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             }
         }
-        for purpose_key, purpose_value in purposes.items():
-            costs = {"truck": {}, "freight_train": {}, "ship": {}}
-            costs["truck"]["cost"] = calc_road_cost(purpose_value.costdata,
-                                                    impedance["truck"])
-            costs["freight_train"]["cost"] = calc_rail_cost(purpose_value.costdata,
-                                                            impedance["freight_train"])
-            costs["ship"]["cost"] = calc_ship_cost(purpose_value.costdata,
-                                                   impedance["ship"])
-            demand = purpose_value.calc_traffic(costs, purpose_key)
+        for purpose in purposes.values():
+            demand = purpose.calc_traffic(impedance)
             for mode in demand:
                 self.assertFalse(numpy.isnan(demand[mode]).any())

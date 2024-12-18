@@ -15,6 +15,7 @@ import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
+from utils.freight_costs import calc_cost
 
 
 class Purpose:
@@ -570,7 +571,7 @@ class FreightPurpose(Purpose):
             self.model = logit.ModeDestModel(*args)
         self.modes = list(self.model.mode_choice_param)
 
-    def calc_traffic(self, impedance: dict, purpose_key: str):
+    def calc_traffic(self, impedance: dict):
         """Calculate freight traffic matrix.
 
         Parameters
@@ -578,18 +579,18 @@ class FreightPurpose(Purpose):
         impedance : dict
             Mode (truck/train/...) : dict
                 Type (time/cost/dist) : numpy 2d matrix
-        purpose_key : str
-            freight commodity name
 
         Return
         ------
         dict
             Mode (truck/train/...) : calculated demand (numpy 2d matrix)
         """
-        self.dist = impedance["truck"]["cost"]
+        costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+            for mode in self.modes}
+        self.dist = costs["truck"]["cost"]
         nr_zones = self.zone_data.nr_zones
-        probs = self.model.calc_prob(impedance)
-        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        probs = self.model.calc_prob(costs)
+        generation = numpy.tile(self.zone_data[f"gen_{self.name}"], (nr_zones, 1))
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
 
