@@ -181,7 +181,7 @@
                 "logsum": 0.92606
             },
             "individual_dummy": {
-                "parent_mode": 2.50554
+                "wb_other_parent_car_work_share": 2.50554
             }
         },
         "car_pax": {
@@ -213,7 +213,7 @@
                 "logsum": 0.92606
             },
             "individual_dummy": {
-                "parent_mode": 3.64131
+                "wb_other_parent_bike_share": 3.64131
             }
         },
         "walk": {
@@ -230,7 +230,7 @@
             "car_leisure": {
                 "constant": 0.92606,
                 "individual_dummy": {
-                    "parent_mode": 0.92606
+                    "wb_other_parent_car_work_share": 0.92606
                 }
             },
             "car_pax": {
@@ -242,7 +242,7 @@
             "bike": {
                 "constant": 0.92606,
                 "individual_dummy": {
-                    "parent_mode": 0.92606
+                    "wb_other_parent_bike_share": 0.92606
                 }
             },
             "walk": {

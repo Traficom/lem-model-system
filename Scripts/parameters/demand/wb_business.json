@@ -173,7 +173,7 @@
                 "logsum": 0.91455
             },
             "individual_dummy": {
-                "parent_mode": 0.88704
+                "wb_business_parent_car_work_share": 0.88704
             }
         },
         "car_pax": {
@@ -205,7 +205,7 @@
                 "logsum": 0.91455
             },
             "individual_dummy": {
-                "parent_mode": 1.85913
+                "wb_business_parent_bike_share": 1.85913
             }
         },
         "walk": {
@@ -219,22 +219,22 @@
             "individual_dummy": {}
         },
         "scaling": {
-            "car_leisure": {
+            "car_work": {
                 "constant": 0.91455,
                 "individual_dummy": {
-                    "parent_mode": 0.91455
+                    "wb_business_parent_car_work_share": 0.91455
                 }
             },
             "car_pax": {
                 "constant": 0.91455
             },
-            "transit_leisure": {
+            "transit_work": {
                 "constant": 0.91455
             },
             "bike": {
                 "constant": 0.91455,
                 "individual_dummy": {
-                    "parent_mode": 0.91455
+                    "wb_business_parent_bike_share": 0.91455
                 }
             },
             "walk": {
