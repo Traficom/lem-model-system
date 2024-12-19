@@ -3,6 +3,7 @@ import pandas
 from collections import defaultdict
 
 import parameters.tour_generation as param
+from models.logit import divide
 
 
 class GenerationModel:
@@ -80,7 +81,8 @@ class NonHomeGeneration(GenerationModel):
         tours = sum(mode_tours.values())
         for mode in mode_tours:
             key = f"{self.purpose.name}_parent_{mode}_share"
-            self.zone_data.share[key] = mode_tours[mode] / tours
+            self.zone_data.share[key] = pandas.Series(
+                divide(mode_tours[mode], tours), self.purpose.zone_numbers)
         return tours
 
 

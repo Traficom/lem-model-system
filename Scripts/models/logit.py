@@ -445,9 +445,9 @@ class ModeDestModel(LogitModel):
                     continue
                 no_dummy_share -= dummy_share
                 mode_exps, mode_expsum2 = self.calc_individual_prob(mode, i)
-                for mode_exp in mode_exps:
-                    mode_probs[mode].append(
-                        dummy_share * divide(mode_exp, mode_expsum2))
+                for mode2 in mode_exps:
+                    mode_probs[mode2].append(
+                        dummy_share * divide(mode_exps[mode2], mode_expsum2))
             mode_probs[mode].append(
                 no_dummy_share * divide(self.mode_exps[mode], mode_expsum))
         prob = {}
