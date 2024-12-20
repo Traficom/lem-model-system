@@ -60,39 +60,21 @@ def main(args):
     
     total_demand = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)])
                     for mode in param.truck_classes}
-    matrix_counter = args.first_matrix_id
-    for purpose, purpose_value in purposes.items():
-        log.info(f"Calculating demand for purpose: {purpose}")
-        costs = {"truck": {}, "freight_train": {}, "ship": {}}
-        costs["truck"]["cost"] = calc_road_cost(purpose_value.costdata,
-                                                impedance["truck"])
-        costs["freight_train"]["cost"] = calc_rail_cost(purpose_value.costdata,
-                                                        impedance["freight_train"])
-        costs["ship"]["cost"] = calc_ship_cost(purpose_value.costdata,
-                                               impedance["ship"])
-        demand = purpose_value.calc_traffic(costs, purpose)
+    for purpose in purposes.values():
+        log.info(f"Calculating demand for purpose: {purpose.name}")
+        demand = purpose.calc_traffic(impedance)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
-            if purpose not in args.specify_commodity_names:
+            if purpose.name not in args.specify_commodity_names:
                 continue
-            # Explicitly save commodity
-            matrix_id = f"mf{matrix_counter}"
-            matrix_name = f"{purpose}_{mode}"
-            matrix_type = "demand"
-            ass_model._create_matrix(matrix_id, matrix_name, matrix_type, overwrite=True)
-            matrix_counter += 1
-            ass_model.freight_network.emme_matrices.update(
-                {matrix_name: {matrix_type: matrix_id}})
-            ass_model.freight_network.set_matrix(matrix_name, demand[mode])
             with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
-                mtx[matrix_name] = demand[mode]
-        if purpose in args.specify_commodity_names:
-            ass_model.freight_network.save_network_volumes(purpose)
-            matrix_counter += 7 # Shift to next 10 digit
+                mtx[f"{purpose}_{mode}"] = demand[mode]
+        if purpose.name in args.specify_commodity_names:
+            ass_model.freight_network.save_network_volumes(purpose.name)
         ass_model.freight_network.output_traversal_matrix(resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
-            total_demand[mode] += purpose_value.calc_vehicles(demand["truck"], mode)
+            total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
