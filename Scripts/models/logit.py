@@ -401,11 +401,10 @@ class ModeDestModel(LogitModel):
         
         Parameters
         ----------
-        is_car_user : bool
-            Whether the agent is car user or not
         zone : int
             Index of zone where the agent lives
-        
+        individual_dummy : str (optional)
+            Name of individual dummy to take into account in utility
         Returns
         -------
         numpy.ndarray
@@ -418,7 +417,7 @@ class ModeDestModel(LogitModel):
         for i, mode in enumerate(modes):
             mode_utils[i] = self.mode_utils[mode][zone]
             b = self.mode_choice_param[mode]["individual_dummy"]
-            if individual_dummy is not None and individual_dummy in b:
+            if individual_dummy in b:
                 try:
                     mode_utils[i] += b[individual_dummy]
                 except ValueError:

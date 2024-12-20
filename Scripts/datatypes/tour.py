@@ -126,8 +126,14 @@ class Tour:
         is_car_user : bool
             Whether the person is car user or not
         """
+        try:
+            parent_tour: Tour = self._source
+        except AttributeError:
+            dummy = "car_users" if is_car_user else None
+        else:
+            dummy = f"{self.purpose.name}_parent_{parent_tour.mode}_share"
         utils = self.purpose.model.calc_individual_mode_prob(
-                is_car_user, self.position[0]) + self._mode_draw
+                self.position[0], dummy) + self._mode_draw
         self._mode_idx = utils.argmax()
         self.purpose.generated_tours[self.mode][self.position[0]] += 1
         self.total_access = (-self.purpose.model.money_utility
