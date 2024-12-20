@@ -301,7 +301,12 @@ class ModeDestModel(LogitModel):
 
         First calculates basic probabilities. Then inserts individual
         dummy variables by calling `calc_individual_prob()`.
-        
+
+        If model for non-home-based tours has individual dummy variables
+        representing parent tour mode choice, None will be returned,
+        because it requires parent tour demand to be calculated first.
+        In this case, `calc_prob_again` will be called later.
+
         Parameters
         ----------
         impedance : dict
@@ -316,6 +321,22 @@ class ModeDestModel(LogitModel):
                 Choice probabilities
         """
         return self._calc_prob(*self._calc_utils(impedance))
+
+    def calc_prob_again(self) -> dict:
+        """Return matrix of choice probabilities.
+
+        First recovers basic probabilities. Then inserts individual
+        dummy variables by calling `calc_individual_prob()`.
+
+        Returns
+        -------
+        dict
+            Mode (car/transit/bike/walk) : numpy 2-d matrix
+                Choice probabilities
+        """
+        stashed_exps = self._stashed_exps
+        del self._stashed_exps
+        return self._calc_prob(*stashed_exps)
 
     def calc_basic_prob(self, impedance: dict):
         """Calculate utilities and cumulative destination choice probabilities.
@@ -439,10 +460,8 @@ class ModeDestModel(LogitModel):
                     dummy_share = self.zone_data.get_data(
                         i, self.bounds, generation=True)
                 except KeyError:
-                    utils.log.warn(
-                        f"Individual dummy {i} skipped, share missing! "
-                        + "May correct itself in next iteration.")
-                    continue
+                    self._stashed_exps = (mode_expsum, dest_exps, dest_expsums)
+                    return None
                 no_dummy_share -= dummy_share
                 mode_exps, mode_expsum2 = self.calc_individual_prob(mode, i)
                 for mode2 in mode_exps:
