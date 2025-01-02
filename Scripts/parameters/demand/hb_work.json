@@ -92,7 +92,7 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1,
-                "logsum": 0.9956
+                "logsum": 0.92768
             },
             "attraction_size": {
                 "workplaces": 1
@@ -101,64 +101,64 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": -1.09886,
+            "constant": -1.30038,
             "generation": {
-                "car_density": 2.93265
+                "car_density": 2.97885
             },
             "attraction": {
-                "within_zone_time": -0.03762
+                "within_zone_time": -0.04168
             },
             "impedance": {
-                "time": -0.03762,
-                "cost": -0.06626
+                "time": -0.04168,
+                "cost": -0.06515
             },
             "log": {
-                "cost": -0.13022
+                "cost": -0.14452
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -3.72995,
+            "constant": -4.06872,
             "generation": {
-                "car_density": 2.53237
+                "car_density": 2.51359
             },
             "attraction": {
-                "within_zone_time": -0.06883
+                "within_zone_time": -0.06972
             },
             "impedance": {
-                "time": -0.06883,
-                "cost": -0.06626
+                "time": -0.06972,
+                "cost": -0.06515
             },
             "log": {
-                "cost": -0.13022
+                "cost": -0.14452
             },
             "individual_dummy": {}
         },
         "transit_work": {
-            "constant": -0.83087,
+            "constant": -1.00285,
             "generation": {},
             "attraction": {
                 "within_zone_inf": -1,
-                "Helsingin_kantakaupunki": 1.05151,
-                "Tampereen_kantakaupunki": 0.47633
+                "Helsingin_kantakaupunki": 1.04415,
+                "Tampereen_kantakaupunki": 0.47499
             },
             "impedance": {
-                "time": -0.01377,
-                "cost": -0.06626
+                "time": -0.01525,
+                "cost": -0.06515
             },
             "log": {
-                "cost": -0.13022
+                "cost": -0.14452
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -0.89047,
+            "constant": -1.11553,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.14911
+                "within_zone_dist": -0.1535
             },
             "impedance": {
-                "dist": -0.14911
+                "dist": -0.1535
             },
             "log": {},
             "individual_dummy": {}
@@ -167,10 +167,10 @@
             "constant": 0,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.39659
+                "within_zone_dist": -0.45032
             },
             "impedance": {
-                "dist": -0.39659
+                "dist": -0.45032
             },
             "log": {},
             "individual_dummy": {}
