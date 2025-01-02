@@ -15,6 +15,7 @@ import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
+from utils.freight_costs import calc_cost
 
 
 class Purpose:
@@ -131,7 +132,15 @@ class Purpose:
                 for m in self.mtx_adjustment[t]:
                     p = self.mtx_adjustment[t][m]
                     try:
-                        day_imp[m][t] = p * day_imp[m][t]
+                        # If `t` is one word (e.g., "time"),
+                        # `los_component` is also that word.
+                        # Then the calculation breaks down to
+                        # `day_imp[m][t] *= p`, where `p` is the relative
+                        # adjustment parameter.
+                        # If t is "inv_time" for instance,
+                        # `los_component` becomes "time".
+                        los_component = t.split('_')[-1]
+                        day_imp[m][los_component] += (p-1) * day_imp[m][t]
                         msg = (f"Purpose {self.name}: "
                             + f"Added {round(100*(p-1))} % to {t} : {m}.")
                         log.warn(msg)
@@ -553,9 +562,10 @@ def scale(spec: dict, calib_spec: dict):
 
 class FreightPurpose(Purpose):
 
-    def __init__(self, specification, zone_data, resultdata):
+    def __init__(self, specification, zone_data, resultdata, costdata):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
+        self.costdata = costdata
 
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
@@ -563,7 +573,7 @@ class FreightPurpose(Purpose):
             self.model = logit.ModeDestModel(*args)
         self.modes = list(self.model.mode_choice_param)
 
-    def calc_traffic(self, impedance: dict, purpose_key: str):
+    def calc_traffic(self, impedance: dict):
         """Calculate freight traffic matrix.
 
         Parameters
@@ -571,17 +581,38 @@ class FreightPurpose(Purpose):
         impedance : dict
             Mode (truck/train/...) : dict
                 Type (time/cost/dist) : numpy 2d matrix
-        purpose_key : str
-            freight commodity name
 
         Return
         ------
         dict
             Mode (truck/train/...) : calculated demand (numpy 2d matrix)
         """
-        self.dist = impedance["truck"]["cost"]
+        costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+            for mode in self.modes}
+        self.dist = costs["truck"]["cost"]
         nr_zones = self.zone_data.nr_zones
-        probs = self.model.calc_prob(impedance)
-        generation = numpy.tile(self.zone_data[f"gen_{purpose_key}"], (nr_zones, 1))
+        probs = self.model.calc_prob(costs)
+        generation = numpy.tile(self.zone_data[f"gen_{self.name}"], (nr_zones, 1))
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
+
+    def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
+        """Calculate vehicle matrix from ton matrix using ton-to-vehicles 
+        conversion values.
+
+        Parameters
+        ----------
+        matrix : numpy.ndarray
+            ton matrix
+        ass_class : str
+            truck assignment class
+
+        Returns
+        -------
+        numpy.ndarray
+            vehicle matrix
+        """
+        costdata = self.costdata["truck"][ass_class]
+        vehicles = matrix * costdata["distribution"] / costdata["avg_load"] / 365
+        vehicles += vehicles.T * (costdata["empty_share"] - 1)
+        return vehicles

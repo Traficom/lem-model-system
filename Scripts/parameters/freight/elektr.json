@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "elektr",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,20 +25,20 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.7163
+                "logsum": 0.2754
             },
             "attraction_size": {
-                "att_elektr": 1.0
+                "att_elektr": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.1174
+                "cost": -0.1805
             },
             "log": {},
             "individual_dummy": {}
@@ -48,21 +47,21 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.3397
+                "cost": -0.7462
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 2.815
+            "constant": 10.07
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.9161
+                "cost": -1.222
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 18.64
+            "constant": 23.25
         }
     },
     "demand_share": {}

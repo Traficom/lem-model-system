@@ -1,10 +1,9 @@
 {
-    "name": "freight",
+    "name": "kpoljy",
     "orig": "null",
     "dest": "null",
     "area": "all",
     "struct": "dest>mode",
-    "impedance_transform": {},
     "impedance_share": {},
     "distance_boundaries": {
         "truck": [
@@ -26,20 +25,20 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 0.6746
+                "logsum": 0.4868
             },
             "attraction_size": {
-                "att_kpoljy": 1.0
+                "att_kpoljy": 1
             }
         }
     },
     "mode_choice": {
         "truck": {
-            "constant": 0.0,
+            "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.4986
+                "cost": -0.3869
             },
             "log": {},
             "individual_dummy": {}
@@ -48,21 +47,21 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.3428
+                "cost": -0.4142
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 1.454
+            "constant": 4.765
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.7001
+                "cost": -0.7465
             },
             "log": {},
             "individual_dummy": {},
-            "constant": 12.18
+            "constant": 13.02
         }
     },
     "demand_share": {}

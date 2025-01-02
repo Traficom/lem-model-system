@@ -188,6 +188,11 @@ class EmmeAssignmentModel(AssignmentModel):
                     "LINK", '@a_' + attr_name,
                     "commodity flow", overwrite=True,
                     scenario=self.mod_scenario)
+                attr_name = (comm_class + "truck")[:17]
+                self.emme_project.create_extra_attribute(
+                        "LINK", '@' + attr_name,
+                        "commodity flow", overwrite=True,
+                        scenario=self.mod_scenario)
         self.freight_network.prepare(
             self._create_attributes(
                 self.mod_scenario,
@@ -756,6 +761,9 @@ class EmmeAssignmentModel(AssignmentModel):
                            + 10*log10(cross_traffic/15/1000)
                            + heavy_correction)
                 if cross_traffic > 0 else 0)
+            if start_noise < 0:
+                log.warn(f"Negative noise level for link {link.id}")
+                start_noise = 0
 
             # Calculate noise zone width
             func = param.noise_zone_width
