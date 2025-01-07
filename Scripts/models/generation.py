@@ -1,7 +1,9 @@
 import numpy
 import pandas
+from collections import defaultdict
 
 import parameters.tour_generation as param
+from models.logit import divide
 
 
 class GenerationModel:
@@ -71,11 +73,16 @@ class NonHomeGeneration(GenerationModel):
         numpy.ndarray
             Vector of tour numbers per zone
         """
-        tours = 0
+        mode_tours = defaultdict(float)
         for source in self.purpose.sources:
             b = self.param[source.name]
             for mode in source.attracted_tours:
-                tours += b * source.attracted_tours[mode]
+                mode_tours[mode] += b * source.attracted_tours[mode]
+        tours = sum(mode_tours.values())
+        for mode in mode_tours:
+            key = f"{self.purpose.name}_parent_{mode}_share"
+            self.zone_data.share[key] = pandas.Series(
+                divide(mode_tours[mode], tours), self.purpose.zone_numbers)
         return tours
 
 
