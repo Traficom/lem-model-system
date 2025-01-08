@@ -58,12 +58,13 @@ class EmmeAssignmentTest(unittest.TestCase):
         ]
         ass_model.init_assign()
         ass_model.beeline_dist
-        for ass_class in demand:
-            ass_model.assignment_periods[0].set_matrix(
-                ass_class, car_matrix)
-        ass_model.assignment_periods[0].assign_trucks_init()
-        ass_model.assignment_periods[0].assign(demand + ["car_pax"])
-        ass_model.assignment_periods[0].end_assign()
+        for ap in ass_model.assignment_periods:
+            for ass_class in demand:
+                ap.set_matrix(
+                    ass_class, car_matrix)
+            ap.assign_trucks_init()
+            ap.assign(demand + ["car_pax"])
+            ap.end_assign()
         resultdata = ResultsData(RESULTS_PATH)
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
