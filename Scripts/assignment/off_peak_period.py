@@ -67,9 +67,8 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["coarse"])
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
-        for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         del mtxs["dist"]
+        del mtxs["toll_cost"]
         return mtxs
 
 
