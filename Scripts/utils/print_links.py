@@ -50,11 +50,17 @@ def geometries(attr_names: Iterable[str],
     """
     recs = ({
         "geometry": geom_type(obj),
-        "properties": {attr: float(obj[attr]) for attr in attr_names}
+        "properties": {
+            "id": obj.id,
+            **{attr[1:]: obj[attr] for attr in attr_names},
+        }
     } for obj in objects)
     schema = {
         "geometry": geom_type.geom_type,
-        "properties": {attr: "float" for attr in attr_names}
+        "properties": {
+            "id": "str",
+            **{attr[1:]: "float" for attr in attr_names}
+        }
     }
     return recs, schema
 
