@@ -173,7 +173,7 @@ class EmmeMatrixContainer:
         self._assignment_period = assignment_period
 
     def __getitem__(self, key: str) -> numpy.ndarray:
-        return self._assignment_period.get_matrix(key, "demand")
+        return self._assignment_period.get_matrix(key)
 
     def __setitem__(self, key: str, data: Any):
         self._assignment_period.set_matrix(key, data)

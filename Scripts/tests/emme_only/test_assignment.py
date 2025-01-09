@@ -100,8 +100,8 @@ class EmmeAssignmentTest:
             "van": car_matrix,
         }
         travel_cost = {}
-        self.ass_model.init_assign()
         self.test_transit_cost()
+        self.ass_model.init_assign()
         for ap in self.ass_model.assignment_periods:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)

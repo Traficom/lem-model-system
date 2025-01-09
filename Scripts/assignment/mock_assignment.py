@@ -21,7 +21,7 @@ class MockAssignmentModel(AssignmentModel):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
         self.use_free_flow_speeds = use_free_flow_speeds
-        end_assignment_classes = set(param.emme_matrices)
+        end_assignment_classes = set(param.transport_classes)
         if delete_extra_matrices:
             end_assignment_classes -= set(param.freight_classes)
             if use_free_flow_speeds:
@@ -116,8 +116,12 @@ class MockPeriod(Period):
         """
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
-                                        * mtxs["dist"][ass_cl])
+            mtxs["cost"][ass_cl] = (self.dist_unit_cost[ass_cl]
+                                    * mtxs["dist"][ass_cl])
+        if "toll_cost" in mtxs:
+            for ass_cl in mtxs["toll_cost"]:
+                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
+            del mtxs["toll_cost"]
         for ass_cl in param.car_classes + param.transit_classes:
             if ass_cl in mtxs["dist"]:
                 del mtxs["dist"][ass_cl]
@@ -135,8 +139,19 @@ class MockPeriod(Period):
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
+        impedance_output = [mtx_type for mtx_type in param.impedance_output
+            if mtx_type != "toll_cost"]
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
-            for mtx_type in param.impedance_output}
+            for mtx_type in impedance_output}
+        # TODO This is a temporary solution to maintain backwards compability.
+        # Fresh LOS matrices will from now on include toll_cost,
+        # so when the old LOS matrix folders are no longer in use,
+        # we can remove this separate handling of toll_cost.
+        try:
+            mtxs["toll_cost"] = self._get_matrices(
+                "toll_cost", assignment_classes)
+        except FileNotFoundError:
+            pass
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -176,7 +191,7 @@ class MockPeriod(Period):
 
     def get_matrix(self,
                     ass_class: str,
-                    matrix_type: str) -> numpy.ndarray:
+                    matrix_type: str = "demand") -> numpy.ndarray:
         with self.matrices.open(matrix_type, self.name) as mtx:
             matrix = mtx[ass_class]
         return matrix
