@@ -51,11 +51,11 @@ def create_emme_project(args):
     }
     nr_transit_classes = len(param.transit_classes)
     nr_segment_results = len(param.segment_results)
-    nr_veh_classes = len(param.emme_matrices)
+    nr_veh_classes = len(param.transport_classes)
     nr_attr = {
         "centroids": nr_transit_classes * (nr_segment_results-1),
         "regular_nodes": nr_transit_classes * (nr_segment_results-1),
-        "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+        "links": nr_veh_classes + 3,
         "transit_lines": nr_transit_classes + 2,
         "transit_segments": nr_transit_classes*nr_segment_results + 2,
     }

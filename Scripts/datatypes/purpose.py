@@ -355,6 +355,8 @@ class TourPurpose(Purpose):
                 Mode-specific demand matrix for whole day
         """
         tours = self.gen_model.get_tours()
+        if self.prob is None:
+            self.prob = self.model.calc_prob_again()
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T

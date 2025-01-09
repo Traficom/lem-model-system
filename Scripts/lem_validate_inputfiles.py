@@ -117,11 +117,11 @@ def main(args):
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
-            nr_veh_classes = len(param.emme_matrices)
+            nr_veh_classes = len(param.transport_classes)
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+                "links": nr_veh_classes + 3,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
