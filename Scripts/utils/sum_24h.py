@@ -24,12 +24,12 @@ def sum_24h(obj, networks, extras: Dict[str, Dict[str, str]],
                 key : str
                     Assignment class
                 value : str
-                    Extra attribute
+                    Extra attribute from where time-period data is taken
         extra : dict
             key : str
                 Assignment class
             value : str
-                Extra attribute
+                Extra attribute where to store 24h result
         getter : Callable
             get_node, get_link or get_segment
         """
