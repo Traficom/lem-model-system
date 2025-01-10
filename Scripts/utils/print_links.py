@@ -27,6 +27,14 @@ class Link(GeometryType):
         return LineString(link.shape)
 
 
+class Segment(GeometryType):
+    name = "TRANSIT_SEGMENT"
+    geom_type = "Point"
+
+    def __new__(cls, segment):
+        return Node(segment.i_node)
+
+
 def geometries(attr_names: Iterable[str],
                objects: Iterable,
                geom_type: GeometryType) -> Tuple[Iterable, dict]:
@@ -38,8 +46,8 @@ def geometries(attr_names: Iterable[str],
         List of extra attributes in network objects
     objects : Iterable
         Iterator over network objects (links or nodes)
-    geom_type : NODE or LINK
-        NODE or LINK geometry type
+    geom_type : GeometryType
+        Node or Link or Segment geometry type
 
     Returns
     -------
