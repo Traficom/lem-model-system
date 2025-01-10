@@ -45,7 +45,7 @@ def geometries(attr_names: Iterable[str],
     attr_names : List of str
         List of extra attributes in network objects
     objects : Iterable
-        Iterator over network objects (links or nodes)
+        Iterator over network objects (links or nodes or segments)
     geom_type : GeometryType
         Node or Link or Segment geometry type
 
