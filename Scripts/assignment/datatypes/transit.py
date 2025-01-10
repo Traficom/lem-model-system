@@ -61,6 +61,7 @@ class TransitMode(AssignmentMode):
         }
         modes = (param.local_transit_modes + param.aux_modes
                  + param.long_dist_transit_modes[self.name])
+        num_proc = "number_of_processors"
         self.transit_spec = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
             "modes": modes,
@@ -101,7 +102,9 @@ class TransitMode(AssignmentMode):
                 "consider_total_impedance": True,
             },
             "journey_levels": None,
-            "performance_settings": param.performance_settings,
+            "performance_settings": {
+                num_proc: param.performance_settings[num_proc],
+            },
         }
         if self.name in param.park_and_ride_classes:
             self.park_and_ride_results = f"@{self.name[4:]}_aux"

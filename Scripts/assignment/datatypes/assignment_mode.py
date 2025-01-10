@@ -98,7 +98,7 @@ class SoftMode(AssignmentMode):
 class BikeMode(SoftMode):
     def _specify(self):
         self.spec = {
-            "type": "STANDARD_TRAFFIC_ASSIGNMENT",
+            "type": "SOLA_TRAFFIC_ASSIGNMENT",
             "classes": [
                 {
                     "mode": param.main_mode,
@@ -109,14 +109,11 @@ class BikeMode(SoftMode):
                         },
                         "link_volumes": f"@{self.name}_{self.time_period}",
                     },
-                    "analysis": {
-                        "results": {
-                            "od_values": self.dist.id,
-                        },
-                    },
+                    "path_analyses": [
+                        PathAnalysis(LENGTH_ATTR, self.dist.id).spec,
+                    ],
                 }
             ],
-            "path_analysis": PathAnalysis(LENGTH_ATTR).spec,
             "stopping_criteria": {
                 "max_iterations": 1,
                 "best_relative_gap": 1,
