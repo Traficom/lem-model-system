@@ -156,15 +156,15 @@ def main(args):
             app.close()
 
     for submodel in zone_numbers:
-        # Check base matrices
-        base_matrices_path = Path(
-            args.baseline_data_path, "Matrices", submodel)
-        if not base_matrices_path.exists():
-            msg = "Baseline matrices' directory '{}' does not exist.".format(
-                base_matrices_path)
-            log.error(msg)
-            raise ValueError(msg)
         if not calculate_long_dist_demand:
+            # Check base matrices
+            base_matrices_path = Path(
+                args.baseline_data_path, "Matrices", submodel)
+            if not base_matrices_path.exists():
+                msg = "Baseline matrices' directory '{}' does not exist.".format(
+                    base_matrices_path)
+                log.error(msg)
+                raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
