@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast, Iterable
 from collections import defaultdict
 import numpy
 import pandas
@@ -7,6 +7,7 @@ from math import log10
 
 import utils.log as log
 from utils.print_links import geometries, Node, Link, Segment
+import utils.sum_24h as sum24
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
 from assignment.datatypes.emme_matrix import EmmeMatrix
@@ -213,14 +214,11 @@ class EmmeAssignmentModel(AssignmentModel):
     def beeline_dist(self):
         log.info("Get beeline distances from network centroids")
         network = self.mod_scenario.get_network()
-        centroids = [numpy.array([0.001 * node.x, 0.001 * node.y])
-                              for node in network.centroids()]
-        centr_array = numpy.array(centroids)
-        mtx = numpy.zeros(
-            shape=(len(centroids), len(centroids)), dtype=numpy.float32)
-        for i, centr in enumerate(centroids):
-            mtx[i, :] = numpy.sqrt(numpy.sum((centr_array - centr) ** 2, axis=1))
-        return mtx
+        xy = 0.001 * numpy.array(
+            [[node.x, node.y] for node in network.centroids()],
+            dtype=numpy.float32)
+        return numpy.sqrt(
+            sum((xy[:, axis] - xy[:, axis, None])**2 for axis in (0, 1)))
 
     def aggregate_results(self,
                           resultdata: ResultsData,
@@ -243,16 +241,21 @@ class EmmeAssignmentModel(AssignmentModel):
         # Aggregate results to 24h
         for ap in self.assignment_periods:
             ap.transit_results_links_nodes()
-        for transit_class in param.transit_classes:
-            for res in param.segment_results:
-                self._transit_segment_24h(
-                    transit_class, param.segment_results[res])
-                if res != "transit_volumes":
-                    self._node_24h(
-                        transit_class, param.segment_results[res])
+        network = self.day_scenario.get_network()
+        networks = {ap.name: ap.emme_scenario.get_network()
+            for ap in self.assignment_periods}
+        for res in param.segment_results:
+            self._transit_segment_24h(
+                network, networks, param.segment_results[res])
+            if res != "transit_volumes":
+                self._node_24h(network, networks, param.segment_results[res])
+            log.info("Attribute {} aggregated to 24h (scenario {})".format(
+                res, self.day_scenario.id))
         ass_classes = param.transport_classes + ("bus", "aux_transit")
-        for ass_class in ass_classes:
-            self._link_24h(ass_class)
+        self._link_24h(network, networks, ass_classes)
+        self.day_scenario.publish_network(network)
+        log.info("Link attributes aggregated to 24h (scenario {})".format(
+            self.day_scenario.id))
 
         # Aggregate and print vehicle kms and link lengths
         kms = dict.fromkeys(ass_classes, 0.0)
@@ -272,7 +275,6 @@ class EmmeAssignmentModel(AssignmentModel):
                      + list(dict.fromkeys(param.railtypes.values())))
         linklengths = pandas.Series(0.0, linktypes, name="length")
         soft_modes = param.transit_classes + ("bike",)
-        network = self.day_scenario.get_network()
         faulty_kela_code_nodes = set()
         for link in network.links():
             linktype = link.type % 100
@@ -598,96 +600,81 @@ class EmmeAssignmentModel(AssignmentModel):
                 noise_areas[area] += 0.001 * zone_width * link.length
         return noise_areas
 
-    def _link_24h(self, attr: str):
+    def _link_24h(self, network: Network, networks: Dict[str, Network],
+                  attrs: Iterable[str]):
         """ 
         Sums and expands link volumes to 24h.
 
         Parameters
         ----------
-        attr : str
-            Attribute name that is usually key in param.emme_demand_mtx
+        network : inro.emme.network.Network.Network
+            Day network
+        networks : dict
+            key : str
+                Time period
+            value : inro.emme.network.Network.Network
+                Time-period networks
+        attrs : list of str
+            List of attributes corresponding to assignment class volumes
         """
-        networks = {ap.name: ap.emme_scenario.get_network()
-            for ap in self.assignment_periods}
-        extras = {ap.name: ap.extra(attr) for ap in self.assignment_periods}
-        network = self.day_scenario.get_network()
-        extra = self._extra(attr)
+        extras = self._extras({attr: attr for attr in attrs})
         # save link volumes to result network
         for link in network.links():
-            day_attr = 0
-            for tp in networks:
-                try:
-                    tp_link = networks[tp].link(link.i_node, link.j_node)
-                    day_attr += (tp_link[extras[tp]]
-                                 * param.volume_factors[attr][tp])
-                except (AttributeError, TypeError):
-                    pass
-            link[extra] = day_attr
-        self.day_scenario.publish_network(network)
-        log.info("Link attribute {} aggregated to 24h (scenario {})".format(
-            extra, self.day_scenario.id))
+            sum24.sum_24h(link, networks, *extras, sum24.get_link)
+        return network
 
-    def _node_24h(self, transit_class: str, attr: str):
+    def _node_24h(self, network: Network, networks: Dict[str, Network],
+                  attr: str):
         """ 
         Sums and expands node attributes to 24h.
 
         Parameters
         ----------
-        transit_class : str
-            Transit class (transit_work/transit_leisure)
+        network : inro.emme.network.Network.Network
+            Day network
+        networks : dict
+            key : str
+                Time period
+            value : inro.emme.network.Network.Network
+                Time-period networks
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attr = transit_class[:10] + 'n_' + attr
-        networks = {ap.name: ap.emme_scenario.get_network()
-            for ap in self.assignment_periods}
-        extras = {ap.name: ap.extra(attr) for ap in self.assignment_periods}
-        network = self.day_scenario.get_network()
-        extra = self._extra(attr)
+        attrs = {transit_class: transit_class[:10] + 'n_' + attr
+            for transit_class in param.transit_classes}
+        extras = self._extras(attrs)
         # save node volumes to result network
         for node in network.nodes():
-            day_attr = 0
-            for tp in networks:
-                try:
-                    tp_node = networks[tp].node(node.id)
-                    day_attr += (tp_node[extras[tp]]
-                                 * param.volume_factors[transit_class][tp])
-                except (AttributeError, TypeError):
-                    pass
-            node[extra] = day_attr
-        self.day_scenario.publish_network(network)
-        log.info("Node attribute {} aggregated to 24h (scenario {})".format(
-            extra, self.day_scenario.id))
+            sum24.sum_24h(node, networks, *extras, sum24.get_node)
+        return network
 
-    def _transit_segment_24h(self, transit_class: str, attr: str):
+    def _transit_segment_24h(self, network: Network,
+                             networks: Dict[str, Network], attr: str):
         """ 
         Sums and expands transit attributes to 24h.
 
         Parameters
         ----------
-        transit_class : str
-            Transit class (transit_work/transit_leisure)
+        network : inro.emme.network.Network.Network
+            Day network
+        networks : dict
+            key : str
+                Time period
+            value : inro.emme.network.Network.Network
+                Time-period networks
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attr = transit_class[:11] + '_' + attr
-        networks = {ap.name: ap.emme_scenario.get_network()
-            for ap in self.assignment_periods}
-        extras = {ap.name: ap.extra(attr) for ap in self.assignment_periods}
-        network = self.day_scenario.get_network()
-        extra = self._extra(attr)
+        attrs = {transit_class: transit_class[:11] + '_' + attr
+            for transit_class in param.transit_classes}
+        extras = self._extras(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():
-            day_attr = 0
-            for tp in networks:
-                try:
-                    tp_segment = networks[tp].transit_line(
-                        segment.line.id).segment(segment.number)
-                    day_attr += (tp_segment[extras[tp]]
-                                 * param.volume_factors[transit_class][tp])
-                except (AttributeError, TypeError):
-                    pass
-            segment[extra] = day_attr
-        self.day_scenario.publish_network(network)
-        log.info("Transit attribute {} aggregated to 24h (scenario {})".format(
-            extra, self.day_scenario.id))
+            sum24.sum_24h(segment, networks, *extras, sum24.get_segment)
+        return network
+
+    def _extras(self, attrs: Dict[str, str]):
+        extras = {ap.name: {attr: ap.extra(attrs[attr]) for attr in attrs}
+            for ap in self.assignment_periods}
+        extra = {attr: self._extra(attrs[attr]) for attr in attrs}
+        return extras, extra
