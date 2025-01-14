@@ -442,7 +442,8 @@ car_classes = (
     "car_work",
     "car_leisure",
 )
-private_classes = car_classes + ("bike",)
+car_and_van_classes = car_classes + ("van",)
+private_classes = car_and_van_classes + ("bike",)
 park_and_ride_classes = (
     # "car_first_mile",
     # "car_last_mile",
@@ -462,8 +463,7 @@ truck_classes = (
     "semi_trailer",
     "trailer_truck",
 )
-freight_classes = truck_classes + ("van",)
-transport_classes = private_classes + transit_classes + freight_classes
+transport_classes = private_classes + transit_classes + truck_classes
 assignment_classes = {
     "hb_work": "work",
     "hb_edu_basic": "work",

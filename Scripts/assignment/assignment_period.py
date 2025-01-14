@@ -24,55 +24,49 @@ class AssignmentPeriod(Period):
     This typically represents an hour of the day, which may or may not
     have a dedicated EMME scenario. In case it does not have its own
     EMME scenario, assignment results are stored only in extra attributes.
-
-    Parameters
-    ----------
-    name : str
-        Time period name (aht/pt/iht)
-    emme_scenario : int
-        EMME scenario linked to the time period
-    emme_context : assignment.emme_bindings.emme_project.EmmeProject
-        Emme project to connect to this assignment
-    separate_emme_scenarios : bool (optional)
-        Whether separate scenarios have been created in EMME
-        for storing time-period specific network results.
-    use_free_flow_speeds : bool (optional)
-        Whether traffic assignment is all-or-nothing with free-flow speeds.
-    use_stored_speeds : bool (optional)
-        Whether traffic assignment is all-or-nothing with speeds stored
-        in `#car_time_xxx`. Overrides `use_free_flow_speeds` if this is
-        also set to `True`.
-    delete_extra_matrices : bool (optional)
-        If True, only matrices needed for demand calculation will be
-        returned from end assignment.
     """
     def __init__(self, name: str, emme_scenario: int,
                  emme_context: EmmeProject,
                  separate_emme_scenarios: bool = False,
-                 use_free_flow_speeds: bool = False,
                  use_stored_speeds: bool = False,
                  delete_extra_matrices: bool = False):
+        """
+        Initialize assignment period.
+
+        Parameters
+        ----------
+        name : str
+            Time period name (aht/pt/iht)
+        emme_scenario : int
+            EMME scenario linked to the time period
+        emme_context : assignment.emme_bindings.emme_project.EmmeProject
+            Emme project to connect to this assignment
+        separate_emme_scenarios : bool (optional)
+            Whether separate scenarios have been created in EMME
+            for storing time-period specific network results.
+        use_stored_speeds : bool (optional)
+            Whether traffic assignment is all-or-nothing with speeds stored
+            in `#car_time_xxx`. Overrides `use_free_flow_speeds` if this is
+            also set to `True`.
+        delete_extra_matrices : bool (optional)
+            If True, only matrices needed for demand calculation will be
+            returned from end assignment.
+        """
         self.name = name
         self.emme_scenario: Scenario = emme_context.modeller.emmebank.scenario(
             emme_scenario)
         self.emme_project = emme_context
         self._separate_emme_scenarios = separate_emme_scenarios
         self.use_stored_speeds = use_stored_speeds
-        self.use_free_flow_speeds = use_free_flow_speeds
         self.stopping_criteria = copy.deepcopy(
             param.stopping_criteria)
-        if use_free_flow_speeds or use_stored_speeds:
+        if use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self._end_assignment_classes = set(param.transport_classes)
-        if delete_extra_matrices:
-            self._end_assignment_classes -= set(param.freight_classes)
-            if use_free_flow_speeds:
-                self._end_assignment_classes -= set(
-                    param.local_transit_classes)
-            else:
-                self._end_assignment_classes -= set(
-                    param.long_distance_transit_classes)
+        self.transport_classes = (param.private_classes
+                                  + param.local_transit_classes)
+        self._end_assignment_classes = set(self.transport_classes
+            if delete_extra_matrices else param.transport_classes)
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
     def extra(self, attr: str) -> str:
@@ -129,17 +123,18 @@ class AssignmentPeriod(Period):
         self._prepare_transit(day_scenario, save_matrices, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
-                      save_matrices: bool):
+                      save_matrices: bool,
+                      truck_classes: Iterable[str] = param.truck_classes):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
         car_modes = {mode: CarMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
-            for mode in param.car_classes + ("van",)}
+            for mode in param.car_and_van_classes}
         truck_modes = {mode: TruckMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
-            for mode in param.truck_classes}
+            for mode in truck_classes}
         modes = {**car_modes, **truck_modes}
         if include_toll_cost:
             self._calc_road_cost(modes.values())
@@ -156,11 +151,12 @@ class AssignmentPeriod(Period):
 
     def _prepare_transit(self, day_scenario: int,
                          save_standard_matrices: bool,
-                         save_extra_matrices: bool):
+                         save_extra_matrices: bool,
+                         transit_classes: Iterable[str] = param.transit_classes):
         transit_modes = {mode: TransitMode(
                 mode, self, day_scenario, save_standard_matrices,
                 save_extra_matrices)
-            for mode in param.transit_classes}
+            for mode in transit_classes}
         self.assignment_modes.update(transit_modes)
         # TODO We should probably have only one set of penalties
         self._calc_boarding_penalties(is_last_iteration=True)
@@ -173,12 +169,11 @@ class AssignmentPeriod(Period):
         self._assign_bikes()
 
     def assign_trucks_init(self):
-        if not self.use_free_flow_speeds:
-            self._set_car_vdfs(use_free_flow_speeds=True)
-            self._init_truck_times()
-            self._assign_trucks()
-            self._calc_background_traffic(include_trucks=True)
-        self._set_car_vdfs(self.use_free_flow_speeds)
+        self._set_car_vdfs(use_free_flow_speeds=True)
+        self._init_truck_times()
+        self._assign_trucks()
+        self._calc_background_traffic(include_trucks=True)
+        self._set_car_vdfs()
 
     def assign(self, modes: Iterable[str]
             ) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -200,11 +195,7 @@ class AssignmentPeriod(Period):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        if self.use_free_flow_speeds:
-            self._assign_transit(param.long_distance_transit_classes)
-            self._long_distance_trips_assigned = True
-        else:
-            self._assign_transit()
+        self._assign_transit()
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
@@ -222,23 +213,16 @@ class AssignmentPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
-        if not self.use_free_flow_speeds:
-            self._set_bike_vdfs()
-            self._assign_bikes()
-            self._set_car_vdfs(self.use_free_flow_speeds)
+        self._set_bike_vdfs()
+        self._assign_bikes()
+        self._set_car_vdfs()
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        if self.use_free_flow_speeds:
-            if not self._long_distance_trips_assigned:
-                self._assign_transit(param.long_distance_transit_classes)
-            self._calc_transit_network_results(
-                param.long_distance_transit_classes)
-        else:
-            self._assign_transit(param.transit_classes)
-            self._calc_transit_network_results()
+        self._assign_transit(param.transit_classes)
+        self._calc_transit_network_results()
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):

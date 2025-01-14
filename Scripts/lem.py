@@ -69,7 +69,7 @@ def main(args):
         "delete_extra_matrices": args.delete_extra_matrices,
     }
     if calculate_long_dist_demand:
-        kwargs["time_periods"] = {"vrk": "AssignmentPeriod"}
+        kwargs["time_periods"] = {"vrk": "WholeDayPeriod"}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = results_path / "Matrices" / args.submodel
