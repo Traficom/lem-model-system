@@ -13,7 +13,8 @@ class WholeDayPeriod(AssignmentPeriod):
     """
     EMME assignment definition for long-distance trips.
 
-    This period represents the whole day.
+    This period represents the whole day and only long-distance modes.
+    Cars are assigned with free-flow speed.
     """
     def __init__(self, *args, **kwargs):
         AssignmentPeriod.__init__(self, *args, **kwargs)
@@ -48,10 +49,10 @@ class WholeDayPeriod(AssignmentPeriod):
             transit_classes=param.long_distance_transit_classes)
 
     def init_assign(self):
-         pass
+         self._set_car_vdfs(use_free_flow_speeds=True)
 
     def assign_trucks_init(self):
-         self._set_car_vdfs(use_free_flow_speeds=True)
+         pass
 
     def assign(self, modes: Iterable[str]
             ) -> Dict[str, Dict[str, numpy.ndarray]]:
