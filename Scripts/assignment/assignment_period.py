@@ -67,6 +67,7 @@ class AssignmentPeriod(Period):
                                   + param.local_transit_classes)
         self._end_assignment_classes = set(self.transport_classes
             if delete_extra_matrices else param.transport_classes)
+        self._end_assignment_classes.add("walk")
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
     def extra(self, attr: str) -> str:

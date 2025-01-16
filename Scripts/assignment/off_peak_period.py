@@ -1,5 +1,5 @@
 from typing import Dict, Iterable
-from numpy.core import ndarray
+from numpy import ndarray
 import copy
 
 from assignment.assignment_period import AssignmentPeriod

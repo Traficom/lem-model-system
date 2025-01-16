@@ -81,6 +81,7 @@ class MockPeriod(Period):
         self.transport_classes = (param.private_classes
                                   + param.local_transit_classes)
         self._end_assignment_classes = set(end_assignment_classes)
+        self._end_assignment_classes.add("walk")
 
     @property
     def zone_numbers(self):
@@ -228,6 +229,10 @@ class OffPeakPeriod(MockPeriod):
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
                                         * mtxs["dist"][ass_cl])
+        if "toll_cost" in mtxs:
+            for ass_cl in mtxs["toll_cost"]:
+                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
+            del mtxs["toll_cost"]
         del mtxs["dist"]
         return mtxs
 
@@ -244,6 +249,8 @@ class TransitAssignmentPeriod(MockPeriod):
         """
         mtxs = self._get_impedances(param.local_transit_classes)
         del mtxs["dist"]
+        if "toll_cost" in mtxs:
+            del mtxs["toll_cost"]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
