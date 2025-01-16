@@ -81,7 +81,6 @@ class MockPeriod(Period):
         self.transport_classes = (param.private_classes
                                   + param.local_transit_classes)
         self._end_assignment_classes = set(end_assignment_classes)
-        self._end_assignment_classes.add("walk")
 
     @property
     def zone_numbers(self):
@@ -111,6 +110,7 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
+        self._end_assignment_classes.add("walk")
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] = (self.dist_unit_cost[ass_cl]
