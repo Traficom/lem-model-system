@@ -64,7 +64,11 @@ class EmmeAssignmentTest(unittest.TestCase):
                 ap.set_matrix(
                     ass_class, car_matrix)
             ap.assign_trucks_init()
-            ap.assign(demand + ["car_pax"])
+            imp = ap.assign(demand + ["car_pax"])
+            for mtx_type in imp:
+                for ass_class in imp[mtx_type]:
+                    self.assertEqual(
+                        imp[mtx_type][ass_class].dtype, numpy.float32)
             ap.end_assign()
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
