@@ -67,7 +67,6 @@ class AssignmentPeriod(Period):
                                   + param.local_transit_classes)
         self._end_assignment_classes = set(self.transport_classes
             if delete_extra_matrices else param.transport_classes)
-        self._end_assignment_classes.add("walk")
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
     def extra(self, attr: str) -> str:
@@ -121,6 +120,7 @@ class AssignmentPeriod(Period):
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
         self._prepare_walk_and_bike(save_matrices=True)
+        self._end_assignment_classes.add("walk")
         self._prepare_transit(day_scenario, save_matrices, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
