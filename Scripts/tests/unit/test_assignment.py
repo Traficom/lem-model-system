@@ -26,22 +26,22 @@ class EmmeAssignmentTest(unittest.TestCase):
             "truck": 0.3,
             "van": 0.2,
         }
-        self.resultdata = ResultsData(RESULTS_PATH)
-
-    def test_assignment(self):
         firstb_single = (2, 3, 5, 70, 0, 1.5)
         dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
-        fares = pandas.DataFrame(
+        self.fares = pandas.DataFrame(
             {i: {"firstb_single": firstb_single[i],
                  "dist_single": dist_single[i]}
              for i in range(0, len(firstb_single))})
+        self.resultdata = ResultsData(RESULTS_PATH)
+
+    def test_assignment(self):
         validate(
             self.context.modeller.emmebank.scenario(
                 self.scenario_id).get_network())
         ass_model = EmmeAssignmentModel(
             self.context, self.scenario_id, use_stored_speeds=True)
         ass_model.prepare_network(self.dist_cost)
-        ass_model.calc_transit_cost(fares)
+        ass_model.calc_transit_cost(self.fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
         demand = [
@@ -75,6 +75,29 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.aggregate_results(self.resultdata, mapping)
         ass_model.calc_noise(mapping)
         self.resultdata.flush()
+
+    def test_long_dist_assignment(self):
+        ass_model = EmmeAssignmentModel(
+            self.context, self.scenario_id, use_free_flow_speeds=True,
+            time_periods={"vrk": "WholeDayPeriod"})
+        ass_model.prepare_network(self.dist_cost)
+        ass_model.calc_transit_cost(self.fares)
+        nr_zones = ass_model.nr_zones
+        car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
+        demand = [
+            "car_work",
+            "car_leisure",
+            "train",
+            "long_d_bus",
+            "airplane",
+        ]
+        for ap in ass_model.assignment_periods:
+            for ass_class in demand:
+                ap.set_matrix(
+                    ass_class, car_matrix)
+            ap.assign_trucks_init()
+            ap.assign(demand + ["car_pax"])
+            ap.end_assign()
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)

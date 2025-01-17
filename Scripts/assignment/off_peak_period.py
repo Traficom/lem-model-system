@@ -1,8 +1,9 @@
 from typing import Dict, Iterable
-from numpy.core import ndarray
+from numpy import ndarray
 import copy
 
 from assignment.assignment_period import AssignmentPeriod
+from assignment.long_dist_period import WholeDayPeriod
 import parameters.assignment as param
 
 
@@ -134,7 +135,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         """
         self._calc_transit_network_results()
         self._end_assignment_classes -= set(
-            param.private_classes + param.freight_classes)
+            param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 

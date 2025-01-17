@@ -8,6 +8,11 @@ from assignment.datatypes.freight_specification import FreightMode
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
+    def __init__(self, *args, **kwargs):
+        AssignmentPeriod.__init__(self, *args, **kwargs)
+        for criteria in self.stopping_criteria.values():
+                criteria["max_iterations"] = 0
+
     def prepare(self, dist_unit_cost: Dict[str, float], save_matrices: bool):
         self._prepare_cars(dist_unit_cost, save_matrices)
         network = self.emme_scenario.get_network()

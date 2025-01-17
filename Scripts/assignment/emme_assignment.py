@@ -111,7 +111,6 @@ class EmmeAssignmentModel(AssignmentModel):
             self.assignment_periods.append(vars(periods)[self.time_periods[tp]](
                 tp, scen_id, self.emme_project,
                 separate_emme_scenarios=self.separate_emme_scenarios,
-                use_free_flow_speeds=self.use_free_flow_speeds,
                 use_stored_speeds=self.use_stored_speeds,
                 delete_extra_matrices=self.delete_extra_matrices))
         ass_classes = param.transport_classes + ("bus",)
@@ -144,8 +143,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Class names for which we want extra attributes
         """
         self.freight_network = FreightAssignmentPeriod(
-            "vrk", self.mod_scenario.number, self.emme_project,
-            use_free_flow_speeds=True)
+            "vrk", self.mod_scenario.number, self.emme_project)
         self.assignment_periods = [self.freight_network]
         self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",

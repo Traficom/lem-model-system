@@ -265,20 +265,12 @@ class ModelSystem:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
             if is_end_assignment or not self.ass_model.use_free_flow_speeds:
-                if not self.ass_model.use_free_flow_speeds:
-                    transport_classes = (param.private_classes
-                                        + param.local_transit_classes
-                                        + ("van",))
-                else:
-                    transport_classes = (param.car_classes
-                                         + param.long_distance_transit_classes)
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=transport_classes) as mtx:
-                    for ass_class in transport_classes:
+                        transport_classes=ap.transport_classes) as mtx:
+                    for ass_class in ap.transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
-            if not self.ass_model.use_free_flow_speeds:
-                ap.init_assign()
+            ap.init_assign()
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
