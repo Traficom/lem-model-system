@@ -106,7 +106,7 @@
                 "car_density": 3.78903
             },
             "attraction": {
-                "within_zone_time": -0.05519
+                "time*within_zone": -0.05519
             },
             "impedance": {
                 "time": -0.05519,
@@ -121,7 +121,7 @@
             "constant": -4.07795,
             "generation": {},
             "attraction": {
-                "within_zone_time": -0.04851
+                "time*within_zone": -0.04851
             },
             "impedance": {
                 "time": -0.04851,
@@ -153,7 +153,7 @@
             "constant": -1.24451,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.28358
+                "dist*within_zone": -0.28358
             },
             "impedance": {
                 "dist": -0.28358
@@ -165,7 +165,7 @@
             "constant": 0,
             "generation": {},
             "attraction": {
-                "within_zone_dist": -0.48005
+                "dist*within_zone": -0.48005
             },
             "impedance": {
                 "dist": -0.48005
