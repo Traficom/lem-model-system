@@ -80,9 +80,8 @@ class ModelSystem:
             in cost_data["transit_cost"].values()}
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, submodel)
-        within_zone_cost = (self.zdata_forecast["within_zone_dist"]
-                            * self.car_dist_cost["car_work"])
-        self.zdata_forecast["within_zone_cost"] = within_zone_cost
+        self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
+                                       * self.car_dist_cost["car_work"])
 
         # Output data
         self.resultdata = ResultsData(results_path)
