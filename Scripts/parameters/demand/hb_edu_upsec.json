@@ -89,7 +89,7 @@
     "destination_choice": {
         "car_work": {
             "attraction": {
-                "within_zone_time": -0.05109
+                "time*within_zone": -0.05109
             },
             "impedance": {
                 "time": -0.05109,
@@ -105,7 +105,7 @@
         },
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.08743
+                "time*within_zone": -0.08743
             },
             "impedance": {
                 "time": -0.08743,
@@ -137,7 +137,7 @@
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.43169
+                "dist*within_zone": -0.43169
             },
             "impedance": {
                 "dist": -0.43169
@@ -151,7 +151,7 @@
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.71309
+                "dist*within_zone": -0.71309
             },
             "impedance": {
                 "dist": -0.71309

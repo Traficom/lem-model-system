@@ -71,7 +71,7 @@
     "destination_choice": {
         "car_pax": {
             "attraction": {
-                "within_zone_time": -0.13518
+                "time*within_zone": -0.13518
             },
             "impedance": {
                 "time": -0.13518
@@ -80,8 +80,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "students_comprehensive<within_municipality": 1,
-                "students_comprehensive<outside_municipality": 0.05094
+                "students_comprehensive*within_municipality": 1,
+                "students_comprehensive*outside_municipality": 0.05094
             }
         },
         "transit_work": {
@@ -95,13 +95,13 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "students_comprehensive<within_municipality": 1,
-                "students_comprehensive<outside_municipality": 0.05094
+                "students_comprehensive*within_municipality": 1,
+                "students_comprehensive*outside_municipality": 0.05094
             }
         },
         "bike": {
             "attraction": {
-                "within_zone_dist": -0.34315
+                "dist*within_zone": -0.34315
             },
             "impedance": {
                 "dist": -0.34315
@@ -110,13 +110,13 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "students_comprehensive<within_municipality": 1,
-                "students_comprehensive<outside_municipality": 0.05094
+                "students_comprehensive*within_municipality": 1,
+                "students_comprehensive*outside_municipality": 0.05094
             }
         },
         "walk": {
             "attraction": {
-                "within_zone_dist": -0.69587
+                "dist*within_zone": -0.69587
             },
             "impedance": {
                 "dist": -0.69587
@@ -125,8 +125,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "students_comprehensive<within_municipality": 1,
-                "students_comprehensive<outside_municipality": 0.05094
+                "students_comprehensive*within_municipality": 1,
+                "students_comprehensive*outside_municipality": 0.05094
             }
         }
     },
