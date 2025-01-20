@@ -667,7 +667,7 @@ class DestModeModel(LogitModel):
         return prob
 
     def calc_basic_prob(self, impedance):
-        mode_expsum = self._calc_mode_util(impedance)
+        mode_expsum, _ = self._calc_mode_util(impedance)
         dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
         cumsum = dest_exps.T.cumsum(axis=0)
         self.cumul_dest_prob = cumsum / cumsum[-1]
