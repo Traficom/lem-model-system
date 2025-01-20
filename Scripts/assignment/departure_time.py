@@ -161,8 +161,8 @@ class DepartureTimeModel:
 class DirectDepartureTimeModel (DepartureTimeModel):
     def __init__(self, assignment_model: AssignmentModel):
         self._ass_model = assignment_model
-        modes = car_classes + param.long_distance_transit_classes
-            if assignment_model.use_free_flows else transport classes
+        modes = (car_classes + param.long_distance_transit_classes
+            if assignment_model.use_free_flows else transport classes)
         DepartureTimeModel.__init__(
             self, assignment_model.nr_zones, assignment_model.time_periods,
             modes)
