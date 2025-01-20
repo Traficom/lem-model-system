@@ -334,7 +334,8 @@ class ModelSystem:
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
-            self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
+            if not self.ass_model.use_free_flow_speeds:
+                self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap.name)
