@@ -249,7 +249,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 self._node_24h(network, networks, param.segment_results[res])
             log.info("Attribute {} aggregated to 24h (scenario {})".format(
                 res, self.day_scenario.id))
-        ass_classes = param.transport_classes + ("bus", "aux_transit")
+        ass_classes = (param.car_classes + param.long_distance_transit_classes
+            if self.use_free_flow_speeds else param.transport_classes)
+        ass_classes += ("bus", "aux_transit")
         self._link_24h(network, networks, ass_classes)
         self.day_scenario.publish_network(network)
         log.info("Link attributes aggregated to 24h (scenario {})".format(

@@ -274,17 +274,18 @@ class AssignmentPeriod(Period):
         """
         network = self.emme_scenario.get_network()
         for tc in param.transit_classes:
-            link_attr = self.extra(tc)
-            mode: TransitMode = self.assignment_modes[tc]
-            for result, attr_name in mode.segment_results.items():
-                if result == "transit_volumes":
-                    for segment in network.transit_segments():
-                        if segment.link is not None:
-                            segment.link[link_attr] += segment[attr_name]
-                else:
-                    nodeattr = mode.node_results[result]
-                    for segment in network.transit_segments():
-                        segment.i_node[nodeattr] += segment[attr_name]
+            if tc in self.assignment_modes:
+                link_attr = self.extra(tc)
+                mode: TransitMode = self.assignment_modes[tc]
+                for result, attr_name in mode.segment_results.items():
+                    if result == "transit_volumes":
+                        for segment in network.transit_segments():
+                            if segment.link is not None:
+                                segment.link[link_attr] += segment[attr_name]
+                    else:
+                        nodeattr = mode.node_results[result]
+                        for segment in network.transit_segments():
+                            segment.i_node[nodeattr] += segment[attr_name]
         self.emme_scenario.publish_network(network)
 
     def get_car_times(self) -> Dict[str, float]:
