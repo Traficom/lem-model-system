@@ -113,6 +113,11 @@ def main(args):
                             attr, scen.id)
                         log.error(msg)
                         raise ValueError(msg)
+            for attr in (param.ferry_wait_attr, param.freight_gate_attr):
+                if scen.extra_attribute(attr) is None:
+                    msg = f"Attribute {attr} missing from scenario {scen.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
