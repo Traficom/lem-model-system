@@ -10,7 +10,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import assignment_classes, car_classes
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -55,6 +55,10 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
+        self.car_mode = "car_" + assignment_classes[self.name]
+        if self.car_mode in self.impedance_share:
+            car_imp_share = self.impedance_share[self.car_mode]
+            self.impedance_share["car_electric"] = car_imp_share
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
@@ -163,7 +167,7 @@ class Purpose:
                                                     self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
-                if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
+                if mtx_type == "cost" and mode in car_classes:
                     try:
                         day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
                                                     (cost.car_drv_occupancy[self.name] - 1) /
@@ -258,7 +262,9 @@ class TourPurpose(Purpose):
             self.accessibility_model = logit.AccessibilityModel(*args)
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
-        self.modes = list(self.model.mode_choice_param)
+        if self.car_mode in self.demand_share:
+            self.demand_share["car_electric"] = self.demand_share[self.car_mode]
+        self.modes = list(self.impedance_share)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
