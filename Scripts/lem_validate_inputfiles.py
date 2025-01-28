@@ -64,6 +64,21 @@ def main(args):
     for i, emp_path in enumerate(emme_paths):
         log.info("Checking input data for scenario #{} ...".format(i))
 
+        data_path = args.cost_data_paths[i]
+        if not os.path.exists(data_path):
+            msg = "Forecast data file '{}' does not exist.".format(
+                data_path)
+            log.error(msg)
+            raise ValueError(msg)
+        cost_data = json.loads(Path(data_path).read_text("utf-8"))
+        for ass_class in cost_data["car_cost"]:
+            float(cost_data["car_cost"][ass_class])
+        transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
+        for operator in transit_cost.values():
+            float(operator["firstb_single"])
+            float(operator["dist_single"])
+
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
@@ -113,6 +128,11 @@ def main(args):
                             attr, scen.id)
                         log.error(msg)
                         raise ValueError(msg)
+            for attr in (param.ferry_wait_attr, param.freight_gate_attr):
+                if scen.extra_attribute(attr) is None:
+                    msg = f"Attribute {attr} missing from scenario {scen.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
@@ -152,7 +172,7 @@ def main(args):
                     attr_space)
                 log.error(msg)
                 raise ValueError(msg)
-            validate(scen.get_network(), time_periods)
+            validate(scen.get_network(), time_periods, transit_cost)
             app.close()
 
     for submodel in zone_numbers:
@@ -180,21 +200,6 @@ def main(args):
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
             Path(data_path), zone_numbers[submodel], submodel)
-
-    for data_path in args.cost_data_paths:
-        if not os.path.exists(data_path):
-            msg = "Forecast data file '{}' does not exist.".format(
-                data_path)
-            log.error(msg)
-            raise ValueError(msg)
-        cost_data = json.loads(Path(data_path).read_text("utf-8"))
-        for ass_class in cost_data["car_cost"]:
-            float(cost_data["car_cost"][ass_class])
-        transit_cost = {data.pop("id"): data for data
-            in cost_data["transit_cost"].values()}
-        for operator in transit_cost.values():
-            float(operator["firstb_single"])
-            float(operator["dist_single"])
 
     log.info("Successfully validated all input files")
 
