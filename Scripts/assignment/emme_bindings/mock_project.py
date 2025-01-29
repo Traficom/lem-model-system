@@ -665,7 +665,7 @@ class NetworkField:
 class Matrix:
     def __init__(self, idx: int, dim: int, default_value: Union[int, float]):
         self.id = idx
-        self._data = numpy.full((dim, dim), default_value, dtype=float)
+        self._data = numpy.full((dim, dim), default_value, dtype=numpy.float32)
         self._name = ""
         self._description = ""
 
