@@ -22,31 +22,16 @@ def validate(network, time_periods=param.time_periods, fares=None):
         Network to be validated
     time_periods : list of str (optional)
         Time period names, default is aht, pt, iht
-    fares : assignment.datatypes.transit_fare.TransitFareZoneSpecification
+    fares : pandas.DataFrame
             Transit fare zone specification (optional)
     """
     if fares is not None:
-        fare_zones = fares.transit_fare_zones
-        log.debug("Zonedata has fare zones {}".format(', '.join(fare_zones)))
-        transit_zones = set()
-        nr_transit_zone_nodes = 0
-        nr_nodes = 0
-        # check that fare zones exist in network
-        for node in network.nodes():
-            nr_nodes += 1
-            if node.label in fare_zones:
-                nr_transit_zone_nodes += 1
-            transit_zones.add(node.label)
-        log.debug("Network has fare zones {}".format(', '.join(transit_zones)))
-        if fare_zones > transit_zones:
-            log.warn(
-                "Some zones in transit costs do not exist in node labels.")
-        found_zone_share = nr_transit_zone_nodes / nr_nodes
-        if found_zone_share < 0.5:
-            msg = "Found transit fare zone for only {:.0%} of nodes.".format(
-                found_zone_share)
-            log.error(msg)
-            raise ValueError(msg)
+        op_attr = param.line_operator_attr.replace("ut", "data")
+        for line in network.transit_lines():
+            if line[op_attr] not in fares:
+                msg = f"No transit fares for operator id {int(line[op_attr])}"
+                log.error(msg)
+                raise ValueError(msg)
     validate_mode(network, param.main_mode, EMME_AUTO_MODE)
     for m in param.assignment_modes.values():
         validate_mode(network, m, EMME_AUX_AUTO_MODE)

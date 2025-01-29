@@ -9,6 +9,7 @@ import random
 from collections import defaultdict
 from assignment.abstract_assignment import AssignmentModel
 from assignment.emme_assignment import EmmeAssignmentModel
+from assignment.assignment_period import AssignmentPeriod
 from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
@@ -334,10 +335,11 @@ class ModelSystem:
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
-            self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
+            if not self.ass_model.use_free_flow_speeds:
+                self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
-                self._save_demand_to_omx(ap.name)
+                self._save_demand_to_omx(ap)
 
         # Log mode shares
         tours_mode = {mode: self._generated_tours_mode(mode) for mode in self.travel_modes}
@@ -379,11 +381,12 @@ class ModelSystem:
             self.resultdata.flush()
         return impedance
 
-    def _save_demand_to_omx(self, tp):
+    def _save_demand_to_omx(self, ap: AssignmentPeriod):
         zone_numbers = self.ass_model.zone_numbers
+        tp = ap.name
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in param.transport_classes:
+            for ass_class in ap.assignment_modes.keys():
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())

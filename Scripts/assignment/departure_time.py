@@ -7,7 +7,8 @@ from datatypes.tour import Tour
 import utils.log as log
 from assignment.abstract_assignment import AssignmentModel
 import parameters.departure_time as param
-from parameters.assignment import transport_classes
+from parameters.assignment import (
+   transport_classes, car_classes, long_distance_transit_classes)
 
 
 class DepartureTimeModel:
@@ -160,8 +161,11 @@ class DepartureTimeModel:
 class DirectDepartureTimeModel (DepartureTimeModel):
     def __init__(self, assignment_model: AssignmentModel):
         self._ass_model = assignment_model
+        modes = (car_classes + long_distance_transit_classes
+            if assignment_model.use_free_flow_speeds else transport_classes)
         DepartureTimeModel.__init__(
-            self, assignment_model.nr_zones, assignment_model.time_periods)
+            self, assignment_model.nr_zones, assignment_model.time_periods,
+            modes)
 
     def _create_container(self, *args):
         self.demand = {ap.name: EmmeMatrixContainer(ap)

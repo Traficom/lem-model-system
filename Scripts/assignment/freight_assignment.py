@@ -79,7 +79,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
             "portion_of_path": "COMPLETE",
             "gates_by_trip_component": {
-                "aux_transit": "@freight_gate",
+                "aux_transit": param.freight_gate_attr,
             },
         }
         for ass_class in param.freight_modes:
