@@ -443,11 +443,11 @@ time_periods = {
     "iht": "AssignmentPeriod",
     "it": "TransitAssignmentPeriod",
 }
+ec_mode = "car_electric"
 car_classes = (
     "car_work",
     "car_leisure",
-    "car_electric",
-)
+) + (ec_mode,)
 car_and_van_classes = car_classes + ("van",)
 private_classes = car_and_van_classes + ("bike",)
 park_and_ride_classes = (

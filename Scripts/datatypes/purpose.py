@@ -10,7 +10,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes, car_classes
+from parameters.assignment import assignment_classes, car_classes, ec_mode
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -58,7 +58,7 @@ class Purpose:
         self.car_mode = "car_" + assignment_classes[self.name]
         if self.car_mode in self.impedance_share:
             car_imp_share = self.impedance_share[self.car_mode]
-            self.impedance_share["car_electric"] = car_imp_share
+            self.impedance_share[ec_mode] = car_imp_share
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
@@ -263,7 +263,7 @@ class TourPurpose(Purpose):
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         if self.car_mode in self.demand_share:
-            self.demand_share["car_electric"] = self.demand_share[self.car_mode]
+            self.demand_share[ec_mode] = self.demand_share[self.car_mode]
         self.modes = list(self.impedance_share)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}

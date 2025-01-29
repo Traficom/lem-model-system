@@ -11,13 +11,14 @@ if TYPE_CHECKING:
     from datatypes.purpose import TourPurpose
 
 import utils.log
+from parameters.assignment import ec_mode
 
 
-def log(a: numpy.array):
+def log(a: numpy.ndarray):
     with numpy.errstate(divide="ignore"):
         return numpy.log(a)
 
-def divide(a, b):
+def divide(a, b) -> numpy.ndarray:
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class LogitModel:
@@ -256,6 +257,19 @@ class LogitModel:
                 zdata.get_data(i, self.bounds, generation) + 1, b[i])
         return exps
 
+    def _calc_electric_car_shares(self, probs: Dict[str, numpy.ndarray],
+                                  ec_probs: Dict[str, numpy.ndarray]):
+        ec_share = self.zone_data.get_data(
+            "share_electric_cars", self.bounds, generation=True)
+        for mode in self.mode_choice_param:
+            if mode == self.purpose.car_mode:
+                probs[mode] = (1-ec_share) * probs[mode]
+                probs[ec_mode] = ec_share * ec_probs[mode]
+            else:
+                probs[mode] = ((1-ec_share) * probs[mode]
+                                    + ec_share * ec_probs[mode])
+        return probs
+
 
 class ModeDestModel(LogitModel):
     """Nested logit model with mode choice in upper level.
@@ -324,38 +338,15 @@ class ModeDestModel(LogitModel):
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
             impedance)
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
-        ec_mode = "car_electric"
         if mode_probs is None:
             self._stashed_exps += [dest_exps, dest_expsums, impedance[ec_mode]]
             return None
         if ec_mode in impedance:
-            mode_probs, dest_exps[ec_mode], dest_expsums[ec_mode] = self._calc_electric_car_prob(
+            mode_probs, ec_dest_exps, dest_expsum = self._calc_electric_car_prob(
                 impedance.pop(ec_mode), mode_exps, mode_probs)
+            dest_exps[ec_mode] = ec_dest_exps
+            dest_expsums[ec_mode] = dest_expsum
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
-
-    def _calc_electric_car_prob(self, impedance, mode_exps, mode_probs):
-        ec_mode = "car_electric"
-        dest_exps = self._calc_dest_util(
-            self.purpose.car_mode, impedance)
-        try:
-            expsum = dest_exps.sum(1)
-        except ValueError:
-            expsum = dest_exps.sum()
-        dest_expsum = {"logsum": expsum}
-        mode_exps[self.purpose.car_mode] = self._calc_mode_util(
-            self.purpose.car_mode, dest_expsum)
-        ec_mode_probs = self._calc_mode_prob(
-            mode_exps, sum(mode_exps.values()))
-        ec_share = self.zone_data.get_data(
-            "share_electric_cars", self.bounds, generation=True)
-        for mode in self.mode_choice_param:
-            if mode == self.purpose.car_mode:
-                mode_probs[mode] = (1-ec_share) * mode_probs[mode]
-                mode_probs[ec_mode] = ec_share * ec_mode_probs[mode]
-            else:
-                mode_probs[mode] = ((1-ec_share) * mode_probs[mode]
-                                    + ec_share * ec_mode_probs[mode])
-        return mode_probs, dest_exps, dest_expsum
 
     def calc_prob_again(self) -> dict:
         """Return matrix of choice probabilities.
@@ -369,12 +360,15 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        mode_exps, mode_expsum, dest_exps, dest_expsums, impedance = self._stashed_exps
+        (
+            mode_exps, mode_expsum, dest_exps, dest_expsums, impedance
+        ) = self._stashed_exps
         del self._stashed_exps
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
-        ec_mode = "car_electric"
-        mode_probs, dest_exps[ec_mode], dest_expsums[ec_mode] = self._calc_electric_car_prob(
+        mode_probs, ec_dest_exps, dest_expsum = self._calc_electric_car_prob(
             impedance, mode_exps, mode_probs)
+        dest_exps[ec_mode] = ec_dest_exps
+        dest_expsums[ec_mode] = dest_expsum
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
     def calc_basic_prob(self, impedance: dict):
@@ -395,7 +389,24 @@ class ModeDestModel(LogitModel):
         for mode in self.mode_choice_param:
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
-    
+
+    def _calc_electric_car_prob(self, impedance: Dict[str, numpy.ndarray],
+                                mode_exps: Dict[str, numpy.ndarray],
+                                mode_probs: Dict[str, numpy.ndarray]):
+        dest_exps = self._calc_dest_util(
+            self.purpose.car_mode, impedance)
+        try:
+            expsum = dest_exps.sum(1)
+        except ValueError:
+            expsum = dest_exps.sum()
+        dest_expsum = {"logsum": expsum}
+        mode_exps[self.purpose.car_mode] = self._calc_mode_util(
+            self.purpose.car_mode, dest_expsum)
+        ec_mode_probs = self._calc_mode_prob(
+            mode_exps, sum(mode_exps.values()))
+        mode_probs = self._calc_electric_car_shares(mode_probs, ec_mode_probs)
+        return mode_probs, dest_exps, dest_expsum
+
     def _calc_individual_prob(self, mod_mode: str, dummy: str,
                               mode_exps: Dict[str, numpy.ndarray]):
         """Calculate utilities with individual dummies included.
@@ -693,19 +704,10 @@ class DestModeModel(LogitModel):
         prob = self._calc_prob(impedance)
 
         # Calculate electric car probability and add to prob
-        ec_mode = "car_electric"
         if ec_mode in impedance:
             impedance[self.purpose.car_mode] = impedance[ec_mode]
             ec_prob = self._calc_prob(impedance)
-            ec_share = self.zone_data.get_data(
-                "share_electric_cars", self.bounds, generation=True)
-            for mode in self.mode_choice_param:
-                if mode == self.purpose.car_mode:
-                    prob[mode] = (1-ec_share) * prob[mode]
-                    prob[ec_mode] = ec_share * ec_prob[mode]
-                else:
-                    prob[mode] = ((1-ec_share) * prob[mode]
-                                + ec_share * ec_prob[mode])
+            prob = self._calc_electric_car_shares(prob, ec_prob)
 
         return prob
 
@@ -722,7 +724,7 @@ class DestModeModel(LogitModel):
             name=self.purpose.name)
         self.accessibility = {"all": logsum}
         self.zone_data._values[self.purpose.name] = logsum
-        prob = {}
+        prob: Dict[str, numpy.ndarray] = {}
         dest_prob = divide(dest_exps.T, dest_expsum)
         for mode in self.mode_choice_param:
             mode_prob = divide(mode_exps.pop(mode), mode_expsum).T
