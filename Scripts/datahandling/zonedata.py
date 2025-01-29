@@ -60,8 +60,6 @@ class ZoneData:
         self.share["share_male"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         share_7_99 = pandas.Series(0, self.zone_numbers, dtype=numpy.float32)
-        self.share["share_electric_cars"] = pandas.Series(
-            0.0, self.zone_numbers, dtype=numpy.float32)
         pop = data["population"]
         wp = data["workplaces"]
         for col in data:

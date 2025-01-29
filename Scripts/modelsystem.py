@@ -82,6 +82,9 @@ class ModelSystem:
             zone_data_path, self.zone_numbers, submodel)
         self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
                                        * self.car_dist_cost["car_work"])
+        ec_sh = "share_electric_cars"
+        self.zdata_forecast.share[ec_sh] = pandas.Series(
+            self.car_dist_cost[ec_sh], self.zone_numbers, dtype=numpy.float32)
 
         # Output data
         self.resultdata = ResultsData(results_path)
