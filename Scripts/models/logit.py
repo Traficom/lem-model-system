@@ -701,7 +701,7 @@ class DestModeModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        prob = self._calc_prob(impedance)
+        prob = self._calc_prob(impedance, store_logsum=True)
 
         # Calculate electric car probability and add to prob
         if ec_mode in impedance:
@@ -711,7 +711,8 @@ class DestModeModel(LogitModel):
 
         return prob
 
-    def _calc_prob(self, impedance):
+    def _calc_prob(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
+                   store_logsum: bool = False):
         mode_expsum, mode_exps = self._calc_mode_utils(impedance)
         self.mode_utils = {}
         dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
@@ -719,11 +720,12 @@ class DestModeModel(LogitModel):
             dest_expsum = dest_exps.sum(1)
         except ValueError:
             dest_expsum = dest_exps.sum()
-        logsum = pandas.Series(
-            log(dest_expsum), self.purpose.zone_numbers,
-            name=self.purpose.name)
-        self.accessibility = {"all": logsum}
-        self.zone_data._values[self.purpose.name] = logsum
+        if store_logsum:
+            logsum = pandas.Series(
+                log(dest_expsum), self.purpose.zone_numbers,
+                name=self.purpose.name)
+            self.accessibility = {"all": logsum}
+            self.zone_data._values[self.purpose.name] = logsum
         prob: Dict[str, numpy.ndarray] = {}
         dest_prob = divide(dest_exps.T, dest_expsum)
         for mode in self.mode_choice_param:

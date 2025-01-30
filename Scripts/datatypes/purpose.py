@@ -55,10 +55,11 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
-        self.car_mode = "car_" + assignment_classes[self.name]
-        if self.car_mode in self.impedance_share:
-            car_imp_share = self.impedance_share[self.car_mode]
-            self.impedance_share[ec_mode] = car_imp_share
+        if self.name in assignment_classes:
+            self.car_mode = "car_" + assignment_classes[self.name]
+            if self.car_mode in self.impedance_share:
+                car_imp_share = self.impedance_share[self.car_mode]
+                self.impedance_share[ec_mode] = car_imp_share
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help

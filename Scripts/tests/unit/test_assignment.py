@@ -93,6 +93,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         demand = [
             "car_work",
             "car_leisure",
+            "car_electric",
             "train",
             "long_d_bus",
             "airplane",
