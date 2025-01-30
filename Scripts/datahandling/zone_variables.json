@@ -1,51 +1,120 @@
 {
-    "sum": [
-        {
-            "total": "population",
-            "shares": [
-                "sh_age_7_17",
-                "sh_age_18_29",
-                "sh_age_30_49",
-                "sh_age_50_64",
-                "sh_age_65_99",
-                "sh_income_0_19",
-                "sh_income_20_39",
-                "sh_income_40_59",
-                "sh_income_60_79",
-                "sh_income_80_99",
-                "sh_income_100_"
-            ]
-        },
-        {
-            "total": "workplaces",
-            "shares": [
-                "sh_wrk_service",
-                "sh_wrk_shop",
-                "sh_wrk_hospitality",
-                "sh_wrk_recreation"
-            ]
-        },
-        "sport_facility_indoor",
-        "sport_facility_outdoor",
-        "ski_resort",
-        "area_education_buildings",
-        "area_leisure_buildings",
-        "area_university_buildings",
-        "students_comprehensive",
-        "students_upper_secondary",
-        "students_higher_education"
-    ],
-    "mean": [
-        "avg_park_cost",
-        "avg_park_time",
-        "car_density",
-        "avg_building_distance"
-    ],
-    "first": [
-        "aggregate_results_municipality",
-        "aggregate_results_county",
-        "aggregate_results_subarea",
-        "aggregate_results_submodel",
-        "municipality_center"
-    ]
+    "trips": {
+        "sum": [
+            {
+                "total": "population",
+                "shares": [
+                    "sh_age_7_17",
+                    "sh_age_18_29",
+                    "sh_age_30_49",
+                    "sh_age_50_64",
+                    "sh_age_65_99",
+                    "sh_income_0_19",
+                    "sh_income_20_39",
+                    "sh_income_40_59",
+                    "sh_income_60_79",
+                    "sh_income_80_99",
+                    "sh_income_100_"
+                ]
+            },
+            {
+                "total": "workplaces",
+                "shares": [
+                    "sh_wrk_healthcare",
+                    "sh_wrk_shop",
+                    "sh_wrk_hospitality",
+                    "sh_wrk_recreation"
+                ]
+            },
+            "sport_facility_indoor",
+            "sport_facility_outdoor",
+            "ski_resort",
+            "area_education_buildings",
+            "area_leisure_buildings",
+            "area_university_buildings",
+            "students_comprehensive",
+            "students_upper_secondary",
+            "students_higher_education"
+        ],
+        "mean": [
+            "avg_park_cost",
+            "avg_park_time",
+            "car_density",
+            "avg_building_distance"
+        ],
+        "first": [
+            "aggregate_results_municipality",
+            "aggregate_results_county",
+            "aggregate_results_subarea",
+            "aggregate_results_submodel"
+        ]
+    },
+    "freight": {
+        "sum": [
+            "gen_marita",
+            "gen_metsat",
+            "gen_kalevi",
+            "gen_krhiil",
+            "gen_rkoljy",
+            "gen_metkai",
+            "gen_turve",
+            "gen_elint",
+            "gen_tekst",
+            "gen_puukor",
+            "gen_papsel",
+            "gen_pappai",
+            "gen_kokbri",
+            "gen_bensa",
+            "gen_diesel",
+            "gen_kpoljy",
+            "gen_kroljy",
+            "gen_mpoljy",
+            "gen_kemlaa",
+            "gen_kummuo",
+            "gen_minkai",
+            "gen_rauter",
+            "gen_jaloml",
+            "gen_mltuot",
+            "gen_elektr",
+            "gen_konela",
+            "gen_majon",
+            "gen_huonek",
+            "gen_jate",
+            "att_marita",
+            "att_metsat",
+            "att_kalevi",
+            "att_krhiil",
+            "att_rkoljy",
+            "att_metkai",
+            "att_turve",
+            "att_elint",
+            "att_tekst",
+            "att_puukor",
+            "att_papsel",
+            "att_pappai",
+            "att_kokbri",
+            "att_bensa",
+            "att_diesel",
+            "att_kpoljy",
+            "att_kroljy",
+            "att_mpoljy",
+            "att_kemlaa",
+            "att_kummuo",
+            "att_minkai",
+            "att_rauter",
+            "att_jaloml",
+            "att_mltuot",
+            "att_elektr",
+            "att_konela",
+            "att_majon",
+            "att_huonek",
+            "att_jate"
+        ],
+        "first": [
+            "aggregate_results_municipality",
+            "aggregate_results_county",
+            "aggregate_results_subarea",
+            "aggregate_results_submodel"
+        ]
+    }
 }

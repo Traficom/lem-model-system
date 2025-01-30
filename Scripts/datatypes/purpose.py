@@ -15,6 +15,7 @@ import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
+from utils.freight_costs import calc_cost
 
 
 class Purpose:
@@ -110,28 +111,36 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        mapping = self.zone_data.aggregations.municipality_centre_mapping
         day_imp = {}
         for mode in self.impedance_share:
+            share_sum = 0
             day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
                     if ass_class in impedance[time_period][mtx_type]:
-                        share = self.impedance_share[mode][time_period]
                         imp = impedance[time_period][mtx_type][ass_class]
+                        share = self.impedance_share[mode][time_period]
+                        share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if "vrk" in impedance:
-                for mtx_type in day_imp[mode]:
-                    day_imp[mode][mtx_type] = day_imp[mode][mtx_type][:, mapping]
+            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
+                raise ValueError(f"False impedance shares: {self.name} : {mode}")
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
                 for m in self.mtx_adjustment[t]:
                     p = self.mtx_adjustment[t][m]
                     try:
-                        day_imp[m][t] = p * day_imp[m][t]
+                        # If `t` is one word (e.g., "time"),
+                        # `los_component` is also that word.
+                        # Then the calculation breaks down to
+                        # `day_imp[m][t] *= p`, where `p` is the relative
+                        # adjustment parameter.
+                        # If t is "inv_time" for instance,
+                        # `los_component` becomes "time".
+                        los_component = t.split('_')[-1]
+                        day_imp[m][los_component] += (p-1) * day_imp[m][t]
                         msg = (f"Purpose {self.name}: "
                             + f"Added {round(100*(p-1))} % to {t} : {m}.")
                         log.warn(msg)
@@ -346,6 +355,8 @@ class TourPurpose(Purpose):
                 Mode-specific demand matrix for whole day
         """
         tours = self.gen_model.get_tours()
+        if self.prob is None:
+            self.prob = self.model.calc_prob_again()
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
@@ -527,6 +538,8 @@ def attempt_calibration(spec: dict):
     for param_name in param_names:
         if param_name == "calibration":
             calibrate(spec, spec.pop(param_name))
+        elif param_name == "scaling":
+            scale(spec, spec.pop(param_name))
         else:
             # Search deeper
             attempt_calibration(spec[param_name])
@@ -538,3 +551,68 @@ def calibrate(spec: dict, calib_spec: dict):
         except TypeError:
             # Search deeper
             calibrate(spec[param_name], calib_spec[param_name])
+
+def scale(spec: dict, calib_spec: dict):
+    for param_name in calib_spec:
+        try:
+            spec[param_name] *= calib_spec[param_name]
+        except TypeError:
+            # Search deeper
+            scale(spec[param_name], calib_spec[param_name])
+
+class FreightPurpose(Purpose):
+
+    def __init__(self, specification, zone_data, resultdata, costdata):
+        args = (self, specification, zone_data, resultdata)
+        Purpose.__init__(*args)
+        self.costdata = costdata
+
+        if specification["struct"] == "dest>mode":
+            self.model = logit.DestModeModel(*args)
+        else:
+            self.model = logit.ModeDestModel(*args)
+        self.modes = list(self.model.mode_choice_param)
+
+    def calc_traffic(self, impedance: dict):
+        """Calculate freight traffic matrix.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
+        Return
+        ------
+        dict
+            Mode (truck/train/...) : calculated demand (numpy 2d matrix)
+        """
+        costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+            for mode in self.modes}
+        self.dist = costs["truck"]["cost"]
+        nr_zones = self.zone_data.nr_zones
+        probs = self.model.calc_prob(costs)
+        generation = numpy.tile(self.zone_data[f"gen_{self.name}"], (nr_zones, 1))
+        demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
+        return demand
+
+    def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
+        """Calculate vehicle matrix from ton matrix using ton-to-vehicles 
+        conversion values.
+
+        Parameters
+        ----------
+        matrix : numpy.ndarray
+            ton matrix
+        ass_class : str
+            truck assignment class
+
+        Returns
+        -------
+        numpy.ndarray
+            vehicle matrix
+        """
+        costdata = self.costdata["truck"][ass_class]
+        vehicles = matrix * costdata["distribution"] / costdata["avg_load"] / 365
+        vehicles += vehicles.T * (costdata["empty_share"] - 1)
+        return vehicles

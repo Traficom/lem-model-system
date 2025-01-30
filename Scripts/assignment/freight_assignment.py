@@ -1,14 +1,20 @@
+from typing import Dict
 from pathlib import Path
 
 import utils.log as log
 import parameters.assignment as param
 from assignment.assignment_period import AssignmentPeriod
-from assignment.datatypes.freight_specification import FreightSpecification
+from assignment.datatypes.freight_specification import FreightMode
 
 
 class FreightAssignmentPeriod(AssignmentPeriod):
-    def prepare(self, *args, **kwargs):
-        AssignmentPeriod.prepare(self, *args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        AssignmentPeriod.__init__(self, *args, **kwargs)
+        for criteria in self.stopping_criteria.values():
+                criteria["max_iterations"] = 0
+
+    def prepare(self, dist_unit_cost: Dict[str, float], save_matrices: bool):
+        self._prepare_cars(dist_unit_cost, save_matrices)
         network = self.emme_scenario.get_network()
         for line in network.transit_lines():
             mode = line.mode.id
@@ -19,9 +25,9 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     line[cost_attrs[mode]] = cost
                     break
         self.emme_scenario.publish_network(network)
-        self._freight_specs = {ass_class: FreightSpecification(
-                param.freight_modes[ass_class], self.emme_matrices[ass_class])
-            for ass_class in param.freight_modes}
+        self.assignment_modes.update({ass_class: FreightMode(
+                ass_class, self, save_matrices)
+            for ass_class in param.freight_modes})
 
     def assign(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -29,9 +35,12 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         self._assign_trucks()
         self._set_freight_vdfs()
         self._assign_freight()
-        return {imp_type: self._get_matrices(
-                imp_type, list(param.freight_matrices))
-            for imp_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+        mtxs = {tc: self.assignment_modes[tc].get_matrices()
+            for tc in param.truck_classes + tuple(param.freight_modes)}
+        impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
+                for mode in mtxs if mtx_type in mtxs[mode]}
+            for mtx_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+        return impedance
 
     def save_network_volumes(self, commodity_class: str):
         """Save commodity-specific volumes in segment attribute.
@@ -42,24 +51,40 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             Commodity class name
         """
         for ass_class in param.freight_modes:
-            spec = self._freight_specs[ass_class].ntw_results_spec
+            spec = self.assignment_modes[ass_class].ntw_results_spec
             attr_name = (commodity_class + ass_class)[:17]
-            spec["on_segments"]["transit_volumes"] = '@' + attr_name
-            spec["on_links"]["aux_transit_volumes"] = '@a_' + attr_name
+            spec["on_segments"]["transit_volumes"] = "@" + attr_name
+            spec["on_links"]["aux_transit_volumes"] = "@a_" + attr_name
             self.emme_project.network_results(
                 spec, self.emme_scenario, ass_class)
+        spec = self._car_spec.truck_spec()
+        attr_name = (commodity_class + "truck")[:17]
+        spec["classes"][0]["results"]["link_volumes"] = "@" + attr_name
+        spec["stopping_criteria"] = self.stopping_criteria["coarse"]
+        self.emme_project.car_assignment(spec, self.emme_scenario)
+        for tc in param.truck_classes:
+            self.assignment_modes[tc].get_matrices()
 
     def output_traversal_matrix(self, output_path: Path):
+        """Save commodity class specific auxiliary tons for freight modes.
+        Result file indicates amount of transported tons with auxiliary 
+        mode between gate pair.
+
+        Parameters
+        ----------
+        output_path : Path
+            Path where traversal matrices are saved
+        """
         spec = {
             "type": "EXTENDED_TRANSIT_TRAVERSAL_ANALYSIS",
             "portion_of_path": "COMPLETE",
             "gates_by_trip_component": {
-                "aux_transit": "@freight_gate",
+                "aux_transit": param.freight_gate_attr,
             },
         }
         for ass_class in param.freight_modes:
             output_file = output_path / f"{ass_class}.txt"
-            spec["analyzed_demand"] = self.emme_matrices[ass_class]["demand"]
+            spec["analyzed_demand"] = self.assignment_modes[ass_class].demand.id
             self.emme_project.traversal_analysis(
                 spec, output_file, append_to_output_file=False,
                 scenario=self.emme_scenario, class_name=ass_class)
@@ -81,7 +106,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                 link.modes -= {park_and_ride_mode}
         self.emme_scenario.publish_network(network)
         for i, ass_class in enumerate(param.freight_modes):
-            spec = self._freight_specs[ass_class]
+            spec = self.assignment_modes[ass_class]
+            spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=ass_class)

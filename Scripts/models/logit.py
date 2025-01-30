@@ -2,13 +2,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, cast
 import numpy # type: ignore
 import pandas
-import math
+import copy
+from collections import defaultdict
+
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
     from datahandling.zonedata import ZoneData
     from datatypes.purpose import TourPurpose
 
-import parameters.zone as param
+import utils.log
 
 
 def log(a: numpy.array):
@@ -63,6 +65,11 @@ class LogitModel:
             self._add_log_impedance(utility, impedance[mode], b["log"])
             self.mode_utils[mode] = utility
             exps = numpy.exp(utility)
+            dist = self.purpose.dist
+            if dist.shape == exps.shape:
+                # If this is the lower level in nested model
+                l, u = self.distance_boundary[mode]
+                exps[(dist < l) | (dist >= u)] = 0
             self.mode_exps[mode] = exps
             expsum += exps
         return expsum
@@ -294,7 +301,12 @@ class ModeDestModel(LogitModel):
 
         First calculates basic probabilities. Then inserts individual
         dummy variables by calling `calc_individual_prob()`.
-        
+
+        If model for non-home-based tours has individual dummy variables
+        representing parent tour mode choice, None will be returned,
+        because it requires parent tour demand to be calculated first.
+        In this case, `calc_prob_again` will be called later.
+
         Parameters
         ----------
         impedance : dict
@@ -308,18 +320,24 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        prob = self._calc_prob(*self._calc_utils(impedance))
-        for mod_mode in self.mode_choice_param:
-            for i in self.mode_choice_param[mod_mode]["individual_dummy"]:
-                dummy_share = self.zone_data.get_data(
-                    i, self.bounds, generation=True)
-                ind_prob = self.calc_individual_prob(mod_mode, i)
-                for mode in prob:
-                    no_dummy = (1 - dummy_share) * prob[mode]
-                    dummy = dummy_share * ind_prob[mode]
-                    prob[mode] = no_dummy + dummy
-        return prob
-    
+        return self._calc_prob(*self._calc_utils(impedance))
+
+    def calc_prob_again(self) -> dict:
+        """Return matrix of choice probabilities.
+
+        First recovers basic probabilities. Then inserts individual
+        dummy variables by calling `calc_individual_prob()`.
+
+        Returns
+        -------
+        dict
+            Mode (car/transit/bike/walk) : numpy 2-d matrix
+                Choice probabilities
+        """
+        stashed_exps = self._stashed_exps
+        del self._stashed_exps
+        return self._calc_prob(*stashed_exps)
+
     def calc_basic_prob(self, impedance: dict):
         """Calculate utilities and cumulative destination choice probabilities.
 
@@ -359,34 +377,34 @@ class ModeDestModel(LogitModel):
                 Choice probabilities
         """
         b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
+        mode_exps = copy.deepcopy(self.mode_exps)
         try:
-            self.mode_exps[mod_mode] *= numpy.exp(b)
+            mode_exps[mod_mode] *= numpy.exp(b)
         except ValueError:
             for i, bounds in enumerate(self.sub_bounds):
-                self.mode_exps[mod_mode][bounds] *= numpy.exp(b[i])
-        mode_expsum = numpy.zeros_like(self.mode_exps[mod_mode])
+                mode_exps[mod_mode][bounds] *= numpy.exp(b[i])
+        mode_expsum = numpy.zeros_like(mode_exps[mod_mode])
         for mode in self.mode_choice_param:
-            mode_expsum += self.mode_exps[mode]
-        return self._calc_prob(mode_expsum)
+            mode_expsum += mode_exps[mode]
+        return mode_exps, mode_expsum
     
-    def calc_individual_mode_prob(self, 
-                                  is_car_user: bool, 
-                                  zone: int) -> Tuple[numpy.ndarray, float]:
+    def calc_individual_mode_prob(self, zone: int,
+                                  individual_dummy: Optional[str] = None,
+                                  ) -> Tuple[numpy.ndarray, float]:
         """Calculate individual choice probabilities with individual dummies.
         
         Calculate mode choice probabilities for individual
-        agent with individual dummy variable "car_users" included.
+        agent with individual dummy variable included.
 
         Additionally save and rescale logsum values for agent based accessibility 
         analysis.
         
         Parameters
         ----------
-        is_car_user : bool
-            Whether the agent is car user or not
         zone : int
             Index of zone where the agent lives
-        
+        individual_dummy : str (optional)
+            Name of individual dummy to take into account in utility
         Returns
         -------
         numpy.ndarray
@@ -399,14 +417,14 @@ class ModeDestModel(LogitModel):
         for i, mode in enumerate(modes):
             mode_utils[i] = self.mode_utils[mode][zone]
             b = self.mode_choice_param[mode]["individual_dummy"]
-            if is_car_user and "car_users" in b:
+            if individual_dummy in b:
                 try:
-                    mode_utils[i] += b["car_users"]
+                    mode_utils[i] += b[individual_dummy]
                 except ValueError:
                     # Separate sub-region parameters
                     j = self.purpose.sub_intervals.searchsorted(
                         zone, side="right")
-                    mode_utils[i] += b["car_users"][j]
+                    mode_utils[i] += b[individual_dummy][j]
         return mode_utils
 
     def _calc_utils(self, impedance: dict) -> Tuple[numpy.ndarray, dict, dict]:
@@ -433,14 +451,29 @@ class ModeDestModel(LogitModel):
     def _calc_prob(self, mode_expsum: numpy.ndarray,
                    dest_exps: dict,
                    dest_expsums: dict) -> dict:
+        mode_probs = defaultdict(list)
+        no_dummy_share = 1.0
+        for mode in self.mode_choice_param:
+            for i in self.mode_choice_param[mode]["individual_dummy"]:
+                try:
+                    dummy_share = self.zone_data.get_data(
+                        i, self.bounds, generation=True)
+                except KeyError:
+                    self._stashed_exps = (mode_expsum, dest_exps, dest_expsums)
+                    return None
+                no_dummy_share -= dummy_share
+                mode_exps, mode_expsum2 = self.calc_individual_prob(mode, i)
+                for mode2 in mode_exps:
+                    mode_probs[mode2].append(
+                        dummy_share * divide(mode_exps[mode2], mode_expsum2))
+            mode_probs[mode].append(
+                no_dummy_share * divide(self.mode_exps[mode], mode_expsum))
         prob = {}
         for mode in self.mode_choice_param:
-            mode_exps = self.mode_exps[mode]
-            mode_prob = divide(mode_exps, mode_expsum)
             dest_exp = dest_exps.pop(mode).T
             dest_expsum = dest_expsums[mode]["logsum"]
             dest_prob = divide(dest_exp, dest_expsum)
-            prob[mode] = mode_prob * dest_prob
+            prob[mode] = sum(mode_probs[mode]) * dest_prob
         return prob
 
 
