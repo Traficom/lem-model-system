@@ -302,7 +302,7 @@ class AssignmentPeriod(Period):
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
         return {(link.i_node.id, link.j_node.id): link[time_attr]
-            for link in network.links() if link.i_node["#subarea"] == 2}
+            for link in network.links() if link.i_node[param.subarea_attr] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
