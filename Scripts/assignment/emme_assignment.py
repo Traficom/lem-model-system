@@ -277,34 +277,40 @@ class EmmeAssignmentModel(AssignmentModel):
         soft_modes = param.transit_classes + ("bike",)
         faulty_kela_code_nodes = set()
         for link in network.links():
-            linktype = link.type % 100
-            if linktype in param.roadclasses:
-                vdf = param.roadclasses[linktype].volume_delay_func
-            elif linktype in param.custom_roadtypes:
-                vdf = linktype - 90
-            else:
-                vdf = 0
-            municipality = link.i_node["#municipality"]
-            try:
-                area = mapping[municipality]
-            except KeyError:
-                faulty_kela_code_nodes.add(municipality)
-                area = None
-            for ass_class in ass_classes:
-                veh_kms = link[self._extra(ass_class)] * link.length
-                kms[ass_class] += veh_kms
-                if vdf in vdfs:
-                    vdf_kms[ass_class][vdf] += veh_kms
-                if area in areas:
-                    area_kms[ass_class][area] += veh_kms
-                if (vdf in vdfs
-                        and area in vdf_area_kms[vdf]
-                        and ass_class not in soft_modes):
-                    vdf_area_kms[vdf][area] += veh_kms
-            if vdf == 0 and linktype in param.railtypes:
-                linklengths[param.railtypes[linktype]] += link.length
-            else:
-                linklengths[param.roadtypes[vdf]] += link.length / 2
+            if link.i_node[param.subarea_attr] == 2:
+                linktype = link.type % 100
+                if linktype in param.roadclasses:
+                    vdf = param.roadclasses[linktype].volume_delay_func
+                elif linktype in param.custom_roadtypes:
+                    vdf = linktype - 90
+                else:
+                    vdf = 0
+                municipality = link.i_node[param.municipality_attr]
+                try:
+                    area = mapping[municipality]
+                except KeyError:
+                    faulty_kela_code_nodes.add(municipality)
+                    area = None
+                for ass_class in ass_classes:
+                    veh_kms = link[self._extra(ass_class)] * link.length
+                    kms[ass_class] += veh_kms
+                    try:
+                        vdf_kms[ass_class][vdf] += veh_kms
+                    except KeyError:
+                        pass
+                    try:
+                        area_kms[ass_class][area] += veh_kms
+                    except KeyError:
+                        pass
+                    if ass_class not in soft_modes:
+                        try:
+                            vdf_area_kms[vdf][area] += veh_kms
+                        except KeyError:
+                            pass
+                if vdf == 0 and linktype in param.railtypes:
+                    linklengths[param.railtypes[linktype]] += link.length
+                else:
+                    linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
             s = ("County not found for #municipality when aggregating link data: "
                  + ", ".join(faulty_kela_code_nodes))
@@ -329,8 +335,9 @@ class EmmeAssignmentModel(AssignmentModel):
         for line in network.transit_lines():
             mode = line.mode.id
             for seg in line.segments():
+                municipality = seg.i_node[param.municipality_attr]
                 for tc in attrs:
-                    boardings[mode][seg.i_node["#municipality"]] += seg[tc]
+                    boardings[mode][municipality] += seg[tc]
         resultdata.print_data(
             pandas.DataFrame.from_dict(boardings), "municipality_boardings.txt")
 
@@ -595,7 +602,7 @@ class EmmeAssignmentModel(AssignmentModel):
 
             # Calculate noise zone area and aggregate to area level
             try:
-                area = mapping[link.i_node["#municipality"]]
+                area = mapping[link.i_node[param.municipality_attr]]
             except KeyError:
                 area = None
             if area in noise_areas:
