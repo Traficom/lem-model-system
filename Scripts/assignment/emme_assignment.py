@@ -378,6 +378,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Segment, network.transit_segments())):
             attrs = [attr.name for attr in self.day_scenario.extra_attributes()
                 if attr.type == geom_type.name]
+            attrs += [attr.name for attr in self.day_scenario.network_fields()
+                if attr.type == geom_type.name and attr.atype == "REAL"]
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")

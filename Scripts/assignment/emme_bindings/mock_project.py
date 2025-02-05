@@ -581,6 +581,11 @@ class Scenario:
         if idx in network._netfield[obj_type]:
             return network._netfield[obj_type][idx]
 
+    def network_fields(self):
+        network = self.get_network()
+        return (attr for attrs in network._netfield.values()
+            for attr in attrs.values())
+
     def create_extra_attribute(self,
                                obj_type: str,
                                idx: str,
