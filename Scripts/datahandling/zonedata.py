@@ -76,13 +76,12 @@ class ZoneData:
             if col.startswith("sh_wrk_"):
                 self[col.replace("sh_wrk_", "")] = data[col] * wp
         self.share["share_age_7-99"] = share_7_99
-        # Create diagonal matrix with zone area
+        # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
         # Two-way intrazonal distances from building distances
-        self["within_zone_dist"] = (self["within_zone"] 
-                                    * data["avg_building_distance"].values * 2)
-        self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
+        self["dist"] = data["avg_building_distance"] * 2
+        self["time"] = self["dist"] / (20/60) # 20 km/h
         # Unavailability of intrazonal tours
         self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf
@@ -176,12 +175,11 @@ class ZoneData:
         try:
             val = self._values[key]
         except KeyError as err:
-            keyl: List[str] = key.split('<')
-            if keyl[1] in ("within_municipality", "outside_municipality"):
-                # If parameter is only for own municipality or for all
-                # municipalities except own, array is multiplied by
-                # bool matrix
-                return (self[keyl[1]] * self._values[keyl[0]].values)[bounds, :]
+            keyl: List[str] = key.split('*')
+            if (len(keyl) == 2):
+                # If parameter is two-fold, they will be multiplied
+                return (self.get_data(keyl[0], bounds, generation)
+                        * self.get_data(keyl[1], bounds, generation))
             else:
                 raise KeyError(err)
         if val.ndim == 1: # If not a compound (i.e., matrix)

@@ -466,6 +466,15 @@ class MockProject:
                     if scenario.extra_attribute(attr) is None:
                         raise AttributeError(f"Attribute {attr} does not exist")
 
+    def traversal_analysis(self, specification: Dict, output_file: str,
+                           gate_labels: Optional[str] = None,
+                           append_to_output_file: bool = True,
+                           scenario: Optional[Scenario] = None,
+                           class_name: Optional[str] = None,
+                           num_prosessors: Union[str, int] = "max",
+                           last_n_iterations: Optional[int] = None):
+        pass
+
 
 Modeller = namedtuple("Modeller", "emmebank")
 
@@ -656,7 +665,7 @@ class NetworkField:
 class Matrix:
     def __init__(self, idx: int, dim: int, default_value: Union[int, float]):
         self.id = idx
-        self._data = numpy.full((dim, dim), default_value, dtype=float)
+        self._data = numpy.full((dim, dim), default_value, dtype=numpy.float32)
         self._name = ""
         self._description = ""
 

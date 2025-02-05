@@ -55,14 +55,14 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.335967979242067)
+           0.3707034495718531)
         
         print("Model system test done")
     
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 3)
+        self.assertEquals(len(impedances), 4)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIsNotNone(impedances["dist"])
@@ -76,7 +76,7 @@ class ModelTest(unittest.TestCase):
     def _validate_off_peak_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 2)
+        self.assertEquals(len(impedances), 3)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIs(type(impedances["time"]), dict)

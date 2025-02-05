@@ -27,6 +27,14 @@ class Link(GeometryType):
         return LineString(link.shape)
 
 
+class Segment(GeometryType):
+    name = "TRANSIT_SEGMENT"
+    geom_type = "Point"
+
+    def __new__(cls, segment):
+        return Node(segment.i_node)
+
+
 def geometries(attr_names: Iterable[str],
                objects: Iterable,
                geom_type: GeometryType) -> Tuple[Iterable, dict]:
@@ -37,9 +45,9 @@ def geometries(attr_names: Iterable[str],
     attr_names : List of str
         List of extra attributes in network objects
     objects : Iterable
-        Iterator over network objects (links or nodes)
-    geom_type : NODE or LINK
-        NODE or LINK geometry type
+        Iterator over network objects (links or nodes or segments)
+    geom_type : GeometryType
+        Node or Link or Segment geometry type
 
     Returns
     -------
@@ -50,11 +58,17 @@ def geometries(attr_names: Iterable[str],
     """
     recs = ({
         "geometry": geom_type(obj),
-        "properties": {attr: float(obj[attr]) for attr in attr_names}
+        "properties": {
+            "id": obj.id,
+            **{attr[1:]: obj[attr] for attr in attr_names},
+        }
     } for obj in objects)
     schema = {
         "geometry": geom_type.geom_type,
-        "properties": {attr: "float" for attr in attr_names}
+        "properties": {
+            "id": "str",
+            **{attr[1:]: "float" for attr in attr_names}
+        }
     }
     return recs, schema
 

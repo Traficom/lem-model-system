@@ -1,8 +1,9 @@
 from typing import Dict, Iterable
-from numpy.core import ndarray
+from numpy import ndarray
 import copy
 
 from assignment.assignment_period import AssignmentPeriod
+from assignment.long_dist_period import WholeDayPeriod
 import parameters.assignment as param
 
 
@@ -15,6 +16,31 @@ class OffPeakPeriod(AssignmentPeriod):
 
     Car assignment is performed as usual.
     """
+
+    def prepare(self, dist_unit_cost: Dict[str, float],
+                day_scenario: int, save_matrices: bool):
+        """Prepare network for assignment.
+
+        Calculate road toll cost and specify car assignment.
+        Set boarding penalties and attribute names.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Length multiplier to calculate link cost
+        day_scenario : int
+            EMME scenario linked to the whole day
+        save_matrices : bool
+            Whether matrices will be saved in Emme format for all time periods.
+        """
+        self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_walk_and_bike(save_matrices=False)
+        self._prepare_transit(
+            day_scenario, save_standard_matrices=True,
+            save_extra_matrices=save_matrices)
 
     def init_assign(self):
         """Assign transit for one time period with free-flow bus speed."""
@@ -42,9 +68,8 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["coarse"])
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
-        for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += self._dist_unit_cost[ass_cl] * mtxs["dist"][ass_cl]
         del mtxs["dist"]
+        del mtxs["toll_cost"]
         return mtxs
 
 
@@ -57,6 +82,31 @@ class TransitAssignmentPeriod(OffPeakPeriod):
 
     Car assignment is not performed at all.
     """
+
+    def prepare(self, dist_unit_cost: Dict[str, float],
+                day_scenario: int, save_matrices: bool):
+        """Prepare network for assignment.
+
+        Calculate road toll cost and specify car assignment.
+        Set boarding penalties and attribute names.
+
+        Parameters
+        ----------
+        dist_unit_cost : dict
+            key : str
+                Assignment class (car_work/truck/...)
+            value : float
+                Length multiplier to calculate link cost
+        day_scenario : int
+            EMME scenario linked to the whole day
+        save_matrices : bool
+            Whether matrices will be saved in Emme format for all time periods.
+        """
+        self._prepare_cars(dist_unit_cost, save_matrices=False)
+        self._prepare_walk_and_bike(save_matrices=False)
+        self._prepare_transit(
+            day_scenario, save_standard_matrices=True,
+            save_extra_matrices=save_matrices)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Get local transit impedance matrices for one time period.
@@ -85,7 +135,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         """
         self._calc_transit_network_results()
         self._end_assignment_classes -= set(
-            param.private_classes + param.freight_classes)
+            param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 

@@ -64,6 +64,21 @@ def main(args):
     for i, emp_path in enumerate(emme_paths):
         log.info("Checking input data for scenario #{} ...".format(i))
 
+        data_path = args.cost_data_paths[i]
+        if not os.path.exists(data_path):
+            msg = "Forecast data file '{}' does not exist.".format(
+                data_path)
+            log.error(msg)
+            raise ValueError(msg)
+        cost_data = json.loads(Path(data_path).read_text("utf-8"))
+        for ass_class in cost_data["car_cost"]:
+            float(cost_data["car_cost"][ass_class])
+        transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
+        for operator in transit_cost.values():
+            float(operator["firstb_single"])
+            float(operator["dist_single"])
+
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
@@ -98,10 +113,10 @@ def main(args):
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
             attrs = {
-                "NODE": ["#transit_stop_b", "#transit_stop_e", "#transit_stop_g",
-                         "#transit_stop_t", "#transit_stop_p"],
+                "NODE": (list(param.stop_codes.values())
+                         + [param.subarea_attr, param.municipality_attr]),
                 "LINK": ["#buslane"],
-                "TRANSIT_LINE": ["#keep_stops"],
+                "TRANSIT_LINE": [param.keep_stops_attr],
             }
             for tp in time_periods:
                 attrs["LINK"].append(f"#car_time_{tp}")
@@ -113,15 +128,20 @@ def main(args):
                             attr, scen.id)
                         log.error(msg)
                         raise ValueError(msg)
+            for attr in (param.ferry_wait_attr, param.freight_gate_attr):
+                if scen.extra_attribute(attr) is None:
+                    msg = f"Attribute {attr} missing from scenario {scen.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
-            nr_veh_classes = len(param.emme_matrices)
+            nr_veh_classes = len(param.transport_classes)
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+                "links": nr_veh_classes + 3,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
@@ -152,19 +172,19 @@ def main(args):
                     attr_space)
                 log.error(msg)
                 raise ValueError(msg)
-            validate(scen.get_network(), time_periods)
+            validate(scen.get_network(), time_periods, transit_cost)
             app.close()
 
     for submodel in zone_numbers:
-        # Check base matrices
-        base_matrices_path = Path(
-            args.baseline_data_path, "Matrices", submodel)
-        if not base_matrices_path.exists():
-            msg = "Baseline matrices' directory '{}' does not exist.".format(
-                base_matrices_path)
-            log.error(msg)
-            raise ValueError(msg)
         if not calculate_long_dist_demand:
+            # Check base matrices
+            base_matrices_path = Path(
+                args.baseline_data_path, "Matrices", submodel)
+            if not base_matrices_path.exists():
+                msg = "Baseline matrices' directory '{}' does not exist.".format(
+                    base_matrices_path)
+                log.error(msg)
+                raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
@@ -180,21 +200,6 @@ def main(args):
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
             Path(data_path), zone_numbers[submodel], submodel)
-
-    for data_path in args.cost_data_paths:
-        if not os.path.exists(data_path):
-            msg = "Forecast data file '{}' does not exist.".format(
-                data_path)
-            log.error(msg)
-            raise ValueError(msg)
-        cost_data = json.loads(Path(data_path).read_text("utf-8"))
-        for ass_class in cost_data["car_cost"]:
-            float(cost_data["car_cost"][ass_class])
-        transit_cost = {data.pop("id"): data for data
-            in cost_data["transit_cost"].values()}
-        for operator in transit_cost.values():
-            float(operator["firstb_single"])
-            float(operator["dist_single"])
 
     log.info("Successfully validated all input files")
 

@@ -21,21 +21,15 @@ class MockAssignmentModel(AssignmentModel):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
         self.use_free_flow_speeds = use_free_flow_speeds
-        end_assignment_classes = set(param.emme_matrices)
-        if delete_extra_matrices:
-            end_assignment_classes -= set(param.freight_classes)
-            if use_free_flow_speeds:
-                end_assignment_classes -= set(param.local_transit_classes)
-            else:
-                end_assignment_classes -= set(
-                    param.long_distance_transit_classes)
+        end_ass_classes = ((param.private_classes + param.local_transit_classes)
+            if delete_extra_matrices else param.transport_classes)
         self.time_periods = {}
         cls = globals()
         for tp, class_name in time_periods.items():
             self.time_periods[tp] = (cls[class_name] if class_name in cls
                                      else MockPeriod)
         self.assignment_periods = [self.time_periods[tp](
-                tp, matrices, end_assignment_classes)
+                tp, matrices, end_ass_classes)
             for tp in time_periods]
 
     @property
@@ -84,7 +78,9 @@ class MockPeriod(Period):
                  end_assignment_classes: Iterable[str]):
         self.name = name
         self.matrices = matrices
-        self._end_assignment_classes = end_assignment_classes
+        self.transport_classes = (param.private_classes
+                                  + param.local_transit_classes)
+        self._end_assignment_classes = set(end_assignment_classes)
 
     @property
     def zone_numbers(self):
@@ -114,10 +110,15 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
+        self._end_assignment_classes.add("walk")
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
-                                        * mtxs["dist"][ass_cl])
+            mtxs["cost"][ass_cl] = (self.dist_unit_cost[ass_cl]
+                                    * mtxs["dist"][ass_cl])
+        if "toll_cost" in mtxs:
+            for ass_cl in mtxs["toll_cost"]:
+                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
+            del mtxs["toll_cost"]
         for ass_cl in param.car_classes + param.transit_classes:
             if ass_cl in mtxs["dist"]:
                 del mtxs["dist"][ass_cl]
@@ -135,8 +136,19 @@ class MockPeriod(Period):
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
+        impedance_output = [mtx_type for mtx_type in param.impedance_output
+            if mtx_type != "toll_cost"]
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
-            for mtx_type in ("time", "cost", "dist")}
+            for mtx_type in impedance_output}
+        # TODO This is a temporary solution to maintain backwards compability.
+        # Fresh LOS matrices will from now on include toll_cost,
+        # so when the old LOS matrix folders are no longer in use,
+        # we can remove this separate handling of toll_cost.
+        try:
+            mtxs["toll_cost"] = self._get_matrices(
+                "toll_cost", assignment_classes)
+        except FileNotFoundError:
+            pass
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
@@ -165,10 +177,9 @@ class MockPeriod(Period):
             Subtype (car_work/truck/inv_time/...) : numpy 2-d matrix
                 Matrix of the specified type
         """
-        matrix_list = [ass_class for ass_class in assignment_classes
-            if mtx_type in param.emme_matrices.get(ass_class, [])]
         with self.matrices.open(
-                mtx_type, self.name, transport_classes=matrix_list) as mtx:
+                mtx_type, self.name, transport_classes=[]) as mtx:
+            matrix_list = set(assignment_classes) & set(mtx.matrix_list)
             matrices = {mode: mtx[mode] for mode in matrix_list}
         for mode in matrices:
             if numpy.any(matrices[mode] > 1e10):
@@ -177,7 +188,7 @@ class MockPeriod(Period):
 
     def get_matrix(self,
                     ass_class: str,
-                    matrix_type: str) -> numpy.ndarray:
+                    matrix_type: str = "demand") -> numpy.ndarray:
         with self.matrices.open(matrix_type, self.name) as mtx:
             matrix = mtx[ass_class]
         return matrix
@@ -187,6 +198,20 @@ class MockPeriod(Period):
                     matrix: numpy.ndarray):
         with self.matrices.open("demand", self.name, self.zone_numbers, m='a') as mtx:
             mtx[ass_class] = matrix
+
+
+class WholeDayPeriod(MockPeriod):
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """ Get travel impedance matrices for whole day from files.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
+        """
+        return self._get_impedances(
+            param.car_classes + param.long_distance_transit_classes)
 
 
 class OffPeakPeriod(MockPeriod):
@@ -204,6 +229,10 @@ class OffPeakPeriod(MockPeriod):
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
                                         * mtxs["dist"][ass_cl])
+        if "toll_cost" in mtxs:
+            for ass_cl in mtxs["toll_cost"]:
+                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
+            del mtxs["toll_cost"]
         del mtxs["dist"]
         return mtxs
 
@@ -220,6 +249,8 @@ class TransitAssignmentPeriod(MockPeriod):
         """
         mtxs = self._get_impedances(param.local_transit_classes)
         del mtxs["dist"]
+        if "toll_cost" in mtxs:
+            del mtxs["toll_cost"]
         return mtxs
 
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -235,7 +266,7 @@ class TransitAssignmentPeriod(MockPeriod):
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
         self._end_assignment_classes -= set(
-            param.private_classes + param.freight_classes)
+            param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 class EndAssignmentOnlyPeriod(MockPeriod):

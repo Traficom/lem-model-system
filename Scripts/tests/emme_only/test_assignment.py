@@ -100,8 +100,8 @@ class EmmeAssignmentTest:
             "van": car_matrix,
         }
         travel_cost = {}
-        self.ass_model.init_assign()
         self.test_transit_cost()
+        self.ass_model.init_assign()
         for ap in self.ass_model.assignment_periods:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
@@ -143,7 +143,7 @@ class EmmeAssignmentTest:
         self.ass_model.calc_transit_cost(fares)
 
     def test_freight_assignment(self):
-        purposes = ["mameka", "kalevi"]
+        purposes = ["marita", "kalevi"]
         self.ass_model.prepare_freight_network(self.dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones
