@@ -307,6 +307,9 @@ class AssignmentPeriod(Period):
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
             self.emme_scenario.id))
+        emmebank = self.emme_project.modeller.emmebank
+        # Function 90 is used for free-flow speeds on external links
+        emmebank.function("fd90").expression = param.volume_delay_funcs["fd90"]
         network = self.emme_scenario.get_network()
         car_time_attr = self.netfield("car_time")
         main_mode = network.mode(param.main_mode)
@@ -431,6 +434,8 @@ class AssignmentPeriod(Period):
     def _set_bike_vdfs(self):
         log.info("Sets bike functions for scenario {}".format(
             self.emme_scenario.id))
+        emmebank = self.emme_project.modeller.emmebank
+        emmebank.function("fd90").expression = param.volume_delay_funcs["fd98"]
         network = self.emme_scenario.get_network()
         main_mode = network.mode(param.main_mode)
         bike_mode = network.mode(param.bike_mode)
