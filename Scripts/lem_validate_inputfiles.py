@@ -56,7 +56,7 @@ def main(args):
 
     zone_numbers: Dict[str, numpy.array] = {}
     calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
-    time_periods = (["vrk"] if calculate_long_dist_demand
+    time_periods = ({"vrk": "WholeDayPeriod"} if calculate_long_dist_demand
         else param.time_periods)
 
     # Check scenario based input data
