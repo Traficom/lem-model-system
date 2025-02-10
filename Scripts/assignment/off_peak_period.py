@@ -72,6 +72,29 @@ class OffPeakPeriod(AssignmentPeriod):
         del mtxs["toll_cost"]
         return mtxs
 
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+        """Assign bikes, cars and trucks for one time period.
+
+        Get travel impedance matrices for one time period from assignment.
+        Transit impedance is fetched from free-flow init assignment.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (car_work/transit/...) : numpy 2-d matrix
+        """
+        self._set_bike_vdfs()
+        self._assign_bikes()
+        self._set_car_vdfs()
+        if not self._separate_emme_scenarios:
+            self._calc_background_traffic(include_trucks=True)
+        self._assign_cars(self.stopping_criteria["fine"])
+        self._set_car_vdfs(use_free_flow_speeds=True)
+        self._assign_trucks()
+        self._calc_transit_network_results()
+        return self._get_impedances(self._end_assignment_classes)
+
 
 class TransitAssignmentPeriod(OffPeakPeriod):
     """Transit-only assignment period.
@@ -107,6 +130,9 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
             save_extra_matrices=save_matrices)
+
+    def assign_trucks_init(self):
+        pass
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Get local transit impedance matrices for one time period.
