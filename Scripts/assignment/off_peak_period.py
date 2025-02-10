@@ -72,7 +72,7 @@ class OffPeakPeriod(AssignmentPeriod):
         del mtxs["toll_cost"]
         return mtxs
 
-    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
+    def end_assign(self) -> Dict[str, Dict[str, ndarray]]:
         """Assign bikes, cars and trucks for one time period.
 
         Get travel impedance matrices for one time period from assignment.
