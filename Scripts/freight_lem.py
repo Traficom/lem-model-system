@@ -15,7 +15,6 @@ from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
 
 from datahandling.traversaldata import transform_traversal_data
-from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
 
 BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
@@ -45,10 +44,7 @@ def main(args):
                                              zonedata,
                                              resultdata,
                                              costdata["freight"][commodity_conversion[commodity]])
-    purps_to_assign = list(filter(lambda purposes: purposes[0] in
-                                  list(purposes), args.specify_commodity_names))
-    
-    ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
+    ass_model.prepare_freight_network(costdata["car_cost"])
     impedance = ass_model.freight_network.assign()
     impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
                          for mode in ("truck", "freight_train", "ship")}
@@ -65,12 +61,9 @@ def main(args):
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
-            if purpose.name not in args.specify_commodity_names:
-                continue
-            with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
-                mtx[f"{purpose}_{mode}"] = demand[mode]
-        if purpose.name in args.specify_commodity_names:
-            ass_model.freight_network.save_network_volumes(purpose.name)
+            if args.save_freight_matrix:
+                with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+                    mtx[f"{purpose.name}_{mode}"] = demand[mode]
         ass_model.freight_network.output_traversal_matrix(resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
@@ -115,18 +108,13 @@ if __name__ == "__main__":
         type=int,
         help="First (biking) scenario ID within EMME project (.emp)."),
     parser.add_argument(
-        "--save-emme-matrices",
-        type=bool,
-        help="Using this flag saves matrices for specified commodities."),
-    parser.add_argument(
         "--first-matrix-id",
         type=int,
         help="First matrix ID within EMME project (.emp)."),
     parser.add_argument(
-        "--specify-commodity-names",
-        nargs="*",
-        choices=commodity_conversion,
-        help="Commodity names in 29 classification. Assigned and saved as mtx."),
+        "--save-freight-matrix",
+        type=bool,
+        help="Using this flag saves freight omx-file for commodity-mode pairs in tons.")
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})

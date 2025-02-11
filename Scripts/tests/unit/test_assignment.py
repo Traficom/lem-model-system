@@ -105,11 +105,10 @@ class EmmeAssignmentTest(unittest.TestCase):
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
-        ass_model.prepare_freight_network(self.dist_cost, ["c1", "c2"])
+        ass_model.prepare_freight_network(self.dist_cost)
         ass_model.freight_network.assign()
         demand = numpy.full((ass_model.nr_zones, ass_model.nr_zones), 1.0)
         for mode in ["truck", "freight_train", "ship"]:
             ass_model.freight_network.set_matrix(mode, demand)
-        ass_model.freight_network.save_network_volumes("c1")
         ass_model.freight_network.output_traversal_matrix(self.resultdata.path)
         self.resultdata.flush()
