@@ -297,6 +297,38 @@ class ModeDestModel(LogitModel):
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         self.money_utility = money_utility
 
+    def calc_soft_mode_exps(self, impedance):
+        self.soft_mode_exps: Dict[str, numpy.ndarray] = {}
+        self.modes = list(self.dest_choice_param)
+        modes = list(impedance)
+        for mode in modes:
+            self.modes.remove(mode)
+            dest_exps = self._calc_dest_util(mode, impedance.pop(mode))
+            try:
+                expsum = dest_exps.sum(1)
+            except ValueError:
+                expsum = dest_exps.sum()
+            dest_expsum = {"logsum": expsum}
+            label = self.purpose.name + "_" + mode
+            logsum = pandas.Series(
+                log(expsum), self.purpose.zone_numbers, name=label)
+            self.zone_data._values[label] = logsum
+            self.soft_mode_exps[mode] = self._calc_mode_util(mode, dest_expsum)
+        return modes
+
+    def calc_soft_mode_prob(self, impedance):
+        modes = list(impedance)
+        probs = {}
+        for mode in modes:
+            dest_exps = self._calc_dest_util(mode, impedance.pop(mode))
+            try:
+                expsum = dest_exps.sum(1)
+            except ValueError:
+                expsum = dest_exps.sum()
+            dest_prob = divide(dest_exps.T, expsum)
+            probs[mode] = sum(self.soft_mode_probs[mode]) * dest_prob
+        return probs
+
     def calc_prob(self, impedance: dict) -> dict:
         """Calculate matrix of choice probabilities.
 
@@ -327,7 +359,10 @@ class ModeDestModel(LogitModel):
         if mode_probs is None:
             self._stashed_exps += [dest_exps, dest_expsums]
             return None
-        return self._calc_prob(mode_probs, dest_exps, dest_expsums)
+        else:
+            self.soft_mode_probs = {
+                mode: mode_probs[mode] for mode in self.soft_mode_exps}
+            return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
     def calc_prob_again(self) -> dict:
         """Return matrix of choice probabilities.
@@ -344,6 +379,8 @@ class ModeDestModel(LogitModel):
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._stashed_exps
         del self._stashed_exps
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
+        self.soft_mode_probs = {
+            mode: mode_probs[mode] for mode in self.soft_mode_exps}
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
     def calc_basic_prob(self, impedance: dict):
@@ -440,7 +477,8 @@ class ModeDestModel(LogitModel):
                     impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
         dest_expsums: Dict[str, numpy.ndarray] = {}
         dest_exps: Dict[str, numpy.ndarray] = {}
-        for mode in self.dest_choice_param:
+        mode_exps: Dict[str, numpy.ndarray] = {}
+        for mode in self.modes:
             dest_exps[mode] = self._calc_dest_util(mode, impedance.pop(mode))
             try:
                 expsum = dest_exps[mode].sum(1)
@@ -451,7 +489,10 @@ class ModeDestModel(LogitModel):
             logsum = pandas.Series(
                 log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
-        mode_expsum, mode_exps = self._calc_mode_utils(dest_expsums)
+            mode_exps[mode] = self._calc_mode_util(mode, dest_expsums[mode])
+        for mode in self.soft_mode_exps:
+            mode_exps[mode] = self.soft_mode_exps[mode]
+        mode_expsum: numpy.ndarray = sum(mode_exps.values())
         logsum = pandas.Series(
             log(mode_expsum), self.purpose.zone_numbers,
             name=self.purpose.name)
@@ -486,7 +527,7 @@ class ModeDestModel(LogitModel):
                    dest_expsums: Dict[str, numpy.ndarray]
                    ) -> Dict[str, numpy.ndarray]:
         prob = {}
-        for mode in mode_probs:
+        for mode in self.modes:
             dest_exp = dest_exps.pop(mode).T
             dest_expsum = dest_expsums[mode]["logsum"]
             dest_prob = divide(dest_exp, dest_expsum)
@@ -642,6 +683,11 @@ class DestModeModel(LogitModel):
     resultdata : ResultData
         Writer object to result directory
     """
+    def calc_soft_mode_exps(self, impedance):
+        return []
+
+    def calc_soft_mode_prob(self, impedance):
+        return []
 
     def calc_prob(self, impedance):
         """Calculate matrix of choice probabilities.

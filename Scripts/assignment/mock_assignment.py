@@ -90,7 +90,7 @@ class MockPeriod(Period):
         return zone_numbers
 
     def init_assign(self):
-        pass
+        return self._get_impedances(["walk", "bike"])
 
     def assign_trucks_init(self):
         pass

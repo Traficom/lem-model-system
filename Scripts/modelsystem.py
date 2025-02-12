@@ -153,6 +153,10 @@ class ModelSystem:
         # Tour generation
         self.dm.generate_tours()
 
+        soft_mode_impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            soft_mode_impedance[ap.name] = ap._get_impedances(["walk", "bike"])
+
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
@@ -165,7 +169,7 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                for mode_demand in purpose.calc_demand():
+                for mode_demand in purpose.calc_demand(soft_mode_impedance):
                     self.dtm.add_demand(mode_demand)
         log.info("Demand calculation completed")
 
@@ -241,8 +245,6 @@ class ModelSystem:
                 value : numpy.ndarray
                     Impedance (float 2-d matrix)
         """
-        impedance = {}
-
         # create attributes and background variables to network
         self.ass_model.prepare_network(self.car_dist_cost)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
@@ -259,9 +261,7 @@ class ModelSystem:
         with self.resultmatrices.open(
                 "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
             mtx["all"] = Purpose.distance
-
-        # Perform traffic assignment and get result impedance, 
-        # for each time period
+        soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
@@ -271,7 +271,15 @@ class ModelSystem:
                         transport_classes=ap.transport_classes) as mtx:
                     for ass_class in ap.transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
-            ap.init_assign()
+            soft_mode_impedance[tp] = ap.init_assign()
+        if not is_end_assignment:
+            for purpose in self.dm.tour_purposes:
+                purpose.calc_soft_mode_prob(soft_mode_impedance)
+        # Perform traffic assignment and get result impedance,
+        # for each time period
+        impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            tp = ap.name
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))

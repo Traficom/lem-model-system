@@ -168,6 +168,7 @@ class AssignmentPeriod(Period):
         self._assign_pedestrians()
         self._set_bike_vdfs()
         self._assign_bikes()
+        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
 
     def assign_trucks_init(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
