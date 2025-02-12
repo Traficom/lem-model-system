@@ -109,8 +109,7 @@ def main(args):
         "Starting simulation with {} iterations...".format(iterations),
         extra=log_extra)
     stored_speed_assignment = (None if args.stored_speed_assignment is None
-        else [Path(args.results_path, scenario) for scenario
-              in args.stored_speed_assignment])
+        else [Path(path) for path in args.stored_speed_assignment])
     impedance = model.assign_base_demand(
         iterations==0, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
