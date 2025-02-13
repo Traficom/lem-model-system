@@ -128,7 +128,8 @@ class EmmeAssignmentModel(AssignmentModel):
         #add ferry wait time
         self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
 
-    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float]):
+    def prepare_freight_network(self, car_dist_unit_cost: Dict[str, float],
+                                commodity_classes: List[str]):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
@@ -138,6 +139,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 Assignment class (car_work/truck/...)
             value : float
                 Car cost per km in euros
+        commodity_classes : list of str
+            Class names for which we want extra attributes
         """
         self.freight_network = FreightAssignmentPeriod(
             "vrk", self.mod_scenario.number, self.emme_project)
@@ -150,6 +153,22 @@ class EmmeAssignmentModel(AssignmentModel):
                 self.emme_project.create_extra_attribute(
                     "TRANSIT_LINE", attr, "terminal cost",
                     overwrite=True, scenario=self.mod_scenario)
+        for comm_class in commodity_classes:
+            for ass_class in param.freight_modes:
+                attr_name = (comm_class + ass_class)[:17]
+                self.emme_project.create_extra_attribute(
+                    "TRANSIT_SEGMENT", '@' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
+                self.emme_project.create_extra_attribute(
+                    "LINK", '@a_' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
+                attr_name = (comm_class + "truck")[:17]
+                self.emme_project.create_extra_attribute(
+                    "LINK", '@' + attr_name,
+                    "commodity flow", overwrite=True,
+                    scenario=self.mod_scenario)
         self._create_attributes(
             self.mod_scenario,
             list(param.truck_classes) + list(param.freight_modes),

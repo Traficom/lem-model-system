@@ -44,7 +44,7 @@ def main(args):
                                              zonedata,
                                              resultdata,
                                              costdata["freight"][commodity_conversion[commodity]])
-    ass_model.prepare_freight_network(costdata["car_cost"])
+    ass_model.prepare_freight_network(costdata["car_cost"], args.specify_commodity_names)
     impedance = ass_model.freight_network.assign()
     impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
                          for mode in ("truck", "freight_train", "ship")}
@@ -61,13 +61,15 @@ def main(args):
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
-            if args.save_freight_matrix:
+            if purpose.name in args.specify_commodity_names:
+                ass_model.freight_network.save_network_volumes(purpose.name)
                 with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
                     mtx[f"{purpose.name}_{mode}"] = demand[mode]
         ass_model.freight_network.output_traversal_matrix(resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
+    log.info("Setting vehicle matrices and performing end assignment.")
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
@@ -112,9 +114,10 @@ if __name__ == "__main__":
         type=int,
         help="First matrix ID within EMME project (.emp)."),
     parser.add_argument(
-        "--save-freight-matrix",
-        type=bool,
-        help="Using this flag saves freight omx-file for commodity-mode pairs in tons.")
+        "--specify-commodity-names",
+        nargs="*",
+        choices=commodity_conversion,
+        help="Using this flag, user can specify which commodity results are saved into an omx-file.")
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
