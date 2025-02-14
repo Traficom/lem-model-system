@@ -590,7 +590,7 @@ class AssignmentPeriod(Period):
         self.bike_mode.init_matrices()
         scen = self.emme_scenario
         log.info("Bike assignment started...")
-        self.emme_project.bike_assignment(
+        self.emme_project.car_assignment(
             specification=self.bike_mode.spec, scenario=scen)
         log.info("Bike assignment performed for scenario " + str(scen.id))
 

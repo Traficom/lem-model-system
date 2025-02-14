@@ -396,9 +396,6 @@ class MockProject:
         }
         return report
 
-    def bike_assignment(self, *args, **kwargs):
-        pass
-
     def pedestrian_assignment(self, *args, **kwargs):
         pass
 
