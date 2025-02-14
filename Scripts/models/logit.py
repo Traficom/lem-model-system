@@ -556,6 +556,10 @@ class AccessibilityModel(ModeDestModel):
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
         """
+        if "car_electric" in impedance:
+            impedance.pop("car_electric")
+        if "car_electric_pax" in impedance:
+            impedance.pop("car_electric_pax")
         mode_exps, mode_expsum, _, _ = self._calc_utils(impedance)
         self.accessibility = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
@@ -713,6 +717,8 @@ class DestModeModel(LogitModel):
         # Calculate electric car probability and add to prob
         if ec_mode in impedance:
             impedance[self.purpose.car_mode] = impedance[ec_mode]
+        if "car_electric_pax" in impedance:
+            impedance["car_pax"] = impedance["car_electric_pax"]
             ec_prob = self._calc_prob(impedance)
             prob = self._calc_electric_car_shares(prob, ec_prob)
 
