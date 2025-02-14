@@ -90,8 +90,7 @@ def main(args):
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
-            first_matrix_id=args.first_matrix_id,
-            use_stored_speeds=args.stored_speed_assignment, **kwargs)
+            first_matrix_id=args.first_matrix_id, **kwargs)
     # Initialize model system (wrapping Assignment-model,
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
@@ -109,7 +108,10 @@ def main(args):
     log.info(
         "Starting simulation with {} iterations...".format(iterations),
         extra=log_extra)
-    impedance = model.assign_base_demand(iterations==0)
+    stored_speed_assignment = (None if args.stored_speed_assignment is None
+        else [Path(path) for path in args.stored_speed_assignment])
+    impedance = model.assign_base_demand(
+        iterations==0, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -203,8 +205,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",
-        action="store_true",
-        help="Using this flag runs assigment with stored (fixed) speed."
+        type=str,
+        nargs="*",
+        help=("Using this flag runs assigment with stored (fixed) speed. "
+              + "If argument is followed by list of scenarios, "
+              + "stored speeds will be imported from result path "
+              + "for these scenarios.")
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",
