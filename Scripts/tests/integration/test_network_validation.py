@@ -3,9 +3,6 @@ import unittest
 import pandas
 from pathlib import Path
 from assignment.emme_bindings.mock_project import MockProject, MODE_TYPES
-from assignment.datatypes.transit_fare import TransitFareZoneSpecification
-from assignment.mock_assignment import MockAssignmentModel
-from datahandling.matrixdata import MatrixData
 from utils.validate_network import validate
 from utils.validate_loaded_network import validate_loaded
 from parameters.assignment import time_periods
@@ -18,21 +15,11 @@ class EmmeAssignmentTest(unittest.TestCase):
         scenario_dir = Path(__file__).parent.parent / "test_data" / "Network"
         scenario_id = 19
         context.import_scenario(scenario_dir, scenario_id, "test")
-        fares = TransitFareZoneSpecification(pandas.DataFrame({
-            "fare": {
-                "A": 59,
-                "AB": 109,
-                "dist": 3.0,
-                "start": 35,
-            },
-        }))
 
         network0 = context.modeller.emmebank.scenario(scenario_id).get_network()
         network1 = copy.deepcopy(network0)
         network1.create_mode(MODE_TYPES["3"],"h")
-        self.assertRaises(ValueError, validate,
-            network1,
-            fares)
+        self.assertRaises(ValueError, validate, network1)
         
         #Link check cases
         cases = [
@@ -70,7 +57,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         node1_id = 800900
         node2_id = 800901
         for case in cases:
-            self.link_check_network(network0, fares, 
+            self.link_check_network(network0,
                     node1_id, case["node1_centroid"], 
                     node2_id, case["node2_centroid"], 
                     case["link_modes"],
@@ -90,7 +77,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         line._segments[0].allow_alightings = 0
         line._segments[1].allow_boardings = 1
         line._segments[1].allow_alightings = 1
-        self.assertRaises(ValueError, validate_loaded, network, fares) 
+        self.assertRaises(ValueError, validate_loaded, network)
         
         #Segment check, train or metro travel time us1 is not 0 before stopping (noalin=1 and noboan=1)
         # Check line encoding, if row's @ccost=1
@@ -105,7 +92,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         line._segments[0].allow_alightings = 0
         line._segments[1].allow_boardings = 0
         line._segments[1].allow_alightings = 0
-        self.assertRaises(ValueError, validate_loaded, network, fares) 
+        self.assertRaises(ValueError, validate_loaded, network)
 
         #Line check, headway should not be 0,1
         network = copy.deepcopy(network0)
@@ -113,7 +100,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         line = self.line_creator(network, itinerary, "mr", '3002A5', 5, 0.001)
         self.assertRaises(ValueError, validate, network)
 
-    def link_check_network(self, network0, fares, node1_id, 
+    def link_check_network(self, network0, node1_id,
                            node1_iscentroid, node2_id, node2_iscentroid, 
                            link_modes, link_type, link_length):
 
@@ -124,9 +111,7 @@ class EmmeAssignmentTest(unittest.TestCase):
         #Check if link type equals 1
         link.type = link_type
         link.length = link_length
-        self.assertRaises(ValueError, validate,
-            network,
-            fares)
+        self.assertRaises(ValueError, validate, network)
 
     def line_creator(self, network, nodelist, modes,
                      linename, lineid, hdwy_value):
