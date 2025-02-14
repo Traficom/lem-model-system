@@ -10,7 +10,7 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import assignment_classes, car_classes, ec_mode
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -55,6 +55,14 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
+        if self.name in assignment_classes:
+            self.car_mode = "car_" + assignment_classes[self.name]
+            if self.car_mode in self.impedance_share:
+                car_imp_share = self.impedance_share[self.car_mode]
+                self.impedance_share[ec_mode] = car_imp_share
+            if "car_pax" in self.impedance_share:
+                car_pax_imp_share = self.impedance_share["car_pax"]
+                self.impedance_share["car_electric_pax"] = car_pax_imp_share
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
@@ -111,11 +119,13 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        day_imp = {}
+        day_imp = defaultdict(lambda: defaultdict(float))
         for mode in self.impedance_share:
             share_sum = 0
-            day_imp[mode] = defaultdict(float)
-            ass_class = mode.replace("pax", assignment_classes[self.name])
+            if mode == "car_electric_pax":
+                ass_class = "car_electric"
+            else:
+                ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
                     if ass_class in impedance[time_period][mtx_type]:
@@ -124,8 +134,9 @@ class Purpose:
                         share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
+            if mode in day_imp and abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
+        day_imp = dict(day_imp)
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
@@ -163,14 +174,14 @@ class Purpose:
                                                     self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
-                if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
+                if mtx_type == "cost" and mode in car_classes:
                     try:
                         day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
                                                     (cost.car_drv_occupancy[self.name] - 1) /
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
-                if mtx_type == "cost" and mode == "car_pax":
+                if mtx_type == "cost" and mode in ("car_pax", "car_electric_pax"):
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
                                                     cost.car_pax_occupancy[self.name])
@@ -258,7 +269,10 @@ class TourPurpose(Purpose):
             self.accessibility_model = logit.AccessibilityModel(*args)
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
-        self.modes = list(self.model.mode_choice_param)
+        if self.car_mode in self.demand_share:
+            self.demand_share[ec_mode] = self.demand_share[self.car_mode]
+        self.demand_share["car_electric_pax"] = self.demand_share["car_pax"]
+        self.modes = list(self.impedance_share)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
