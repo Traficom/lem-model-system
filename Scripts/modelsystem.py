@@ -327,12 +327,13 @@ class ModelSystem:
         self.dtm.init_demand(
             [mode for mode in self.travel_modes if mode != "walk"])
 
-        # Update car density
-        try:
+        if "hb_leisure_sustainable" in self.zdata_forecast._values:
             prediction = self.dm.car_ownership_model.calc_prob()
-        except KeyError:
+            log.info("New car ownership values calculated.")
+        else: 
             prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
                           .clip(upper=1.0))
+            log.info("Use car ownership from basedata.")
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
