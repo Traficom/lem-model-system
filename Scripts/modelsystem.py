@@ -328,8 +328,11 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         # Update car density
-        prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
-                      .clip(upper=1.0))
+        try:
+            prediction = self.dm.car_ownership_model.calc_prob()
+        except KeyError:
+            prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
+                          .clip(upper=1.0))
         self.zdata_forecast["car_density"] = prediction
         self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 

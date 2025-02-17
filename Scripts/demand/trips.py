@@ -12,7 +12,7 @@ import utils.log as log
 import parameters.zone as param
 from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
-from models import car_use, linear, tour_combinations
+from models import car_use, car_ownership, linear, tour_combinations
 
 
 
@@ -55,6 +55,8 @@ class DemandModel:
             [bounds[0], bounds[-1]]))
         self.car_use_model = car_use.CarUseModel(
             zone_data, self.bounds, param.age_groups, self.resultdata)
+        self.car_ownership_model = car_ownership.CarOwnershipModel(
+            zone_data, self.bounds, self.resultdata)
         self.tour_generation_model = tour_combinations.TourCombinationModel(
             self.zone_data)
         # Income models used only in agent modelling
