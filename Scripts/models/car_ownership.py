@@ -83,15 +83,15 @@ class CarOwnershipModel(LogitModel):
             prob[nr_cars] = no_dummy + dummy
         # Calculate car density
         population = self.zone_data["population"]
+        households = population / self.zone_data["avg_household_size"]
         cars = numpy.zeros_like(population)
         for nr_cars in self.param:
-            cars += prob[nr_cars] * population * nr_cars
+            cars += prob[nr_cars] * households * nr_cars
         prob["cars"] = pandas.Series(
             cars, self.zone_data.zone_numbers[self.bounds], name="cars")
         prob["car_density"] = pandas.Series(
             cars / population, self.zone_data.zone_numbers[self.bounds], name="car_density")
         self.resultdata.print_data(prob, "zone_car_ownership.txt")
-        log.info("Car ownership calculated.")
         return prob["car_density"]
 
     def calc_individual_prob(self, 

@@ -34,7 +34,9 @@
             "area_university_buildings",
             "students_comprehensive",
             "students_upper_secondary",
-            "students_higher_education"
+            "students_higher_education",
+            "sh_row_or_detached",
+            "avg_household_size"
         ],
         "mean": [
             "avg_park_cost",
