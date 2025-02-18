@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 from models.logit import LogitModel
 from parameters.car import car_ownership
 
+def divide(a, b):
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class CarOwnershipModel(LogitModel):
     """Binary logit model for car use.
@@ -50,7 +52,7 @@ class CarOwnershipModel(LogitModel):
             self.exps[nr_cars] = numpy.exp(utility)
             nr_cars_expsum += numpy.exp(utility)
         for nr_cars in self.param:
-            prob[nr_cars] = self.exps[nr_cars] / nr_cars_expsum
+            prob[nr_cars] = divide(self.exps[nr_cars], nr_cars_expsum)
         return prob
 
 
@@ -83,14 +85,14 @@ class CarOwnershipModel(LogitModel):
             prob[nr_cars] = no_dummy + dummy
         # Calculate car density
         population = self.zone_data["population"]
-        households = population / self.zone_data["avg_household_size"]
+        households = divide(population, self.zone_data["avg_household_size"])
         cars = numpy.zeros_like(population)
         for nr_cars in self.param:
             cars += prob[nr_cars] * households * nr_cars
         prob["cars"] = pandas.Series(
             cars, self.zone_data.zone_numbers[self.bounds], name="cars")
         prob["car_density"] = pandas.Series(
-            cars / population, self.zone_data.zone_numbers[self.bounds], name="car_density")
+            divide(cars, population), self.zone_data.zone_numbers[self.bounds], name="car_density")
         self.resultdata.print_data(prob, "zone_car_ownership.txt")
         return prob["car_density"]
 
