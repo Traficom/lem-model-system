@@ -93,6 +93,8 @@ class CarOwnershipModel(LogitModel):
             cars, self.zone_data.zone_numbers[self.bounds], name="cars")
         prob["car_density"] = pandas.Series(
             divide(cars, population), self.zone_data.zone_numbers[self.bounds], name="car_density")
+        for nr_cars in self.param:
+            prob["sh_cars" + nr_cars] = prob.pop(nr_cars)
         self.resultdata.print_data(prob, "zone_car_ownership.txt")
         return prob["car_density"]
 
