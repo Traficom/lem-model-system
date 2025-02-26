@@ -71,7 +71,6 @@ class CarOwnershipModel(LogitModel):
             for dummy in self.param[nr_cars]["individual_dummy"]:
                 ind_prob = {}
                 b = self.param[nr_cars]["individual_dummy"][dummy]
-                dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
                 try:
                     self.exps[nr_cars] *= numpy.exp(b)
                 except ValueError:
@@ -79,10 +78,12 @@ class CarOwnershipModel(LogitModel):
                         self.exps[nr_cars][bounds] *= numpy.exp(b[i])
             nr_cars_expsum += self.exps[nr_cars]
         for nr_cars in self.param:
-            ind_prob = self.exps[nr_cars] / nr_cars_expsum
-            no_dummy = (1 - dummy_share) * prob[nr_cars]
-            dummy = dummy_share * ind_prob
-            prob[nr_cars] = no_dummy + dummy
+            for dummy in self.param[nr_cars]["individual_dummy"]:
+                ind_prob = self.exps[nr_cars] / nr_cars_expsum
+                dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
+                no_dummy = (1 - dummy_share) * prob[nr_cars]
+                dummy = dummy_share * ind_prob
+                prob[nr_cars] = no_dummy + dummy
         # Calculate car density
         population = self.zone_data["population"]
         households = divide(population, self.zone_data["avg_household_size"])
