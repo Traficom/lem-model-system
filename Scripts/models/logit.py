@@ -440,7 +440,6 @@ class ModeDestModel(LogitModel):
                     impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
         dest_expsums: Dict[str, numpy.ndarray] = {}
         dest_exps: Dict[str, numpy.ndarray] = {}
-        sustainable_expsum = list()
         for mode in self.dest_choice_param:
             dest_exps[mode] = self._calc_dest_util(mode, impedance.pop(mode))
             try:
@@ -452,18 +451,11 @@ class ModeDestModel(LogitModel):
             logsum = pandas.Series(
                 log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
-            if "car" not in mode:
-                sustainable_expsum.append(expsum)
         mode_expsum, mode_exps = self._calc_mode_utils(dest_expsums)
         logsum = pandas.Series(
             log(mode_expsum), self.purpose.zone_numbers,
             name=self.purpose.name)
         self.zone_data._values[self.purpose.name] = logsum
-        label = f"{self.purpose.name}_sustainable"
-        logsum_sustainable = pandas.Series(
-            log(numpy.sum(sustainable_expsum, axis=0)), self.purpose.zone_numbers,
-            name=label)
-        self.zone_data._values[label] = logsum_sustainable
         return mode_exps, mode_expsum, dest_exps, dest_expsums
 
     def _calc_mode_prob(self, mode_exps: Dict[str, numpy.ndarray],
