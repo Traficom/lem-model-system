@@ -22,7 +22,14 @@ car_ownership = {
     0: {
         "constant": 0.0,
         "generation": {},
-        "individual_dummy": {},
+        "individual_dummy": {
+            "sh_income_0_19": 0,
+            "sh_income_20_39": 0,
+            "sh_income_40_59": 0,
+            "sh_income_60_79": 0,
+            "sh_income_80_99": 0,
+            "sh_income_100_": 0
+        },
     },
     1: {
         "constant": 3.182379,
@@ -33,6 +40,10 @@ car_ownership = {
         "individual_dummy": {
             "sh_income_0_19": -2.589644,
             "sh_income_20_39": -1.030502,
+            "sh_income_40_59": 0,
+            "sh_income_60_79": 0,
+            "sh_income_80_99": 0,
+            "sh_income_100_": 0
         },
     },
     2: {
