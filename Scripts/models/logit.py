@@ -530,7 +530,6 @@ class AccessibilityModel(ModeDestModel):
             else:
                 sustainable_expsum += mode_exps[mode]
         self.accessibility["sustainable"] = numpy.log(sustainable_expsum)
-        self.accessibility["sustainable2"] = self.zone_data._values[f"{self.purpose.name}_sustainable"]
         self.accessibility["car"] = numpy.log(car_expsum)
         for key in ["all", "sustainable", "car"]:
             self.accessibility[f"{key}_scaled"] = (self.money_utility
