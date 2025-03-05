@@ -64,7 +64,10 @@ class CarOwnershipModel(LogitModel):
         pandas.Series
                 Choice probabilities
         """
-        prob = self.calc_basic_prob()
+        self.calc_basic_prob()
+        prob = {}
+        for nr_cars in self.param:
+            prob[nr_cars] = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
         # Calculate probability with individual dummies and combine
         for dummy in self.param[0]["individual_dummy"]:
             nr_cars_exp = {}
@@ -80,9 +83,8 @@ class CarOwnershipModel(LogitModel):
             for nr_cars in self.param:
                 ind_prob = nr_cars_exp[nr_cars] / nr_cars_expsum
                 dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
-                without_dummy = (1 - dummy_share) * prob[nr_cars]
                 with_dummy = dummy_share * ind_prob
-                prob[nr_cars] = without_dummy + with_dummy
+                prob[nr_cars] += with_dummy
         # Calculate car density
         population = self.zone_data["population"]
         households = divide(population, self.zone_data["avg_household_size"])
