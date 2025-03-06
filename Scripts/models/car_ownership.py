@@ -64,26 +64,27 @@ class CarOwnershipModel(LogitModel):
         pandas.Series
                 Choice probabilities
         """
-        prob = self.calc_basic_prob()
-        # Calculate probability within individual dummies and combine
-        nr_cars_expsum = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+        self.calc_basic_prob()
+        prob = {}
         for nr_cars in self.param:
-            for dummy in self.param[nr_cars]["individual_dummy"]:
-                ind_prob = {}
+            prob[nr_cars] = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+        # Calculate probability with individual dummies and combine
+        for dummy in self.param[0]["individual_dummy"]:
+            nr_cars_exp = {}
+            nr_cars_expsum = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+            for nr_cars in self.param:
                 b = self.param[nr_cars]["individual_dummy"][dummy]
                 try:
-                    self.exps[nr_cars] *= numpy.exp(b)
-                except ValueError:
+                    nr_cars_exp[nr_cars] = self.exps[nr_cars] * numpy.exp(b)
+                except KeyError:
                     for i, bounds in enumerate(self.bounds):
-                        self.exps[nr_cars][bounds] *= numpy.exp(b[i])
-            nr_cars_expsum += self.exps[nr_cars]
-        for nr_cars in self.param:
-            for dummy in self.param[nr_cars]["individual_dummy"]:
-                ind_prob = self.exps[nr_cars] / nr_cars_expsum
+                        nr_cars_exp[nr_cars] = self.exps[nr_cars][bounds] * numpy.exp(b[i])
+                nr_cars_expsum += nr_cars_exp[nr_cars]
+            for nr_cars in self.param:
+                ind_prob = nr_cars_exp[nr_cars] / nr_cars_expsum
                 dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
-                no_dummy = (1 - dummy_share) * prob[nr_cars]
-                dummy = dummy_share * ind_prob
-                prob[nr_cars] = no_dummy + dummy
+                with_dummy = dummy_share * ind_prob
+                prob[nr_cars] += with_dummy
         # Calculate car density
         population = self.zone_data["population"]
         households = divide(population, self.zone_data["avg_household_size"])
