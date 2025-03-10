@@ -306,7 +306,7 @@ class TourPurpose(Purpose):
 
     def calc_soft_mode_prob(self, impedance):
         purpose_impedance = self.transform_impedance(impedance)
-        self.model.calc_soft_mode_exps(purpose_impedance)
+        self.model.calc_soft_mode_exps(copy(purpose_impedance))
         self.accessibility_model.calc_soft_mode_exps(purpose_impedance)
 
     def calc_prob(self, impedance, is_last_iteration):

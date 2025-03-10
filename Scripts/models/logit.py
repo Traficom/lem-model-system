@@ -298,28 +298,11 @@ class ModeDestModel(LogitModel):
         self.money_utility = money_utility
 
     def calc_soft_mode_exps(self, impedance):
-        self.soft_mode_exps: Dict[str, numpy.ndarray] = {}
-        self.modes = list(self.dest_choice_param)
-        modes = list(impedance)
-        for mode in modes:
-            self.modes.remove(mode)
-            dest_exps = self._calc_dest_util(mode, impedance.pop(mode))
-            try:
-                expsum = dest_exps.sum(1)
-            except ValueError:
-                expsum = dest_exps.sum()
-            dest_expsum = {"logsum": expsum}
-            label = self.purpose.name + "_" + mode
-            logsum = pandas.Series(
-                log(expsum), self.purpose.zone_numbers, name=label)
-            self.zone_data._values[label] = logsum
-            self.soft_mode_exps[mode] = self._calc_mode_util(mode, dest_expsum)
-        return modes
+        self.soft_mode_exps, _, _, = self._calc_exps(impedance)
 
     def calc_soft_mode_prob(self, impedance):
-        modes = list(impedance)
         probs = {}
-        for mode in modes:
+        for mode in list(impedance):
             dest_exps = self._calc_dest_util(mode, impedance.pop(mode))
             try:
                 expsum = dest_exps.sum(1)
@@ -475,10 +458,22 @@ class ModeDestModel(LogitModel):
 
     def _calc_utils(self,
                     impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
+        mode_exps, dest_exps, dest_expsums = self._calc_exps(impedance)
+        for mode in self.soft_mode_exps:
+            mode_exps[mode] = self.soft_mode_exps[mode]
+        mode_expsum: numpy.ndarray = sum(mode_exps.values())
+        logsum = pandas.Series(
+            log(mode_expsum), self.purpose.zone_numbers,
+            name=self.purpose.name)
+        self.zone_data._values[self.purpose.name] = logsum
+        return mode_exps, mode_expsum, dest_exps, dest_expsums
+
+    def _calc_exps(self,
+                   impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
         dest_expsums: Dict[str, numpy.ndarray] = {}
         dest_exps: Dict[str, numpy.ndarray] = {}
         mode_exps: Dict[str, numpy.ndarray] = {}
-        for mode in self.modes:
+        for mode in list(impedance):
             dest_exps[mode] = self._calc_dest_util(mode, impedance.pop(mode))
             try:
                 expsum = dest_exps[mode].sum(1)
@@ -490,14 +485,7 @@ class ModeDestModel(LogitModel):
                 log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
             mode_exps[mode] = self._calc_mode_util(mode, dest_expsums[mode])
-        for mode in self.soft_mode_exps:
-            mode_exps[mode] = self.soft_mode_exps[mode]
-        mode_expsum: numpy.ndarray = sum(mode_exps.values())
-        logsum = pandas.Series(
-            log(mode_expsum), self.purpose.zone_numbers,
-            name=self.purpose.name)
-        self.zone_data._values[self.purpose.name] = logsum
-        return mode_exps, mode_expsum, dest_exps, dest_expsums
+        return mode_exps, dest_exps, dest_expsums
 
     def _calc_mode_prob(self, mode_exps: Dict[str, numpy.ndarray],
                         mode_expsum: numpy.ndarray,
@@ -527,7 +515,7 @@ class ModeDestModel(LogitModel):
                    dest_expsums: Dict[str, numpy.ndarray]
                    ) -> Dict[str, numpy.ndarray]:
         prob = {}
-        for mode in self.modes:
+        for mode in dest_expsums:
             dest_exp = dest_exps.pop(mode).T
             dest_expsum = dest_expsums[mode]["logsum"]
             dest_prob = divide(dest_exp, dest_expsum)
