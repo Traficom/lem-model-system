@@ -401,7 +401,7 @@ class ModeDestModel(LogitModel):
                                 mode_probs: Dict[str, numpy.ndarray]):
         ec_mode_exps, _, dest_exps, dest_expsums = self._calc_utils(
             impedance)
-        for d in (ec_mode_exps, dest_exps, dest_expsums):
+        for d in (dest_exps, dest_expsums):
             if "car_pax" in d:
                 d["car_electric_pax"] = d.pop("car_pax")
             if self.purpose.car_mode in d:
