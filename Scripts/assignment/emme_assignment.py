@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, cast, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, Optional, cast, Iterable
 from collections import defaultdict
 import numpy
 import pandas
@@ -39,10 +39,6 @@ class EmmeAssignmentModel(AssignmentModel):
         Whether matrices will be saved in Emme format for all time periods.
     use_free_flow_speeds : bool (optional)
         Whether traffic assignment is all-or-nothing with free-flow speeds.
-    use_stored_speeds : bool (optional)
-        Whether traffic assignment is all-or-nothing with speeds stored
-        in `@car_time_xxx`. Overrides `use_free_flow_speeds` if this is
-        also set to `True`.
     delete_extra_matrices : bool (optional)
         If True, only matrices needed for demand calculation will be
         returned from end assignment.
@@ -62,14 +58,12 @@ class EmmeAssignmentModel(AssignmentModel):
                  separate_emme_scenarios: bool = False,
                  save_matrices: bool = False,
                  use_free_flow_speeds: bool = False,
-                 use_stored_speeds: bool = False,
                  delete_extra_matrices: bool = False,
                  time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
         self.use_free_flow_speeds = use_free_flow_speeds
-        self.use_stored_speeds = use_stored_speeds
         self.delete_extra_matrices = delete_extra_matrices
         self.time_periods = time_periods
         EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
@@ -79,7 +73,8 @@ class EmmeAssignmentModel(AssignmentModel):
         if self.mod_scenario is None:
             raise ValueError(f"EMME project has no scenario {first_scenario_id}")
 
-    def prepare_network(self, car_dist_unit_cost: Dict[str, float]):
+    def prepare_network(self, car_dist_unit_cost: Dict[str, float],
+                        car_time_files: Optional[List[str]] = None):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
@@ -89,7 +84,17 @@ class EmmeAssignmentModel(AssignmentModel):
                 Assignment class (car_work/truck/...)
             value : float
                 Car cost per km in euros
+        car_time_files : list (optional)
+            List of paths, where car time data is stored.
+            If set, traffic assignment is all-or-nothing with speeds stored
+            in `#car_time_xxx`. Overrides `use_free_flow_speeds`.
+            List can be empty, if car times are already stored on network.
         """
+        if car_time_files is not None:
+            for path in car_time_files:
+                self.emme_project.import_network_fields(
+                    path / "netfield_links.txt", field_separator="TAB",
+                    revert_on_error=False, scenario=self.mod_scenario)
         self._add_bus_stops()
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
@@ -111,7 +116,7 @@ class EmmeAssignmentModel(AssignmentModel):
             self.assignment_periods.append(vars(periods)[self.time_periods[tp]](
                 tp, scen_id, self.emme_project,
                 separate_emme_scenarios=self.separate_emme_scenarios,
-                use_stored_speeds=self.use_stored_speeds,
+                use_stored_speeds=(car_time_files is not None),
                 delete_extra_matrices=self.delete_extra_matrices))
         ass_classes = param.transport_classes + ("bus",)
         self._create_attributes(
@@ -277,34 +282,40 @@ class EmmeAssignmentModel(AssignmentModel):
         soft_modes = param.transit_classes + ("bike",)
         faulty_kela_code_nodes = set()
         for link in network.links():
-            linktype = link.type % 100
-            if linktype in param.roadclasses:
-                vdf = param.roadclasses[linktype].volume_delay_func
-            elif linktype in param.custom_roadtypes:
-                vdf = linktype - 90
-            else:
-                vdf = 0
-            municipality = link.i_node["#municipality"]
-            try:
-                area = mapping[municipality]
-            except KeyError:
-                faulty_kela_code_nodes.add(municipality)
-                area = None
-            for ass_class in ass_classes:
-                veh_kms = link[self._extra(ass_class)] * link.length
-                kms[ass_class] += veh_kms
-                if vdf in vdfs:
-                    vdf_kms[ass_class][vdf] += veh_kms
-                if area in areas:
-                    area_kms[ass_class][area] += veh_kms
-                if (vdf in vdfs
-                        and area in vdf_area_kms[vdf]
-                        and ass_class not in soft_modes):
-                    vdf_area_kms[vdf][area] += veh_kms
-            if vdf == 0 and linktype in param.railtypes:
-                linklengths[param.railtypes[linktype]] += link.length
-            else:
-                linklengths[param.roadtypes[vdf]] += link.length / 2
+            if link.i_node[param.subarea_attr] == 2:
+                linktype = link.type % 100
+                if linktype in param.roadclasses:
+                    vdf = param.roadclasses[linktype].volume_delay_func
+                elif linktype in param.custom_roadtypes:
+                    vdf = linktype - 90
+                else:
+                    vdf = 0
+                municipality = link.i_node[param.municipality_attr]
+                try:
+                    area = mapping[municipality]
+                except KeyError:
+                    faulty_kela_code_nodes.add(municipality)
+                    area = None
+                for ass_class in ass_classes:
+                    veh_kms = link[self._extra(ass_class)] * link.length
+                    kms[ass_class] += veh_kms
+                    try:
+                        vdf_kms[ass_class][vdf] += veh_kms
+                    except KeyError:
+                        pass
+                    try:
+                        area_kms[ass_class][area] += veh_kms
+                    except KeyError:
+                        pass
+                    if ass_class not in soft_modes:
+                        try:
+                            vdf_area_kms[vdf][area] += veh_kms
+                        except KeyError:
+                            pass
+                if vdf == 0 and linktype in param.railtypes:
+                    linklengths[param.railtypes[linktype]] += link.length
+                else:
+                    linklengths[param.roadtypes[vdf]] += link.length / 2
         if faulty_kela_code_nodes:
             s = ("County not found for #municipality when aggregating link data: "
                  + ", ".join(faulty_kela_code_nodes))
@@ -329,8 +340,9 @@ class EmmeAssignmentModel(AssignmentModel):
         for line in network.transit_lines():
             mode = line.mode.id
             for seg in line.segments():
+                municipality = seg.i_node[param.municipality_attr]
                 for tc in attrs:
-                    boardings[mode][seg.i_node["#municipality"]] += seg[tc]
+                    boardings[mode][municipality] += seg[tc]
         resultdata.print_data(
             pandas.DataFrame.from_dict(boardings), "municipality_boardings.txt")
 
@@ -371,6 +383,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Segment, network.transit_segments())):
             attrs = [attr.name for attr in self.day_scenario.extra_attributes()
                 if attr.type == geom_type.name]
+            attrs += [attr.name for attr in self.day_scenario.network_fields()
+                if attr.type == geom_type.name and attr.atype == "REAL"]
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")
@@ -595,7 +609,7 @@ class EmmeAssignmentModel(AssignmentModel):
 
             # Calculate noise zone area and aggregate to area level
             try:
-                area = mapping[link.i_node["#municipality"]]
+                area = mapping[link.i_node[param.municipality_attr]]
             except KeyError:
                 area = None
             if area in noise_areas:

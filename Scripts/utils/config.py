@@ -81,7 +81,7 @@ def create_config(config: dict):
         "END_ASSIGNMENT_ONLY": False,
         "LONG_DIST_DEMAND_FORECAST": None,
         "FREIGHT_MATRIX_PATH": None,
-        "STORED_SPEED_ASSIGNMENT": False,
+        "STORED_SPEED_ASSIGNMENT": None,
         "RUN_AGENT_SIMULATION": False,
         "DO_NOT_USE_EMME": False,
         "SEPARATE_EMME_SCENARIOS": False,

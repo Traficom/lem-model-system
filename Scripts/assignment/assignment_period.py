@@ -302,11 +302,14 @@ class AssignmentPeriod(Period):
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
         return {(link.i_node.id, link.j_node.id): link[time_attr]
-            for link in network.links() if link.i_node["#subarea"] == 2}
+            for link in network.links() if link.i_node[param.subarea_attr] == 2}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
             self.emme_scenario.id))
+        emmebank = self.emme_project.modeller.emmebank
+        # Function 90 is used for free-flow speeds on external links
+        emmebank.function("fd90").expression = param.volume_delay_funcs["fd90"]
         network = self.emme_scenario.get_network()
         car_time_attr = self.netfield("car_time")
         main_mode = network.mode(param.main_mode)
@@ -431,6 +434,8 @@ class AssignmentPeriod(Period):
     def _set_bike_vdfs(self):
         log.info("Sets bike functions for scenario {}".format(
             self.emme_scenario.id))
+        emmebank = self.emme_project.modeller.emmebank
+        emmebank.function("fd90").expression = param.volume_delay_funcs["fd98"]
         network = self.emme_scenario.get_network()
         main_mode = network.mode(param.main_mode)
         bike_mode = network.mode(param.bike_mode)
@@ -585,7 +590,7 @@ class AssignmentPeriod(Period):
         self.bike_mode.init_matrices()
         scen = self.emme_scenario
         log.info("Bike assignment started...")
-        self.emme_project.bike_assignment(
+        self.emme_project.car_assignment(
             specification=self.bike_mode.spec, scenario=scen)
         log.info("Bike assignment performed for scenario " + str(scen.id))
 

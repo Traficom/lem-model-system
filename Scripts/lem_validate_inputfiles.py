@@ -56,7 +56,7 @@ def main(args):
 
     zone_numbers: Dict[str, numpy.array] = {}
     calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
-    time_periods = (["vrk"] if calculate_long_dist_demand
+    time_periods = ({"vrk": "WholeDayPeriod"} if calculate_long_dist_demand
         else param.time_periods)
 
     # Check scenario based input data
@@ -113,10 +113,10 @@ def main(args):
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
             attrs = {
-                "NODE": ["#transit_stop_b", "#transit_stop_e", "#transit_stop_g",
-                         "#transit_stop_t", "#transit_stop_p"],
+                "NODE": (list(param.stop_codes.values())
+                         + [param.subarea_attr, param.municipality_attr]),
                 "LINK": ["#buslane"],
-                "TRANSIT_LINE": ["#keep_stops"],
+                "TRANSIT_LINE": [param.keep_stops_attr],
             }
             for tp in time_periods:
                 attrs["LINK"].append(f"#car_time_{tp}")

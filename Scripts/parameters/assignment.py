@@ -175,7 +175,9 @@ bus_dwell_time = {
 hsl_area = "ABCDE HEXL"
 # Performance settings
 performance_settings = {
-    "number_of_processors": "max"
+    "number_of_processors": "max",
+    "network_acceleration": True,
+    "u_turns_allowed": True,
 }
 # Inversed value of time [min/eur]
 vot_inv = {
@@ -581,6 +583,8 @@ board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
+subarea_attr = "#subarea"
+municipality_attr = "#municipality"
 terminal_cost_attr = "@freight_term_cost"
 freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
