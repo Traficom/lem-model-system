@@ -159,8 +159,8 @@ class ModelSystem:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
                     for imp in tp_imp.values():
-                        imp.pop("car_work", None)
-                        imp.pop("transit_work", None)
+                        for mode in ("car_work", "transit_work", "walk", "bike"):
+                            imp.pop(mode, None)
             purpose_impedance = purpose.calc_prob(
                 previous_iter_impedance, is_last_iteration)
         previous_iter_impedance.clear()
