@@ -266,7 +266,7 @@ class ModelSystem:
             tp = ap.name
             log.info("Assigning period {}...".format(tp))
             if is_end_assignment or (not self.ass_model.use_free_flow_speeds
-                                     and not self.ass_model.use_stored_speeds):
+                                     and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes=ap.transport_classes) as mtx:
