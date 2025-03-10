@@ -343,8 +343,11 @@ class ModeDestModel(LogitModel):
             self._stashed_exps += [dest_exps, dest_expsums]
             return None
         else:
-            self.soft_mode_probs = {
-                mode: mode_probs[mode] for mode in self.soft_mode_exps}
+            try:
+                self.soft_mode_probs = {
+                    mode: mode_probs[mode] for mode in self.soft_mode_exps}
+            except AttributeError:
+                pass
             return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
     def calc_prob_again(self) -> dict:
@@ -459,8 +462,11 @@ class ModeDestModel(LogitModel):
     def _calc_utils(self,
                     impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
         mode_exps, dest_exps, dest_expsums = self._calc_exps(impedance)
-        for mode in self.soft_mode_exps:
-            mode_exps[mode] = self.soft_mode_exps[mode]
+        try:
+            for mode in self.soft_mode_exps:
+                mode_exps[mode] = self.soft_mode_exps[mode]
+        except AttributeError:
+            pass
         mode_expsum: numpy.ndarray = sum(mode_exps.values())
         logsum = pandas.Series(
             log(mode_expsum), self.purpose.zone_numbers,
