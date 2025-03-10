@@ -297,10 +297,36 @@ class ModeDestModel(LogitModel):
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
         self.money_utility = money_utility
 
-    def calc_soft_mode_exps(self, impedance):
+    def calc_soft_mode_exps(self, impedance: dict):
+        """Calculate utility exponentials for walk and bike.
+
+        The exponentials will be used for mode choice at a later stage.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2-d matrix
+                    Impedances
+        """
         self.soft_mode_exps, _, _, = self._calc_exps(impedance)
 
-    def calc_soft_mode_prob(self, impedance):
+    def calc_soft_mode_prob(self, impedance: dict) -> dict:
+        """Calculate matrix of walk and bike choice probabilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2-d matrix
+                    Impedances
+
+        Returns
+        -------
+        dict
+            Mode (bike/walk) : numpy 2-d matrix
+                Choice probabilities
+        """
         probs = {}
         for mode in list(impedance):
             dest_exps = self._calc_dest_util(mode, impedance.pop(mode))

@@ -155,7 +155,7 @@ class ModelSystem:
 
         soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
-            soft_mode_impedance[ap.name] = ap._get_impedances(["walk", "bike"])
+            soft_mode_impedance[ap.name] = ap.get_soft_mode_impedances()
 
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:

@@ -305,6 +305,14 @@ class TourPurpose(Purpose):
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
     def calc_soft_mode_prob(self, impedance):
+        """Calculate walk and bike utilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+        """
         purpose_impedance = self.transform_impedance(impedance)
         self.model.calc_soft_mode_exps(copy(purpose_impedance))
         self.accessibility_model.calc_soft_mode_exps(purpose_impedance)
@@ -353,7 +361,13 @@ class TourPurpose(Purpose):
 
     def calc_demand(self, impedance) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
-              
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
         Yields
         -------
         Demand
