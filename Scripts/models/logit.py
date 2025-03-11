@@ -61,7 +61,7 @@ class LogitModel:
         self._add_impedance(utility, impedance, b["impedance"])
         self._add_log_impedance(utility, impedance, b["log"])
         if dummy in b["individual_dummy"]:
-            self._add_constant(b["individual_dummy"][dummy])
+            self._add_constant(utility, b["individual_dummy"][dummy])
         self.mode_utils[mode] = utility
         exps = numpy.exp(utility)
         dist = self.purpose.dist
