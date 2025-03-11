@@ -365,14 +365,14 @@ class ModeDestModel(LogitModel):
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
     
-    def _calc_individual_prob(self, mod_mode: str, dummy: str,
+    def _calc_individual_prob(self, mod_modes: list[str], dummy: str,
                               mode_exps: Dict[str, numpy.ndarray]):
         """Calculate utilities with individual dummies included.
 
         Parameters
         ----------
-        mod_mode : str
-            The mode for which the utility will be modified
+        mod_modes : str
+            The modes for which the utility will be modified
         dummy : str
             The name of the individual dummy
         mode_exps : dict
@@ -388,13 +388,14 @@ class ModeDestModel(LogitModel):
             value : numpy.ndarray
                 Modified utility exponentials
         """
-        b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
         mode_exps2 = copy.deepcopy(mode_exps)
-        try:
-            mode_exps2[mod_mode] *= numpy.exp(b)
-        except ValueError:
-            for i, bounds in enumerate(self.sub_bounds):
-                mode_exps2[mod_mode][bounds] *= numpy.exp(b[i])
+        for mod_mode in mod_modes:
+            b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
+            try:
+                mode_exps2[mod_mode] *= numpy.exp(b)
+            except ValueError:
+                for i, bounds in enumerate(self.sub_bounds):
+                    mode_exps2[mod_mode][bounds] *= numpy.exp(b[i])
         return mode_exps2
     
     def calc_individual_mode_prob(self, zone: int,
@@ -461,22 +462,26 @@ class ModeDestModel(LogitModel):
     def _calc_mode_prob(self, mode_exps: Dict[str, numpy.ndarray],
                         mode_expsum: numpy.ndarray,
                         ) -> Dict[str, numpy.ndarray]:
-        mode_probs = defaultdict(list)
-        no_dummy_share = 1.0
+        dummies: defaultdict[str, list] = defaultdict(list)
         for mode in self.mode_choice_param:
             for i in self.mode_choice_param[mode]["individual_dummy"]:
-                try:
-                    dummy_share = self.zone_data.get_data(
-                        i, self.bounds, generation=True)
-                except KeyError:
-                    self._stashed_exps = [mode_exps, mode_expsum]
-                    return None
-                no_dummy_share -= dummy_share
-                mode_exps2 = self._calc_individual_prob(mode, i, mode_exps)
-                mode_expsum2 = sum(mode_exps2.values())
-                for mode2 in mode_exps2:
-                    mode_probs[mode2].append(
-                        dummy_share * divide(mode_exps2[mode2], mode_expsum2))
+                dummies[i].append(mode)
+        mode_probs: defaultdict[str, list] = defaultdict(list)
+        no_dummy_share = 1.0
+        for dummy, modes in dummies.items():
+            try:
+                dummy_share = self.zone_data.get_data(
+                    dummy, self.bounds, generation=True)
+            except KeyError:
+                self._stashed_exps = [mode_exps, mode_expsum]
+                return None
+            no_dummy_share -= dummy_share
+            mode_exps2 = self._calc_individual_prob(modes, dummy, mode_exps)
+            mode_expsum2 = sum(mode_exps2.values())
+            for mode2 in mode_exps2:
+                mode_probs[mode2].append(
+                    dummy_share * divide(mode_exps2[mode2], mode_expsum2))
+        for mode in self.mode_choice_param:
             mode_probs[mode].append(
                 no_dummy_share * divide(mode_exps[mode], mode_expsum))
         return mode_probs
