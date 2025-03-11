@@ -175,7 +175,9 @@ bus_dwell_time = {
 hsl_area = "ABCDE HEXL"
 # Performance settings
 performance_settings = {
-    "number_of_processors": "max"
+    "number_of_processors": "max",
+    "network_acceleration": True,
+    "u_turns_allowed": True,
 }
 # Inversed value of time [min/eur]
 vot_inv = {

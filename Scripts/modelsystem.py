@@ -91,9 +91,11 @@ class ModelSystem:
         self.resultdata = ResultsData(results_path)
         self.resultmatrices = MatrixData(results_path / "Matrices" / submodel)
         parameters_path = Path(__file__).parent / "parameters" / "demand"
-        home_based_purposes = []
+        home_based_work_purposes = []
+        home_based_leisure_purposes = []
         sec_dest_purposes = []
-        other_purposes = []
+        other_work_purposes = []
+        other_leisure_purposes = []
         for file in parameters_path.rglob("*.json"):
             purpose = new_tour_purpose(
                 json.loads(file.read_text("utf-8")), self.zdata_forecast,
@@ -104,11 +106,19 @@ class ModelSystem:
                 if isinstance(purpose, SecDestPurpose):
                     sec_dest_purposes.append(purpose)
                 elif purpose.orig == "home":
-                    home_based_purposes.append(purpose)
+                    if param.assignment_classes[purpose.name] == "work":
+                        home_based_work_purposes.append(purpose)
+                    else:
+                        home_based_leisure_purposes.append(purpose)
                 else:
-                    other_purposes.append(purpose)
+                    if param.assignment_classes[purpose.name] == "work":
+                        other_work_purposes.append(purpose)
+                    else:
+                        other_leisure_purposes.append(purpose)
         self.dm = self._init_demand_model(
-            home_based_purposes + other_purposes + sec_dest_purposes)
+            home_based_work_purposes + other_work_purposes
+            + home_based_leisure_purposes + other_leisure_purposes
+            + sec_dest_purposes)
         self.travel_modes = {mode: True for purpose in self.dm.tour_purposes
             for mode in purpose.modes}  # Dict instead of set, to preserve order
         self.em = ExternalModel(
@@ -149,6 +159,11 @@ class ModelSystem:
         # as logsums from probability calculation are used in tour generation.
         self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
+            if param.assignment_classes[purpose.name] == "leisure":
+                for tp_imp in previous_iter_impedance.values():
+                    for imp in tp_imp.values():
+                        imp.pop("car_work", None)
+                        imp.pop("transit_work", None)
             purpose_impedance = purpose.calc_prob(
                 previous_iter_impedance, is_last_iteration)
         previous_iter_impedance.clear()
@@ -225,7 +240,8 @@ class ModelSystem:
 
     # possibly merge with init
     def assign_base_demand(self, 
-            is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
+            is_end_assignment: bool = False,
+            car_time_files: Optional[List[str]] = None) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign base demand to network (before first iteration).
 
         Parameters
@@ -243,11 +259,16 @@ class ModelSystem:
                     Impedance type (time/cost/dist)
                 value : numpy.ndarray
                     Impedance (float 2-d matrix)
+        car_time_files : list (optional)
+            List of paths, where car time data is stored.
+            If set, traffic assignment is all-or-nothing with speeds stored
+            in `#car_time_xxx`. Overrides `use_free_flow_speeds`.
+            List can be empty, if car times are already stored on network.
         """
         impedance = {}
 
         # create attributes and background variables to network
-        self.ass_model.prepare_network(self.car_dist_cost)
+        self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
         if not self.ass_model.use_free_flow_speeds:

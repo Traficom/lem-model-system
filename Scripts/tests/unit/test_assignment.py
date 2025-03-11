@@ -39,9 +39,8 @@ class EmmeAssignmentTest(unittest.TestCase):
         validate(
             self.context.modeller.emmebank.scenario(
                 self.scenario_id).get_network())
-        ass_model = EmmeAssignmentModel(
-            self.context, self.scenario_id, use_stored_speeds=True)
-        ass_model.prepare_network(self.dist_cost)
+        ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
+        ass_model.prepare_network(self.dist_cost, car_time_files=[])
         ass_model.calc_transit_cost(self.fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
