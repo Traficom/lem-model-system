@@ -898,6 +898,12 @@ class Node(NetworkObject):
     def id(self):
         return str(self.number)
 
+    def incoming_links(self):
+        return (l for l in self.network.links() if l.j_node is self)
+
+    def outgoing_links(self):
+        return (l for l in self.network.links() if l.i_node is self)
+
     def outgoing_segments(self, include_hidden=False):
         return (s for s in self.network.transit_segments(include_hidden)
             if s.i_node is self)

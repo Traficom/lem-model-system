@@ -62,7 +62,7 @@ class ModelTest(unittest.TestCase):
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 8)
+        self.assertEquals(len(impedances), 4)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIsNotNone(impedances["dist"])

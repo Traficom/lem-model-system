@@ -66,7 +66,7 @@ class AssignmentPeriod(Period):
         self.transport_classes = (param.private_classes
                                   + param.local_transit_classes)
         self._end_assignment_classes = set(self.transport_classes
-            if delete_extra_matrices else param.transport_classes)
+            if delete_extra_matrices else param.simple_transport_classes)
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
     def extra(self, attr: str) -> str:
@@ -528,15 +528,11 @@ class AssignmentPeriod(Period):
         """Calculate boarding penalties for transit assignment."""
         # Definition of line specific boarding penalties
         network = self.emme_scenario.get_network()
-        if self.use_free_flow_speeds:
-            penalties = param.long_boarding_penalty
-        else:
-            penalties = param.boarding_penalty
         missing_penalties = set()
         penalty_attr = param.boarding_penalty_attr
         for line in network.transit_lines():
             try:
-                penalty = penalties[line.mode.id] + extra_penalty
+                penalty = self.boarding_penalty[line.mode.id] + extra_penalty
             except KeyError:
                 penalty = extra_penalty
                 missing_penalties.add(line.mode.id)
@@ -546,6 +542,10 @@ class AssignmentPeriod(Period):
             missing_penalties_str: str = ", ".join(missing_penalties)
             log.warn("No boarding penalty found for transit modes " + missing_penalties_str)
         self.emme_scenario.publish_network(network)
+
+    @property
+    def boarding_penalty(self):
+        return param.boarding_penalty
 
     def _assign_cars(self, 
                      stopping_criteria: Dict[str, Union[int, float]]):

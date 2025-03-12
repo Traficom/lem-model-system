@@ -97,3 +97,7 @@ class WholeDayPeriod(AssignmentPeriod):
         self._calc_transit_network_results(
             param.long_distance_transit_classes)
         return self._get_impedances(self.transport_classes)
+
+    @property
+    def boarding_penalty(self):
+        return param.long_boarding_penalty
