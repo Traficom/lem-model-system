@@ -38,35 +38,48 @@ class ModelTest(unittest.TestCase):
         for ap in ass_model.assignment_periods:
             tp = ap.name
             print("Validating impedance")
-            self.assertEqual(7, len(impedance[tp]))
             self.assertIsNotNone(impedance[tp]["time"])
             self.assertIsNotNone(impedance[tp]["cost"])
-            self.assertIsNotNone(impedance[tp]["dist"])
+            if tp == "iht":
+                self.assertIsNotNone(impedance[tp]["dist"])
             
         print("Adding demand and assigning")
         impedance = model.run_iteration(impedance)
 
         self.assertEquals(len(ass_model.assignment_periods), len(impedance))
         self._validate_impedances(impedance["aht"])
-        self._validate_impedances(impedance["pt"])
+        self._validate_off_peak_impedances(impedance["pt"])
         self._validate_impedances(impedance["iht"])
+        self._validate_off_peak_impedances(impedance["it"])
 
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.3015116522404117)
+            0.33602782311375684)
         
         print("Model system test done")
     
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)
-        self.assertEquals(len(impedances), 7)
+        self.assertEquals(len(impedances), 8)
         self.assertIsNotNone(impedances["time"])
         self.assertIsNotNone(impedances["cost"])
         self.assertIsNotNone(impedances["dist"])
         self.assertIs(type(impedances["time"]), dict)
         self.assertEquals(len(impedances["time"]), 6)
+        self.assertIsNotNone(impedances["time"]["transit_work"])
+        self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
+        self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
+
+    def _validate_off_peak_impedances(self, impedances):
+        self.assertIsNotNone(impedances)
+        self.assertIs(type(impedances), dict)
+        self.assertEquals(len(impedances), 3)
+        self.assertIsNotNone(impedances["time"])
+        self.assertIsNotNone(impedances["cost"])
+        self.assertIs(type(impedances["time"]), dict)
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)

@@ -13,21 +13,6 @@ if TYPE_CHECKING:
 import utils.log as log
 import parameters.assignment as param
 
-@contextmanager
-def temp_cd(path: Path):
-    """A contextmanager to temporarily change current working directory. 
-    Only used to bypass bug in old pytables that fails to load files from
-    paths containing unicode characters.
-
-    Args:
-        path (Path): New working directory
-    """
-    original_cwd = Path.cwd()
-    os.chdir(path)
-    try:
-        yield
-    finally:
-        os.chdir(original_cwd)
 
 class MatrixData:
     def __init__(self, path: Path):
@@ -42,14 +27,10 @@ class MatrixData:
              mapping: Optional[pandas.Series] = None,
              transport_classes: Iterable[str] = param.simple_transport_classes,
              m: str = 'r'):
-        file_name = mtx_type+'_'+time_period+".omx"
-        with temp_cd(self.path):
-            # Use context manager to temporarely change the cwd to bypass
-            # a bug in pytables version provided by Emme 
-            # (https://github.com/PyTables/PyTables/issues/757)
-            mtxfile = MatrixFile(
-                omx.open_file(file_name, m), zone_numbers, mapping,
-                transport_classes)
+        file_name = self.path / (mtx_type + '_' + time_period + ".omx")
+        mtxfile = MatrixFile(
+            omx.open_file(file_name, m), zone_numbers, mapping,
+            transport_classes)
         try:
             yield mtxfile
         finally:

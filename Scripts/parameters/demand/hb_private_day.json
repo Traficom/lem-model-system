@@ -1,5 +1,5 @@
 {
-    "name": "hb_leisure_long",
+    "name": "hb_private_day",
     "orig": "home",
     "dest": "leisure",
     "area": "all",
@@ -84,9 +84,7 @@
     },
     "destination_choice": {
         "airplane": {
-            "attraction": {
-                "ski_resort": 0.56431
-            },
+            "attraction": {},
             "impedance": {
                 "logsum": 0.15224
             },
@@ -95,14 +93,11 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 200.5573,
-                "area_leisure_buildings": 0.3688
+                "recreation": 25.02837
             }
         },
         "train": {
-            "attraction": {
-                "ski_resort": 0.56431
-            },
+            "attraction": {},
             "impedance": {
                 "logsum": 0.08405
             },
@@ -111,14 +106,11 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 200.5573,
-                "area_leisure_buildings": 0.3688
+                "recreation": 25.02837
             }
         },
         "long_d_bus": {
-            "attraction": {
-                "ski_resort": 0.56431
-            },
+            "attraction": {},
             "impedance": {
                 "logsum": 0.12369
             },
@@ -127,41 +119,35 @@
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 200.5573,
-                "area_leisure_buildings": 0.3688
+                "recreation": 25.02837
             }
         },
         "car_leisure": {
-            "attraction": {
-                "ski_resort": 0.56431
-            },
+            "attraction": {},
             "impedance": {
-                "time": -0.003,
-                "cost": -0.00906
+                "time": -0.00763,
+                "cost": -0.02983
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 200.5573,
-                "area_leisure_buildings": 0.3688
+                "recreation": 25.02837
             }
         },
         "car_pax": {
-            "attraction": {
-                "ski_resort": 0.56431
-            },
+            "attraction": {},
             "impedance": {
-                "time": -0.00462
+                "time": -0.00934,
+                "cost": -0.02983
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "hospitality": 200.5573,
-                "area_leisure_buildings": 0.3688
+                "recreation": 25.02837
             }
         }
     },
@@ -172,71 +158,94 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.74082
+                "logsum": 0.27758
             },
             "individual_dummy": {}
         },
         "train": {
-            "constant": -1.66629,
+            "constant": -0.39743,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.74082
+                "logsum": 0.27758
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": -0.58605,
+            "constant": 2.14415,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.74082
+                "logsum": 0.27758
             },
             "individual_dummy": {}
         },
         "car_leisure": {
-            "constant": -0.39981,
+            "constant": 6.74817,
             "generation": {
-                "car_density": 3.2628
+                "car_density": 4.77115
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.74082
+                "logsum": 0.27758
             },
             "individual_dummy": {}
         },
         "car_pax": {
-            "constant": -0.68153,
+            "constant": 6.48579,
             "generation": {
-                "car_density": 2.94883
+                "car_density": 2.29003
             },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.74082
+                "logsum": 0.27758
             },
             "individual_dummy": {}
         },
-        "calibration": {
-            "airplane": {
-                "constant": 0.139560724
-            },
-            "train": {
-                "constant": 0.706851037
-            },
-            "long_d_bus": {
-                "constant": 0.456115979
-            },
+        "scaling": {
             "car_leisure": {
-                "constant": -0.170366014
+                "constant": 0.27758,
+                "generation": {
+                    "car_density": 0.27758
+                }
             },
             "car_pax": {
-                "constant": 0.043026219
+                "constant": 0.27758,
+                "generation": {
+                    "car_density": 0.27758
+                }
+            },
+            "airplane": {
+                "constant": 0.27758
+            },
+            "train": {
+                "constant": 0.27758
+            },
+            "long_d_bus": {
+                "constant": 0.27758
             }
-        }  
+        },
+        "calibration": {
+            "airplane": {
+                "constant": -0.29035
+            },
+            "train": {
+                "constant": -0.17264
+            },
+            "long_d_bus": {
+                "constant": -0.12156
+            },
+            "car_leisure": {
+                "constant": -0.08759
+            },
+            "car_pax": {
+                "constant": 0.16784
+            }
+        }
     },
     "access_mode_choice": {
         "airplane": {

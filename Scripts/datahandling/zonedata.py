@@ -13,7 +13,7 @@ from datatypes.zone import Zone, ZoneAggregations, avg
 
 
 class ZoneData:
-    """Container for zone data read from input files.
+    """Container for zone data read from input file.
 
     Parameters
     ----------
@@ -25,8 +25,11 @@ class ZoneData:
             Name of column where mapping between data zones (index)
             and assignment zones
     """
-    def __init__(self, data_path: Path, zone_numbers: Sequence,
-                 zone_mapping: str):
+    def __init__(self, *args, **kwargs):
+        self._init_data(*args, **kwargs)
+
+    def _init_data(self, data_path: Path, zone_numbers: Sequence,
+                 zone_mapping: str, data_type: str = "trips"):
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
@@ -37,17 +40,21 @@ class ZoneData:
             name="analysis_zone_id")
         Zone.counter = 0
         data, mapping = read_zonedata(
-            data_path, self.zone_numbers, zone_mapping)
+            data_path, self.zone_numbers, zone_mapping, data_type)
         self.mapping = mapping
-        zone_indices = pandas.Series(
-            range(len(self.zone_numbers)), index=self.zone_numbers)
         agg_keys = [key for key in data if "aggregate_results_" in key]
         aggs = data[agg_keys].rename(
             columns=lambda x : x.replace("aggregate_results_", ""))
-        self.aggregations = ZoneAggregations(
-            aggs, data["municipality_center"].map(zone_indices))
+        self.aggregations = ZoneAggregations(aggs)
+        for col in data:
+            if col not in agg_keys:
+                self[col] = data[col]
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
+        self.nr_zones = len(self.zone_numbers)
+        self._add_transformations(data)
+
+    def _add_transformations(self, data):
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
@@ -56,8 +63,6 @@ class ZoneData:
         pop = data["population"]
         wp = data["workplaces"]
         for col in data:
-            if col not in agg_keys:
-                self[col] = data[col]
             if col.startswith("sh_age"):
                 pop_share = data[col]
                 self.share[col] = pop_share
@@ -71,14 +76,12 @@ class ZoneData:
             if col.startswith("sh_wrk_"):
                 self[col.replace("sh_wrk_", "")] = data[col] * wp
         self.share["share_age_7-99"] = share_7_99
-        self.nr_zones = len(self.zone_numbers)
-        # Create diagonal matrix with zone area
+        # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
         # Two-way intrazonal distances from building distances
-        self["within_zone_dist"] = (self["within_zone"] 
-                                    * data["avg_building_distance"].values * 2)
-        self["within_zone_time"] = self["within_zone_dist"] / (20/60) # 20 km/h
+        self["dist"] = data["avg_building_distance"] * 2
+        self["time"] = self["dist"] / (20/60) # 20 km/h
         # Unavailability of intrazonal tours
         self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf
@@ -90,6 +93,7 @@ class ZoneData:
         self["outside_municipality"] = ~within_municipality
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
+        self["Lappi"] = self.dummy("county", "Lappi")
         for key in data["aggregate_results_submodel"].unique():
             self["population_" + key] = self.dummy("submodel", key) * pop
 
@@ -105,17 +109,17 @@ class ZoneData:
     def __getitem__(self, key):
         return self._values[key]
 
-    def __setitem__(self, key: str, data: Any):
+    def __setitem__(self, key: str, data: pandas.Series):
         try:
             if not numpy.isfinite(data).all():
-                for (i, val) in data.iteritems():
+                for (i, val) in data.items():
                     if not numpy.isfinite(val):
                         msg = "{} for zone {} is not a finite number".format(
                             key, i).capitalize()
                         log.error(msg)
                         raise ValueError(msg)
         except TypeError:
-            for (i, val) in data.iteritems():
+            for (i, val) in data.items():
                 try:
                     float(val)
                 except ValueError:
@@ -127,7 +131,7 @@ class ZoneData:
             log.error(msg)
             raise TypeError(msg)
         if (data < 0).any():
-            for (i, val) in data.iteritems():
+            for (i, val) in data.items():
                 if val < 0:
                     msg = "{} ({}) for zone {} is negative".format(
                         key, val, i).capitalize()
@@ -171,12 +175,11 @@ class ZoneData:
         try:
             val = self._values[key]
         except KeyError as err:
-            keyl: List[str] = key.split('<')
-            if keyl[1] in ("within_municipality", "outside_municipality"):
-                # If parameter is only for own municipality or for all
-                # municipalities except own, array is multiplied by
-                # bool matrix
-                return (self[keyl[1]] * self._values[keyl[0]].values)[bounds, :]
+            keyl: List[str] = key.split('*')
+            if (len(keyl) == 2):
+                # If parameter is two-fold, they will be multiplied
+                return (self.get_data(keyl[0], bounds, generation)
+                        * self.get_data(keyl[1], bounds, generation))
             else:
                 raise KeyError(err)
         if val.ndim == 1: # If not a compound (i.e., matrix)
@@ -188,13 +191,33 @@ class ZoneData:
             return val[bounds, :]
 
 
+class FreightZoneData(ZoneData):
+    """Container for freight zone data read from input file.
+
+    Parameters
+    ----------
+    data_path : Path
+        File where scenario input data is found
+    zone_numbers : list
+        Zone numbers to compare with for validation
+    zone_mapping : str
+            Name of column where mapping between data zones (index)
+            and assignment zones
+    """
+    def __init__(self, *args, **kwargs):
+        ZoneData._init_data(self, *args, **kwargs, data_type="freight")
+
+    def _add_transformations(self, *args, **kwargs):
+        pass
+
+
 class ShareChecker:
     def __init__(self, data):
         self.data = data
 
     def __setitem__(self, key, data):
         if (data > 1.02).any():
-            for (i, val) in data.iteritems():
+            for (i, val) in data.items():
                 if val > 1.02:
                     msg = "{} ({}) for zone {} is larger than one".format(
                         key, val, i).capitalize()
@@ -202,9 +225,11 @@ class ShareChecker:
                     raise ValueError(msg)
         self.data[key] = data
 
+
 def read_zonedata(path: Path,
                   zone_numbers: numpy.ndarray,
-                  zone_mapping_name: str):
+                  zone_mapping_name: str,
+                  data_type: str = "trips"):
     """Read zone data from space-separated file.
 
     Parameters
@@ -216,6 +241,8 @@ def read_zonedata(path: Path,
     zone_mapping_name : str
         Name of column where mapping between data zones (index)
         and assignment zones
+    data_type : str (optional)
+        Type of data to read (trips or freight)
 
     Returns
     -------
@@ -244,7 +271,8 @@ def read_zonedata(path: Path,
         log.warn("File {} is not sorted in ascending order".format(path))
     zone_mapping = data[zone_mapping_name]
     zone_variables = json.loads(
-        (Path(__file__).parent / "zone_variables.json").read_text("utf-8"))
+        (Path(__file__).parent / "zone_variables.json").read_text("utf-8")
+    )[data_type]
     aggs = {}
     for func, cols in zone_variables.items():
         for col in cols:

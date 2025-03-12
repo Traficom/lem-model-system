@@ -55,6 +55,8 @@ class EmmeProject:
         log.info("Emme started")
         self.import_scenario = self.modeller.tool(
             "inro.emme.data.scenario.import_scenario")
+        self.import_network_fields = self.modeller.tool(
+            "inro.emme.data.network_field.import_network_fields")
         self.copy_scenario = self.modeller.tool(
             "inro.emme.data.scenario.copy_scenario")
         self.create_matrix = self.modeller.tool(
@@ -65,8 +67,6 @@ class EmmeProject:
             "inro.emme.network_calculation.network_calculator")
         self.car_assignment = self.modeller.tool(
             "inro.emme.traffic_assignment.sola_traffic_assignment")
-        self.bike_assignment = self.modeller.tool(
-            "inro.emme.traffic_assignment.standard_traffic_assignment")
         self.pedestrian_assignment = self.modeller.tool(
             "inro.emme.transit_assignment.standard_transit_assignment")
         self.transit_assignment = self.modeller.tool(

@@ -1,4 +1,76 @@
+from typing import Iterable, Tuple
+from shapely.geometry import Point, LineString
+
 from utils.calc_noise import NoiseModel
+
+
+class GeometryType:
+    name: str
+    geom_type: str
+    def __new__(cls, obj):
+        pass
+
+
+class Node(GeometryType):
+    name = "NODE"
+    geom_type = "Point"
+
+    def __new__(cls, node):
+        return Point(node.x, node.y)
+
+
+class Link(GeometryType):
+    name = "LINK"
+    geom_type = "LineString"
+
+    def __new__(cls, link):
+        return LineString(link.shape)
+
+
+class Segment(GeometryType):
+    name = "TRANSIT_SEGMENT"
+    geom_type = "Point"
+
+    def __new__(cls, segment):
+        return Node(segment.i_node)
+
+
+def geometries(attr_names: Iterable[str],
+               objects: Iterable,
+               geom_type: GeometryType) -> Tuple[Iterable, dict]:
+    """Turn EMME network objects into GeoJSON records.
+
+    Parameters
+    ----------
+    attr_names : List of str
+        List of extra attributes in network objects
+    objects : Iterable
+        Iterator over network objects (links or nodes or segments)
+    geom_type : GeometryType
+        Node or Link or Segment geometry type
+
+    Returns
+    -------
+    Iterable
+        Iterator of GeoJSON records
+    dict
+        Fiona schema of record types
+    """
+    recs = ({
+        "geometry": geom_type(obj),
+        "properties": {
+            "id": obj.id,
+            **{attr[1:]: obj[attr] for attr in attr_names},
+        }
+    } for obj in objects)
+    schema = {
+        "geometry": geom_type.geom_type,
+        "properties": {
+            "id": "str",
+            **{attr[1:]: "float" for attr in attr_names}
+        }
+    }
+    return recs, schema
 
 
 def print_links(network, resultdata):
@@ -20,8 +92,7 @@ def print_links(network, resultdata):
         network, ("@car_work_vrk", "@car_leisure_vrk", "@van_vrk"),
         ("@truck_vrk", "@trailer_truck_vrk"))
     for link in network.links():
-        wkt = "LINESTRING ({} {}, {} {})".format(
-            link.i_node.x, link.i_node.y, link.j_node.x, link.j_node.y)
+        wkt = LineString(link.shape).wkt
         attrs = "\t".join([str(link[attr]) for attr in attr_names])
         noise_zone_width = noisemodel.calc_noise(link)
         resultdata.print_line(

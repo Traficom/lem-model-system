@@ -396,9 +396,6 @@ class MockProject:
         }
         return report
 
-    def bike_assignment(self, *args, **kwargs):
-        pass
-
     def pedestrian_assignment(self, *args, **kwargs):
         pass
 
@@ -465,6 +462,15 @@ class MockProject:
                 for attr in specification[category].values():
                     if scenario.extra_attribute(attr) is None:
                         raise AttributeError(f"Attribute {attr} does not exist")
+
+    def traversal_analysis(self, specification: Dict, output_file: str,
+                           gate_labels: Optional[str] = None,
+                           append_to_output_file: bool = True,
+                           scenario: Optional[Scenario] = None,
+                           class_name: Optional[str] = None,
+                           num_prosessors: Union[str, int] = "max",
+                           last_n_iterations: Optional[int] = None):
+        pass
 
 
 Modeller = namedtuple("Modeller", "emmebank")
@@ -562,10 +568,20 @@ class Scenario:
             if idx in network._extra_attr[attr_type]:
                 return network._extra_attr[attr_type][idx]
 
+    def extra_attributes(self):
+        network = self.get_network()
+        return (attr for attrs in network._extra_attr.values()
+            for attr in attrs.values())
+
     def network_field(self, obj_type: str, idx: str):
         network = self.get_network()
         if idx in network._netfield[obj_type]:
             return network._netfield[obj_type][idx]
+
+    def network_fields(self):
+        network = self.get_network()
+        return (attr for attrs in network._netfield.values()
+            for attr in attrs.values())
 
     def create_extra_attribute(self,
                                obj_type: str,
@@ -651,7 +667,7 @@ class NetworkField:
 class Matrix:
     def __init__(self, idx: int, dim: int, default_value: Union[int, float]):
         self.id = idx
-        self._data = numpy.full((dim, dim), default_value, dtype=float)
+        self._data = numpy.full((dim, dim), default_value, dtype=numpy.float32)
         self._name = ""
         self._description = ""
 
@@ -916,6 +932,13 @@ class Link(NetworkObject):
             return self.network.link(self.j_node, self.i_node)
         except KeyError:
             return None
+
+    @property
+    def shape(self) -> List[Tuple[float, float]]:
+        return [
+            (self.i_node.x, self.i_node.y),
+            (self.j_node.x, self.j_node.y),
+        ]
 
     def segments(self) -> Iterable:
         return iter(self._segments)

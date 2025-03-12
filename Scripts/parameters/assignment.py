@@ -96,6 +96,7 @@ transit_delay_funcs = {
         "aht": 6,
         "pt": 6,
         "iht": 6,
+        "it": 6,
         "vrk": 6,
     },
 }
@@ -174,7 +175,9 @@ bus_dwell_time = {
 hsl_area = "ABCDE HEXL"
 # Performance settings
 performance_settings = {
-    "number_of_processors": "max"
+    "number_of_processors": "max",
+    "network_acceleration": True,
+    "u_turns_allowed": True,
 }
 # Inversed value of time [min/eur]
 vot_inv = {
@@ -474,6 +477,7 @@ volume_factors = {
 volume_factors["aux_transit"] = volume_factors["transit"]
 for mode in volume_factors:
         volume_factors[mode]["vrk"] = 1
+        volume_factors[mode]["it"] = 0
 # Factor for converting weekday traffic into yearly day average
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
@@ -503,12 +507,18 @@ noise_zone_width = {
 }
 
 ### ASSIGNMENT REFERENCES ###
-time_periods: List[str] = ["aht", "pt", "iht"]
+time_periods = {
+    "aht": "AssignmentPeriod",
+    "pt": "OffPeakPeriod",
+    "iht": "AssignmentPeriod",
+    "it": "TransitAssignmentPeriod",
+}
 car_classes = (
     "car_work",
     "car_leisure",
 )
-private_classes = car_classes + ("bike",)
+car_and_van_classes = car_classes + ("van",)
+private_classes = car_and_van_classes + ("bike",)
 car_access_classes = (
     "j_first_mile",
     "j_first_taxi",
@@ -540,10 +550,9 @@ truck_classes = (
     "semi_trailer",
     "trailer_truck",
 )
-freight_classes = truck_classes + ("van",)
 simple_transport_classes = (private_classes
                             + simple_transit_classes
-                            + freight_classes)
+                            + truck_classes)
 transport_classes = simple_transport_classes + mixed_mode_classes
 intermodals = {
     "train": ["j_first_mile", "j_first_taxi"],
@@ -565,7 +574,8 @@ assignment_classes = {
     "ob_other": "leisure",
     "hb_work_long": "work",
     "hb_business_long": "work",
-    "hb_leisure_long": "leisure",
+    "hb_private_day": "leisure",
+    "hb_private_week": "leisure",
     "external": "leisure",
 }
 main_mode = 'h'
@@ -652,41 +662,16 @@ segment_results = {
     "transfer_boardings": "trb",
 }
 uncongested_transit_time = "base_timtr"
-emme_matrices = {
-    "car_work": ("demand", "time", "dist", "cost", "gen_cost"),
-    "car_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    "transit_work": ("demand", "time", "dist", "cost", "gen_cost"),
-    "transit_leisure": ("demand", "time", "dist", "cost", "gen_cost"),
-    "train": ("demand", "time", "dist", "cost", "gen_cost"),
-    "long_d_bus": ("demand", "time", "dist", "cost", "gen_cost"),
-    "airplane": ("demand", "time", "dist", "cost", "gen_cost"),
-    "bike": ("demand", "time", "dist"),
-    "walk": ("time", "dist"),
-    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
-    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "van": ("demand", "time", "dist", "cost", "gen_cost"),
-    "j_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "j_first_taxi": ("demand", "time", "dist", "cost", "gen_cost"),
-    "e_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "l_first_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "j_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "j_last_taxi": ("demand", "time", "dist", "cost", "gen_cost"),
-    "e_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-    "l_last_mile": ("demand", "time", "dist", "cost", "gen_cost"),
-}
+impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time"]
 transit_impedance_matrices = {
     "total": {
-        "total_time": "total_travel_time",
+        "unweighted_time": "total_travel_time",
         "tw_time": "actual_total_waiting_times",
         "fw_time": "actual_first_waiting_times",
     },
     "by_mode_subset": {
         "inv_time": "actual_in_vehicle_times",
         "board_time": "actual_total_boarding_times",
-        "num_board": "avg_boardings",
-        "inv_cost": "actual_in_vehicle_costs",
-        "board_cost": "actual_total_boarding_costs",
         "perc_bcost": "perceived_total_boarding_costs",
     },
     "local": {
@@ -699,13 +684,6 @@ transit_impedance_matrices = {
         "car_dist": "distance",
     },
 }
-freight_matrices = {
-    "truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "semi_trailer": ("demand", "time", "dist", "cost", "gen_cost"),
-    "trailer_truck": ("demand", "time", "dist", "cost", "gen_cost"),
-    "freight_train": {"demand", "time", "dist", "aux_time", "aux_dist"},
-    "ship": {"demand", "time", "dist", "aux_time", "aux_dist"},
-}
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
 line_penalty_attr = "us2"
@@ -717,11 +695,14 @@ board_fare_attr = "@board_fare"
 board_long_dist_attr = "@board_long_dist"
 is_in_transit_zone_attr = "ui1"
 keep_stops_attr = "#keep_stops"
+subarea_attr = "#subarea"
+municipality_attr = "#municipality"
 terminal_cost_attr = "@freight_term_cost"
 aux_transit_time_attr = "@walk_time"
 aux_car_time_attr = "@car_time"
 park_cost_attr_n = "#park_cost_n"
 park_cost_attr_l = "@park_cost_l"
+freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
 railtypes = {
     2: "tram",

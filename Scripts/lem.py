@@ -7,11 +7,12 @@ import utils.config
 import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
+from assignment.assignment_period import AssignmentPeriod
 from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
-BASE_ZONEDATA_FILE = "2018_zonedata.gpkg"
+BASE_ZONEDATA_FILE = "2016_zonedata.gpkg"
 
 
 def main(args):
@@ -68,7 +69,7 @@ def main(args):
         "delete_extra_matrices": args.delete_extra_matrices,
     }
     if calculate_long_dist_demand:
-        kwargs["time_periods"] = ["vrk"]
+        kwargs["time_periods"] = {"vrk": "WholeDayPeriod"}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = results_path / "Matrices" / args.submodel
@@ -89,8 +90,7 @@ def main(args):
             first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
-            first_matrix_id=args.first_matrix_id,
-            use_stored_speeds=args.stored_speed_assignment, **kwargs)
+            first_matrix_id=args.first_matrix_id, **kwargs)
     # Initialize model system (wrapping Assignment-model,
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
@@ -108,7 +108,10 @@ def main(args):
     log.info(
         "Starting simulation with {} iterations...".format(iterations),
         extra=log_extra)
-    impedance = model.assign_base_demand(iterations==0)
+    stored_speed_assignment = (None if args.stored_speed_assignment is None
+        else [Path(path) for path in args.stored_speed_assignment])
+    impedance = model.assign_base_demand(
+        iterations==0, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -202,8 +205,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",
-        action="store_true",
-        help="Using this flag runs assigment with stored (fixed) speed."
+        type=str,
+        nargs="*",
+        help=("Using this flag runs assigment with stored (fixed) speed. "
+              + "If argument is followed by list of scenarios, "
+              + "stored speeds will be imported from result path "
+              + "for these scenarios.")
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",
