@@ -46,7 +46,9 @@ class WholeDayPeriod(AssignmentPeriod):
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
             save_extra_matrices=save_matrices,
-            transit_classes=param.long_distance_transit_classes)
+            transit_classes=param.long_dist_simple_classes,
+            mixed_classes=param.mixed_mode_classes,
+            dist_unit_cost=dist_unit_cost["car_work"])
 
     def init_assign(self):
          self._set_car_vdfs(use_free_flow_speeds=True)

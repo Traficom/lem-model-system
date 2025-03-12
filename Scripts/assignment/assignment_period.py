@@ -3,14 +3,14 @@ import numpy # type: ignore
 import pandas # type: ignore
 import copy
 
-from typing import TYPE_CHECKING, Dict, Union, Iterable
+from typing import TYPE_CHECKING, Dict, Union, Iterable, Optional
 import utils.log as log
 from utils.divide_matrices import divide_matrices
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode, BikeMode, WalkMode
 from assignment.datatypes.car import CarMode, TruckMode
 from assignment.datatypes.car_specification import CarSpecification
-from assignment.datatypes.transit import TransitMode
+from assignment.datatypes.transit import TransitMode, MixedMode
 from assignment.abstract_assignment import Period
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
@@ -150,15 +150,22 @@ class AssignmentPeriod(Period):
             "walk": self.walk_mode,
         })
 
-    def _prepare_transit(self, day_scenario: int,
-                         save_standard_matrices: bool,
-                         save_extra_matrices: bool,
-                         transit_classes: Iterable[str] = param.transit_classes):
+    def _prepare_transit(
+            self, day_scenario: int, save_standard_matrices: bool,
+            save_extra_matrices: bool,
+            transit_classes: Iterable[str] = param.simple_transit_classes,
+            mixed_classes: Iterable[str] = [],
+            dist_unit_cost: Optional[float] = None):
         transit_modes = {mode: TransitMode(
                 mode, self, day_scenario, save_standard_matrices,
                 save_extra_matrices)
             for mode in transit_classes}
         self.assignment_modes.update(transit_modes)
+        mixed_modes = {mode: MixedMode(
+                mode, self, day_scenario, dist_unit_cost,
+                save_standard_matrices, save_extra_matrices)
+            for mode in mixed_classes}
+        self.assignment_modes.update(mixed_modes)
         self._calc_boarding_penalties()
         self._set_transit_vdfs()
         self._set_walk_time()
@@ -475,8 +482,6 @@ class AssignmentPeriod(Period):
             "ul", "data")
         # calc @bus and data3
         heavy = [self.extra(ass_class) for ass_class in param.truck_classes]
-        park_and_ride = [self.assignment_modes[direction].park_and_ride_results
-            for direction in param.mixed_mode_classes]
         for link in network.links():
             if link.type > 100: # If car or bus link
                 freq = 0
@@ -486,8 +491,6 @@ class AssignmentPeriod(Period):
                         freq += 60 / segment_hdw
                 link[self.extra("bus")] = freq
                 link[background_traffic] = 0 if link["#buslane"] else freq
-                for direction in park_and_ride:
-                    link[background_traffic] += link[direction]
                 if include_trucks:
                     for ass_class in heavy:
                         link[background_traffic] += link[ass_class]
@@ -698,11 +701,10 @@ class AssignmentPeriod(Period):
             self.emme_project.matrix_results(
                 spec.transit_result_spec, scenario=self.emme_scenario,
                 class_name=transit_class)
-            if transit_class in param.long_distance_transit_classes:
+            if transit_class in param.mixed_mode_classes:
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
-            if transit_class in param.mixed_mode_classes:
                 self.emme_project.matrix_results(
                     spec.park_and_ride_spec, scenario=self.emme_scenario,
                     class_name=transit_class)

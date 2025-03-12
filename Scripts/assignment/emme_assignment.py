@@ -334,7 +334,7 @@ class EmmeAssignmentModel(AssignmentModel):
         boardings = defaultdict(lambda: defaultdict(float))
         modes = self.assignment_periods[0].assignment_modes
         classes = (param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transit_classes)
+            if self.use_free_flow_speeds else param.simple_transit_classes)
         attrs = [modes[transit_class].segment_results["total_boardings"]
             for transit_class in classes]
         for line in network.transit_lines():
@@ -666,7 +666,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:10] + 'n_' + attr
-            for transit_class in param.transit_classes}
+            for transit_class in param.simple_transit_classes}
         extras = self._extras(attrs)
         # save node volumes to result network
         for node in network.nodes():
@@ -691,7 +691,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:11] + '_' + attr
-            for transit_class in param.transit_classes}
+            for transit_class in param.simple_transit_classes}
         extras = self._extras(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():

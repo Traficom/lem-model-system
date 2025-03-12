@@ -662,7 +662,8 @@ segment_results = {
     "transfer_boardings": "trb",
 }
 uncongested_transit_time = "base_timtr"
-impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time"]
+impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time",
+                    "car_time", "loc_time", "aux_time", "park_cost"]
 transit_impedance_matrices = {
     "total": {
         "unweighted_time": "total_travel_time",
@@ -674,15 +675,8 @@ transit_impedance_matrices = {
         "board_time": "actual_total_boarding_times",
         "perc_bcost": "perceived_total_boarding_costs",
     },
-    "local": {
-        "aux_time": "perceived_aux_transit_times",
-        "loc_time": "perceived_in_vehicle_times",
-    },
-    "park_and_ride": {
-        "car_time": "actual_aux_transit_times",
-        "park_cost": "actual_aux_transit_costs",
-        "car_dist": "distance",
-    },
+    "local": {},
+    "park_and_ride": {},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"
