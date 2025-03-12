@@ -22,7 +22,9 @@ def transform_traversal_data(result_path: Path, zones: list):
     aux_tons = numpy.zeros([len(zones), len(zones)], dtype=numpy.float32)
     for ass_class in param.freight_modes:
         file = result_path / f"{ass_class}.txt"
-        aux_tons += read_traversal_file(file, numpy.array(zones))
+        if file.exists():
+            aux_tons += read_traversal_file(file, numpy.array(zones))
+            file.unlink()
     return aux_tons
 
 def read_traversal_file(file: Path, zones: numpy.ndarray):
