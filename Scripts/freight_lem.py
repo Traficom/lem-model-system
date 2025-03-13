@@ -77,6 +77,7 @@ def main(args):
         for mode in ("truck", "trailer_truck"):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
         write_purpose_summary(purpose.name, demand, impedance, resultdata)
+        write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
     resultdata.flush()
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
@@ -104,6 +105,18 @@ def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict,
         })
     filename = f"freight_purpose_summary.txt"
     resultdata.print_data(df, filename, index_merge=False)
+
+def write_zone_summary(purpose_name: str, zone_numbers: list, 
+                       demand: dict, resultdata: ResultsData):
+    """Write purpose and mode specific departing and arriving tons for each zone
+    in zone mapping.
+    """
+    df = DataFrame(index=zone_numbers)
+    for mode in demand:
+        df[f"Lähtevät_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
+        df[f"Saapuvat_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
+    filename = f"freight_zone_summary.txt"
+    resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
