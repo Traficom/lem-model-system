@@ -6,11 +6,15 @@ import numpy # type: ignore
 import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
-
+from datahandling.matrixdata import MatrixData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import (
+    assignment_classes,
+    intermodals,
+    tour_duration,
+    mixed_mode_classes)
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -259,6 +263,14 @@ class TourPurpose(Purpose):
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
+        self.connection_models = {}
+        for mode in intermodals:
+            if mode in self.modes:
+                self.modes += intermodals[mode]
+                new_spec = copy(specification)
+                new_spec["mode_choice"] = new_spec["access_mode_choice"][mode]
+                self.connection_models[mode] = logit.LogitModel(
+                    self, new_spec, zone_data, resultdata)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
@@ -314,11 +326,53 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : numpy 2d matrix
         """
         purpose_impedance = self.transform_impedance(impedance)
+
+        #If the trip is long-distance, calculate unimodal/intermodal
+        # probability split for each main mode
+        if "long" in self.name:
+            acc_splits = {}
+            matrixdata = MatrixData(self.resultdata.path / "Matrices")
+            with matrixdata.open(f"logsum_{self.name}", "vrk") as mtx:
+                for main_mode, acc_modes in intermodals.items():
+                    mode_impedance = {mode: purpose_impedance.pop(mode)
+                        for mode in [main_mode] + acc_modes}
+                    acc_splits[main_mode], logsum = self.split_connection_mode(
+                        mode_impedance, main_mode, acc_modes)
+                    purpose_impedance[main_mode]["logsum"] = logsum
+                    mtx[main_mode] = logsum
+
+        # Calculate main mode probability after access mode probability
+        # to have access mode logsum as variable
         if is_last_iteration:
             self.accessibility_model.calc_accessibility(
                 copy(purpose_impedance))
         self.prob = self.model.calc_prob(purpose_impedance)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
+
+        # If the trip is long-distance, calculate joint main mode/access
+        # mode probability for each intermodal class in EMME assignment
+        if "long" in self.name:
+            for main_mode, split in acc_splits.items():
+                for acc_mode in split:
+                    self.prob[acc_mode] = split[acc_mode] * self.prob[main_mode]
+
+    def split_connection_mode(self, impedance, pt_mode, car_acc_modes):
+        access_modes = car_acc_modes + [pt_mode]
+        if pt_mode == "airplane":
+            access_modes.append("l_first_taxi")
+            impedance["l_first_taxi"] = impedance["l_first_mile"]
+        for mode in access_modes:
+            if mode in mixed_mode_classes:
+                self.reweight_parking_cost(impedance[mode], tour_duration[mode])
+        model = self.connection_models[pt_mode]
+        prob, logsum = model.calc_mode_prob(impedance)
+        prob["l_first_mile"] += prob.pop("l_first_taxi")
+        return prob, logsum
+
+    def reweight_parking_cost(self, impedance, duration):
+        impedance["park_cost"] = (impedance["park_cost"]
+                                  * duration[self.name[3:-5]]
+                                  / duration["avg"])
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.

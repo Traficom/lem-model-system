@@ -72,6 +72,9 @@ class EmmeAssignmentTest:
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
+        self.long_dist_model = ass.EmmeAssignmentModel(
+            emme_context, scenario_num, use_free_flow_speeds=True,
+            time_periods={"vrk": "WholeDayPeriod"})
         self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
@@ -91,8 +94,6 @@ class EmmeAssignmentTest:
             "car_leisure": car_matrix,
             "transit_work": car_matrix,
             "transit_leisure": car_matrix,
-            # "car_first_mile": car_matrix,
-            # "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
             "semi_trailer": car_matrix,
@@ -133,6 +134,33 @@ class EmmeAssignmentTest:
                         cost_data = travel_cost[time_period][mtx_type][ass_class]
                         mtx[ass_class] = cost_data
 
+    def test_park_and_ride(self):
+        self.long_dist_model.prepare_network(self.dist_cost)
+        nr_zones = self.ass_model.nr_zones
+        car_matrix = numpy.full((nr_zones, nr_zones), 10.0)
+        ass_classes = [
+            "car_work",
+            "car_leisure",
+            "train",
+            "long_d_bus",
+            "airplane",
+            "j_first_mile",
+            "j_first_taxi",
+            "e_first_mile",
+            "l_first_mile",
+            "j_last_mile",
+            "j_last_taxi",
+            "e_last_mile",
+            "l_last_mile",
+        ]
+        demand = {ass_class: car_matrix for ass_class in ass_classes}
+        for ap in self.long_dist_model.assignment_periods:
+            for ass_class in demand:
+                ap.set_matrix(ass_class, car_matrix)
+            ap.assign_trucks_init()
+            ap.end_assign()
+            ap.transit_results_links_nodes()
+
     def test_transit_cost(self):
         firstb_single = (2, 3, 5, 70, 0, 1.5)
         dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
@@ -158,4 +186,5 @@ class EmmeAssignmentTest:
 if emme_available:
     em = EmmeAssignmentTest()
     em.test_assignment()
+    em.test_park_and_ride()
     em.test_freight_assignment()

@@ -49,7 +49,7 @@ class OffPeakPeriod(AssignmentPeriod):
             param.stopping_criteria["coarse"])
         stopping_criteria["max_iterations"] = 0
         self._assign_cars(stopping_criteria)
-        self._assign_transit(param.transit_classes)
+        self._assign_transit(param.simple_transit_classes)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Assign cars for one time period.
@@ -92,7 +92,7 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        self._calc_transit_network_results()
+        self._calc_transit_network_results(param.simple_transit_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 
@@ -159,7 +159,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
-        self._calc_transit_network_results()
+        self._calc_transit_network_results(param.simple_transit_classes)
         self._end_assignment_classes -= set(
             param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)

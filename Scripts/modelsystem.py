@@ -187,7 +187,7 @@ class ModelSystem:
     def _add_external_demand(self,
                              long_dist_matrices,
                              long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)):
+                                 + param.long_dist_simple_classes)):
         # If we want to assign all trips with traffic congestion,
         # then add long-distance trips as background demand
         zone_numbers = self.ass_model.zone_numbers
@@ -406,9 +406,15 @@ class ModelSystem:
         zone_numbers = self.ass_model.zone_numbers
         tp = ap.name
         demand_sum_string = tp
+        transport_classes = (param.car_classes + param.long_dist_simple_classes
+            if self.ass_model.use_free_flow_speeds
+            else ap.assignment_modes.keys())
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in ap.assignment_modes.keys():
+            for ass_class in transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
+                if ass_class in param.intermodals:
+                    for intermodal in param.intermodals[ass_class]:
+                        demand += self.dtm.demand[tp][intermodal]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
         self.resultdata.print_line(demand_sum_string, "result_summary")
