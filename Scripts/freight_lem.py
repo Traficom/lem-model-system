@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import numpy
 import json
+from pandas import DataFrame
 
 import utils.log as log
 import utils.config
@@ -75,10 +76,34 @@ def main(args):
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
+        write_purpose_summary(purpose.name, demand, impedance, resultdata)
+    resultdata.flush()
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
+
+def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
+                          resultdata: ResultsData):
+    """Write purpose-mode specific summary as txt-file containing mode shares 
+    calculated from demand (tons), mode specific demand (tons), mode shares 
+    calculated from mileage, and mode specific ton-mileage.
+    """
+    modes = list(demand)
+    mode_tons = [numpy.sum(demand[mode])+0.01 for mode in modes]
+    shares_tons = [tons / sum(mode_tons) for tons in mode_tons]
+    mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
+    shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
+    df = DataFrame(data={
+        "Tavararyhmä": [purpose_name]*len(modes),
+        "Mode": modes,
+        "Kulkutapaosuus-tonnit (%)": [round(i, 3) for i in shares_tons],
+        "Tonnit (t/vuosi)": [int(i) for i in mode_tons],
+        "Kulkutapaosuus-suorite (%)": [round(i, 3) for i in shares_mileage],
+        "Kuljetussuorite (tkm/vuosi)": [int(i) for i in mode_ton_dist]
+        })
+    filename = f"freight_purpose_summary.txt"
+    resultdata.print_data(df, filename, index_merge=False)
 
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
