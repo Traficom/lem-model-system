@@ -300,6 +300,7 @@ waiting_time_perception_factor = 1.5
 aux_transit_time = {
     "perception_factor": 1.75
 }
+aux_time_perception_factor_truck = 30
 # Stochastic bike assignment distribution
 bike_dist = {
     "type": "UNIFORM", 
