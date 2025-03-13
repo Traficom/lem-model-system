@@ -71,7 +71,7 @@ def main(args):
                 mtx[f"{purpose}_{mode}"] = demand[mode]
         if purpose.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose.name)
-        ass_model.freight_network.output_traversal_matrix(resultdata.path)
+        ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
