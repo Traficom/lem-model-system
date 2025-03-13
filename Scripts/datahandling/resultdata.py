@@ -38,7 +38,7 @@ class ResultsData:
 
     def print_data(self,
                    data: Union[pandas.Series, pandas.DataFrame],
-                   filename: str, index_merge: bool = True):
+                   filename: str):
         """Save data to DataFrame buffer (printed to text file when flushing).
 
         Parameters
@@ -47,27 +47,22 @@ class ResultsData:
             Data to add as new column(s) to DataFrame
         filename : str
             Name of file where data is pushed (can contain other data)
-        index_merge : bool, Optional
-            Perform df_buffer merge with indeces. Otherwise, use existing
-            columns in df_buffer for merging
         """
         if filename not in self._df_buffer:
             self._df_buffer[filename] = pandas.DataFrame(data)
         else:
-            if index_merge:
-                self._df_buffer[filename] = self._df_buffer[filename].merge(
-                    data, "outer", left_index=True, right_index=True)
-            else:
-                self._df_buffer[filename] = self._df_buffer[filename].merge(
-                    data, "outer", on=list(self._df_buffer[filename].columns))
+            self._df_buffer[filename] = self._df_buffer[filename].merge(
+                data, "outer", left_index=True, right_index=True)
 
-    def print_concat(self, data: pandas.Series, filename: str):
+    def print_concat(self,
+                     data: Union[pandas.Series, pandas.DataFrame],
+                     filename: str):
         """Save data to Series buffer (printed to text file when flushing).
 
         Parameters
         ----------
-        data : pandas.Series
-            Data with multi index to add to Series
+        data : pandas.Series or pandas.DataFrame
+            Data with multi index to add to Series or DataFrame
         filename : str
             Name of file where data is pushed (can contain other data)
         """

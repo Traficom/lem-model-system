@@ -106,7 +106,7 @@ def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict,
         "Kuljetussuorite (tkm/vuosi)": [int(i) for i in mode_ton_dist]
         })
     filename = f"freight_purpose_summary.txt"
-    resultdata.print_data(df, filename, index_merge=False)
+    resultdata.print_concat(df, filename)
 
 def write_zone_summary(purpose_name: str, zone_numbers: list, 
                        demand: dict, resultdata: ResultsData):
