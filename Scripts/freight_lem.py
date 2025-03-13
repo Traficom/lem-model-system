@@ -98,12 +98,12 @@ def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict,
     mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
     shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
     df = DataFrame(data={
-        "Tavararyhmä": [purpose_name]*len(modes),
+        "Commodity": [purpose_name]*len(modes),
         "Mode": modes,
-        "Kulkutapaosuus-tonnit (%)": [round(i, 3) for i in shares_tons],
-        "Tonnit (t/vuosi)": [int(i) for i in mode_tons],
-        "Kulkutapaosuus-suorite (%)": [round(i, 3) for i in shares_mileage],
-        "Kuljetussuorite (tkm/vuosi)": [int(i) for i in mode_ton_dist]
+        "Mode share from tons (%)": [round(i, 3) for i in shares_tons],
+        "Tons (t/annual)": [int(i) for i in mode_tons],
+        "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
+        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
         })
     filename = f"freight_purpose_summary.txt"
     resultdata.print_concat(df, filename)
@@ -115,8 +115,8 @@ def write_zone_summary(purpose_name: str, zone_numbers: list,
     """
     df = DataFrame(index=zone_numbers)
     for mode in demand:
-        df[f"Lähtevät_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
-        df[f"Saapuvat_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
+        df[f"Departing_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
+        df[f"Arriving_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
     filename = f"freight_zone_summary.txt"
     resultdata.print_data(df, filename)
 
@@ -127,8 +127,8 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
     mileage_sum = [numpy.sum(dist.pop(mode)*demand[mode]) for mode in modes]
     df = DataFrame(data={
         "Mode": modes,
-        "Ajokerrat (vrk)": [int(i) for i in vehicles_sum],
-        "Ajoneuvosuorite (ajon-km/vrk)": [int(i) for i in mileage_sum]
+        "Vehicle trips (day)": [int(i) for i in vehicles_sum],
+        "Vehicle mileage (vkm/day)": [int(i) for i in mileage_sum]
         })
     filename = f"freight_vehicle_summary.txt"
     resultdata.print_data(df, filename)
