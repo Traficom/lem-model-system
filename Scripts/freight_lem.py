@@ -51,6 +51,7 @@ def main(args):
     
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
     impedance = ass_model.freight_network.assign()
+    truck_distances = {key: impedance["dist"][key] for key in param.truck_classes}
     impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
                          for mode in ("truck", "freight_train", "ship")}
     impedance["channel"] = {"ship" : numpy.zeros([len(zone_numbers), len(zone_numbers)])}
@@ -78,6 +79,7 @@ def main(args):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
         write_purpose_summary(purpose.name, demand, impedance, resultdata)
         write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
+    write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
@@ -116,6 +118,19 @@ def write_zone_summary(purpose_name: str, zone_numbers: list,
         df[f"Lähtevät_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
         df[f"Saapuvat_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
     filename = f"freight_zone_summary.txt"
+    resultdata.print_data(df, filename)
+
+def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
+    """Write summary for truck classes and their mileage."""
+    modes = list(demand)
+    vehicles_sum = [numpy.sum(demand[mode]) for mode in modes]
+    mileage_sum = [numpy.sum(dist.pop(mode)*demand[mode]) for mode in modes]
+    df = DataFrame(data={
+        "Mode": modes,
+        "Ajokerrat (vrk)": [int(i) for i in vehicles_sum],
+        "Ajoneuvosuorite (ajon-km/vrk)": [int(i) for i in mileage_sum]
+        })
+    filename = f"freight_vehicle_summary.txt"
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
