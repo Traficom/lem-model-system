@@ -50,6 +50,7 @@ class OffPeakPeriod(AssignmentPeriod):
         stopping_criteria["max_iterations"] = 0
         self._assign_cars(stopping_criteria)
         self._assign_transit(param.transit_classes)
+        return []
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Assign cars for one time period.
