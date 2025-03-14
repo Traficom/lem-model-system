@@ -42,6 +42,7 @@ class FreightMode(AssignmentMode):
             "penalty": 0,
             "perception_factor": 1,
         }
+        num_proc = "number_of_processors"
         self.spec: Dict[str, Any] = {
             "type": "EXTENDED_TRANSIT_ASSIGNMENT",
             "modes": list(all_modes),
@@ -57,9 +58,11 @@ class FreightMode(AssignmentMode):
             "in_vehicle_time": {
                 "perception_factor": 1,
             },
-            "aux_transit_time": {
-                "perception_factor": 30,
-            },
+            "aux_transit_by_mode": [{
+                "mode": param.park_and_ride_mode,
+                "time": "@truck_time_vrk",
+                "time_perception_factor": param.aux_time_perception_factor_truck,
+            }],
             "flow_distribution_at_origins": {
                 "choices_at_origins": "OPTIMAL_STRATEGY",
             },
@@ -70,7 +73,9 @@ class FreightMode(AssignmentMode):
                 "consider_total_impedance": False
             },
             "journey_levels": journey_levels,
-            "performance_settings": param.performance_settings,
+            "performance_settings": {
+                num_proc: param.performance_settings[num_proc],
+            },
         }
         self.result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
