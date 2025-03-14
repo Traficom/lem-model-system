@@ -110,5 +110,6 @@ class EmmeAssignmentTest(unittest.TestCase):
         for mode in ["truck", "freight_train", "ship"]:
             ass_model.freight_network.set_matrix(mode, demand)
         ass_model.freight_network.save_network_volumes("c1")
-        ass_model.freight_network.output_traversal_matrix(self.resultdata.path)
+        ass_model.freight_network.output_traversal_matrix({"freight_train", "ship"},
+                                                          self.resultdata.path)
         self.resultdata.flush()

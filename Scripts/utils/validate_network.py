@@ -46,6 +46,7 @@ def validate(network, time_periods=param.time_periods, fares=None):
     for modes in param.official_node_numbers:
         modesets.append({network.mode(m) for m in modes})
         intervals += param.official_node_numbers[modes]
+    car_time_attrs = [f"#car_time_{tp}" for tp in time_periods]
     for link in network.links():
         if not link.modes:
             msg = "No modes defined for link {}. At minimum mode h and one more mode needs to be defined for the simulation to work".format(link.id)
@@ -74,6 +75,11 @@ def validate(network, time_periods=param.time_periods, fares=None):
                 msg = "Link type missing for link {}".format(link.id)
                 log.error(msg)
                 raise ValueError(msg)
+            for attr in car_time_attrs:
+                if link[attr] < 0:
+                    msg = f"Negative {attr} on car link {link.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
     hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
     for line in network.transit_lines():
         for hdwy in hdw_attrs:
