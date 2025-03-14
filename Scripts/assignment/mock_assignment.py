@@ -90,7 +90,18 @@ class MockPeriod(Period):
         return zone_numbers
 
     def init_assign(self):
-        pass
+        return self.get_soft_mode_impedances()
+
+    def get_soft_mode_impedances(self):
+        """Get travel impedance matrices for walk and bike.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (walk/bike) : numpy 2-d matrix
+        """
+        return self._get_impedances(["walk", "bike"])
 
     def assign_trucks_init(self):
         pass

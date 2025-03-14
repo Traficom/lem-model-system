@@ -168,6 +168,18 @@ class AssignmentPeriod(Period):
         self._assign_pedestrians()
         self._set_bike_vdfs()
         self._assign_bikes()
+        return self.get_soft_mode_impedances()
+
+    def get_soft_mode_impedances(self):
+        """Get travel impedance matrices for walk and bike.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (walk/bike) : numpy 2-d matrix
+        """
+        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
 
     def assign_trucks_init(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
