@@ -12,6 +12,7 @@ class FreightMode(AssignmentMode):
         self.aux_dist = self._create_matrix("aux_dist")
         self.time = self._create_matrix("time")
         self.aux_time = self._create_matrix("aux_time")
+        self.canal_cost = self._create_matrix("canal_cost")
         no_penalty = dict.fromkeys(
             ["global", "at_nodes", "on_lines", "on_segments"])
         all_modes = {param.park_and_ride_mode: "truck access"}
@@ -58,6 +59,10 @@ class FreightMode(AssignmentMode):
             "in_vehicle_time": {
                 "perception_factor": 1,
             },
+            "in_vehicle_cost": {
+                "penalty": param.background_traffic_attr,
+                "perception_factor": 1,
+            },
             "aux_transit_by_mode": [{
                 "mode": param.park_and_ride_mode,
                 "time": "@truck_time_vrk",
@@ -83,6 +88,7 @@ class FreightMode(AssignmentMode):
                 "modes": list(modes),
                 "distance": self.dist.id,
                 "actual_in_vehicle_times": self.time.id,
+                "actual_in_vehicle_costs": self.canal_cost.id,
             },
         }
         self.local_result_spec = {
@@ -106,6 +112,7 @@ class FreightMode(AssignmentMode):
             **self.aux_dist.item,
             **self.time.item,
             **self.aux_time.item,
+            **self.canal_cost.item,
         }
         self._release_matrices()
         return mtxs

@@ -50,9 +50,6 @@ def main(args):
     
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
     impedance = ass_model.freight_network.assign()
-    impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
-                         for mode in ("truck", "freight_train", "ship")}
-    impedance["channel"] = {"ship" : numpy.zeros([len(zone_numbers), len(zone_numbers)])}
     del impedance["cost"]
     impedance = {mode: {mtx_type: impedance[mtx_type][mode] for mtx_type in impedance
                         if mode in impedance[mtx_type]}

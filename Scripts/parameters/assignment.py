@@ -589,6 +589,7 @@ municipality_attr = "#municipality"
 terminal_cost_attr = "@freight_term_cost"
 freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
+extra_freight_cost_attr = "#extra_cost"
 railtypes = {
     2: "tram",
     3: "metro",
