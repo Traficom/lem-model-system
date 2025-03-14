@@ -677,6 +677,7 @@ class DestModeModel(LogitModel):
         for dummy in dummies:
             dummy_share = self.zone_data.get_data(
                 dummy, self.bounds, generation=True)
+            no_dummy_share -= dummy_share
             tmp_prob = self._calc_prob(impedance, dummy)
             for mode in self.mode_choice_param:
                 prob[mode] += dummy_share * tmp_prob.pop(mode)
