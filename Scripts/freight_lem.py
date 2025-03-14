@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 import numpy
 import json
+from pandas import DataFrame
 
 import utils.log as log
 import utils.config
@@ -46,6 +47,7 @@ def main(args):
                                              costdata["freight"][commodity_conversion[commodity]])
     ass_model.prepare_freight_network(costdata["car_cost"], args.specify_commodity_names)
     impedance = ass_model.freight_network.assign()
+    truck_distances = {key: impedance["dist"][key] for key in param.truck_classes}
     impedance["toll"] = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)]) 
                          for mode in ("truck", "freight_train", "ship")}
     impedance["channel"] = {"ship" : numpy.zeros([len(zone_numbers), len(zone_numbers)])}
@@ -65,15 +67,66 @@ def main(args):
                 ass_model.freight_network.save_network_volumes(purpose.name)
                 with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
                     mtx[f"{purpose.name}_{mode}"] = demand[mode]
-        ass_model.freight_network.output_traversal_matrix(resultdata.path)
+        ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
+        write_purpose_summary(purpose.name, demand, impedance, resultdata)
+        write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
+    write_vehicle_summary(total_demand, truck_distances, resultdata)
+    resultdata.flush()
     log.info("Setting vehicle matrices and performing end assignment.")
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
+
+def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
+                          resultdata: ResultsData):
+    """Write purpose-mode specific summary as txt-file containing mode shares 
+    calculated from demand (tons), mode specific demand (tons), mode shares 
+    calculated from mileage, and mode specific ton-mileage.
+    """
+    modes = list(demand)
+    mode_tons = [numpy.sum(demand[mode])+0.01 for mode in modes]
+    shares_tons = [tons / sum(mode_tons) for tons in mode_tons]
+    mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
+    shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
+    df = DataFrame(data={
+        "Commodity": [purpose_name]*len(modes),
+        "Mode": modes,
+        "Mode share from tons (%)": [round(i, 3) for i in shares_tons],
+        "Tons (t/annual)": [int(i) for i in mode_tons],
+        "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
+        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
+        })
+    filename = f"freight_purpose_summary.txt"
+    resultdata.print_concat(df, filename)
+
+def write_zone_summary(purpose_name: str, zone_numbers: list, 
+                       demand: dict, resultdata: ResultsData):
+    """Write purpose and mode specific departing and arriving tons for each zone
+    in zone mapping.
+    """
+    df = DataFrame(index=zone_numbers)
+    for mode in demand:
+        df[f"Departing_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
+        df[f"Arriving_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
+    filename = f"freight_zone_summary.txt"
+    resultdata.print_data(df, filename)
+
+def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
+    """Write summary for truck classes and their mileage."""
+    modes = list(demand)
+    vehicles_sum = [numpy.sum(demand[mode]) for mode in modes]
+    mileage_sum = [numpy.sum(dist.pop(mode)*demand[mode]) for mode in modes]
+    df = DataFrame(data={
+        "Mode": modes,
+        "Vehicle trips (day)": [int(i) for i in vehicles_sum],
+        "Vehicle mileage (vkm/day)": [int(i) for i in mileage_sum]
+        })
+    filename = f"freight_vehicle_summary.txt"
+    resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
     parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")

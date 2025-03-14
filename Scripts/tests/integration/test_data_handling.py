@@ -49,12 +49,17 @@ class MatrixDataTest(unittest.TestCase):
             print("validating matrix type", matrix_type)
             self._validate_matrix_operations(m, matrix_type)
 
-    def _validate_matrix_operations(self, matrix_data, matrix_type):
+    def _validate_matrix_operations(self, matrix_data: MatrixData,
+                                    matrix_type: str):
         emme_scenarios = ["aht", "pt", "iht"]
         expanded_zones = numpy.insert(ZONE_INDEXES, 3, 8)
+        expanded_internal = numpy.insert(INTERNAL_ZONES, 3, 8)
+        mapping = pandas.Series(expanded_internal, expanded_internal)
+        mapping[300] = 202
         for key in emme_scenarios:
             print("Opening matrix for time period", key)
-            with matrix_data.open(matrix_type, key, expanded_zones) as mtx:
+            with matrix_data.open(
+                    matrix_type, key, expanded_zones, mapping) as mtx:
                 for ass_class in param.transport_classes:
                     a = mtx[ass_class]
 

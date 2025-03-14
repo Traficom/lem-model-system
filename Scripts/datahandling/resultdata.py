@@ -54,13 +54,15 @@ class ResultsData:
             self._df_buffer[filename] = self._df_buffer[filename].merge(
                 data, "outer", left_index=True, right_index=True)
 
-    def print_concat(self, data: pandas.Series, filename: str):
+    def print_concat(self,
+                     data: Union[pandas.Series, pandas.DataFrame],
+                     filename: str):
         """Save data to Series buffer (printed to text file when flushing).
 
         Parameters
         ----------
-        data : pandas.Series
-            Data with multi index to add to Series
+        data : pandas.Series or pandas.DataFrame
+            Data with multi index to add to Series or DataFrame
         filename : str
             Name of file where data is pushed (can contain other data)
         """
