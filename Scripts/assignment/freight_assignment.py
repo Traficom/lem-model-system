@@ -67,13 +67,15 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         for tc in param.truck_classes:
             self.assignment_modes[tc].get_matrices()
 
-    def output_traversal_matrix(self, output_path: Path):
+    def output_traversal_matrix(self, demand_modes: set, output_path: Path):
         """Save commodity class specific auxiliary tons for freight modes.
         Result file indicates amount of transported tons with auxiliary 
         mode between gate pair.
 
         Parameters
         ----------
+        demand_modes : set
+            commodity specific demand modes
         output_path : Path
             Path where traversal matrices are saved
         """
@@ -84,7 +86,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                 "aux_transit": param.freight_gate_attr,
             },
         }
-        for ass_class in param.freight_modes:
+        for ass_class in set(param.freight_modes) & demand_modes:
             output_file = output_path / f"{ass_class}.txt"
             spec["analyzed_demand"] = self.assignment_modes[ass_class].demand.id
             self.emme_project.traversal_analysis(
