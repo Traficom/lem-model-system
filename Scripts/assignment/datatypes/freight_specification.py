@@ -8,6 +8,8 @@ from assignment.datatypes.assignment_mode import AssignmentMode
 class FreightMode(AssignmentMode):
     def __init__(self, *args, **kwargs):
         AssignmentMode.__init__(self, *args, **kwargs)
+        self._include_toll_cost = self.emme_scenario.extra_attribute(
+            "@toll_cost_vrk") is not None
         self.dist = self._create_matrix("dist")
         self.aux_dist = self._create_matrix("aux_dist")
         self.time = self._create_matrix("time")
@@ -99,6 +101,11 @@ class FreightMode(AssignmentMode):
                 "actual_aux_transit_times": self.aux_time.id,
             },
         }
+        if self._include_toll_cost:
+            self.spec["aux_transit_by_mode"][0]["cost"] = "@toll_cost_vrk"
+            self.spec["aux_transit_by_mode"][0]["cost_perception_factor"] = 1.0
+            self.toll_cost = self._create_matrix("toll_cost")
+            self.local_result_spec["actual_aux_transit_costs"] = self.toll_cost.id
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": self.demand.id,
@@ -114,5 +121,7 @@ class FreightMode(AssignmentMode):
             **self.aux_time.item,
             **self.canal_cost.item,
         }
+        if self._include_toll_cost:
+            mtxs.update(self.toll_cost.item)
         self._release_matrices()
         return mtxs
