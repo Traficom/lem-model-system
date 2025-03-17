@@ -285,7 +285,7 @@ class ModelSystem:
         soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period {}...".format(tp))
+            log.info(f"Initializing assignment for period {tp}...")
             if is_end_assignment or not self.ass_model.use_free_flow_speeds:
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
@@ -294,13 +294,16 @@ class ModelSystem:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
         if not is_end_assignment:
+            log.info("Calculate probabilities for bike and walk...")
             for purpose in self.dm.tour_purposes:
                 purpose.calc_soft_mode_prob(soft_mode_impedance)
+            log.info("Bike and walk calculation completed")
         # Perform traffic assignment and get result impedance,
         # for each time period
         impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
@@ -396,7 +399,7 @@ class ModelSystem:
         # Calculate and return traffic impedance
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period " + tp)
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             impedance[tp] = (ap.end_assign() if iteration=="last"
                              else ap.assign(self.travel_modes))
             if iteration=="last":
