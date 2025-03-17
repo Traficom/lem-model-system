@@ -266,10 +266,9 @@ class LogitModel:
         ec_share = self.zone_data.get_data(
             "share_electric_cars", self.bounds, generation=True)
         for mode in self.mode_choice_param:
-            if mode in (self.purpose.car_mode, "car_pax"):
-                ex_mode = ec_mode if mode == self.purpose.car_mode else "car_electric_pax"
+            if mode in self.purpose.car_modes:
                 probs[mode] = (1-ec_share) * probs[mode]
-                probs[ex_mode] = ec_share * ec_probs[mode]
+                probs[self.purpose.car_modes[mode]] = ec_share * ec_probs[mode]
             else:
                 probs[mode] = ((1-ec_share) * probs[mode]
                                     + ec_share * ec_probs[mode])
@@ -341,10 +340,9 @@ class ModeDestModel(LogitModel):
                 Choice probabilities
         """
         ec_impedance = {}
-        if "car_electric" in impedance:
-            ec_impedance[self.purpose.car_mode] = impedance.pop("car_electric")
-        if "car_electric_pax" in impedance:
-            ec_impedance["car_pax"] = impedance.pop("car_electric_pax")
+        for mode, electric_mode in self.purpose.car_modes.items():
+            if electric_mode in impedance:
+                ec_impedance[mode] = impedance.pop(electric_mode)
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
             impedance)
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
@@ -405,11 +403,10 @@ class ModeDestModel(LogitModel):
                                 mode_probs: Dict[str, numpy.ndarray]):
         ec_mode_exps, _, dest_exps, dest_expsums = self._calc_utils(
             impedance)
-        for d in (dest_exps, dest_expsums):
-            if "car_pax" in d:
-                d["car_electric_pax"] = d.pop("car_pax")
-            if self.purpose.car_mode in d:
-                d["car_electric"] = d.pop(self.purpose.car_mode)
+        for mode, electric_mode in self.purpose.car_modes.items():
+            for d in (dest_exps, dest_expsums):
+                if mode in d:
+                    d[electric_mode] = d.pop(mode)
         mode_exps.update(ec_mode_exps)
         ec_mode_probs = self._calc_mode_prob(
             mode_exps, sum(mode_exps.values()))
@@ -553,7 +550,7 @@ class ModeDestModel(LogitModel):
 
 
 class AccessibilityModel(ModeDestModel):
-    def calc_accessibility(self, impedance):
+    def calc_accessibility(self, impedance: dict):
         """Calculate logsum-based accessibility measures.
 
         Individual dummy variables are not included.
@@ -565,10 +562,8 @@ class AccessibilityModel(ModeDestModel):
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
         """
-        if "car_electric" in impedance:
-            impedance.pop("car_electric")
-        if "car_electric_pax" in impedance:
-            impedance.pop("car_electric_pax")
+        for electric_mode in self.purpose.car_modes.values():
+            impedance.pop(electric_mode, None)
         mode_exps, mode_expsum, _, _ = self._calc_utils(impedance)
         self.accessibility = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
@@ -724,10 +719,12 @@ class DestModeModel(LogitModel):
         prob = self._calc_dummy_prob(impedance, store_logsum=True)
 
         # Calculate electric car probability and add to prob
-        if ec_mode in impedance:
-            impedance[self.purpose.car_mode] = impedance[ec_mode]
-        if "car_electric_pax" in impedance:
-            impedance["car_pax"] = impedance["car_electric_pax"]
+        includes_electric = False
+        for mode, electric_mode in self.purpose.car_modes.items():
+            if electric_mode in impedance:
+                impedance[mode] = impedance[electric_mode]
+                includes_electric = True
+        if includes_electric:
             ec_prob = self._calc_dummy_prob(impedance)
             prob = self._calc_electric_car_shares(prob, ec_prob)
 

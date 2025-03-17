@@ -69,6 +69,7 @@ class LogitModelTest(unittest.TestCase):
         pur.sub_bounds = [slice(0, 20), slice(20, 24)]
         pur.zone_numbers = INTERNAL_ZONES
         pur.dist = mtx
+        pur.car_modes = {}
         parameters_path = Path(__file__).parents[2] / "parameters" / "demand"
         for file in parameters_path.rglob("*.json"):
             parameters = json.loads(file.read_text("utf-8"))
