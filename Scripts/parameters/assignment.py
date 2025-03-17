@@ -469,8 +469,7 @@ transport_classes = private_classes + transit_classes + truck_classes
 assignment_classes = {
     "hb_work": "work",
     "hb_edu_basic": "work",
-    "hb_edu_upsec": "work",
-    "hb_edu_higher": "work",
+    "hb_edu_student": "work",
     "hb_grocery": "leisure",
     "hb_other_shop": "leisure",
     "hb_leisure": "leisure",
