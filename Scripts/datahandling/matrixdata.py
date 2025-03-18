@@ -46,6 +46,8 @@ class MatrixFile:
         self._file = omx_file
         self.missing_zones = []
         if mapping is not None:
+            extra_mapping = pandas.Series(zone_numbers, zone_numbers)
+            mapping = mapping.combine_first(extra_mapping).astype("int32")
             zone_numbers = mapping.index
         self._data_zone_mapping = mapping
         if zone_numbers is None:
