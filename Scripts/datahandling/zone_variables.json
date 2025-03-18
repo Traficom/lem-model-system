@@ -23,17 +23,16 @@
                     "sh_wrk_healthcare",
                     "sh_wrk_shop",
                     "sh_wrk_hospitality",
-                    "sh_wrk_recreation"
+                    "sh_wrk_recreation",
+                    "sh_wrk_edu_higher",
+                    "sh_wrk_edu_other"
                 ]
             },
             "sport_facility_indoor",
             "sport_facility_outdoor",
-            "area_education_buildings",
             "area_leisure_buildings",
             "area_university_buildings",
-            "students_comprehensive",
-            "students_upper_secondary",
-            "students_higher_education"
+            "students_comprehensive"
         ],
         "mean": [
             "avg_park_cost",

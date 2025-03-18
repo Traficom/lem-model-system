@@ -13,7 +13,7 @@ tour_number_increase = {
 tour_combinations = {
     0: {
         () : {
-            "constant":   14.64,
+            "constant":   8.587,
             "individual_dummy": {
                 "age_7_17": 0.0,
                 "age_18_29":  0.0,
@@ -26,32 +26,32 @@ tour_combinations = {
 # utility function 2
     },
     1: {
-        ("hb_edu_higher",) : {
-            "constant":   2.512,
+        ("hb_edu_student",) : {
+            "constant":   3.948,
             "individual_dummy": {
                 "age_7_17": 0.0,
-                "age_18_29":  4.958,
-                "age_30_49":  2.652,
+                "age_18_29": 1.982,
+                "age_30_49": 0.1045,
                 "age_50_64": 0.0,
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher": .4611
+                "hb_edu_student": .1260
             }
         }
     },
     2: {
-        ("hb_edu_higher", "hb_edu_higher") : {
+        ("hb_edu_student", "hb_edu_student") : {
             "constant":   0.0,
             "individual_dummy": {
                 "age_7_17": 0.0,
-                "age_18_29":  4.958,
-                "age_30_49":  2.652,
+                "age_18_29": 1.982,
+                "age_30_49": 0.1045,
                 "age_50_64": 0.0,
                 "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_higher": .4166
+                "hb_edu_student": .2786
             }
         }
     }
@@ -74,14 +74,7 @@ tour_generation = {
         "age_50_64": 0,
         "age_65_99": 0
     },
-    "hb_edu_upsec": {
-        "age_7_17": 0.0321,
-        "age_18_29": 0.058,
-        "age_30_49": 0.0053,
-        "age_50_64": 0.002,
-        "age_65_99": 0
-    },
-    "hb_edu_higher": {
+    "hb_edu_student": {
         "age_7_17": 0.0,
         "age_18_29": 0.0,
         "age_30_49": 0.0,
@@ -132,7 +125,7 @@ tour_generation = {
     "ob_other": {
         "hb_edu_basic": 0.0353,
         "hb_edu_upsec": 0.0238,
-        "hb_edu_higher": 0.0405,
+        "hb_edu_student": 0.0405,
         "hb_visit": 0.065
     },
     "hb_work_long": {
