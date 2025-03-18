@@ -46,18 +46,18 @@ class FreightModelTest(unittest.TestCase):
             "truck": {
                 "time": numpy.array(time_impedance["truck"]),
                 "dist": numpy.array(dist_impedance["truck"]),
-                "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
+                "toll_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             },
             "freight_train": {
                 "time": numpy.array(time_impedance["freight_train"]),
                 "dist": numpy.array(dist_impedance["freight_train"]),
                 "aux_time": numpy.array(time_impedance["freight_train_aux"]),
                 "aux_dist": numpy.array(dist_impedance["freight_train_aux"]),
-                "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
+                "toll_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             },
             "ship": {
                 "dist": numpy.array(dist_impedance["ship"]),
-                "channel": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)]),
+                "canal_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)]),
                 "aux_time": numpy.array(time_impedance["ship_aux"]),
                 "aux_dist": numpy.array(dist_impedance["ship_aux"]),
                 "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])

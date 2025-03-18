@@ -300,6 +300,7 @@ waiting_time_perception_factor = 1.5
 aux_transit_time = {
     "perception_factor": 1.75
 }
+aux_time_perception_factor_truck = 30
 # Stochastic bike assignment distribution
 bike_dist = {
     "type": "UNIFORM", 
@@ -587,6 +588,7 @@ municipality_attr = "#municipality"
 terminal_cost_attr = "@freight_term_cost"
 freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
+extra_freight_cost_attr = "#extra_cost"
 railtypes = {
     2: "tram",
     3: "metro",

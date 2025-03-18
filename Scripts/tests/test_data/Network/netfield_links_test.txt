@@ -3,6 +3,7 @@ t network_fields
 #hinta_pt LINK REAL ''
 #hinta_iht LINK REAL ''
 #hinta_vrk LINK REAL ''
+#extra_cost LINK INTEGER32 extra_cost
 #car_time_aht LINK REAL ''
 #car_time_pt LINK REAL ''
 #car_time_iht LINK REAL ''
