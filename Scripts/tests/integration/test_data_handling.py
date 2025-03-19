@@ -12,7 +12,7 @@ import parameters.assignment as param
 
 TEST_DATA_PATH = Path(__file__).parent.parent / "test_data"
 RESULTS_PATH = TEST_DATA_PATH / "Results" / "test"
-ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "zonedata.gpkg"
+ZONEDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "zonedata_test.gpkg"
 COSTDATA_PATH = TEST_DATA_PATH / "Scenario_input_data" / "costdata.json"
 BASE_MATRICES_PATH = TEST_DATA_PATH / "Scenario_input_data" / "Matrices"
 INTERNAL_ZONES = [
