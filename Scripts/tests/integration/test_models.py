@@ -12,7 +12,6 @@ from tests.integration.test_data_handling import (
     RESULTS_PATH,
     ZONEDATA_PATH,
     COSTDATA_PATH,
-    BASE_ZONEDATA_PATH,
     BASE_MATRICES_PATH,
 )
 
@@ -32,7 +31,7 @@ class ModelTest(unittest.TestCase):
         ass_model = MockAssignmentModel(MatrixData(
             RESULTS_PATH / "Matrices" / "uusimaa"))
         model = ModelSystem(
-            ZONEDATA_PATH, COSTDATA_PATH, BASE_ZONEDATA_PATH,
+            ZONEDATA_PATH, COSTDATA_PATH, ZONEDATA_PATH,
             BASE_MATRICES_PATH, RESULTS_PATH, ass_model, "uusimaa")
         impedance = model.assign_base_demand()
         for ap in ass_model.assignment_periods:
@@ -55,7 +54,7 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.31408963309396976)
+            0.31744493514386324)
         
         print("Model system test done")
     
