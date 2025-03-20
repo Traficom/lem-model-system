@@ -38,9 +38,14 @@ class OffPeakPeriod(AssignmentPeriod):
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
         self._prepare_walk_and_bike(save_matrices=False)
+        long_dist_transit_modes = {mode: TransitMode(
+                mode, self, day_scenario, save_matrices, save_matrices)
+            for mode in param.long_distance_transit_classes}
+        self.assignment_modes.update(long_dist_transit_modes)
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
-            save_extra_matrices=save_matrices)
+            save_extra_matrices=save_matrices,
+            transit_classes=param.local_transit_classes)
 
     def init_assign(self):
         """Assign transit for one time period with free-flow bus speed."""
