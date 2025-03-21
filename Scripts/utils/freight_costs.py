@@ -17,7 +17,7 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
             Mode (truck/trailer_truck) : unit cost name
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll) : numpy 2d matrix
+        Type (time/dist/toll_cost) : numpy 2d matrix
 
     Returns
     ----------
@@ -48,7 +48,7 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
             Mode (truck/trailer_truck) : unit cost name
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll) : numpy 2d matrix
+        Type (time/dist/toll_cost) : numpy 2d matrix
 
     Returns
     ----------
@@ -76,7 +76,7 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
             Mode (electric_train/diesel_train) : unit cost name
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll) : numpy 2d matrix
+        Type (time/dist/toll_cost) : numpy 2d matrix
 
     Returns
     ----------
@@ -106,7 +106,7 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
                 draught (4m/7m/9m) : unit cost name
                     unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll/channel) : numpy 2d matrix
+        Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
 
     Returns
     ----------
@@ -119,7 +119,7 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
         for draught, params in unit_costs["ship"][mode].items():
             ship_cost = (impedance["dist"]*params["time"]
                          / params["speed"] * params["empty_share"])
-            ship_cost += (impedance["channel"] + params["other_costs"]
+            ship_cost += (impedance["canal_cost"] + params["other_costs"]
                           + params["terminal_cost"])*2
             mode_cost[mode][draught] = ship_cost
     ship_cost = mode_cost["other_dry_cargo"]["4m"]
@@ -139,7 +139,7 @@ def get_aux_cost(unit_costs: Dict[str, Dict],
     unit_costs : Dict[str, Dict]
         Freight mode (truck/freight_train/ship)
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll) : numpy 2d matrix
+        Type (time/dist/toll_cost) : numpy 2d matrix
 
     Returns
     ----------
@@ -149,7 +149,7 @@ def get_aux_cost(unit_costs: Dict[str, Dict],
     impedance_aux = {
         "dist": impedance["aux_dist"],
         "time": impedance["aux_time"],
-        "toll": impedance["toll"]
+        "toll_cost": impedance["toll_cost"]
     }
     aux_cost = numpy.where(
         (impedance["aux_dist"] > (impedance["dist"]*2))

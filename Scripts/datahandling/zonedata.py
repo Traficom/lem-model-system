@@ -255,6 +255,10 @@ def read_zonedata(path: Path,
         msg = f"Path {path} not found."
         raise NameError(msg)
     logging.getLogger("fiona").setLevel(logging.ERROR)
+    if len(fiona.listlayers(path)) > 1:
+        msg = f"Multiple layers found in file {path}"
+        log.error(msg)
+        raise TypeError(msg)
     with fiona.open(path, ignore_geometry=True) as colxn:
         data = pandas.DataFrame(
             [record["properties"] for record in colxn],
