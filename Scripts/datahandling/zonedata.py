@@ -83,7 +83,7 @@ class ZoneData:
         self["sh_hh1"] = divide(self["sh_hh1"], hh_population)
         self["sh_hh2"] = divide(2*self["sh_hh2"], hh_population)
         self["sh_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
-        self["sh_cars1_hh1"] = divide(2*self["sh_cars1_hh1"], hh_population)
+        self["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
         self["sh_cars1_hh2"] = divide(2*self["sh_cars1_hh2"] + 4.13*self["sh_cars1_hh3"], 
                                       hh_population)
         self["sh_cars2_hh2"] = divide(2*self["sh_cars2_hh2"] + 4.13*self["sh_cars2_hh3"], 
