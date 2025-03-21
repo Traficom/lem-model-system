@@ -344,14 +344,25 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         if "hb_leisure_sustainable" in self.zdata_forecast._values:
-            prediction = self.dm.car_ownership_model.calc_prob()
+            prob_hh1 = self.dm.car_ownership_models[0].calc_prob()
+            prob_hh2 = self.dm.car_ownership_models[1].calc_prob()
+            prob_hh3 = self.dm.car_ownership_models[2].calc_prob()
+            self.zdata_forecast["sh_cars1_hh1"] = self.zdata_forecast["sh_hh1"]*prob_hh1[1]
+            self.zdata_forecast["sh_cars1_hh2"] = (self.zdata_forecast["sh_hh2"]*prob_hh2[1] + 
+                                                   self.zdata_forecast["sh_hh3"]*prob_hh3[1])
+            self.zdata_forecast["sh_cars2_hh2"] = (self.zdata_forecast["sh_hh2"]*prob_hh2[2] + 
+                                                   self.zdata_forecast["sh_hh3"]*prob_hh3[2])
+            prob = dict()
+            prob["cars"] = numpy.zeros_like(self.zdata_forecast["population"])
+            for n in [0, 1, 2]:
+                prob[f"sh_cars{n}"] = (prob_hh1[n] * self.zdata_forecast["sh_hh1"] +
+                                       prob_hh2[n] * self.zdata_forecast["sh_hh2"] +
+                                       prob_hh3[n] * self.zdata_forecast["sh_hh3"])
+                prob["cars"] += n * prob[f"sh_cars{n}"] * self.zdata_forecast["population"]
+            self.resultdata.print_data(prob, "zone_car_ownership.txt")
             log.info("New car ownership values calculated.")
         else: 
-            prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
-                          .clip(upper=1.0))
             log.info("Use car ownership from basedata.")
-        self.zdata_forecast["car_density"] = prediction
-        self.zdata_forecast["cars_per_1000"] = 1000 * prediction
 
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")

@@ -11,6 +11,8 @@ import parameters.zone as param
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations, avg
 
+def divide(a, b):
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class ZoneData:
     """Container for zone data read from input file.
@@ -76,6 +78,16 @@ class ZoneData:
             if col.startswith("sh_wrk_"):
                 self[col.replace("sh_wrk_", "")] = data[col] * wp
         self.share["share_age_7-99"] = share_7_99
+        # Convert household shares to population shares
+        hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
+        self["sh_hh1"] = divide(self["sh_hh1"], hh_population)
+        self["sh_hh2"] = divide(2*self["sh_hh2"], hh_population)
+        self["sh_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
+        self["sh_cars1_hh1"] = divide(2*self["sh_cars1_hh1"], hh_population)
+        self["sh_cars1_hh2"] = divide(2*self["sh_cars1_hh2"] + 4.13*self["sh_cars1_hh3"], 
+                                      hh_population)
+        self["sh_cars2_hh2"] = divide(2*self["sh_cars2_hh2"] + 4.13*self["sh_cars2_hh3"], 
+                                      hh_population)
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
