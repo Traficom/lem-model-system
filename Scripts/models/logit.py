@@ -467,7 +467,7 @@ class ModeDestModel(LogitModel):
         for mode in mode_exps:
             if "car" not in mode:
                 sustainable_expsum += mode_exps[mode]
-            else:
+            if mode in ["car_work", "car_leisure"]:
                 car_expsum += mode_exps[mode]
         label = f"{self.purpose.name}_sustainable"
         logsum_sustainable = pandas.Series(
@@ -478,7 +478,7 @@ class ModeDestModel(LogitModel):
         logsum_car = pandas.Series(
             log(car_expsum), self.purpose.zone_numbers,
             name=label)
-        self.zone_data._values[label] = logsum - logsum_car
+        self.zone_data._values[label] = logsum_sustainable - logsum_car
         return mode_exps, mode_expsum, dest_exps, dest_expsums
 
     def _calc_mode_prob(self, mode_exps: Dict[str, numpy.ndarray],
