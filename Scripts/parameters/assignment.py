@@ -479,9 +479,7 @@ assignment_classes = {
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
-    "hb_work_long": "work",
     "hb_business_long": "work",
-    "hb_private_day": "leisure",
     "hb_private_week": "leisure",
     "external": "leisure",
 }

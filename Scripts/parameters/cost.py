@@ -37,8 +37,6 @@ sharing_factor = {
     "hb_sport": 1.00,
     "hb_visit": 0.25,
     "ob_other": 1.00,
-    "hb_work_long": 0.00,
-    "hb_private_day": 1.00,
     "hb_private_week": 1.00,
     "hb_business_long": 0.50  
 }
@@ -52,8 +50,6 @@ car_drv_occupancy = {
     "hb_sport": 1.91,
     "hb_visit": 1.74,
     "ob_other": 2.16,
-    "hb_work_long": 1.24,
-    "hb_private_day": 2.16,
     "hb_private_week": 2.16,
     "hb_business_long": 1.35
 }
@@ -67,8 +63,6 @@ car_pax_occupancy = {
     "hb_sport": 2.84,
     "hb_visit": 2.97,
     "ob_other": 3.58,
-    "hb_work_long": 2.50,
-    "hb_private_day": 3.10,
     "hb_private_week": 3.10,
     "hb_business_long": 2.80
 }

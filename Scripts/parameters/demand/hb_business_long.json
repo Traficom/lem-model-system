@@ -63,7 +63,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00058,
-                "cost": -0.00055
+                "cost": 0.00055
             },
             "log": {
                 "attraction_size": 1
@@ -76,7 +76,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00138,
-                "cost": -0.00055
+                "cost": 0.00055
             },
             "log": {
                 "attraction_size": 1
@@ -89,7 +89,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00316,
-                "cost": -0.00055
+                "cost": 0.00055
             },
             "log": {
                 "attraction_size": 1
@@ -102,7 +102,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00747,
-                "cost": -0.00055
+                "cost": 0.00055
             },
             "log": {
                 "attraction_size": 1
@@ -115,7 +115,7 @@
             "attraction": {},
             "impedance": {
                 "time": -0.00523,
-                "cost": -0.00055
+                "cost": 0.00055
             },
             "log": {
                 "attraction_size": 1

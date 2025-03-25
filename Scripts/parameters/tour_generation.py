@@ -128,25 +128,11 @@ tour_generation = {
         "hb_edu_student": 0.0405,
         "hb_visit": 0.065
     },
-    "hb_work_long": {
-        "population_Uusimaa": 0.00268,
-        "population_Lounais-Suomi": 0.00532,
-        "population_Ita-Suomi": 0.00449,
-        "population_Pohjois-Suomi": 0.00472
-    },
     "hb_business_long": {
         "population_Uusimaa": 0.00129,
         "population_Lounais-Suomi": 0.00334,
         "population_Ita-Suomi": 0.00283,
         "population_Pohjois-Suomi": 0.00185
-    },
-    "hb_private_day": {
-        "income_0_19": 0.00339,
-        "income_20_39": 0.00502,
-        "income_40_59": 0.00708,
-        "income_60_79": 0.00744,
-        "income_80_99": 0.00892,
-        "income_100_": 0.00762
     },
     "hb_private_week": {
         "income_0_19": 0.00786,
