@@ -8,7 +8,6 @@ if TYPE_CHECKING:
     from datahandling.zonedata import ZoneData
 
 from models.logit import LogitModel
-from parameters.car import car_ownership
 
 def divide(a, b):
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
@@ -31,13 +30,14 @@ class CarOwnershipModel(LogitModel):
     """
 
     def __init__(self, 
+                 parameters: dict,
                  zone_data: ZoneData, 
                  bounds: slice, 
                  resultdata: ResultsData):
         self.resultdata = resultdata
         self.zone_data = zone_data
         self.bounds = bounds
-        self.param = car_ownership
+        self.param = parameters
 
     def calc_basic_prob(self) -> numpy.ndarray:
         prob = {}
@@ -85,20 +85,8 @@ class CarOwnershipModel(LogitModel):
                 dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
                 with_dummy = dummy_share * ind_prob
                 prob[nr_cars] += with_dummy
-        # Calculate car density
-        population = self.zone_data["population"]
-        households = divide(population, self.zone_data["avg_household_size"])
-        cars = numpy.zeros_like(population)
-        for nr_cars in self.param:
-            cars += prob[nr_cars] * households * nr_cars
-        prob["cars"] = pandas.Series(
-            cars, self.zone_data.zone_numbers[self.bounds], name="cars")
-        prob["car_density"] = pandas.Series(
-            divide(cars, population), self.zone_data.zone_numbers[self.bounds], name="car_density")
-        for nr_cars in self.param:
-            prob[f"sh_cars{nr_cars}"] = prob.pop(nr_cars)
-        self.resultdata.print_data(prob, "zone_car_ownership.txt")
-        return prob["car_density"]
+
+        return prob
 
     def calc_individual_prob(self, 
                              income: str, 

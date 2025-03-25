@@ -13,6 +13,7 @@ import parameters.zone as param
 from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
 from models import car_use, car_ownership, linear, tour_combinations
+from parameters.car import cars_hh1, cars_hh2, cars_hh3
 
 
 
@@ -55,8 +56,15 @@ class DemandModel:
             [bounds[0], bounds[-1]]))
         self.car_use_model = car_use.CarUseModel(
             zone_data, self.bounds, param.age_groups, self.resultdata)
-        self.car_ownership_model = car_ownership.CarOwnershipModel(
-            zone_data, self.bounds, self.resultdata)
+        self.car_ownership_models = {
+            "hh1": car_ownership.CarOwnershipModel(cars_hh1, zone_data, 
+                                            self.bounds, self.resultdata),
+            "hh2": car_ownership.CarOwnershipModel(cars_hh2, zone_data, 
+                                            self.bounds, self.resultdata),
+            "hh3": car_ownership.CarOwnershipModel(cars_hh3, zone_data, 
+                                            self.bounds, self.resultdata)
+        }
+    
         self.tour_generation_model = tour_combinations.TourCombinationModel(
             self.zone_data)
         # Income models used only in agent modelling
@@ -200,3 +208,21 @@ class DemandModel:
         probs = self.tour_generation_model.calc_prob(
             age, is_car_user, self.bounds)
         return pandas.DataFrame(probs).to_numpy().cumsum(axis=1)
+    
+    def calculate_car_ownership(self):
+        prob_hh1 = self.car_ownership_models["hh1"].calc_prob()
+        prob_hh2 = self.car_ownership_models["hh2"].calc_prob()
+        prob_hh3 = self.car_ownership_models["hh3"].calc_prob()
+        self.zone_data["sh_cars1_hh1"] = self.zone_data["sh_hh1"]*prob_hh1[1]
+        self.zone_data["sh_cars1_hh2"] = (self.zone_data["sh_hh2"]*prob_hh2[1] + 
+                                                self.zone_data["sh_hh3"]*prob_hh3[1])
+        self.zone_data["sh_cars2_hh2"] = (self.zone_data["sh_hh2"]*prob_hh2[2] + 
+                                                self.zone_data["sh_hh3"]*prob_hh3[2])
+        prob = dict()
+        prob["cars"] = numpy.zeros_like(self.zone_data["population"])
+        for n in range(3):
+            prob[f"sh_cars{n}"] = (prob_hh1[n] * self.zone_data["sh_hh1"] +
+                                    prob_hh2[n] * self.zone_data["sh_hh2"] +
+                                    prob_hh3[n] * self.zone_data["sh_hh3"])
+            prob["cars"] += n * prob[f"sh_cars{n}"] * self.zone_data["population"]
+        self.resultdata.print_data(prob, "zone_car_ownership.txt")
