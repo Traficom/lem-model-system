@@ -208,7 +208,7 @@ def main(args):
         if long_dist_forecast not in ("calc", "base"):
             long_dist_classes = (param.car_classes
                                  + param.long_distance_transit_classes)
-            long_dist_matrices = MatrixData(long_dist_forecast)
+            long_dist_matrices = MatrixData(Path(long_dist_forecast))
             with long_dist_matrices.open(
                     "demand", "vrk", zone_numbers[submodel],
                     forecast_zonedata.mapping, long_dist_classes) as mtx:
@@ -217,7 +217,7 @@ def main(args):
 
         # Check freight matrices
         if freight_path != "none":
-            freight_matrices = MatrixData(freight_path)
+            freight_matrices = MatrixData(Path(freight_path))
             with freight_matrices.open(
                     "demand", "vrk", zone_numbers[submodel],
                     forecast_zonedata.mapping, param.truck_classes) as mtx:
