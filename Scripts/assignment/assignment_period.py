@@ -682,7 +682,8 @@ class AssignmentPeriod(Period):
                                              / (2.0*line[effective_headway_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self, transit_classes=param.local_transit_classes):
+    def _assign_transit(self, transit_classes=param.local_transit_classes,
+                        add_volumes=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -692,7 +693,8 @@ class AssignmentPeriod(Period):
             spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
-                add_volumes=i, save_strategies=True, class_name=transit_class)
+                add_volumes=(i or add_volumes), save_strategies=True,
+                class_name=transit_class)
             self.emme_project.matrix_results(
                 spec.transit_result_spec, scenario=self.emme_scenario,
                 class_name=transit_class)
