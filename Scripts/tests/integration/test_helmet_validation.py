@@ -18,7 +18,8 @@ class Args:
     results_path = TEST_DATA_PATH / "Results"
     scenario_name = "test"
     do_not_use_emme = True
-    long_dist_demand_forecast = None
+    long_dist_demand_forecast = ["base"]
+    freight_matrix_paths = [None]
     submodel = ["uusimaa"]
 
 

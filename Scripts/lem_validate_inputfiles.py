@@ -192,9 +192,9 @@ def main(args):
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
 
-    for data_path, submodel, long_dist_forecast in zip(
+    for data_path, submodel, long_dist_forecast, freight_path in zip(
             forecast_zonedata_paths, args.submodel,
-            args.long_dist_demand_forecast):
+            args.long_dist_demand_forecast, args.freight_matrix_paths):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
             msg = "Forecast data file '{}' does not exist.".format(
@@ -213,6 +213,15 @@ def main(args):
                     "demand", "vrk", zone_numbers[submodel],
                     forecast_zonedata.mapping, long_dist_classes) as mtx:
                 for ass_class in long_dist_classes:
+                    a = mtx[ass_class]
+
+        # Check freight matrices
+        if freight_path is not None:
+            freight_matrices = MatrixData(freight_path)
+            with freight_matrices.open(
+                    "demand", "vrk", zone_numbers[submodel],
+                    forecast_zonedata.mapping, param.truck_classes) as mtx:
+                for ass_class in param.truck_classes:
                     a = mtx[ass_class]
 
     log.info("Successfully validated all input files")
@@ -238,7 +247,7 @@ if __name__ == "__main__":
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--long-dist-demand-forecasts",
+        "-f", "--long-dist-demand-forecast",
         type=str,
         nargs="+",
         required=True,
@@ -246,6 +255,12 @@ if __name__ == "__main__":
               + "calculates demand for long-distance trips. "
               + "If 'base', takes long-distance trips from base matrices. "
               + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-paths",
+        type=str,
+        nargs="+",
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "--do-not-use-emme",
