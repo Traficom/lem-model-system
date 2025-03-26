@@ -216,7 +216,7 @@ def main(args):
                     a = mtx[ass_class]
 
         # Check freight matrices
-        if freight_path is not None:
+        if freight_path != "none":
             freight_matrices = MatrixData(freight_path)
             with freight_matrices.open(
                     "demand", "vrk", zone_numbers[submodel],
@@ -260,6 +260,7 @@ if __name__ == "__main__":
         "-f", "--freight-matrix-paths",
         type=str,
         nargs="+",
+        required=True,
         help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
