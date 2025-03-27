@@ -534,10 +534,13 @@ class AccessibilityModel(ModeDestModel):
         self.zone_data._values[label] = logsum_sustainable
         self.accessibility["sustainable"] = logsum_sustainable
         self.accessibility["car"] = pandas.Series(
-            log(car_expsum), self.purpose.zone_numbers, name="car")
+            log(car_expsum), self.purpose.zone_numbers,
+            name=f"{self.purpose.name}_car")
         for key in ["all", "sustainable", "car"]:
-            self.accessibility[f"{key}_scaled"] = (self.money_utility
-                                                   * self.accessibility[key])
+            scaled_access = self.money_utility * self.accessibility[key]
+            name = f"{scaled_access.name}_scaled"
+            scaled_access.rename(name, inplace=True)
+            self.accessibility[name] = scaled_access
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.
