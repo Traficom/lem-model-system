@@ -209,7 +209,11 @@ class DemandModel:
             age, is_car_user, self.bounds)
         return pandas.DataFrame(probs).to_numpy().cumsum(axis=1)
     
-    def calculate_car_ownership(self):
+    def calculate_car_ownership(self, impedance):
+        acc_purpose = self.purpose_dict["hb_leisure"]
+        purpose_impedance = acc_purpose.transform_impedance(impedance)
+        acc_purpose.accessibility_model.calc_accessibility(purpose_impedance)
+
         prob_hh1 = self.car_ownership_models["hh1"].calc_prob()
         prob_hh2 = self.car_ownership_models["hh2"].calc_prob()
         prob_hh3 = self.car_ownership_models["hh3"].calc_prob()

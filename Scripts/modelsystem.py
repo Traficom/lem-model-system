@@ -343,11 +343,8 @@ class ModelSystem:
         self.dtm.init_demand(
             [mode for mode in self.travel_modes if mode != "walk"])
 
-        if "hb_leisure_sustainable" in self.zdata_forecast._values:
-            self.dm.calculate_car_ownership()
-            log.info("New car ownership values calculated.")
-        else: 
-            log.info("Use car ownership from basedata.")
+        self.dm.calculate_car_ownership(previous_iter_impedance)
+        log.info("New car ownership values calculated.")
 
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
@@ -435,9 +432,7 @@ class ModelSystem:
     def _export_accessibility(self):
         for purpose in self.dm.tour_purposes:
             accessibility = purpose.accessibility_model.accessibility
-            for key in accessibility:
-                logsum = pandas.Series(accessibility[key], 
-                    purpose.zone_numbers, name=f"{purpose.name}_{key}")
+            for logsum in accessibility.values():
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_model_results(self):
