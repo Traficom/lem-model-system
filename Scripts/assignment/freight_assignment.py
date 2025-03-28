@@ -39,7 +39,9 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             for tc in param.truck_classes + tuple(param.freight_modes)}
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
                 for mode in mtxs if mtx_type in mtxs[mode]}
-            for mtx_type in ("time", "cost", "dist", "aux_time", "aux_dist")}
+            for mtx_type in (
+                "time", "cost", "dist", "aux_time", "aux_dist", "toll_cost",
+                "canal_cost")}
         return impedance
 
     def save_network_volumes(self, commodity_class: str):
@@ -101,11 +103,13 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         network = self.emme_scenario.get_network()
         truck_mode = network.mode(param.assignment_modes["truck"])
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
+        extra_cost_attr = param.background_traffic_attr.replace("ul", "data")
         for link in network.links():
             if truck_mode in link.modes:
                 link.modes |= {park_and_ride_mode}
             else:
                 link.modes -= {park_and_ride_mode}
+            link[extra_cost_attr] = link[param.extra_freight_cost_attr]
         self.emme_scenario.publish_network(network)
         for i, ass_class in enumerate(param.freight_modes):
             spec = self.assignment_modes[ass_class]

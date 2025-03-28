@@ -4,8 +4,11 @@
     "dest": "other",
     "source": [
         "hb_edu_basic",
-        "hb_edu_upsec",
-        "hb_edu_higher",
+        "hb_edu_student",
+        "hb_grocery",
+        "hb_leisure",
+        "hb_other_shop",
+        "hb_sport",
         "hb_visit"
     ],
     "area": "all",
@@ -85,11 +88,11 @@
         ],
         "bike": [
             0,
-            100
+            20
         ],
         "walk": [
             0,
-            100
+            10
         ]
     },
     "destination_choice": {

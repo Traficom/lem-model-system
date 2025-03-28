@@ -61,11 +61,11 @@
         ],
         "bike": [
             0,
-            100
+            20
         ],
         "walk": [
             0,
-            100
+            10
         ]
     },
     "destination_choice": {

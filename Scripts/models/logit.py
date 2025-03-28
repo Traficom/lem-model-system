@@ -43,7 +43,6 @@ class LogitModel:
         self.resultdata = resultdata
         self.purpose = purpose
         self.bounds = purpose.bounds
-        self.sub_bounds = purpose.sub_bounds
         self.zone_data = zone_data
         self.mode_utils: Dict[str, numpy.array] = {}
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
@@ -120,9 +119,6 @@ class LogitModel:
 
     def _add_constant(self, utility, b):
         """Add constant term to utility.
-
-        If parameter b is a tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
         
         Parameters
         ----------
@@ -131,20 +127,10 @@ class LogitModel:
         b : float or tuple
             The value of the constant
         """
-        try: # If only one parameter
-            utility += b
-        except ValueError: # Separate sub-region parameters
-            for i, bounds in enumerate(self.sub_bounds):
-                if utility.ndim == 1: # 1-d array calculation
-                    utility[bounds] += b[i]
-                else: # 2-d matrix calculation
-                    utility[bounds, :] += b[i]
+        utility += b
     
     def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
-
-        If parameter in b is tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
         
         Parameters
         ----------
@@ -157,18 +143,11 @@ class LogitModel:
             The parameters for different impedance matrices.
         """
         for i in b:
-            try: # If only one parameter
-                utility += b[i] * impedance[i]
-            except ValueError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    utility[bounds, :] += b[i][j] * impedance[i][bounds, :]
+            utility += b[i] * impedance[i]
         return utility
 
     def _add_log_impedance(self, utility, impedance, b):
         """Adds log transformations of impedance to utility.
-
-        If parameter in b is tuple of two terms, they will be multiplied for
-        capital region and surrounding region respectively.
 
         Parameters
         ----------
@@ -181,22 +160,12 @@ class LogitModel:
             The parameters for different impedance matrices
         """
         for i in b:
-            try: # If only one parameter
-                imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
-                utility += b[i] * log(imp)
-            except ValueError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    imp = impedance[i][bounds, :]
-                    if b[i][j] < 0:
-                        imp += 1
-                    utility[bounds, :] += b[i][j] * log(imp)
+            imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
+            utility += b[i] * log(imp)
         return utility
 
     def _add_zone_util(self, utility, b, generation=False):
         """Adds simple linear zone terms to utility.
-
-        If parameter in b is tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
         
         Parameters
         ----------
@@ -211,25 +180,13 @@ class LogitModel:
         """
         zdata = self.zone_data
         for i in b:
-            try: # If only one parameter
-                utility += b[i] * zdata.get_data(i, self.bounds, generation)
-            except ValueError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    data = zdata.get_data(i, bounds, generation)
-                    if utility.ndim == 1: # 1-d array calculation
-                        utility[bounds] += b[i][j] * data
-                    else: # 2-d matrix calculation
-                        utility[bounds, :] += b[i][j] * data
+            utility += b[i] * zdata.get_data(i, self.bounds, generation)
         return utility
     
-    def _add_sec_zone_util(self, utility, b, orig=None, dest=None):
+    def _add_sec_zone_util(self, utility, b):
         for i in b:
             data = self.zone_data.get_data(i, self.bounds, generation=True)
-            try: # If only one parameter
-                utility += b[i] * data
-            except ValueError: # Separate params for orig and dest
-                utility += b[i][0] * data[orig, self.bounds]
-                utility += b[i][1] * data[dest, self.bounds]
+            utility += b[i] * data
         return utility
 
     def _add_log_zone_util(self, exps, b, generation=False):
@@ -239,9 +196,6 @@ class LogitModel:
         zonedata1^b1 * ... * zonedataN^bN in the following equation:
         e^(linear_terms + b1*log(zonedata1) + ... + bN*log(zonedataN))
         = e^(linear_terms) * zonedata1^b1 * ... * zonedataN^bN
-
-        If parameter in b is tuple of two terms, they will be multiplied for
-        capital region and surrounding region respectively.
 
         Parameters
         ----------
@@ -444,11 +398,7 @@ class ModeDestModel(LogitModel):
         mode_exps2 = copy.deepcopy(mode_exps)
         for mod_mode in mod_modes:
             b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
-            try:
-                mode_exps2[mod_mode] *= numpy.exp(b)
-            except ValueError:
-                for i, bounds in enumerate(self.sub_bounds):
-                    mode_exps2[mod_mode][bounds] *= numpy.exp(b[i])
+            mode_exps2[mod_mode] *= numpy.exp(b)
         return mode_exps2
     
     def calc_individual_mode_prob(self, zone: int,
@@ -481,13 +431,7 @@ class ModeDestModel(LogitModel):
             mode_utils[i] = self.mode_utils[mode][zone]
             b = self.mode_choice_param[mode]["individual_dummy"]
             if individual_dummy in b:
-                try:
-                    mode_utils[i] += b[individual_dummy]
-                except ValueError:
-                    # Separate sub-region parameters
-                    j = self.purpose.sub_intervals.searchsorted(
-                        zone, side="right")
-                    mode_utils[i] += b[individual_dummy][j]
+                mode_utils[i] += b[individual_dummy]
         return mode_utils
 
     def _calc_utils(self,
@@ -594,98 +538,6 @@ class AccessibilityModel(ModeDestModel):
         for key in ["all", "sustainable", "car"]:
             self.accessibility[f"{key}_scaled"] = (self.money_utility
                                                    * self.accessibility[key])
-
-    def _add_constant(self, utility, b):
-        """Add constant term to utility.
-
-        If parameter b is a tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the constant b will be added
-        b : float or tuple
-            The value of the constant
-        """
-        try: # If only one parameter
-            utility += b
-        except ValueError: # Separate params for cap region and surrounding
-            utility += b[0]
-
-    def _add_impedance(self, utility, impedance, b):
-        """Adds simple linear impedances to utility.
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the impedances will be added
-        impedance : dict
-            A dictionary of time-averaged impedance matrices. Includes keys
-            `time`, `cost`, and `dist` of which values are all ndarrays.
-        b : dict
-            The parameters for different impedance matrices.
-        """
-        for i in b:
-            try: # If only one parameter
-                utility += b[i] * impedance[i]
-            except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * impedance[i]
-        return utility
-
-    def _add_log_impedance(self, utility, impedance, b):
-        """Adds log transformations of impedance to utility.
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the impedances will be added
-        impedance : dict
-            A dictionary of time-averaged impedance matrices. Includes keys
-            `time`, `cost`, and `dist` of which values are all ndarrays.
-        b : dict
-            The parameters for different impedance matrices
-        """
-        for i in b:
-            try: # If only one parameter
-                utility += b[i] * log(impedance[i] + 1)
-            except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * log(impedance[i] + 1)
-        return utility
-
-    def _add_zone_util(self, utility, b, generation=False):
-        """Adds simple linear zone terms to utility.
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the impedances will be added
-        b : dict
-            The parameters for different zone data.
-        generation : bool
-            Whether the effect of the zone term is added only to the
-            geographical area in which this model is used based on the
-            `self.bounds` attribute of this class.
-        """
-        zdata = self.zone_data
-        for i in b:
-            try: # If only one parameter
-                # Remove area dummies from accessibility indicators
-                data = zdata.get_data(i, self.bounds, generation)
-                if data.dtype != bool:
-                    utility += b[i] * data
-            except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * zdata.get_data(i, self.bounds, generation)
-        return utility
 
 
 class DestModeModel(LogitModel):
