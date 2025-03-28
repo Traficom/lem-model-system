@@ -111,10 +111,9 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        day_imp = {}
+        day_imp = defaultdict(lambda: defaultdict(float))
         for mode in self.impedance_share:
             share_sum = 0
-            day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
@@ -124,8 +123,9 @@ class Purpose:
                         share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
+            if mode in day_imp and abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
+        day_imp = dict(day_imp)
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
@@ -304,6 +304,19 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
+    def calc_soft_mode_prob(self, impedance):
+        """Calculate walk and bike utilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+        """
+        purpose_impedance = self.transform_impedance(impedance)
+        self.model.calc_soft_mode_exps(copy(purpose_impedance))
+        self.accessibility_model.calc_soft_mode_exps(purpose_impedance)
+
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
         
@@ -346,9 +359,15 @@ class TourPurpose(Purpose):
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 
-    def calc_demand(self) -> Iterator[Demand]:
+    def calc_demand(self, impedance) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
-              
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
         Yields
         -------
         Demand
@@ -357,6 +376,8 @@ class TourPurpose(Purpose):
         tours = self.gen_model.get_tours()
         if self.prob is None:
             self.prob = self.model.calc_prob_again()
+        purpose_impedance = self.transform_impedance(impedance)
+        self.prob.update(self.model.calc_soft_mode_prob(purpose_impedance))
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
