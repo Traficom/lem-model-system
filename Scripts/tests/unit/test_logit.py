@@ -10,7 +10,7 @@ from datahandling.zonedata import ZoneData
 from models.logit import ModeDestModel, DestModeModel
 from datatypes.purpose import attempt_calibration
 from datahandling.resultdata import ResultsData
-from tests.integration.test_data_handling import RESULTS_PATH, BASE_ZONEDATA_PATH
+from tests.integration.test_data_handling import RESULTS_PATH, ZONEDATA_PATH
 
 
 INTERNAL_ZONES = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519,
@@ -27,7 +27,7 @@ class LogitModelTest(unittest.TestCase):
             pass
         pur = Purpose()
         zi = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
-        zd = ZoneData(BASE_ZONEDATA_PATH, zi, "uusimaa")
+        zd = ZoneData(ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
         mtx = numpy.arange(720, dtype=numpy.float32)
         mtx.shape = (24, 30)

@@ -318,6 +318,19 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
+    def calc_soft_mode_prob(self, impedance):
+        """Calculate walk and bike utilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+        """
+        purpose_impedance = self.transform_impedance(impedance)
+        self.model.calc_soft_mode_exps(copy(purpose_impedance))
+        self.accessibility_model.calc_soft_mode_exps(purpose_impedance)
+
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
         
@@ -360,9 +373,15 @@ class TourPurpose(Purpose):
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 
-    def calc_demand(self) -> Iterator[Demand]:
+    def calc_demand(self, impedance) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
-              
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2d matrix
+
         Yields
         -------
         Demand
@@ -371,6 +390,8 @@ class TourPurpose(Purpose):
         tours = self.gen_model.get_tours()
         if self.prob is None:
             self.prob = self.model.calc_prob_again()
+        purpose_impedance = self.transform_impedance(impedance)
+        self.prob.update(self.model.calc_soft_mode_prob(purpose_impedance))
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T

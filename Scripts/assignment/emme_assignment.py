@@ -64,6 +64,8 @@ class EmmeAssignmentModel(AssignmentModel):
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
         self.use_free_flow_speeds = use_free_flow_speeds
+        self.transit_classes = (param.long_distance_transit_classes
+            if self.use_free_flow_speeds else param.transit_classes)
         self.delete_extra_matrices = delete_extra_matrices
         self.time_periods = time_periods
         EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
@@ -333,10 +335,8 @@ class EmmeAssignmentModel(AssignmentModel):
         # Print mode boardings per municipality
         boardings = defaultdict(lambda: defaultdict(float))
         modes = self.assignment_periods[0].assignment_modes
-        classes = (param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transit_classes)
         attrs = [modes[transit_class].segment_results["total_boardings"]
-            for transit_class in classes]
+            for transit_class in self.transit_classes]
         for line in network.transit_lines():
             mode = line.mode.id
             for seg in line.segments():
@@ -657,7 +657,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:10] + 'n_' + attr
-            for transit_class in param.transit_classes}
+            for transit_class in self.transit_classes}
         extras = self._extras(attrs)
         # save node volumes to result network
         for node in network.nodes():
@@ -682,7 +682,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:11] + '_' + attr
-            for transit_class in param.transit_classes}
+            for transit_class in self.transit_classes}
         extras = self._extras(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():

@@ -168,6 +168,18 @@ class AssignmentPeriod(Period):
         self._assign_pedestrians()
         self._set_bike_vdfs()
         self._assign_bikes()
+        return self.get_soft_mode_impedances()
+
+    def get_soft_mode_impedances(self):
+        """Get travel impedance matrices for walk and bike.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (walk/bike) : numpy 2-d matrix
+        """
+        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
 
     def assign_trucks_init(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -302,7 +314,8 @@ class AssignmentPeriod(Period):
         time_attr = self.netfield("car_time")
         network = self.emme_scenario.get_network()
         return {(link.i_node.id, link.j_node.id): link[time_attr]
-            for link in network.links() if link.i_node[param.subarea_attr] == 2}
+            for link in network.links()
+            if link.i_node[param.subarea_attr] == 2 and link[time_attr] > 0}
 
     def _set_car_vdfs(self, use_free_flow_speeds: bool = False):
         log.info("Sets car functions for scenario {}".format(
@@ -681,7 +694,8 @@ class AssignmentPeriod(Period):
                                              / (2.0*line[effective_headway_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self, transit_classes=param.local_transit_classes):
+    def _assign_transit(self, transit_classes=param.local_transit_classes,
+                        add_volumes=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -691,7 +705,8 @@ class AssignmentPeriod(Period):
             spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
-                add_volumes=i, save_strategies=True, class_name=transit_class)
+                add_volumes=(i or add_volumes), save_strategies=True,
+                class_name=transit_class)
             self.emme_project.matrix_results(
                 spec.transit_result_spec, scenario=self.emme_scenario,
                 class_name=transit_class)

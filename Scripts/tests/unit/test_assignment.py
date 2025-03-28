@@ -33,6 +33,12 @@ class EmmeAssignmentTest(unittest.TestCase):
             {i: {"firstb_single": firstb_single[i],
                  "dist_single": dist_single[i]}
              for i in range(0, len(firstb_single))})
+        self.mapping = pandas.Series({
+            "Helsinki": "Uusimaa",
+            "Espoo": "Uusimaa",
+            "Lohja": "Uusimaa",
+            "Salo": "Varsinais-Suomi",
+        })
         self.resultdata = ResultsData(RESULTS_PATH)
 
     def test_assignment(self):
@@ -71,14 +77,8 @@ class EmmeAssignmentTest(unittest.TestCase):
                     self.assertEqual(
                         imp[mtx_type][ass_class].dtype, numpy.float32)
             ap.end_assign()
-        mapping = pandas.Series({
-            "Helsinki": "Uusimaa",
-            "Espoo": "Uusimaa",
-            "Lohja": "Uusimaa",
-            "Salo": "Varsinais-Suomi",
-        })
-        ass_model.aggregate_results(self.resultdata, mapping)
-        ass_model.calc_noise(mapping)
+        ass_model.aggregate_results(self.resultdata, self.mapping)
+        ass_model.calc_noise(self.mapping)
         self.resultdata.flush()
 
     def test_long_dist_assignment(self):
@@ -104,6 +104,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             ap.assign_trucks_init()
             ap.assign(demand + ["car_pax"])
             ap.end_assign()
+        ass_model.aggregate_results(self.resultdata, self.mapping)
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
@@ -113,5 +114,6 @@ class EmmeAssignmentTest(unittest.TestCase):
         for mode in ["truck", "freight_train", "ship"]:
             ass_model.freight_network.set_matrix(mode, demand)
         ass_model.freight_network.save_network_volumes("c1")
-        ass_model.freight_network.output_traversal_matrix(self.resultdata.path)
+        ass_model.freight_network.output_traversal_matrix({"freight_train", "ship"},
+                                                          self.resultdata.path)
         self.resultdata.flush()

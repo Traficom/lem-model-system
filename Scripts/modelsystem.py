@@ -162,14 +162,18 @@ class ModelSystem:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
                     for imp in tp_imp.values():
-                        imp.pop("car_work", None)
-                        imp.pop("transit_work", None)
+                        for mode in ("car_work", "transit_work", "walk", "bike"):
+                            imp.pop(mode, None)
             purpose_impedance = purpose.calc_prob(
                 previous_iter_impedance, is_last_iteration)
         previous_iter_impedance.clear()
 
         # Tour generation
         self.dm.generate_tours()
+
+        soft_mode_impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            soft_mode_impedance[ap.name] = ap.get_soft_mode_impedances()
 
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
@@ -183,7 +187,7 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                for mode_demand in purpose.calc_demand():
+                for mode_demand in purpose.calc_demand(soft_mode_impedance):
                     self.dtm.add_demand(mode_demand)
         log.info("Demand calculation completed")
 
@@ -265,8 +269,6 @@ class ModelSystem:
             in `#car_time_xxx`. Overrides `use_free_flow_speeds`.
             List can be empty, if car times are already stored on network.
         """
-        impedance = {}
-
         # create attributes and background variables to network
         self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
@@ -283,19 +285,29 @@ class ModelSystem:
         with self.resultmatrices.open(
                 "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
             mtx["all"] = Purpose.distance
-
-        # Perform traffic assignment and get result impedance, 
-        # for each time period
+        soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period {}...".format(tp))
-            if is_end_assignment or not self.ass_model.use_free_flow_speeds:
+            log.info(f"Initializing assignment for period {tp}...")
+            if is_end_assignment or (not self.ass_model.use_free_flow_speeds
+                                     and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes=ap.transport_classes) as mtx:
                     for ass_class in ap.transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
-            ap.init_assign()
+            soft_mode_impedance[tp] = ap.init_assign()
+        if not is_end_assignment:
+            log.info("Calculate probabilities for bike and walk...")
+            for purpose in self.dm.tour_purposes:
+                purpose.calc_soft_mode_prob(soft_mode_impedance)
+            log.info("Bike and walk calculation completed")
+        # Perform traffic assignment and get result impedance,
+        # for each time period
+        impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            tp = ap.name
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
@@ -391,7 +403,7 @@ class ModelSystem:
         # Calculate and return traffic impedance
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period " + tp)
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             impedance[tp] = (ap.end_assign() if iteration=="last"
                              else ap.assign(self.travel_modes))
             if iteration=="last":
