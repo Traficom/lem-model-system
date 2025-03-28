@@ -33,7 +33,8 @@
             "area_leisure_buildings",
             "area_university_buildings",
             "sh_row_or_detached",
-            "students_comprehensive"
+            "students_comprehensive",
+            "households"
         ],
         "mean": [
             "avg_park_cost",

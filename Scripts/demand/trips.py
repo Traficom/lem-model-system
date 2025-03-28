@@ -217,16 +217,16 @@ class DemandModel:
         prob_hh1 = self.car_ownership_models["hh1"].calc_prob()
         prob_hh2 = self.car_ownership_models["hh2"].calc_prob()
         prob_hh3 = self.car_ownership_models["hh3"].calc_prob()
-        self.zone_data["sh_cars1_hh1"] = self.zone_data["sh_hh1"]*prob_hh1[1]
-        self.zone_data["sh_cars1_hh2"] = (self.zone_data["sh_hh2"]*prob_hh2[1] + 
-                                                self.zone_data["sh_hh3"]*prob_hh3[1])
-        self.zone_data["sh_cars2_hh2"] = (self.zone_data["sh_hh2"]*prob_hh2[2] + 
-                                                self.zone_data["sh_hh3"]*prob_hh3[2])
+        self.zone_data["sh_cars1_hh1"] = self.zone_data["pop_sh_hh1"]*prob_hh1[1]
+        self.zone_data["sh_cars1_hh2"] = (self.zone_data["pop_sh_hh2"]*prob_hh2[1] + 
+                                                self.zone_data["pop_sh_hh3"]*prob_hh3[1])
+        self.zone_data["sh_cars2_hh2"] = (self.zone_data["pop_sh_hh2"]*prob_hh2[2] + 
+                                                self.zone_data["pop_sh_hh3"]*prob_hh3[2])
         prob = dict()
         prob["cars"] = numpy.zeros_like(self.zone_data["population"])
         for n in range(3):
             prob[f"sh_cars{n}"] = (prob_hh1[n] * self.zone_data["sh_hh1"] +
                                     prob_hh2[n] * self.zone_data["sh_hh2"] +
                                     prob_hh3[n] * self.zone_data["sh_hh3"])
-            prob["cars"] += n * prob[f"sh_cars{n}"] * self.zone_data["population"]
+            prob["cars"] += n * prob[f"sh_cars{n}"] * self.zone_data["households"]
         self.resultdata.print_data(prob, "zone_car_ownership.txt")

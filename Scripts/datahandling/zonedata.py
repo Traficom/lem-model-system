@@ -80,9 +80,9 @@ class ZoneData:
         self.share["share_age_7-99"] = share_7_99
         # Convert household shares to population shares
         hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
-        self["sh_hh1"] = divide(self["sh_hh1"], hh_population)
-        self["sh_hh2"] = divide(2*self["sh_hh2"], hh_population)
-        self["sh_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
+        self["pop_sh_hh1"] = divide(self["sh_hh1"], hh_population)
+        self["pop_sh_hh2"] = divide(2*self["sh_hh2"], hh_population)
+        self["pop_sh_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
         self["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
         self["sh_cars1_hh2"] = divide(2*self["sh_cars1_hh2"] + 4.13*self["sh_cars1_hh3"], 
                                       hh_population)
