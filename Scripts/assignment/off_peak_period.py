@@ -4,6 +4,7 @@ import copy
 
 from assignment.assignment_period import AssignmentPeriod
 from assignment.long_dist_period import WholeDayPeriod
+from assignment.datatypes.transit import TransitMode
 import parameters.assignment as param
 
 
@@ -37,10 +38,19 @@ class OffPeakPeriod(AssignmentPeriod):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_other(day_scenario, save_matrices)
+
+    def _prepare_other(self, day_scenario: Dict[str, float],
+                       save_matrices: bool):
         self._prepare_walk_and_bike(save_matrices=False)
+        long_dist_transit_modes = {mode: TransitMode(
+                mode, self, day_scenario, save_matrices, save_matrices)
+            for mode in param.long_distance_transit_classes}
+        self.assignment_modes.update(long_dist_transit_modes)
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
-            save_extra_matrices=save_matrices)
+            save_extra_matrices=save_matrices,
+            transit_classes=param.local_transit_classes)
 
     def init_assign(self):
         """Assign transit for one time period with free-flow bus speed."""
@@ -49,7 +59,7 @@ class OffPeakPeriod(AssignmentPeriod):
             param.stopping_criteria["coarse"])
         stopping_criteria["max_iterations"] = 0
         self._assign_cars(stopping_criteria)
-        self._assign_transit(param.transit_classes)
+        self._assign_transit(param.local_transit_classes)
 
     def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
         """Assign cars for one time period.
@@ -92,6 +102,8 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
+        self._assign_transit(
+            param.long_distance_transit_classes, add_volumes=True)
         self._calc_transit_network_results()
         return self._get_impedances(self._end_assignment_classes)
 
@@ -126,10 +138,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices=False)
-        self._prepare_walk_and_bike(save_matrices=False)
-        self._prepare_transit(
-            day_scenario, save_standard_matrices=True,
-            save_extra_matrices=save_matrices)
+        self._prepare_other(day_scenario, save_matrices)
 
     def assign_trucks_init(self):
         pass
@@ -159,6 +168,8 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
+        self._assign_transit(
+            param.long_distance_transit_classes, add_volumes=True)
         self._calc_transit_network_results()
         self._end_assignment_classes -= set(
             param.private_classes + param.truck_classes)
