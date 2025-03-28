@@ -3,7 +3,8 @@
     "orig": "source",
     "dest": "other",
     "source": [
-        "hb_work"
+        "hb_work",
+        "hb_business"
     ],
     "area": "all",
     "struct": "mode>dest",
