@@ -359,7 +359,7 @@ class AssignmentPeriod(Period):
             if self.use_stored_speeds:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
-                    if 0 < car_time < 1440:
+                    if 0 < car_time < 5000:
                         link.data2 = (link.length / car_time) * 60
                         car_time_ok = True
                     elif car_time == 0:
