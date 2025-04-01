@@ -448,7 +448,7 @@ time_periods = {
 }
 cp_mode = "car_pax"
 ec_mode = "car_electric"
-ecp_mode = "car_electric_pax"
+ecp_mode = "car_e_pax"
 pax_modes = (cp_mode, ecp_mode)
 car_classes = (
     "car_work",
