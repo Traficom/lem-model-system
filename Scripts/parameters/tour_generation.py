@@ -124,27 +124,26 @@ tour_generation = {
         "age_65_99": 0.0155
     },
     "hb_second_home": {
-        "age_7_17": 0.0133,
-        "age_18_29": 0.0168,
-        "age_30_49": 0.0157,
-        "age_50_64": 0.0344,
-        "age_65_99": 0.0471
+        "age_7_17": 0.0144,
+        "age_18_29": 0.0172,
+        "age_30_49": 0.0197,
+        "age_50_64": 0.0372,
+        "age_65_99": 0.0503
     },
     "wb_business": {
         "hb_work": 0.0367
     },
     "wb_other": {
-        "hb_work": 0.0613,
-        "hb_business": 0.0777
+        "hb_work": 0.0618,
+        "hb_business": 0.0295,
+        "hb_edu_basic": 0.0303,
+        "hb_edu_student": 0.0363
     },
     "ob_other": {
-        "hb_edu_basic": 0.0303,
-        "hb_edu_student": 0.0363,
-        "hb_grocery": 0.0184,
-        "hb_leisure": 0.0232,
-        "hb_other_shop": 0.0294,
-        "hb_sport": 0.0279,
-        "hb_visit": 0.0294,
+        "hb_leisure": 0.0184,
+        "hb_sport": 0.0061,
+        "hb_visit": 0.0281,
+        "hb_second_home": 0.0346
     },
     "hb_work_long": {
         "population_Uusimaa": 0.00268,
