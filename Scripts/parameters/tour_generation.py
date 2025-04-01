@@ -123,7 +123,7 @@ tour_generation = {
         "age_50_64": 0.0383,
         "age_65_99": 0.0155
     },
-    "hb_second_home": {
+    "hb_overnight": {
         "age_7_17": 0.0144,
         "age_18_29": 0.0172,
         "age_30_49": 0.0197,
@@ -143,7 +143,7 @@ tour_generation = {
         "hb_leisure": 0.0184,
         "hb_sport": 0.0061,
         "hb_visit": 0.0281,
-        "hb_second_home": 0.0346
+        "hb_overnight": 0.0346
     },
     "hb_work_long": {
         "population_Uusimaa": 0.00268,

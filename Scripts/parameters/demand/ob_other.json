@@ -6,7 +6,7 @@
         "hb_leisure",
         "hb_sport",
         "hb_visit",
-        "hb_second_home"
+        "hb_overnight"
     ],
     "area": "all",
     "struct": "mode>dest",
