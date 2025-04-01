@@ -5,6 +5,10 @@
     "source": [
         "hb_edu_basic",
         "hb_edu_student",
+        "hb_grocery",
+        "hb_leisure",
+        "hb_other_shop",
+        "hb_sport",
         "hb_visit"
     ],
     "area": "all",

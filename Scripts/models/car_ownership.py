@@ -74,11 +74,7 @@ class CarOwnershipModel(LogitModel):
             nr_cars_expsum = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
             for nr_cars in self.param:
                 b = self.param[nr_cars]["individual_dummy"][dummy]
-                try:
-                    nr_cars_exp[nr_cars] = self.exps[nr_cars] * numpy.exp(b)
-                except KeyError:
-                    for i, bounds in enumerate(self.bounds):
-                        nr_cars_exp[nr_cars] = self.exps[nr_cars][bounds] * numpy.exp(b[i])
+                nr_cars_exp[nr_cars] = self.exps[nr_cars] * numpy.exp(b)
                 nr_cars_expsum += nr_cars_exp[nr_cars]
             for nr_cars in self.param:
                 ind_prob = nr_cars_exp[nr_cars] / nr_cars_expsum

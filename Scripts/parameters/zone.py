@@ -31,8 +31,8 @@ purpose_areas: Dict[str, Union[Tuple[int,int],Tuple[int,int,int]]] = {
     "all": (0, 2000, 36000),
     "external": (36000, 40000),
 }
-tour_length_intervals = (0, 3, 5, 10, 20, 30, 40, 100,
-                         200, 400, 600, 800, float("inf"))
+tour_length_intervals = (0, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100,
+                         200, 300, 400, 500, 600, 700, 800, float("inf"))
 # Population in noise zones as share of total area population as
 # function only of zone area, calculated by Ramboll Feb 2021
 pop_share_per_noise_area = {
