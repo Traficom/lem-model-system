@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from datahandling.zonedata import ZoneData
 
 from models.logit import LogitModel
+from utils.calibrate import attempt_calibration
 
 def divide(a, b):
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
@@ -37,6 +38,7 @@ class CarOwnershipModel(LogitModel):
         self.resultdata = resultdata
         self.zone_data = zone_data
         self.bounds = bounds
+        attempt_calibration(parameters)
         self.param = parameters
 
     def calc_basic_prob(self) -> numpy.ndarray:
