@@ -213,20 +213,22 @@ class DemandModel:
         acc_purpose = self.purpose_dict["hb_leisure"]
         purpose_impedance = acc_purpose.transform_impedance(impedance)
         acc_purpose.accessibility_model.calc_accessibility(purpose_impedance)
-
-        prob_hh1 = self.car_ownership_models["hh1"].calc_prob()
-        prob_hh2 = self.car_ownership_models["hh2"].calc_prob()
-        prob_hh3 = self.car_ownership_models["hh3"].calc_prob()
-        self.zone_data["sh_cars1_hh1"] = self.zone_data["pop_sh_hh1"]*prob_hh1[1]
-        self.zone_data["sh_cars1_hh2"] = (self.zone_data["pop_sh_hh2"]*prob_hh2[1] + 
-                                                self.zone_data["pop_sh_hh3"]*prob_hh3[1])
-        self.zone_data["sh_cars2_hh2"] = (self.zone_data["pop_sh_hh2"]*prob_hh2[2] + 
-                                                self.zone_data["pop_sh_hh3"]*prob_hh3[2])
-        prob = dict()
-        prob["cars"] = numpy.zeros_like(self.zone_data["population"])
-        for n in range(3):
-            prob[f"sh_cars{n}"] = (prob_hh1[n] * self.zone_data["sh_hh1"] +
-                                    prob_hh2[n] * self.zone_data["sh_hh2"] +
-                                    prob_hh3[n] * self.zone_data["sh_hh3"])
-            prob["cars"] += n * prob[f"sh_cars{n}"] * self.zone_data["households"]
-        self.resultdata.print_data(prob, "zone_car_ownership.txt")
+        zd = self.zone_data
+        prob = {hh_size: model.calc_prob()
+            for hh_size, model in self.car_ownership_models.items()}
+        zd["sh_cars1_hh1"] = zd["pop_sh_hh1"]*prob["hh1"][1]
+        zd["sh_cars1_hh2"] = (zd["pop_sh_hh2"]*prob["hh2"][1]
+                              + zd["pop_sh_hh3"]*prob["hh3"][1])
+        zd["sh_cars2_hh2"] = (zd["pop_sh_hh2"]*prob["hh2"][2]
+                              + zd["pop_sh_hh3"]*prob["hh3"][2])
+        result = {"cars": numpy.zeros_like(zd["population"])}
+        for n_cars in range(3):
+            for hh_size in prob:
+                cars = prob[hh_size][n_cars] * zd[hh_size]
+                result["cars"] += cars
+                national_share = sum(cars) / sum(zd[hh_size])
+                self.resultdata.print_line(
+                    f"{hh_size},cars{n_cars},{national_share}", "car_ownership")
+            result[f"sh_cars{n_cars}"] = sum(
+                prob[hh_size][n_cars] * zd[f"sh_{hh_size}"] for hh_size in prob)
+        self.resultdata.print_data(result, "zone_car_ownership.txt")

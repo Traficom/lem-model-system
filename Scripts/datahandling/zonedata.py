@@ -64,6 +64,7 @@ class ZoneData:
         share_7_99 = pandas.Series(0, self.zone_numbers, dtype=numpy.float32)
         pop = data["population"]
         wp = data["workplaces"]
+        hh = data["households"]
         for col in data:
             if col.startswith("sh_age"):
                 pop_share = data[col]
@@ -77,6 +78,8 @@ class ZoneData:
                 self[col.replace("sh_", "")] = data[col] * pop
             if col.startswith("sh_wrk_"):
                 self[col.replace("sh_wrk_", "")] = data[col] * wp
+            if col.startswith("sh_hh"):
+                self[col.replace("sh_", "")] = data[col] * hh
         self.share["share_age_7-99"] = share_7_99
         # Convert household shares to population shares
         hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
