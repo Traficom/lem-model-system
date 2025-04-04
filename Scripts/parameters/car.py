@@ -46,22 +46,6 @@ cars_hh1 = {
             "sh_income_80_99": 0,
             "sh_income_100_": 0
         },
-    },
-    2: {
-        "constant": 0,
-        "generation": {
-            "hb_leisure_sustainable": 0,
-            "hb_leisure_car_leisure": 0,
-            "sh_row_or_detached": 0,
-        },
-        "individual_dummy": {
-            "sh_income_0_19": 0,
-            "sh_income_20_39": 0,
-            "sh_income_40_59": 0,
-            "sh_income_60_79": 0,
-            "sh_income_80_99": 0,
-            "sh_income_100_": 0
-        },
     }
 }
 
