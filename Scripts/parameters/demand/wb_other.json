@@ -73,15 +73,15 @@
     "distance_boundaries": {
         "car_leisure": [
             0,
-            100
+            30
         ],
         "car_pax": [
             0,
-            100
+            30
         ],
         "transit_leisure": [
             0,
-            100
+            30
         ],
         "bike": [
             0,

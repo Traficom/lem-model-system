@@ -53,11 +53,11 @@
     "distance_boundaries": {
         "car_pax": [
             0,
-            100
+            50
         ],
         "transit_work": [
             0,
-            100
+            50
         ],
         "bike": [
             0,
