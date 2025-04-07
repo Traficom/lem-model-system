@@ -62,10 +62,10 @@ tour_conditions = {}
 tour_generation = {
     "hb_work": {
         "age_7_17": 0.0062,
-        "age_18_29": 0.2677,
-        "age_30_49": 0.3642,
-        "age_50_64": 0.2926,
-        "age_65_99": 0.0156
+        "age_18_29": 0.268,
+        "age_30_49": 0.3679,
+        "age_50_64": 0.2943,
+        "age_65_99": 0.0158
     },
     "hb_edu_basic": {
         "age_7_17": 0.3736,
@@ -75,11 +75,11 @@ tour_generation = {
         "age_65_99": 0
     },
     "hb_edu_student": {
-        "age_7_17": 0.0,
-        "age_18_29": 0.0,
-        "age_30_49": 0.0,
-        "age_50_64": 0.0,
-        "age_65_99": 0.0
+        "age_7_17": 0.0353,
+        "age_18_29": 0.1366,
+        "age_30_49": 0.0223,
+        "age_50_64": 0.0066,
+        "age_65_99": 0.0026
     },
     "hb_grocery": {
         "age_7_17": 0.0632,
@@ -96,25 +96,25 @@ tour_generation = {
         "age_65_99": 0.1806
     },
     "hb_leisure": {
-        "age_7_17": 0.1429,
-        "age_18_29": 0.091,
-        "age_30_49": 0.0961,
-        "age_50_64": 0.1015,
-        "age_65_99": 0.1123
+        "age_7_17": 0.1439,
+        "age_18_29": 0.0915,
+        "age_30_49": 0.0989,
+        "age_50_64": 0.1022,
+        "age_65_99": 0.1143
     },
     "hb_sport": {
         "age_7_17": 0.1467,
-        "age_18_29": 0.07,
-        "age_30_49": 0.0925,
+        "age_18_29": 0.0703,
+        "age_30_49": 0.0939,
         "age_50_64": 0.0668,
         "age_65_99": 0.0542
     },
     "hb_visit": {
-        "age_7_17": 0.1461,
-        "age_18_29": 0.1352,
-        "age_30_49": 0.0948,
-        "age_50_64": 0.0966,
-        "age_65_99": 0.0944
+        "age_7_17": 0.1495,
+        "age_18_29": 0.1412,
+        "age_30_49": 0.1003,
+        "age_50_64": 0.1012,
+        "age_65_99": 0.0979
     },
     "hb_business": {
         "age_7_17": 0.0013,
@@ -122,13 +122,6 @@ tour_generation = {
         "age_30_49": 0.0453,
         "age_50_64": 0.0383,
         "age_65_99": 0.0155
-    },
-    "hb_overnight": {
-        "age_7_17": 0.0144,
-        "age_18_29": 0.0172,
-        "age_30_49": 0.0197,
-        "age_50_64": 0.0372,
-        "age_65_99": 0.0503
     },
     "wb_business": {
         "hb_work": 0.0367
@@ -142,28 +135,13 @@ tour_generation = {
     "ob_other": {
         "hb_leisure": 0.0184,
         "hb_sport": 0.0061,
-        "hb_visit": 0.0281,
-        "hb_overnight": 0.0346
-    },
-    "hb_work_long": {
-        "population_Uusimaa": 0.00268,
-        "population_Lounais-Suomi": 0.00532,
-        "population_Ita-Suomi": 0.00449,
-        "population_Pohjois-Suomi": 0.00472
+        "hb_visit": 0.0281
     },
     "hb_business_long": {
         "population_Uusimaa": 0.00129,
         "population_Lounais-Suomi": 0.00334,
         "population_Ita-Suomi": 0.00283,
         "population_Pohjois-Suomi": 0.00185
-    },
-    "hb_private_day": {
-        "income_0_19": 0.00339,
-        "income_20_39": 0.00502,
-        "income_40_59": 0.00708,
-        "income_60_79": 0.00744,
-        "income_80_99": 0.00892,
-        "income_100_": 0.00762
     },
     "hb_private_week": {
         "income_0_19": 0.00786,
