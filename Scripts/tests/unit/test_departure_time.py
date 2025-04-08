@@ -7,7 +7,17 @@ from assignment.departure_time import DepartureTimeModel
 
 class DepartureTimeTest(unittest.TestCase):
     def test_mtx_add(self):
-        dtm = DepartureTimeModel(8)
+        class Period:
+            def __init__(self, name):
+                self.name = name
+                self.assignment_modes = [
+                    "car_leisure", "transit_leisure", "bike"]
+        assignment_periods = [
+            Period(name) for name in ("aht", "pt", "iht")]
+        it = Period("it")
+        it.assignment_modes = ["transit_leisure"]
+        assignment_periods.append(it)
+        dtm = DepartureTimeModel(8, assignment_periods)
         mtx = numpy.arange(9)
         mtx.shape = (3, 3)
         class Demand:
@@ -46,7 +56,11 @@ class DepartureTimeTest(unittest.TestCase):
                 "iht": [
                     [0.191259463404029, 0.0367695909665859],
                     [0.0872373132287834, 0.0165925719765324]
-                ]
+                ],
+                "it": [
+                    [0.0392336062771297, 0.0251341675086098],
+                    [0.0191847672424449, 0.0215475457292278]
+                ],
             },
         }
         dem.mode = "car_leisure"
@@ -82,7 +96,8 @@ class DepartureTimeTest(unittest.TestCase):
             "transit_leisure": {
                 "aht": [0.168710422485735, 0.0387468664988151],
                 "pt": [0.0716348116654068, 0.0679842570835241],
-                "iht": [0.0437554897467228, 0.108924099422715]
+                "iht": [0.0437554897467228, 0.108924099422715],
+                "it": [0.0716348116654068, 0.0679842570835241],
                 },
             "bike": {
                 "aht": [0.0259945209673068, 0.0164613914375604],

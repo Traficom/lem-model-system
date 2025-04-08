@@ -31,8 +31,9 @@ class CarSpecification:
     def light_spec(self) -> Dict[str, Any]:
         specs = []
         for mode in param.car_and_van_classes:
-            self._modes[mode].init_matrices()
-            specs.append(self._modes[mode].spec)
+            if mode in self._modes:
+                self._modes[mode].init_matrices()
+                specs.append(self._modes[mode].spec)
         self._spec["classes"] = specs
         return self._spec
 

@@ -121,6 +121,12 @@ class TransitAssignmentPeriod(OffPeakPeriod):
 
     Car assignment is not performed at all.
     """
+    def __init__(self, *args, **kwargs):
+        AssignmentPeriod.__init__(self, *args, **kwargs)
+        self.transport_classes = param.local_transit_classes
+        self._end_assignment_classes -= set(
+            param.private_classes + param.truck_classes)
+
 
     def prepare(self, dist_unit_cost: Dict[str, float],
                 day_scenario: int, save_matrices: bool):
@@ -141,7 +147,9 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         save_matrices : bool
             Whether matrices will be saved in Emme format for all time periods.
         """
-        self._prepare_cars(dist_unit_cost, save_matrices=False)
+        self._prepare_cars(
+            dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
+            truck_classes=[])
         self._prepare_other(day_scenario, save_matrices)
 
     def assign_trucks_init(self):
@@ -175,8 +183,6 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._assign_transit(
             param.long_distance_transit_classes, add_volumes=True)
         self._calc_transit_network_results()
-        self._end_assignment_classes -= set(
-            param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 
