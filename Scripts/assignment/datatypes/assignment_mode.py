@@ -66,8 +66,7 @@ class AssignmentMode(ABC):
             mtx.release()
 
     def release_matrices(self):
-        """Release all matrices if mode not initialized with
-        save_matrices=True."""
+        """Release matrices, unless mode initialized with save_matrices=True."""
         if not self._save_matrices:
             for mtx in self._matrices.values():
                 mtx.hard_release()
