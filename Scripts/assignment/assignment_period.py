@@ -237,7 +237,10 @@ class AssignmentPeriod(Period):
         self._assign_trucks()
         self._assign_transit(param.transit_classes)
         self._calc_transit_network_results()
-        return self._get_impedances(self._end_assignment_classes)
+        mtxs = self._get_impedances(self._end_assignment_classes)
+        for tc in self.assignment_modes:
+            self.assignment_modes[tc].release_matrices()
+        return mtxs
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {tc: self.assignment_modes[tc].get_matrices()

@@ -183,7 +183,10 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._assign_transit(
             param.long_distance_transit_classes, add_volumes=True)
         self._calc_transit_network_results()
-        return self._get_impedances(self._end_assignment_classes)
+        mtxs = self._get_impedances(self._end_assignment_classes)
+        for tc in self.assignment_modes:
+            self.assignment_modes[tc].release_matrices()
+        return mtxs
 
 
 class EndAssignmentOnlyPeriod(AssignmentPeriod):

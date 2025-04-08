@@ -60,9 +60,17 @@ class AssignmentMode(ABC):
         for mtx in self._matrices.values():
             mtx.init()
 
-    def _release_matrices(self):
+    def _soft_release_matrices(self):
+        """Release matrices that are not PermanentMatrix."""
         for mtx in self._matrices.values():
             mtx.release()
+
+    def release_matrices(self):
+        """Release all matrices if mode not initialized with
+        save_matrices=True."""
+        if not self._save_matrices:
+            for mtx in self._matrices.values():
+                mtx.hard_release()
 
     @abstractmethod
     def get_matrices(self) -> Dict[str, numpy.ndarray]:
@@ -91,7 +99,7 @@ class SoftMode(AssignmentMode):
 
     def get_matrices(self):
         mtxs = {**self.dist.item, **self.time.item}
-        self._release_matrices()
+        self._soft_release_matrices()
         return mtxs
 
 
