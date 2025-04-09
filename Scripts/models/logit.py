@@ -533,11 +533,19 @@ class AccessibilityModel(ModeDestModel):
                 car_expsum += mode_exps[mode]
             else:
                 sustainable_expsum += mode_exps[mode]
-        self.accessibility["sustainable"] = numpy.log(sustainable_expsum)
-        self.accessibility["car"] = numpy.log(car_expsum)
+        label = f"{self.purpose.name}_sustainable"
+        logsum_sustainable = pandas.Series(
+            log(sustainable_expsum), self.purpose.zone_numbers, name=label)
+        self.zone_data._values[label] = logsum_sustainable
+        self.accessibility["sustainable"] = logsum_sustainable
+        self.accessibility["car"] = pandas.Series(
+            log(car_expsum), self.purpose.zone_numbers,
+            name=f"{self.purpose.name}_car")
         for key in ["all", "sustainable", "car"]:
-            self.accessibility[f"{key}_scaled"] = (self.money_utility
-                                                   * self.accessibility[key])
+            scaled_access = self.money_utility * self.accessibility[key]
+            name = f"{scaled_access.name}_scaled"
+            scaled_access.rename(name, inplace=True)
+            self.accessibility[name] = scaled_access
 
 
 class DestModeModel(LogitModel):

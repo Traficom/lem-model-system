@@ -12,7 +12,8 @@ import utils.log as log
 import parameters.zone as param
 from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
-from models import car_use, linear, tour_combinations
+from models import car_use, car_ownership, linear, tour_combinations
+from parameters.car import cars_hh1, cars_hh2, cars_hh3
 
 
 
@@ -55,6 +56,15 @@ class DemandModel:
             [bounds[0], bounds[-1]]))
         self.car_use_model = car_use.CarUseModel(
             zone_data, self.bounds, param.age_groups, self.resultdata)
+        self.car_ownership_models = {
+            "hh1": car_ownership.CarOwnershipModel(cars_hh1, zone_data, 
+                                            self.bounds, self.resultdata),
+            "hh2": car_ownership.CarOwnershipModel(cars_hh2, zone_data, 
+                                            self.bounds, self.resultdata),
+            "hh3": car_ownership.CarOwnershipModel(cars_hh3, zone_data, 
+                                            self.bounds, self.resultdata)
+        }
+    
         self.tour_generation_model = tour_combinations.TourCombinationModel(
             self.zone_data)
         # Income models used only in agent modelling
@@ -198,3 +208,28 @@ class DemandModel:
         probs = self.tour_generation_model.calc_prob(
             age, is_car_user, self.bounds)
         return pandas.DataFrame(probs).to_numpy().cumsum(axis=1)
+    
+    def calculate_car_ownership(self, impedance):
+        acc_purpose = self.purpose_dict["hb_leisure"]
+        purpose_impedance = acc_purpose.transform_impedance(impedance)
+        acc_purpose.accessibility_model.calc_accessibility(purpose_impedance)
+        zd = self.zone_data
+        prob = {hh_size: model.calc_prob()
+            for hh_size, model in self.car_ownership_models.items()}
+        zd["sh_cars1_hh1"] = zd["pop_sh_hh1"]*prob["hh1"][1]
+        zd["sh_cars1_hh2"] = (zd["pop_sh_hh2"]*prob["hh2"][1]
+                              + zd["pop_sh_hh3"]*prob["hh3"][1])
+        zd["sh_cars2_hh2"] = (zd["pop_sh_hh2"]*prob["hh2"][2]
+                              + zd["pop_sh_hh3"]*prob["hh3"][2])
+        result = {"cars": numpy.zeros_like(zd["population"])}
+        for n_cars in range(3):
+            result[f"sh_cars{n_cars}"] = numpy.zeros_like(zd["population"])
+            for hh_size in prob:
+                if n_cars in prob[hh_size]:
+                    hh_car = prob[hh_size][n_cars] * zd[hh_size]
+                    result["cars"] += hh_car * n_cars
+                    national_share = sum(hh_car) / sum(zd[hh_size])
+                    self.resultdata.print_line(
+                        f"{hh_size},cars{n_cars},{national_share}", "car_ownership")
+                    result[f"sh_cars{n_cars}"] += prob[hh_size][n_cars] * zd[f"sh_{hh_size}"]                
+        self.resultdata.print_data(result, "zone_car_ownership.txt")
