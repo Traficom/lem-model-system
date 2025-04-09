@@ -151,13 +151,15 @@ class DepartureTimeModel:
         nr_zones : int
             Number of zones in model area (metropolitan + peripheral)
         """
-        n = nr_zones
-        mtx = self.demand[time_period]
-        car_demand = (mtx["car_work"][0:n, 0:n] + mtx["car_leisure"][0:n, 0:n])
-        share = param.demand_share["freight"]["van"][time_period]
-        self._add_2d_demand(share, "van", time_period, car_demand, (0, 0))
-        self._add_2d_demand(
-            (1, 0), "van", time_period, mtx["truck"][0:n, 0:n], (0, 0))
+        if time_period in param.demand_share["freight"]["van"]:
+            n = nr_zones
+            mtx = self.demand[time_period]
+            car_demand = (mtx["car_work"][0:n, 0:n]
+                          + mtx["car_leisure"][0:n, 0:n])
+            share = param.demand_share["freight"]["van"][time_period]
+            self._add_2d_demand(share, "van", time_period, car_demand, (0, 0))
+            self._add_2d_demand(
+                (1, 0), "van", time_period, mtx["truck"][0:n, 0:n], (0, 0))
 
 
 class DirectDepartureTimeModel (DepartureTimeModel):
