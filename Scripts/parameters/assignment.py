@@ -476,6 +476,8 @@ assignment_classes = {
     "hb_leisure": "leisure",
     "hb_sport": "leisure",
     "hb_visit": "leisure",
+    "hb_overnight": "leisure",
+    "hb_business": "work",
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
