@@ -20,7 +20,7 @@ car_density = {
 }
 cars_hh1 = {
     0: {
-        "constant": 0.292637529,
+        "constant": 0.0,
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -31,12 +31,11 @@ cars_hh1 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.059108964
-
+            "constant": 0.351746493
         }
     },
     1: {
-        "constant": 1.132771869,
+        "constant": 1.340137,
         "generation": {
             "hb_leisure_sustainable": 0.205013,
             "hb_leisure_car_leisure": -0.205013,
@@ -51,14 +50,14 @@ cars_hh1 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.050803787
+            "constant": -0.258168917
         },
     }
 }
 
 cars_hh2 = {
     0: {
-        "constant": 0.014435612,
+        "constant": 0.0,
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -69,11 +68,11 @@ cars_hh2 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.014435612
+            "constant": 0.0000762998
         }
     },
     1: {
-        "constant": 2.114567411,
+        "constant": 2.162438,
         "generation": {
             "hb_leisure_sustainable": 0.198998,
             "hb_leisure_car_leisure": -0.198998,
@@ -88,11 +87,11 @@ cars_hh2 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.005159903
+            "constant": -0.053030492
         }
     },
     2: {
-        "constant": 1.280823805,
+        "constant": 1.190672,
         "generation": {
             "hb_leisure_sustainable": 0.568111,
             "hb_leisure_car_leisure": -0.568111,
@@ -107,14 +106,14 @@ cars_hh2 = {
             "sh_income_100_": 1.084823
         },
         "calibration": {
-            "constant": 0.016357384
+            "constant": 0.106509189
         }
     }
 }
 
 cars_hh3 = {
     0: {
-        "constant": 0.002411826,
+        "constant": 0.0,
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -125,11 +124,11 @@ cars_hh3 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.042711188
+            "constant": -0.040299362
         }
     },
     1: {
-        "constant": 2.283196232,
+        "constant": 2.39324,
         "generation": {
             "hb_leisure_sustainable": 0.198998,
             "hb_leisure_car_leisure": -0.198998,
@@ -144,11 +143,11 @@ cars_hh3 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.016846008
+            "constant": -0.126889775
         }
     },
     2: {
-        "constant": 2.315279683,
+        "constant": 2.220873,
         "generation": {
             "hb_leisure_sustainable": 0.568111,
             "hb_leisure_car_leisure": -0.568111,
@@ -163,7 +162,7 @@ cars_hh3 = {
             "sh_income_100_": 1.084823
         },
         "calibration": {
-            "constant": 0.019640599
+            "constant": 0.114047282
         }
     }
 }
