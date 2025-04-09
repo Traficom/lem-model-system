@@ -279,9 +279,10 @@ class ModelSystem:
             log.info("Long-distance and freight matrices imported")
         self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
-        with self.resultmatrices.open(
-                "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
-            mtx["all"] = Purpose.distance
+        if not isinstance(self.ass_model, MockAssignmentModel):
+            with self.resultmatrices.open(
+                    "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
+                mtx["all"] = Purpose.distance
         soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
@@ -309,7 +310,8 @@ class ModelSystem:
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
-                self._save_to_omx(impedance[tp], tp)
+                if not isinstance(self.ass_model, MockAssignmentModel):
+                    self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
@@ -404,7 +406,8 @@ class ModelSystem:
             impedance[tp] = (ap.end_assign() if iteration=="last"
                              else ap.assign(self.travel_modes))
             if iteration=="last":
-                self._save_to_omx(impedance[tp], tp)
+                if not isinstance(self.ass_model, MockAssignmentModel):
+                    self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
