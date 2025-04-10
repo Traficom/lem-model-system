@@ -34,6 +34,7 @@
             "area_university_buildings",
             "sh_row_or_detached",
             "students_comprehensive",
+            "land_area",
             {
                 "total": "households",
                 "shares": [
