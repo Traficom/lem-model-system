@@ -368,7 +368,7 @@ class AssignmentPeriod(Period):
                     link.data1 = roadclass.lane_capacity
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
-            if self.use_stored_speeds and link.volume_delay_func != 90:
+            if self.use_stored_speeds and link.volume_delay_func < 90:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
