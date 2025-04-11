@@ -210,7 +210,12 @@ class DemandModel:
         return pandas.DataFrame(probs).to_numpy().cumsum(axis=1)
     
     def calculate_car_ownership(self, impedance):
-        acc_purpose = self.purpose_dict["hb_leisure"]
+        try:
+            acc_purpose = self.purpose_dict["hb_leisure"]
+        except KeyError:
+            log.info("Car ownership not calculated, take from zone data")
+            return
+        log.info("Calc car ownership based on hb_leisure accessibility...")
         purpose_impedance = acc_purpose.transform_impedance(impedance)
         acc_purpose.accessibility_model.calc_accessibility(purpose_impedance)
         zd = self.zone_data
@@ -233,3 +238,4 @@ class DemandModel:
                         f"{hh_size},cars{n_cars},{national_share}", "car_ownership")
                     result[f"sh_cars{n_cars}"] += prob[hh_size][n_cars] * zd[f"sh_{hh_size}"]                
         self.resultdata.print_data(result, "zone_car_ownership.txt")
+        log.info("New car-ownership values calculated.")

@@ -357,7 +357,6 @@ class ModelSystem:
             [mode for mode in self.travel_modes if mode != "walk"])
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
-        log.info("New car ownership values calculated.")
 
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
