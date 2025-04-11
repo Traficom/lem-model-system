@@ -83,7 +83,7 @@ def main(args):
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
-                args.results_path, args.scenario_name, "Matrices",
+                args.results_path, args.scenario_name[i], "Matrices",
                 args.submodel[i])
             if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
@@ -192,6 +192,12 @@ def main(args):
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
 
+    long_dist_result_paths = []
+    for name, long_dist in zip(
+            args.scenario_name, args.long_dist_demand_forecast):
+        if long_dist == "calc":
+            long_dist_result_paths.append(
+                Path(args.results_path, name, "Matrices", "koko_suomi"))
     for data_path, submodel, long_dist_forecast, freight_path in zip(
             forecast_zonedata_paths, args.submodel,
             args.long_dist_demand_forecast, args.freight_matrix_paths):
@@ -208,12 +214,14 @@ def main(args):
         if long_dist_forecast not in ("calc", "base"):
             long_dist_classes = (param.car_classes
                                  + param.long_distance_transit_classes)
-            long_dist_matrices = MatrixData(Path(long_dist_forecast))
-            with long_dist_matrices.open(
-                    "demand", "vrk", zone_numbers[submodel],
-                    forecast_zonedata.mapping, long_dist_classes) as mtx:
-                for ass_class in long_dist_classes:
-                    a = mtx[ass_class]
+            long_dist_path = Path(long_dist_forecast)
+            if long_dist_path not in long_dist_result_paths:
+                long_dist_matrices = MatrixData(long_dist_path)
+                with long_dist_matrices.open(
+                        "demand", "vrk", zone_numbers[submodel],
+                        forecast_zonedata.mapping, long_dist_classes) as mtx:
+                    for ass_class in long_dist_classes:
+                        a = mtx[ass_class]
 
         # Check freight matrices
         if freight_path != "none":
@@ -276,6 +284,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scenario-name",
         type=str,
+        nargs="+",
+        required=True,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
