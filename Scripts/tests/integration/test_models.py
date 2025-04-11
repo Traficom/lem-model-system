@@ -26,7 +26,7 @@ class Config():
 class ModelTest(unittest.TestCase):
     
     def test_models(self):
-        print("Testing assignment..")
+        print("Testing model system...")
         log.initialize(Config())
         ass_model = MockAssignmentModel(MatrixData(
             RESULTS_PATH / "Matrices" / "uusimaa"))
@@ -57,7 +57,20 @@ class ModelTest(unittest.TestCase):
             0.3357713386140368)
         
         print("Model system test done")
-    
+
+    def test_long_dist_models(self):
+        print("Testing model system for long trips...")
+        ass_model = MockAssignmentModel(
+            MatrixData(RESULTS_PATH / "Matrices" / "koko_suomi"),
+            use_free_flow_speeds=True, time_periods={"vrk": "WholeDayPeriod"})
+        model = ModelSystem(
+            ZONEDATA_PATH, COSTDATA_PATH, ZONEDATA_PATH,
+            BASE_MATRICES_PATH, RESULTS_PATH, ass_model, "koko_suomi")
+        impedance = model.assign_base_demand()
+
+        print("Adding demand and assigning")
+        impedance = model.run_iteration(impedance)
+
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
         self.assertIs(type(impedances), dict)

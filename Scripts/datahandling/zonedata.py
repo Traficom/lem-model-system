@@ -109,7 +109,7 @@ class ZoneData:
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
         self["Lappi"] = self.dummy("county", "Lappi")
-        for key in data["aggregate_results_submodel"].unique():
+        for key in ["Uusimaa", "Lounais-Suomi", "Ita-Suomi", "Pohjois-Suomi"]:
             self["population_" + key] = self.dummy("submodel", key) * pop
 
     def dummy(self, division_type, name, bounds=slice(None)):
