@@ -264,20 +264,22 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         penalty_attr = param.line_penalty_attr.replace("us", "data")
         op_attr = param.line_operator_attr.replace("ut", "data")
-        long_dist_transit_modes = {mode for mode_set
-            in param.long_dist_transit_modes.values() for mode in mode_set}
+        long_dist_transit_modes = list({mode for mode_set
+            in param.long_dist_transit_modes.values() for mode in mode_set})
+        transit_modes = long_dist_transit_modes + param.local_transit_modes
         for mode in long_dist_transit_modes:
             if network.mode(mode) is None:
                 raise AttributeError(f"Long-dist mode {mode} does not exist.")
         for line in network.transit_lines():
-            fare = fares[line[op_attr]]
-            for segment in line.segments():
-                segment[param.dist_fare_attr] = (fare["dist_single"]
-                                                 * segment.link.length)
-                segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fare["firstb_single"]
-            line[param.board_long_dist_attr] = (line[param.board_fare_attr]
-                if line.mode.id in long_dist_transit_modes else 0)
+            if line.mode.id in transit_modes:
+                fare = fares[line[op_attr]]
+                for segment in line.segments():
+                    segment[param.dist_fare_attr] = (fare["dist_single"]
+                                                    * segment.link.length)
+                    segment[penalty_attr] = segment[param.dist_fare_attr]
+                line[param.board_fare_attr] = fare["firstb_single"]
+                line[param.board_long_dist_attr] = (line[param.board_fare_attr]
+                    if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
 
     def transit_results_links_nodes(self):
@@ -622,76 +624,59 @@ class AssignmentPeriod(Period):
         log.info("Calculates effective headways "
                  + "and cumulative travel times for scenario "
                  + str(self.emme_scenario.id))
+        long_dist_transit_modes = list({mode for mode_set
+            in param.long_dist_transit_modes.values() for mode in mode_set})
+        transit_modes = long_dist_transit_modes + param.local_transit_modes
         headway_attr = self.netfield("hdw")
-        effective_headway_attr = param.effective_headway_attr.replace(
+        effective_hdw_attr = param.effective_headway_attr.replace(
             "ut", "data")
         delay_attr = param.transit_delay_attr.replace("us", "data")
         func = param.effective_headway
         for line in network.transit_lines():
-            hw = line[headway_attr]
-            for interval in func:
-                if interval[0] <= hw < interval[1]:
-                    effective_hw = func[interval](hw - interval[0])
-                    break
-            line[effective_headway_attr] = effective_hw
-            cumulative_length = 0
-            cumulative_time = 0
-            cumulative_speed = 0
-            headway_sd = 0
-            for segment in line.segments():
-                if segment.dwell_time >= 2:
-                    # Time-point stops reset headway deviation
-                    cumulative_length = 0
-                    cumulative_time = 0
-                cumulative_length += segment.link.length
-                # Travel time for buses in mixed traffic
-                if segment.transit_time_func == 1:
-                    cumulative_time += (segment.link.auto_time
-                                        + segment.dwell_time)
-                # Travel time for buses on bus lanes
-                if segment.transit_time_func == 2:
-                    cumulative_time += (segment.link.length/segment.link.data2
-                                        * 60
-                                        + segment.dwell_time)
-                # Travel time for trams AHT
-                if segment.transit_time_func == 3:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 5-6 from end (1-2 from beg.) represent AHT
-                    # speed. If AHT speed is less than 10, data1 will 
-                    # have only 5 digits.
-                    speed = int(speedstr[:-4])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for trams PT
-                if segment.transit_time_func == 4:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 3-4 from end represent PT speed.
-                    speed = int(speedstr[-4:-2])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for trams IHT
-                if segment.transit_time_func == 5:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 1-2 from end represent IHT speed.
-                    speed = int(speedstr[-2:])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for rail
-                if segment.transit_time_func == 6:
-                    cumulative_time += segment[delay_attr] + segment.dwell_time
-                if cumulative_time > 0:
-                    cumulative_speed = (cumulative_length
-                                        / cumulative_time
-                                        * 60)
-                # Headway standard deviation for buses and trams
-                if line.mode.id in param.headway_sd_func:
-                    b = param.headway_sd_func[line.mode.id]
-                    headway_sd = (b["asc"]
-                                  + b["ctime"]*cumulative_time
-                                  + b["cspeed"]*cumulative_speed)
-                # Estimated waiting time addition caused by headway deviation
-                segment["@wait_time_dev"] = (headway_sd**2
-                                             / (2.0*line[effective_headway_attr]))
+            if line.mode.id in transit_modes:
+                hdw = line[headway_attr]
+                for interval in func:
+                    if interval[0] <= hdw < interval[1]:
+                        effective_hdw = func[interval](hdw - interval[0])
+                        break
+                line[effective_hdw_attr] = effective_hdw
+                cumulative_length = 0
+                cumulative_time = 0
+                cumulative_speed = 0
+                headway_sd = 0
+                for segment in line.segments():
+                    if segment.dwell_time >= 2:
+                        # Time-point stops reset headway deviation
+                        cumulative_length = 0
+                        cumulative_time = 0
+                    cumulative_length += segment.link.length
+                    # Travel time for buses in mixed traffic
+                    if segment.transit_time_func == 1:
+                        cumulative_time += (segment.link.auto_time
+                                            + segment.dwell_time)
+                    # Travel time for buses on bus lanes
+                    if segment.transit_time_func == 2:
+                        cumulative_time += (segment.link.length
+                                            / segment.link.data2
+                                            * 60
+                                            + segment.dwell_time)
+                    # Travel time for rail
+                    if segment.transit_time_func == 6:
+                        cumulative_time += (segment[delay_attr]
+                                            + segment.dwell_time)
+                    if cumulative_time > 0:
+                        cumulative_speed = (cumulative_length
+                                            / cumulative_time
+                                            * 60)
+                    # Headway standard deviation for buses and trams
+                    if line.mode.id in param.headway_sd_func:
+                        b = param.headway_sd_func[line.mode.id]
+                        headway_sd = (b["asc"]
+                                    + b["ctime"]*cumulative_time
+                                    + b["cspeed"]*cumulative_speed)
+                    # Estimated waiting time addition caused by headway dev
+                    segment["@wait_time_dev"] = (headway_sd**2
+                                                / (2.0*line[effective_hdw_attr]))
         self.emme_scenario.publish_network(network)
 
     def _assign_transit(self, transit_classes=param.local_transit_classes):
