@@ -72,10 +72,6 @@ demand_share: Dict[str,Dict[str,Any]] = {
         },
     },
 }
-for purpose in demand_share:
-    for mode in demand_share[purpose]:
-        demand_share[purpose][mode]["vrk"] = (((1, 1), (1, 1))
-            if purpose == "hoo" else (1, 1))
 backup_demand_share = {
     "aht": (0.042, 0.028),
     "pt": (0.05, 0.05),
