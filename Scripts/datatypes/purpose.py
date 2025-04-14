@@ -279,6 +279,16 @@ class TourPurpose(Purpose):
             sum(self.generated_tours.values()), self.zone_numbers)
     
     @property
+    def generated_dist_all(self):
+        return pandas.Series(
+            sum(self.generated_distance.values()), self.zone_numbers)
+    
+    @property
+    def attracted_dist_all(self):
+        return pandas.Series(
+            sum(self.attracted_distance.values()), self.zone_numbers)
+
+    @property
     def attracted_tours_all(self):
         return pandas.Series(
             sum(self.attracted_tours.values()), self.zone_numbers)

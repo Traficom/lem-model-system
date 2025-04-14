@@ -459,6 +459,16 @@ class ModelSystem:
                               for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
             attr_tours_purpose, "zone_attraction_by_purpose.txt")
+        gen_dist_purpose = {
+            purpose.name: purpose.generated_dist_all / purpose.generated_tours_all
+                              for purpose in self.dm.tour_purposes}
+        self.resultdata.print_data(
+            gen_dist_purpose, "zone_generation_dist_by_purpose.txt")
+        attr_dist_purpose = {
+            purpose.name: purpose.attracted_dist_all / purpose.attracted_tours_all
+                              for purpose in self.dm.tour_purposes}
+        self.resultdata.print_data(
+            attr_dist_purpose, "zone_attraction_dist_by_purpose.txt")
         gen_tours_mode = {mode: self._generated_tours_mode(mode)[0]
                            for mode in self.travel_modes}
         self.resultdata.print_data(
