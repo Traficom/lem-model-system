@@ -28,8 +28,8 @@ def create_emme_project(args):
     }
     submodel_dimensions = {
         "alueelliset_osamallit": {
-            "centroids": 3300,
-            "regular_nodes": 45000,
+            "centroids": 3400,
+            "regular_nodes": 50000,
             "links": 150000,
             "transit_lines": 3300,
             "transit_segments": 300000,
