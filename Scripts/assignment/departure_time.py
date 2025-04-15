@@ -71,7 +71,10 @@ class DepartureTimeModel:
             Assignment classes for which initialization is done.
             Default is all assignment classes.
         """
-        self.old_car_demand = next(iter(self.demand.values()))["car_work"]
+        try:
+            self.old_car_demand = next(iter(self.demand.values()))["car_work"]
+        except FileNotFoundError:
+            pass
         n = self.nr_zones
         for ap in self.assignment_periods:
             for tc in modes:
