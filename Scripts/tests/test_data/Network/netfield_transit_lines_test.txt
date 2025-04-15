@@ -11,16 +11,6 @@ t network_fields
 #trip_short_name TRANSIT_LINE STRING 'trip_short_name'
 end network_fields
     line #agency_name #departures_per_day  #hdw_aht  #hdw_iht   #hdw_pt #hdw_it  #hdw_vrk #keep_stops #route_short_name #trip_short_name
-'10000_S' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10001_S' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10002_W' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10003_W' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10004_s' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10005_s' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10006_d' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10007_d' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10008_J' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
-'10009_J' 'None'         1.0   999.99   999.99   999.99   999.99   999.99        1 'None'    'None'   
 '1000_w' 'None'         2.0   999.99   999.99   999.99    500.0   999.99        1 'None'    'None'   
 '1001_w' 'None'         2.0   999.99   999.99   999.99    500.0   999.99        1 'None'    'None'   
 'Finnair-AY285-1' 'Finnair'      0.2    180.0   999.99   999.99   999.99   999.99        1 'AY285'   'AY285'  
