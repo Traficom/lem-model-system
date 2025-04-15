@@ -11,7 +11,7 @@ class DepartureTimeTest(unittest.TestCase):
             def __init__(self, name):
                 self.name = name
                 self.assignment_modes = [
-                    "car_leisure", "transit_leisure", "bike"]
+                    "car_work", "car_leisure", "transit_leisure", "bike"]
         assignment_periods = [
             Period(name) for name in ("aht", "pt", "iht")]
         it = Period("it")

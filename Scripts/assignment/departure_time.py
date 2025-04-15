@@ -50,10 +50,11 @@ class DepartureTimeModel:
         max_gap = numpy.abs(car_demand - self.old_car_demand).max()
         try:
             old_sum = self.old_car_demand.sum()
-            relative_gap = abs((car_demand.sum()-old_sum) / old_sum)
         except AttributeError:
             relative_gap = 0
-        self.old_car_demand = car_demand
+        else:
+            relative_gap = abs((car_demand.sum()-old_sum) / old_sum)
+        self.old_car_demand = None
         return {"rel_gap": relative_gap, "max_gap": max_gap}
 
     def _create_container(self, modes: Sequence[str] = transport_classes):
@@ -70,6 +71,7 @@ class DepartureTimeModel:
             Assignment classes for which initialization is done.
             Default is all assignment classes.
         """
+        self.old_car_demand = next(iter(self.demand.values()))["car_work"]
         n = self.nr_zones
         for ap in self.assignment_periods:
             for tc in modes:

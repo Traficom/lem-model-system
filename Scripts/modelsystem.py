@@ -319,7 +319,6 @@ class ModelSystem:
                 self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
-        self.dtm.calc_gaps()
         return impedance
 
     def run_iteration(self, previous_iter_impedance, iteration=None):
