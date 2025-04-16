@@ -36,6 +36,12 @@ class CarSpecification:
         self._spec["classes"] = specs
         return self._spec
 
+    def light_separate_specs(self):
+        for mode in param.car_and_van_classes:
+            self._modes[mode].init_matrices()
+            self._spec["classes"] = [self._modes[mode].spec]
+            yield self._spec
+
     def truck_spec(self) -> Dict[str, Any]:
         specs = []
         for mode in param.truck_classes:
