@@ -255,7 +255,7 @@ if __name__ == "__main__":
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--long-dist-demand-forecast",
+        "-l", "--long-dist-demand-forecast",
         type=str,
         nargs="+",
         required=True,
