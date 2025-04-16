@@ -21,6 +21,7 @@ car_density = {
 cars_hh1 = {
     0: {
         "constant": 0.0,
+        "log_generation": {},
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -31,26 +32,27 @@ cars_hh1 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.351746493
+            "constant": 0.0
         }
     },
     1: {
-        "constant": 1.340137,
+        "constant": 3.221865,
+        "log_generation": {},
         "generation": {
-            "hb_leisure_sustainable": 0.205013,
-            "hb_leisure_car_leisure": -0.205013,
-            "sh_row_or_detached": 1.904786,
+            "hb_leisure_sustainable": -0.099956,
+            "sh_row_or_detached": 0.723959,
+            "avg_park_time": -0.213470
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.916330,
-            "sh_income_20_39": -0.712555,
+            "sh_income_0_19": -2.003805,
+            "sh_income_20_39": -0.761191,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.258168917
+            "constant": 0.0
         },
     }
 }
@@ -58,6 +60,7 @@ cars_hh1 = {
 cars_hh2 = {
     0: {
         "constant": 0.0,
+        "log_generation": {},
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -68,45 +71,48 @@ cars_hh2 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0000762998
+            "constant": 0.0
         }
     },
     1: {
-        "constant": 2.162438,
+        "constant": 46.473448,
+        "log_generation": {
+            "hb_leisure_sustainable": -11.631960
+        },
         "generation": {
-            "hb_leisure_sustainable": 0.198998,
-            "hb_leisure_car_leisure": -0.198998,
-            "sh_row_or_detached": 2.494079,
+            "sh_row_or_detached": 1.288564,
+            "avg_park_time": -0.090125
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.949738,
-            "sh_income_20_39": -0.651540,
+            "sh_income_0_19": -2.028729,
+            "sh_income_20_39": -0.734470,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.053030492
+            "constant": 0.0
         }
     },
     2: {
-        "constant": 1.190672,
+        "constant": 5.380774,
+        "log_generation": {},
         "generation": {
-            "hb_leisure_sustainable": 0.568111,
-            "hb_leisure_car_leisure": -0.568111,
-            "sh_row_or_detached": 4.741679,
+            "hb_leisure_sustainable": -0.474514,
+            "sh_row_or_detached": 1.850552,
+            "avg_park_time": -0.450428
         },
         "individual_dummy": {
-            "sh_income_0_19": -3.083747,
-            "sh_income_20_39": -1.299364,
+            "sh_income_0_19": -3.337603,
+            "sh_income_20_39": -1.430880,
             "sh_income_40_59": 0,
-            "sh_income_60_79": 0.377211,
-            "sh_income_80_99": 0.660624,
-            "sh_income_100_": 1.084823
+            "sh_income_60_79": 0.425441,
+            "sh_income_80_99": 0.732656,
+            "sh_income_100_": 1.248988
         },
         "calibration": {
-            "constant": 0.106509189
+            "constant": 0.0
         }
     }
 }
@@ -114,6 +120,7 @@ cars_hh2 = {
 cars_hh3 = {
     0: {
         "constant": 0.0,
+        "log_generation": {},
         "generation": {},
         "individual_dummy": {
             "sh_income_0_19": 0,
@@ -124,45 +131,48 @@ cars_hh3 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.040299362
+            "constant": 0.0
         }
     },
     1: {
-        "constant": 2.39324,
+        "constant": 46.64258,
+        "log_generation": {
+            "hb_leisure_sustainable": -11.631960
+        },
         "generation": {
-            "hb_leisure_sustainable": 0.198998,
-            "hb_leisure_car_leisure": -0.198998,
-            "sh_row_or_detached": 2.494079,
+            "sh_row_or_detached": 1.288564,
+            "avg_park_time": -0.090125
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.949738,
-            "sh_income_20_39": -0.651540,
+            "sh_income_0_19": -2.028729,
+            "sh_income_20_39": -0.734470,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": -0.126889775
+            "constant": 0.0
         }
     },
     2: {
-        "constant": 2.220873,
+        "constant": 6.32751,
+        "log_generation": {},
         "generation": {
-            "hb_leisure_sustainable": 0.568111,
-            "hb_leisure_car_leisure": -0.568111,
-            "sh_row_or_detached": 4.741679,
+            "hb_leisure_sustainable": -0.474514,
+            "sh_row_or_detached": 1.850552,
+            "avg_park_time": -0.450428
         },
         "individual_dummy": {
-            "sh_income_0_19": -3.083747,
-            "sh_income_20_39": -1.299364,
+            "sh_income_0_19": -3.337603,
+            "sh_income_20_39": -1.430880,
             "sh_income_40_59": 0,
-            "sh_income_60_79": 0.377211,
-            "sh_income_80_99": 0.660624,
-            "sh_income_100_": 1.084823
+            "sh_income_60_79": 0.425441,
+            "sh_income_80_99": 0.732656,
+            "sh_income_100_": 1.248988
         },
         "calibration": {
-            "constant": 0.114047282
+            "constant": 0.0
         }
     }
 }

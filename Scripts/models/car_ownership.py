@@ -52,6 +52,7 @@ class CarOwnershipModel(LogitModel):
             self._add_constant(utility, b["constant"])
             utility = self._add_zone_util(utility, b["generation"], True)
             self.exps[nr_cars] = numpy.exp(utility)
+            self.exps[nr_cars] = self._add_log_zone_util(self.exps[nr_cars], b["log_generation"], True)
             nr_cars_expsum += numpy.exp(utility)
         for nr_cars in self.param:
             prob[nr_cars] = divide(self.exps[nr_cars], nr_cars_expsum)
