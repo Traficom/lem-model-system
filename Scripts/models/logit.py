@@ -211,7 +211,7 @@ class LogitModel:
         zdata = self.zone_data
         for i in b:
             exps *= numpy.power(
-                zdata.get_data(i, self.bounds, generation) + 1, b[i])
+                zdata.get_data(i, self.bounds, generation) + 100, b[i])
         return exps
 
 
