@@ -569,7 +569,7 @@ class AssignmentPeriod(Period):
         """Perform car_work traffic assignment for one scenario."""
         log.info("Car assignment started...")
         if self.use_stored_speeds:
-            for car_spec in self._car_spec.light_separate_specs():
+            for car_spec in self._car_spec.separate_light_specs():
                 car_spec["stopping_criteria"] = stopping_criteria
                 self.emme_project.car_assignment(car_spec, self.emme_scenario)
         else:

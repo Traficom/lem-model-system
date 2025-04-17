@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 import parameters.assignment as param
 from assignment.datatypes.car import CarMode
 
@@ -29,6 +29,7 @@ class CarSpecification:
         }
 
     def light_spec(self) -> Dict[str, Any]:
+        """Return light vehicle assignment specification."""
         specs = []
         for mode in param.car_and_van_classes:
             self._modes[mode].init_matrices()
@@ -36,13 +37,20 @@ class CarSpecification:
         self._spec["classes"] = specs
         return self._spec
 
-    def light_separate_specs(self):
+    def separate_light_specs(self) -> Generator[Dict[str, Any]]:
+        """Yield light vehicle assignment specifications.
+
+        Can be used for assigning car modes sequentially,
+        without congestion.
+        """
         for mode in param.car_and_van_classes:
-            self._modes[mode].init_matrices()
-            self._spec["classes"] = [self._modes[mode].spec]
-            yield self._spec
+            if mode in self._modes:
+                self._modes[mode].init_matrices()
+                self._spec["classes"] = [self._modes[mode].spec]
+                yield self._spec
 
     def truck_spec(self) -> Dict[str, Any]:
+        """Return truck assignment specification."""
         specs = []
         for mode in param.truck_classes:
             self._modes[mode].init_matrices()
