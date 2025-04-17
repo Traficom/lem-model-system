@@ -16,9 +16,10 @@ class Args:
     forecast_data_paths = [ZONEDATA_PATH]
     cost_data_paths = [COSTDATA_PATH]
     results_path = TEST_DATA_PATH / "Results"
-    scenario_name = "test"
+    scenario_name = ["test"]
     do_not_use_emme = True
-    long_dist_demand_forecast = None
+    long_dist_demand_forecast = ["base"]
+    freight_matrix_paths = ["none"]
     submodel = ["uusimaa"]
 
 

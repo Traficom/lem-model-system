@@ -1,5 +1,5 @@
-import os
 import sys
+from pathlib import Path
 import json
 import logging
 import logging.handlers
@@ -31,12 +31,12 @@ def initialize(args):
             format='%(asctime)s [%(levelname)s] %(message)s',
             datefmt='%Y-%m-%d %H:%M:%S',)
     # Rotating file logger
-    file = args.scenario_name + ".log"
-    result_dir = os.path.join(args.results_path, args.scenario_name)
-    if not os.path.exists(result_dir):
-        os.makedirs(result_dir)
+    scenario_name = (args.scenario_name
+        if isinstance(args.scenario_name, str) else args.scenario_name[0])
+    result_dir = Path(args.results_path, scenario_name)
+    result_dir.mkdir(parents=True, exist_ok=True)
     global filename
-    filename = os.path.join(result_dir, file)
+    filename = result_dir / f"{scenario_name}.log"
     fileFormat = logging.Formatter(
         '%(asctime)s [%(levelname)s] %(message)s', '%Y-%m-%d %H:%M:%S')
     fileHandler = logging.handlers.TimedRotatingFileHandler(
