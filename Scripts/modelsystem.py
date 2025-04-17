@@ -493,7 +493,7 @@ class ModelSystem:
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
     def _get_mode_tours(self, generation = True):
-        tours = defaultdict(dict)
+        tours = {"tours": {}, "dist": {}}
         for mode in self.travel_modes:
             demand = pandas.Series(
                 0.0, self.zdata_forecast.zone_numbers, name=mode)
