@@ -71,7 +71,9 @@ class Purpose:
         self.resultdata = resultdata
         self.mtx_adjustment = mtx_adjustment
         self.generated_tours: Dict[str, numpy.array] = {}
+        self.generated_distance: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
+        self.attracted_distance: Dict[str, numpy.array] = {}
 
     @property
     def zone_numbers(self):
@@ -277,6 +279,16 @@ class TourPurpose(Purpose):
             sum(self.generated_tours.values()), self.zone_numbers)
     
     @property
+    def generated_dist_all(self):
+        return pandas.Series(
+            sum(self.generated_distance.values()), self.zone_numbers)
+    
+    @property
+    def attracted_dist_all(self):
+        return pandas.Series(
+            sum(self.attracted_distance.values()), self.zone_numbers)
+
+    @property
     def attracted_tours_all(self):
         return pandas.Series(
             sum(self.attracted_tours.values()), self.zone_numbers)
@@ -388,6 +400,8 @@ class TourPurpose(Purpose):
                 pass
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
+            self.attracted_distance[mode] = (self.dist*mtx).sum(0)
+            self.generated_distance[mode] = (self.dist*mtx).sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
             for mapping in self.aggregates:
                 self.aggregates[mapping][mode] = agg.aggregate_mtx(
