@@ -373,11 +373,11 @@ class ModelSystem:
                 self._save_demand_to_omx(ap)
 
         # Log mode shares
-        tours_mode = {mode: self._generated_tours_mode(mode)[0] for mode in self.travel_modes}
-        sum_all = sum(tours_mode.values())
+        tours_mode = self._generated_tours()
+        sum_all = sum(tours_mode["tours"].values())
         mode_shares = {}
-        for mode in tours_mode:
-            share = tours_mode[mode].sum() / sum_all.sum()
+        for mode in tours_mode["tours"]:
+            share = tours_mode["tours"][mode].sum() / sum_all.sum()
             mode_shares[mode] = share
             log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
         self.mode_share.append(mode_shares)
@@ -469,22 +469,16 @@ class ModelSystem:
                               for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
             attr_dist_purpose, "zone_attraction_dist_by_purpose.txt")
-        gen_tours_mode = {mode: self._generated_tours_mode(mode)[0]
-                           for mode in self.travel_modes}
+        gen_tours_mode = self._generated_tours()
+        attr_tours_mode = self._attracted_tours()
         self.resultdata.print_data(
-            gen_tours_mode, "zone_generation_by_mode.txt")
-        gen_tours_dist_mode = {mode: self._generated_tours_mode(mode)[1]
-                           for mode in self.travel_modes}
+            gen_tours_mode["tours"], "zone_generation_by_mode.txt")
         self.resultdata.print_data(
-            gen_tours_dist_mode, "zone_generation_dist_by_mode.txt")
-        attr_tours_mode = {mode: self._attracted_tours_mode(mode)[0]
-                           for mode in self.travel_modes}
+            gen_tours_mode["dist"], "zone_generation_dist_by_mode.txt")
         self.resultdata.print_data(
-            attr_tours_mode, "zone_attraction_by_mode.txt")
-        attr_tours_dist_mode = {mode: self._attracted_tours_mode(mode)[0]
-                           for mode in self.travel_modes}
+            attr_tours_mode["tours"], "zone_attraction_by_mode.txt")
         self.resultdata.print_data(
-            attr_tours_dist_mode, "zone_attraction_dist_by_mode.txt")
+            attr_tours_mode["dist"], "zone_attraction_dist_by_mode.txt")
         for purpose in self.dm.tour_purposes:
             self.resultdata.print_concat(
                 purpose.generation_mode_shares, "purpose_mode_shares.txt")
@@ -498,33 +492,41 @@ class ModelSystem:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
-    def _generated_tours_mode(self, mode):
-        int_demand = pandas.Series(
-            0.0, self.zdata_forecast.zone_numbers, name=mode)
-        int_dist = pandas.Series(
-            0.0, self.zdata_forecast.zone_numbers, name=mode)
-        for purpose in self.dm.tour_purposes:
-            if mode in purpose.modes and purpose.dest != "source":
-                bounds = (next(iter(purpose.sources)).bounds
-                    if isinstance(purpose, SecDestPurpose)
-                    else purpose.bounds)
-                int_demand[bounds] += purpose.generated_tours[mode]
-                int_dist[bounds] += purpose.generated_distance[mode]
-        return int_demand, int_dist / int_demand
+    def _generated_tours(self):
+        generation = defaultdict(dict)
+        for mode in self.travel_modes:
+            int_demand = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            int_dist = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            for purpose in self.dm.tour_purposes:
+                if mode in purpose.modes and purpose.dest != "source":
+                    bounds = (next(iter(purpose.sources)).bounds
+                        if isinstance(purpose, SecDestPurpose)
+                        else purpose.bounds)
+                    int_demand[bounds] += purpose.generated_tours[mode]
+                    int_dist[bounds] += purpose.generated_distance[mode]
+            generation["tours"][mode] = int_demand
+            generation["dist"][mode] = int_dist / int_demand
+        return generation
     
-    def _attracted_tours_mode(self, mode):
-        int_demand = pandas.Series(
-            0, self.zdata_forecast.zone_numbers, name=mode)
-        int_dist = pandas.Series(
-            0.0, self.zdata_forecast.zone_numbers, name=mode)
-        for purpose in self.dm.tour_purposes:
-            if mode in purpose.modes and purpose.dest != "source":
-                bounds = (next(iter(purpose.sources)).bounds
-                    if isinstance(purpose, SecDestPurpose)
-                    else purpose.bounds)
-                int_demand[bounds] += purpose.attracted_tours[mode]
-                int_dist[bounds] += purpose.generated_distance[mode]
-        return int_demand, int_dist / int_demand
+    def _attracted_tours(self):
+        attraction = defaultdict(dict)
+        for mode in self.travel_modes:
+            int_demand = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            int_dist = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            for purpose in self.dm.tour_purposes:
+                if mode in purpose.modes and purpose.dest != "source":
+                    bounds = (next(iter(purpose.sources)).bounds
+                        if isinstance(purpose, SecDestPurpose)
+                        else purpose.bounds)
+                    int_demand[bounds] += purpose.attracted_tours[mode]
+                    int_dist[bounds] += purpose.generated_distance[mode]
+            attraction["tours"][mode] = int_demand
+            attraction["dist"][mode] = int_dist / int_demand
+        return attraction
 
     def _distribute_sec_dests(self, purpose, mode, impedance):
         threads = []
