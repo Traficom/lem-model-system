@@ -123,5 +123,5 @@ class FreightMode(AssignmentMode):
         }
         if self._include_toll_cost:
             mtxs.update(self.toll_cost.item)
-        self._release_matrices()
+        self._soft_release_matrices()
         return mtxs

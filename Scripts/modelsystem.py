@@ -228,10 +228,12 @@ class ModelSystem:
             if other_classes:
                 for ap in self.ass_model.assignment_periods:
                     tp = ap.name
+                    ass_classes = [ass_class for ass_class in other_classes
+                        if ass_class in ap.assignment_modes]
                     with self.basematrices.open(
                             "demand", tp, zone_numbers,
-                            transport_classes=other_classes) as mtx:
-                        for ass_class in other_classes:
+                            transport_classes=ass_classes) as mtx:
+                        for ass_class in ass_classes:
                             self.dtm.demand[tp][ass_class] = mtx[ass_class]
         if car_matrices:
             with self.resultmatrices.open(
@@ -319,7 +321,6 @@ class ModelSystem:
                 self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
-        self.dtm.calc_gaps()
         return impedance
 
     def run_iteration(self, previous_iter_impedance, iteration=None):
@@ -366,8 +367,7 @@ class ModelSystem:
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
-            if not self.ass_model.use_free_flow_speeds:
-                self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
+            self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap)

@@ -78,6 +78,12 @@ class EmmeMatrix:
         """Remove matrix from EMME if not `PermanentEmmeMatrix.`"""
         self._emme_project.modeller.emmebank.delete_matrix(self.id)
 
+    def hard_release(self):
+        """Remove matrix from EMME (without exceptions)."""
+        emmebank = self._emme_project.modeller.emmebank
+        if emmebank.matrix(self.id) is not None:
+            emmebank.delete_matrix(self.id)
+
 
 class PermanentEmmeMatrix(EmmeMatrix):
     """Container for EMME matrix.
