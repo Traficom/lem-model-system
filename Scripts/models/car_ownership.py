@@ -1,17 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, Optional
 import numpy # type: ignore
-import pandas
-import utils.log as log
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
     from datahandling.zonedata import ZoneData
 
-from models.logit import LogitModel
+from models.logit import LogitModel, divide
 from utils.calibrate import attempt_calibration
 
-def divide(a, b):
-    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class CarOwnershipModel(LogitModel):
     """Binary logit model for car use.
@@ -41,7 +37,7 @@ class CarOwnershipModel(LogitModel):
         attempt_calibration(parameters)
         self.param = parameters
 
-    def calc_basic_prob(self) -> numpy.ndarray:
+    def calc_basic_prob(self) -> Dict[int, numpy.ndarray]:
         prob = {}
         self.exps = {}
         nr_cars_expsum = 0
@@ -58,12 +54,15 @@ class CarOwnershipModel(LogitModel):
         return prob
 
 
-    def calc_prob(self) -> pandas.Series:
+    def calc_prob(self) -> Dict[int, numpy.ndarray]:
         """Calculate car user probabilities with individual dummies included.
 
         Returns
         -------
-        pandas.Series
+        dict
+            key : int
+                Number of cars in household (0, 1, 2(+))
+            value : numpy.ndarray
                 Choice probabilities
         """
         self.calc_basic_prob()
@@ -80,10 +79,10 @@ class CarOwnershipModel(LogitModel):
                 nr_cars_expsum += nr_cars_exp[nr_cars]
             for nr_cars in self.param:
                 ind_prob = nr_cars_exp[nr_cars] / nr_cars_expsum
-                dummy_share = self.zone_data.get_data(dummy, self.bounds, generation=True)
+                dummy_share = self.zone_data.get_data(
+                    dummy, self.bounds, generation=True)
                 with_dummy = dummy_share * ind_prob
                 prob[nr_cars] += with_dummy
-
         return prob
 
     def calc_individual_prob(self, 
@@ -106,7 +105,10 @@ class CarOwnershipModel(LogitModel):
 
         Returns
         -------
-        numpy.ndarray
+        dict
+            key : int
+                Number of cars in household (0, 1, 2(+))
+            value : numpy.ndarray
                 Choice probabilities
         """
         prob = {}

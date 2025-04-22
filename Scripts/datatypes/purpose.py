@@ -323,8 +323,9 @@ class TourPurpose(Purpose):
         Parameters
         ----------
         impedance : dict
-            Mode (bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/dist) : dict
+                    Mode (bike/walk) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
         self.model.calc_soft_mode_exps(copy(purpose_impedance))
@@ -336,8 +337,9 @@ class TourPurpose(Purpose):
         Parameters
         ----------
         impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/cost/dist) : dict
+                    Mode (car/transit/bike/...) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
         if is_last_iteration:
@@ -356,8 +358,9 @@ class TourPurpose(Purpose):
         Parameters
         ----------
         impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/cost/dist) : dict
+                    Mode (car/transit/bike/...) : numpy.ndarray
 
         Returns
         -------
@@ -378,8 +381,9 @@ class TourPurpose(Purpose):
         Parameters
         ----------
         impedance : dict
-            Mode (bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/dist) : dict
+                    Mode (bike/walk) : numpy.ndarray
 
         Yields
         -------
