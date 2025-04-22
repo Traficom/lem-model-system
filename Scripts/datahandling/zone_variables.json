@@ -32,7 +32,6 @@
             "sport_facility_outdoor",
             "area_leisure_buildings",
             "area_university_buildings",
-            "sh_row_or_detached",
             "students_comprehensive",
             {
                 "total": "households",
@@ -53,7 +52,8 @@
             "avg_park_time",
             "car_density",
             "avg_building_distance",
-            "sh_office"
+            "sh_office",
+            "sh_row_or_detached"
         ],
         "first": [
             "aggregate_results_municipality",
