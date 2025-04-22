@@ -50,7 +50,10 @@ class ZoneData:
         self.aggregations = ZoneAggregations(aggs)
         for col in data:
             if col not in agg_keys:
-                self[col] = data[col]
+                if col.startswith("sh_"):
+                    self.share[col] = data[col]
+                else:
+                    self[col] = data[col]
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.nr_zones = len(self.zone_numbers)
@@ -83,14 +86,16 @@ class ZoneData:
         self.share["share_age_7-99"] = share_7_99
         # Convert household shares to population shares
         hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
-        self["pop_sh_hh1"] = divide(self["sh_hh1"], hh_population)
-        self["pop_sh_hh2"] = divide(2*self["sh_hh2"], hh_population)
-        self["pop_sh_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
-        self["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
-        self["sh_cars1_hh2"] = divide(2*self["sh_cars1_hh2"] + 4.13*self["sh_cars1_hh3"], 
-                                      hh_population)
-        self["sh_cars2_hh2"] = divide(2*self["sh_cars2_hh2"] + 4.13*self["sh_cars2_hh3"], 
-                                      hh_population)
+        self.share["sh_pop_hh1"] = divide(self["sh_hh1"], hh_population)
+        self.share["sh_pop_hh2"] = divide(2*self["sh_hh2"], hh_population)
+        self.share["sh_pop_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
+        self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
+        self.share["sh_cars1_hh2"] = divide((2*self["sh_cars1_hh2"]
+                                             + 4.13*self["sh_cars1_hh3"]),
+                                            hh_population)
+        self.share["sh_cars2_hh2"] = divide((2*self["sh_cars2_hh2"]
+                                             + 4.13*self["sh_cars2_hh3"]),
+                                            hh_population)
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
