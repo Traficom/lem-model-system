@@ -473,6 +473,9 @@ class ModeDestModel(LogitModel):
                         ) -> Dict[str, numpy.ndarray]:
         dummies: defaultdict[str, list] = defaultdict(list)
         for mode in self.mode_choice_param:
+            if mode not in mode_exps:
+                msg = f"Mode {mode} missing from {self.purpose.name} impedance"
+                raise KeyError(msg)
             for i in self.mode_choice_param[mode]["individual_dummy"]:
                 dummies[i].append(mode)
         mode_probs: defaultdict[str, list] = defaultdict(list)
