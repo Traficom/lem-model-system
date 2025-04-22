@@ -35,14 +35,15 @@ cars_hh1 = {
         }
     },
     1: {
-        "constant": 1.425544,
+        "constant": 3.221865,
         "generation": {
-            "hb_leisure_sustainable": -0.196968,
-            "sh_row_or_detached": 1.274938,
+            "hb_leisure_sustainable": -0.099956,
+            "sh_row_or_detached": 0.723959,
+            "avg_park_time": -0.213470
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.930154,
-            "sh_income_20_39": -0.701987,
+            "sh_income_0_19": -2.003805,
+            "sh_income_20_39": -0.761191,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
@@ -71,14 +72,15 @@ cars_hh2 = {
         }
     },
     1: {
-        "constant": 2.868101,
+        "constant": 3.477066,
         "generation": {
-            "hb_leisure_sustainable": -0.346655,
-            "sh_row_or_detached": 1.529165,
+            "hb_leisure_sustainable": -0.224521,
+            "sh_row_or_detached": 1.361005,
+            "avg_park_time": -0.102693 
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.997633,
-            "sh_income_20_39": -0.698690,
+            "sh_income_0_19": -2.006058,
+            "sh_income_20_39": -0.722163,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
@@ -89,18 +91,19 @@ cars_hh2 = {
         }
     },
     2: {
-        "constant": 1.638978,
+        "constant": 5.380643,
         "generation": {
-            "hb_leisure_sustainable": -0.594442,
-            "sh_row_or_detached": 2.944721,
+            "hb_leisure_sustainable": -0.396650,
+            "sh_row_or_detached": 1.934757,
+            "avg_park_time": -0.482368
         },
         "individual_dummy": {
-            "sh_income_0_19": -3.341688,
-            "sh_income_20_39": -1.389355,
+            "sh_income_0_19": -3.305633,
+            "sh_income_20_39": -1.418181,
             "sh_income_40_59": 0,
-            "sh_income_60_79": 0.405490,
-            "sh_income_80_99": 0.684946,
-            "sh_income_100_": 1.110711
+            "sh_income_60_79": 0.424536,
+            "sh_income_80_99": 0.730079,
+            "sh_income_100_": 1.241246
         },
         "calibration": {
             "constant": 0.0
@@ -125,14 +128,15 @@ cars_hh3 = {
         }
     },
     1: {
-        "constant": 3.039326,
+        "constant": 3.646567,
         "generation": {
-            "hb_leisure_sustainable": -0.346655,
-            "sh_row_or_detached": 1.529165,
+            "hb_leisure_sustainable": -0.224521,
+            "sh_row_or_detached": 1.361005,
+            "avg_park_time": -0.102693 
         },
         "individual_dummy": {
-            "sh_income_0_19": -1.997633,
-            "sh_income_20_39": -0.698690,
+            "sh_income_0_19": -2.006058,
+            "sh_income_20_39": -0.722163,
             "sh_income_40_59": 0,
             "sh_income_60_79": 0,
             "sh_income_80_99": 0,
@@ -143,18 +147,19 @@ cars_hh3 = {
         }
     },
     2: {
-        "constant": 2.593503,
+        "constant": 6.328425,
         "generation": {
-            "hb_leisure_sustainable": -0.594442,
-            "sh_row_or_detached": 2.944721,
+            "hb_leisure_sustainable": -0.396650,
+            "sh_row_or_detached": 1.934757,
+            "avg_park_time": -0.482368
         },
         "individual_dummy": {
-            "sh_income_0_19": -3.341688,
-            "sh_income_20_39": -1.389355,
+            "sh_income_0_19": -3.305633,
+            "sh_income_20_39": -1.418181,
             "sh_income_40_59": 0,
-            "sh_income_60_79": 0.405490,
-            "sh_income_80_99": 0.684946,
-            "sh_income_100_": 1.110711
+            "sh_income_60_79": 0.424536,
+            "sh_income_80_99": 0.730079,
+            "sh_income_100_": 1.241246
         },
         "calibration": {
             "constant": 0.0
