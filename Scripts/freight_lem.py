@@ -16,14 +16,11 @@ from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
 
 from datahandling.traversaldata import transform_traversal_data
-from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
-
-BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
 
 def main(args):
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
+    base_zonedata_path = Path(args.baseline_data_path, args.forecast_data_path)
     cost_data_path = Path(args.cost_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
@@ -102,7 +99,7 @@ def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict,
         "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
         "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
         })
-    filename = f"freight_purpose_summary.txt"
+    filename = "freight_purpose_summary.txt"
     resultdata.print_concat(df, filename)
 
 def write_zone_summary(purpose_name: str, zone_numbers: list, 
@@ -114,7 +111,7 @@ def write_zone_summary(purpose_name: str, zone_numbers: list,
     for mode in demand:
         df[f"Departing_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
         df[f"Arriving_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
-    filename = f"freight_zone_summary.txt"
+    filename = "freight_zone_summary.txt"
     resultdata.print_data(df, filename)
 
 def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
@@ -127,7 +124,7 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
         "Vehicle trips (day)": [int(i) for i in vehicles_sum],
         "Vehicle mileage (vkm/day)": [int(i) for i in mileage_sum]
         })
-    filename = f"freight_vehicle_summary.txt"
+    filename = "freight_vehicle_summary.txt"
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
@@ -148,6 +145,10 @@ if __name__ == "__main__":
         "--baseline-data-path",
         type=str,
         help="Path to folder containing both baseline zonedata and -matrices"),
+    parser.add_argument(
+        "--forecast-data-path",
+        type=str,
+        help="Path to folder containing forecast zonedata"),
     parser.add_argument(
         "--cost-data-path",
         type=str,
@@ -173,10 +174,20 @@ if __name__ == "__main__":
         type=int,
         help="First matrix ID within EMME project (.emp)."),
     parser.add_argument(
+        "-d", "--del-strat-files",
+        action="store_true",
+        help="Using this flag deletes strategy files from Emme-project Database folder.",
+    ),
+    parser.add_argument(
         "--specify-commodity-names",
         nargs="*",
         choices=commodity_conversion,
         help="Commodity names in 29 classification. Assigned and saved as mtx."),
+    parser.add_argument(
+        "--trade-path",
+        type=str,
+        help="Filepath to .omx file containing freight foreign trade demand."
+    )
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
