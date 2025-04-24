@@ -595,12 +595,12 @@ class AssignmentPeriod(Period):
             self.emme_scenario.id))
 
     def _assign_trucks(self):
-        truck_spec = self._car_spec.truck_spec()
         stopping_criteria = copy.deepcopy(param.stopping_criteria["coarse"])
         stopping_criteria["max_iterations"] = 0
-        truck_spec["stopping_criteria"] = stopping_criteria
-        self.emme_project.car_assignment(
-            truck_spec, self.emme_scenario)
+        for truck_spec in self._car_spec.truck_specs():
+            truck_spec["stopping_criteria"] = stopping_criteria
+            self.emme_project.car_assignment(
+                truck_spec, self.emme_scenario)
         log.info("Truck assignment performed for scenario {}".format(
             self.emme_scenario.id))
 

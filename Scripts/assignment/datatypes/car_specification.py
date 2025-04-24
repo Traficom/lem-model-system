@@ -49,12 +49,9 @@ class CarSpecification:
                 self._spec["classes"] = [self._modes[mode].spec]
                 yield self._spec
 
-    def truck_spec(self) -> Dict[str, Any]:
-        """Return truck assignment specification."""
-        specs = []
+    def truck_specs(self) -> Generator[Dict[str, Any]]:
+        """Yield truck assignment specifications."""
         for mode in param.truck_classes:
             self._modes[mode].init_matrices()
-            specs.append(self._modes[mode].spec)
-        self._spec["classes"] = specs
-        return self._spec
-
+            self._spec["classes"] = [self._modes[mode].spec]
+            yield self._spec
