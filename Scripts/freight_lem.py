@@ -140,50 +140,44 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scenario-name",
         type=str,
-        help="Scenario name"),
+        help="Scenario name.")
     parser.add_argument(
         "--forecast-data-path",
         type=str,
-        help="Path to folder containing forecast zonedata"),
+        help="Path to file containing forecast zonedata.")
     parser.add_argument(
         "--cost-data-path",
         type=str,
-        help="Path to file containing transport cost data"),
+        help="Path to file containing transport cost data.")
     parser.add_argument(
         "--results-path",
         type=str,
-        help="Path to folder where result data is saved to."),
+        help="Path to folder where result data is saved to.")
     parser.add_argument(
         "--emme-path",
         type=str,
-        help="Filepath to .emp EMME-project-file"),
+        help="Filepath to .emp EMME-project-file.")
     parser.add_argument(
         "--first-scenario-id",
         type=int,
-        help="First (biking) scenario ID within EMME project (.emp)."),
-    parser.add_argument(
-        "--save-emme-matrices",
-        type=bool,
-        help="Using this flag saves matrices for specified commodities."),
+        help="First scenario ID within EMME project (.emp).")
     parser.add_argument(
         "--first-matrix-id",
         type=int,
-        help="First matrix ID within EMME project (.emp)."),
+        help="First matrix ID within EMME project (.emp).")
     parser.add_argument(
         "-d", "--del-strat-files",
         action="store_true",
-        help="Using this flag deletes strategy files from Emme-project Database folder.",
-    ),
+        help="Using this flag deletes strategy files from Emme-project Database folder.")
     parser.add_argument(
         "--specify-commodity-names",
         nargs="*",
         choices=commodity_conversion,
-        help="Commodity names in 29 classification. Assigned and saved as mtx."),
+        help="Commodity names in 29 classification. Assigned and saved as mtx.")
     parser.add_argument(
         "--trade-path",
         type=str,
-        help="Filepath to .omx file containing freight foreign trade demand."
-    )
+        help="Path to .omx file containing freight foreign trade demand.")
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
