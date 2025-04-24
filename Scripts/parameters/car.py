@@ -31,7 +31,7 @@ cars_hh1 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": 0.382845731
         }
     },
     1: {
@@ -50,7 +50,7 @@ cars_hh1 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": -0.27793487
         },
     }
 }
@@ -68,7 +68,7 @@ cars_hh2 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": 0.081983161
         }
     },
     1: {
@@ -87,7 +87,7 @@ cars_hh2 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": -0.014866763
         }
     },
     2: {
@@ -106,7 +106,7 @@ cars_hh2 = {
             "sh_income_100_": 1.241246
         },
         "calibration": {
-            "constant": 0.0
+            "constant": -0.007232359
         }
     }
 }
@@ -124,7 +124,7 @@ cars_hh3 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": -0.071076673
         }
     },
     1: {
@@ -143,7 +143,7 @@ cars_hh3 = {
             "sh_income_100_": 0
         },
         "calibration": {
-            "constant": 0.0
+            "constant": -0.100249666
         }
     },
     2: {
@@ -162,7 +162,7 @@ cars_hh3 = {
             "sh_income_100_": 1.241246
         },
         "calibration": {
-            "constant": 0.0
+            "constant": 0.094130157
         }
     }
 }
