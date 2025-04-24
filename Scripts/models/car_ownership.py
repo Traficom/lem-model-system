@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 
 from models.logit import LogitModel, divide
 from utils.calibrate import attempt_calibration
-import utils.log as log
 
 
 class CarOwnershipModel(LogitModel):
