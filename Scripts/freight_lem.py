@@ -20,7 +20,7 @@ from parameters.commodity import commodity_conversion
 
 
 def main(args):
-    base_zonedata_path = Path(args.baseline_data_path, args.forecast_data_path)
+    zonedata_path = Path(args.forecast_data_path)
     cost_data_path = Path(args.cost_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
@@ -31,7 +31,7 @@ def main(args):
                                     save_matrices=args.save_emme_matrices,
                                     first_matrix_id=args.first_matrix_id)
     zone_numbers = ass_model.zone_numbers
-    zonedata = FreightZoneData(base_zonedata_path, zone_numbers, "koko_suomi")
+    zonedata = FreightZoneData(zonedata_path, zone_numbers, "koko_suomi")
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
@@ -141,10 +141,6 @@ if __name__ == "__main__":
         "--scenario-name",
         type=str,
         help="Scenario name"),
-    parser.add_argument(
-        "--baseline-data-path",
-        type=str,
-        help="Path to folder containing both baseline zonedata and -matrices"),
     parser.add_argument(
         "--forecast-data-path",
         type=str,
