@@ -252,6 +252,9 @@ class AssignmentPeriod(Period):
                     f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
+            for mtx_type, mtx in mtxs[mode].items():
+                if numpy.any(mtx > 1e10):
+                    log.warn(f"Matrix with infinite values: {mtx_type} {mode}")
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
                 for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in param.impedance_output}
