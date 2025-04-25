@@ -9,9 +9,6 @@ jobs:
   build:
 
     runs-on: windows-latest
-    env:
-        PIP_PLATFORM: win_amd64
-        PIP_ONLY_BINARY: ":all:"
 
     steps:
     - uses: actions/checkout@v2
@@ -25,5 +22,5 @@ jobs:
         pip install pipenv
         cd Scripts
         cp .env-win .env
-        pipenv --python 3.11 install --dev
+        pipenv --python "C:/hostedtoolcache/windows/Python/3.11.9/x64/python.exe" install --dev
         pipenv run pytest -s tests
