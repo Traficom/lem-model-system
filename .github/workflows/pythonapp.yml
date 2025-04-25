@@ -10,7 +10,7 @@ jobs:
 
     runs-on: windows-latest
     env:
-        PIP_BINARY_ONLY: fiona  
+        PIP_ONLY_BINARY: fiona  
 
     steps:
     - uses: actions/checkout@v2
