@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
 from pathlib import Path
 import json
 import numpy
@@ -56,11 +55,12 @@ class FreightModelTest(unittest.TestCase):
                 "toll_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             },
             "ship": {
+                "time": numpy.array(time_impedance["ship"]),
                 "dist": numpy.array(dist_impedance["ship"]),
                 "canal_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)]),
                 "aux_time": numpy.array(time_impedance["ship_aux"]),
                 "aux_dist": numpy.array(dist_impedance["ship_aux"]),
-                "toll": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
+                "toll_cost": numpy.zeros([len(ZONE_NUMBERS), len(ZONE_NUMBERS)])
             }
         }
         for purpose in purposes.values():
