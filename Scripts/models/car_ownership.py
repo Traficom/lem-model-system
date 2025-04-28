@@ -47,8 +47,8 @@ class CarOwnershipModel(LogitModel):
             utility = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
             self._add_constant(utility, b["constant"])
             utility = self._add_zone_util(utility, b["generation"], True)
-            self.exps[nr_cars] = numpy.exp(utility)
-            nr_cars_expsum += numpy.exp(utility)
+            self.exps[nr_cars] = numpy.minimum(numpy.exp(utility), 99999)
+            nr_cars_expsum += self.exps[nr_cars]
         for nr_cars in self.param:
             prob[nr_cars] = divide(self.exps[nr_cars], nr_cars_expsum)
         return prob
