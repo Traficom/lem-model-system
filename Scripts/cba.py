@@ -92,7 +92,7 @@ CELL_INDICES = {
                 4: 'U',
                 5: 'V',
             },
-            0: {  # After
+            1: {  # After
                 1: "AA",
                 2: "AB",
                 3: "AC",
@@ -210,7 +210,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
     cols = CELL_INDICES["car_miles"]["cols"]
     rows = CELL_INDICES["car_miles"]["rows"][year]
     for mode in rows:
-        for vdf in cols:
+        for vdf in cols[0]:
             ws[cols[0][vdf]+rows[mode]] = miles[0][mode][vdf]
             ws[cols[1][vdf]+rows[mode]] = miles[1][mode][vdf]
 
