@@ -38,14 +38,8 @@ def main(args):
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
-    purposes = {}
-    for file in parameters_path.rglob("*.json"):
-        commodity_params = json.loads(file.read_text("utf-8"))
-        commodity = commodity_params["name"]
-        purposes[commodity] = FreightPurpose(commodity_params,
-                                             zonedata,
-                                             resultdata,
-                                             costdata["freight"][commodity_conversion[commodity]])
+    purposes = create_purposes(parameters_path / "domestic", 
+                               [zonedata, resultdata, costdata["freight"]])
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
     
@@ -60,7 +54,7 @@ def main(args):
     total_demand = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)])
                     for mode in param.truck_classes}
     for purpose in purposes.values():
-        log.info(f"Calculating demand for purpose: {purpose.name}")
+        log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
@@ -78,10 +72,31 @@ def main(args):
         write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
+    
+    purposes = create_purposes(parameters_path / "foreign",
+                               [zonedata, resultdata, costdata["freight"]])
+    for purpose in purposes.values():
+        log.info(f"Calculating demand for foreign purpose: {purpose.name}")
+
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
+
+def create_purposes(parameters_path: Path, purpose_args: list):
+    """Creates instances of FreightPurpose class for each model parameter json file
+    in parameters path. Include information whether estimated model type is
+    either 'domestic' or 'foreign'.
+    """
+    purposes = {}
+    for file in parameters_path.rglob("*.json"):
+        args = purpose_args.copy()
+        commodity_params = json.loads(file.read_text("utf-8"))
+        commodity = commodity_params["name"]
+        args.insert(0, commodity_params)
+        args[-1] = args[-1][commodity_conversion[commodity]]
+        purposes[commodity] = FreightPurpose(*args, parameters_path.stem)
+    return purposes
 
 def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
                           resultdata: ResultsData):

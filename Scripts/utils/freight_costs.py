@@ -4,7 +4,7 @@ import utils.log as log
 
 
 def calc_cost(mode: str, unit_costs: Dict[str, Dict],
-              impedance: Dict[str, numpy.ndarray]):
+              impedance: Dict[str, numpy.ndarray], model_category: str):
     """Calculate freight costs.
 
     Parameters
@@ -17,6 +17,8 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost) : numpy 2d matrix
+    model_category : str
+        purpose estimation category, domestic or foreign
 
     Returns
     ----------
@@ -25,11 +27,11 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
     """
     match mode:
         case "truck":
-            return calc_road_cost(unit_costs, impedance)
+            return calc_road_cost(unit_costs, impedance, model_category)
         case "freight_train":
-            return calc_rail_cost(unit_costs, impedance)
+            return calc_rail_cost(unit_costs, impedance, model_category)
         case "ship":
-            return calc_ship_cost(unit_costs, impedance)
+            return calc_ship_cost(unit_costs, impedance, model_category)
         case _:
             msg = f"Unknown mode {mode}"
             log.error(msg)
@@ -37,7 +39,8 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
 
 
 def calc_road_cost(unit_costs: Dict[str, Dict],
-                   impedance: Dict[str, numpy.ndarray]):
+                   impedance: Dict[str, numpy.ndarray],
+                   model_category: str):
     """Calculate freight road costs.
 
     Parameters
@@ -48,6 +51,8 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost) : numpy 2d matrix
+    model_category : str
+        purpose estimation category, domestic or foreign
 
     Returns
     ----------
@@ -56,13 +61,15 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
     """
     mode_cost = {}
     for mode, params in unit_costs["truck"].items():
-        mode_cost[mode] = (sum(impedance[k] * params[k] for k in impedance) 
-                           + params["terminal_cost"]) * params["domestic_distribution"]
+        mode_cost[mode] = ((sum(impedance[k] * params[k] for k in impedance) 
+                           + params["terminal_cost"])
+                           * params[f"{model_category}_distribution"])
     return sum(mode_cost.values())
 
 
 def calc_rail_cost(unit_costs: Dict[str, Dict],
-                   impedance: Dict[str, numpy.ndarray]):
+                   impedance: Dict[str, numpy.ndarray],
+                   model_category: str):
     """Calculate freight rail based costs.
 
     Parameters
@@ -73,6 +80,8 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost) : numpy 2d matrix
+    model_category : str
+        purpose estimation category, domestic or foreign
 
     Returns
     ----------
@@ -85,12 +94,13 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
                            + impedance["dist"] * params["dist"]
                            + params["terminal_cost"])
     rail_cost = mode_cost["diesel_train"]
-    rail_aux_cost = get_aux_cost(unit_costs, impedance)
+    rail_aux_cost = get_aux_cost(unit_costs, impedance, model_category)
     return rail_cost + rail_aux_cost
 
 
 def calc_ship_cost(unit_costs: Dict[str, Dict],
-                   impedance: Dict[str, numpy.ndarray]):
+                   impedance: Dict[str, numpy.ndarray],
+                   model_category: str):
     """Calculate freight ship based costs.
 
     Parameters
@@ -102,6 +112,8 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
                     unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
+    model_category : str
+        purpose estimation category, domestic or foreign
 
     Returns
     ----------
@@ -113,12 +125,13 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
                  + impedance["dist"] * parameters["dist"]
                  + impedance["canal_cost"] * parameters["canal_cost"] 
                  + parameters["terminal_cost"])
-    ship_aux_cost = get_aux_cost(unit_costs, impedance)
+    ship_aux_cost = get_aux_cost(unit_costs, impedance, model_category)
     return ship_cost + ship_aux_cost
 
 
 def get_aux_cost(unit_costs: Dict[str, Dict],
-                 impedance: Dict[str, numpy.ndarray]):
+                 impedance: Dict[str, numpy.ndarray],
+                 model_category: str):
     """Checks whether auxiliary mode distance is over twice as long
     as main mode distance or if main mode mode has not been used 
     at all. In such cases, assigns inf for said OD pairs.
@@ -130,6 +143,8 @@ def get_aux_cost(unit_costs: Dict[str, Dict],
         Freight mode (truck/freight_train/ship)
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost) : numpy 2d matrix
+    model_category : str
+        purpose estimation category, domestic or foreign
 
     Returns
     ----------
@@ -145,5 +160,5 @@ def get_aux_cost(unit_costs: Dict[str, Dict],
         (impedance["aux_dist"] > (impedance["dist"]*2))
         | (impedance["dist"] == 0),
         numpy.inf,
-        calc_road_cost(unit_costs, impedance_aux))
+        calc_road_cost(unit_costs, impedance_aux, model_category))
     return aux_cost

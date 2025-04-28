@@ -564,10 +564,11 @@ class SecDestPurpose(Purpose):
 
 class FreightPurpose(Purpose):
 
-    def __init__(self, specification, zone_data, resultdata, costdata):
+    def __init__(self, specification, zone_data, resultdata, costdata, category):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
         self.costdata = costdata
+        self.model_category = category
 
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
@@ -589,7 +590,8 @@ class FreightPurpose(Purpose):
         dict
             Mode (truck/train/...) : calculated demand (numpy 2d matrix)
         """
-        costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+        costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode], 
+                                          self.model_category)}
             for mode in self.modes}
         self.dist = costs["truck"]["cost"]
         nr_zones = self.zone_data.nr_zones
