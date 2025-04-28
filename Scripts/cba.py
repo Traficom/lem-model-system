@@ -270,7 +270,7 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                         except NoSuchNodeError:
                             matrices_found = False
                 if not matrices_found:
-                    break
+                    continue
                 if transport_class == "train" and mtx_type == "dist":
                     # Max travel time with fixed 20 kmph speed
                     # and one-hour start time
@@ -282,7 +282,8 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                 result_type = transport_class + "_" + mtx_type
                 results[result_type] += (vol_fac *
                                          (gains_existing+gains_additional))
-                if mtx_type == "cost":
+                if (mtx_type == "cost"
+                        and transport_class in param.transit_classes):
                     revenue = calc_revenue(demand, cost)
                     revenues_transit += revenue
                     results["transit_revenue"] += vol_fac * revenue
@@ -301,7 +302,10 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
         ws = workbook["Julkistaloudelliset"]
         cols = CELL_INDICES["car_revenue"]["cols"]
         rows = CELL_INDICES["car_revenue"]["rows"][year]
-        ws[cols[timeperiod]+rows] = revenues_car.sum()
+        try:
+            ws[cols[timeperiod]+rows] = revenues_car.sum()
+        except AttributeError:
+            pass
         log.info("Gains and revenues calculated for {}".format(timeperiod))
     log.info("Year {} completed".format(year))
     return pandas.DataFrame(results, zone_numbers)
