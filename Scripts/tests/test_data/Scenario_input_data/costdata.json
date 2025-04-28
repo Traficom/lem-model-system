@@ -52,7 +52,7 @@
                     "domestic_distribution": 0.2,
 					"foreign_distribution": 0.1,
                     "avg_load": 5.76,
-                    "empty_share": 1.5
+                    "empty_share": 0.5
                 },
 				"semi_trailer_truck": {
                     "time": 0.11,
@@ -62,7 +62,7 @@
                     "domestic_distribution": 0.3,
 					"foreign_distribution": 0.4,
                     "avg_load": 15.01,
-					"empty_share": 1.5
+					"empty_share": 0.5
                 },
                 "trailer_truck": {
                     "time": 0.06,
@@ -72,7 +72,7 @@
                     "domestic_distribution": 0.5,
 					"foreign_distribution": 0.5,
                     "avg_load": 30.24,
-                    "empty_share": 1.5
+                    "empty_share": 0.5
                 }
             },
             "freight_train": {

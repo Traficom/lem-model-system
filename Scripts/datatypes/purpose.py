@@ -616,5 +616,5 @@ class FreightPurpose(Purpose):
         """
         costdata = self.costdata["truck"][ass_class]
         vehicles = matrix * costdata["domestic_distribution"] / costdata["avg_load"] / 365
-        vehicles += vehicles.T * (costdata["empty_share"] - 1)
+        vehicles += vehicles.T * costdata["empty_share"]
         return vehicles
