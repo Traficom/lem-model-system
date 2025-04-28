@@ -25,6 +25,10 @@ def main(args):
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
     parameters_path = Path(__file__).parent / "parameters" / "freight"
+    if args.specify_commodity_names is None:
+        log.debug("Argument --specify-commodity-names not defined."
+                  " Setting argument value as empty list.")
+        args.specify_commodity_names = []
     save_matrices = True if args.specify_commodity_names else False
     ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
                                     first_scenario_id=args.first_scenario_id,
