@@ -16,25 +16,22 @@ from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
 
 from datahandling.traversaldata import transform_traversal_data
-from utils.freight_costs import calc_rail_cost, calc_road_cost, calc_ship_cost
 from parameters.commodity import commodity_conversion
-
-BASE_ZONEDATA_FILE = "freight_zonedata.gpkg"
 
 
 def main(args):
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
+    zonedata_path = Path(args.forecast_data_path)
     cost_data_path = Path(args.cost_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
     parameters_path = Path(__file__).parent / "parameters" / "freight"
-    
+    save_matrices = True if args.specify_commodity_names else False
     ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
                                     first_scenario_id=args.first_scenario_id,
-                                    save_matrices=args.save_emme_matrices,
+                                    save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
     zone_numbers = ass_model.zone_numbers
-    zonedata = FreightZoneData(base_zonedata_path, zone_numbers, "koko_suomi")
+    zonedata = FreightZoneData(zonedata_path, zone_numbers, "koko_suomi")
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
@@ -102,7 +99,7 @@ def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict,
         "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
         "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
         })
-    filename = f"freight_purpose_summary.txt"
+    filename = "freight_purpose_summary.txt"
     resultdata.print_concat(df, filename)
 
 def write_zone_summary(purpose_name: str, zone_numbers: list, 
@@ -114,7 +111,7 @@ def write_zone_summary(purpose_name: str, zone_numbers: list,
     for mode in demand:
         df[f"Departing_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=1, dtype="int32")
         df[f"Arriving_{purpose_name}_{mode}"] = numpy.sum(demand[mode], axis=0, dtype="int32")
-    filename = f"freight_zone_summary.txt"
+    filename = "freight_zone_summary.txt"
     resultdata.print_data(df, filename)
 
 def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
@@ -127,7 +124,7 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
         "Vehicle trips (day)": [int(i) for i in vehicles_sum],
         "Vehicle mileage (vkm/day)": [int(i) for i in mileage_sum]
         })
-    filename = f"freight_vehicle_summary.txt"
+    filename = "freight_vehicle_summary.txt"
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
@@ -143,40 +140,44 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scenario-name",
         type=str,
-        help="Scenario name"),
+        help="Scenario name.")
     parser.add_argument(
-        "--baseline-data-path",
+        "--forecast-data-path",
         type=str,
-        help="Path to folder containing both baseline zonedata and -matrices"),
+        help="Path to file containing forecast zonedata.")
     parser.add_argument(
         "--cost-data-path",
         type=str,
-        help="Path to file containing transport cost data"),
+        help="Path to file containing transport cost data.")
     parser.add_argument(
         "--results-path",
         type=str,
-        help="Path to folder where result data is saved to."),
+        help="Path to folder where result data is saved to.")
     parser.add_argument(
         "--emme-path",
         type=str,
-        help="Filepath to .emp EMME-project-file"),
+        help="Filepath to .emp EMME-project-file.")
     parser.add_argument(
         "--first-scenario-id",
         type=int,
-        help="First (biking) scenario ID within EMME project (.emp)."),
-    parser.add_argument(
-        "--save-emme-matrices",
-        type=bool,
-        help="Using this flag saves matrices for specified commodities."),
+        help="First scenario ID within EMME project (.emp).")
     parser.add_argument(
         "--first-matrix-id",
         type=int,
-        help="First matrix ID within EMME project (.emp)."),
+        help="First matrix ID within EMME project (.emp).")
+    parser.add_argument(
+        "-d", "--del-strat-files",
+        action="store_true",
+        help="Using this flag deletes strategy files from Emme-project Database folder.")
     parser.add_argument(
         "--specify-commodity-names",
         nargs="*",
         choices=commodity_conversion,
-        help="Commodity names in 29 classification. Assigned and saved as mtx."),
+        help="Commodity names in 29 classification. Assigned and saved as mtx.")
+    parser.add_argument(
+        "--trade-path",
+        type=str,
+        help="Path to .omx file containing freight foreign trade demand.")
 
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
