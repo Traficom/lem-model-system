@@ -125,13 +125,14 @@ class AssignmentPeriod(Period):
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
                       save_matrices: bool,
+                      car_classes: Iterable[str] = param.car_and_van_classes,
                       truck_classes: Iterable[str] = param.truck_classes):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
         car_modes = {mode: CarMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
-            for mode in param.car_and_van_classes}
+            for mode in car_classes}
         truck_modes = {mode: TruckMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
@@ -236,7 +237,10 @@ class AssignmentPeriod(Period):
         self._assign_trucks()
         self._assign_transit(param.transit_classes)
         self._calc_transit_network_results()
-        return self._get_impedances(self._end_assignment_classes)
+        mtxs = self._get_impedances(self._end_assignment_classes)
+        for tc in self.assignment_modes:
+            self.assignment_modes[tc].release_matrices()
+        return mtxs
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {tc: self.assignment_modes[tc].get_matrices()

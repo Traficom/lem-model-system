@@ -32,8 +32,9 @@ class CarSpecification:
         """Return light vehicle assignment specification."""
         specs = []
         for mode in param.car_and_van_classes:
-            self._modes[mode].init_matrices()
-            specs.append(self._modes[mode].spec)
+            if mode in self._modes:
+                self._modes[mode].init_matrices()
+                specs.append(self._modes[mode].spec)
         self._spec["classes"] = specs
         return self._spec
 

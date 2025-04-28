@@ -387,6 +387,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 if attr.type == geom_type.name]
             attrs += [attr.name for attr in self.day_scenario.network_fields()
                 if attr.type == geom_type.name and attr.atype == "REAL"]
+            attrs += geom_type.attrs
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")

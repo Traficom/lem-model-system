@@ -45,7 +45,7 @@ def main(args):
             "completed": 0,
             "failed": 0,
             "total": iterations,
-            "log": log.filename,
+            "log": str(log.filename),
             "converged": 0,
         }
     }

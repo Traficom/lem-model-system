@@ -105,7 +105,7 @@ class FreightMode(AssignmentMode):
             self.spec["aux_transit_by_mode"][0]["cost"] = "@toll_cost_vrk"
             self.spec["aux_transit_by_mode"][0]["cost_perception_factor"] = 1.0
             self.toll_cost = self._create_matrix("toll_cost")
-            self.local_result_spec["actual_aux_transit_costs"] = self.toll_cost.id
+            self.local_result_spec["by_mode_subset"]["actual_aux_transit_costs"] = self.toll_cost.id
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": self.demand.id,
@@ -123,5 +123,5 @@ class FreightMode(AssignmentMode):
         }
         if self._include_toll_cost:
             mtxs.update(self.toll_cost.item)
-        self._release_matrices()
+        self._soft_release_matrices()
         return mtxs
