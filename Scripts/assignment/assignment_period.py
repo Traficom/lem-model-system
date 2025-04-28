@@ -575,10 +575,21 @@ class AssignmentPeriod(Period):
                      stopping_criteria: Dict[str, Union[int, float]]):
         """Perform car_work traffic assignment for one scenario."""
         log.info("Car assignment started...")
-        car_spec = self._car_spec.light_spec()
-        car_spec["stopping_criteria"] = stopping_criteria
-        assign_report = self.emme_project.car_assignment(
-            car_spec, self.emme_scenario)
+        if self.use_stored_speeds:
+            for car_spec in self._car_spec.separate_light_specs():
+                car_spec["stopping_criteria"] = stopping_criteria
+                self.emme_project.car_assignment(car_spec, self.emme_scenario)
+        else:
+            car_spec = self._car_spec.light_spec()
+            car_spec["stopping_criteria"] = stopping_criteria
+            assign_report = self.emme_project.car_assignment(
+                car_spec, self.emme_scenario)
+            log.info("Stopping criteria: {}, iteration {} / {}".format(
+                assign_report["stopping_criterion"],
+                len(assign_report["iterations"]),
+                stopping_criteria["max_iterations"]))
+            if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
+                log.warn("Car assignment not fully converged.")
         network = self.emme_scenario.get_network()
         time_attr = self.netfield("car_time")
         truck_time_attr = self.extra("truck_time")
@@ -589,21 +600,14 @@ class AssignmentPeriod(Period):
         self.emme_scenario.publish_network(network)
         log.info("Car assignment performed for scenario {}".format(
             self.emme_scenario.id))
-        log.info("Stopping criteria: {}, iteration {} / {}".format(
-            assign_report["stopping_criterion"],
-            len(assign_report["iterations"]),
-            stopping_criteria["max_iterations"]
-            ))
-        if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
-            log.warn("Car assignment not fully converged.")
 
     def _assign_trucks(self):
-        truck_spec = self._car_spec.truck_spec()
         stopping_criteria = copy.deepcopy(param.stopping_criteria["coarse"])
         stopping_criteria["max_iterations"] = 0
-        truck_spec["stopping_criteria"] = stopping_criteria
-        self.emme_project.car_assignment(
-            truck_spec, self.emme_scenario)
+        for truck_spec in self._car_spec.truck_specs():
+            truck_spec["stopping_criteria"] = stopping_criteria
+            self.emme_project.car_assignment(
+                truck_spec, self.emme_scenario)
         log.info("Truck assignment performed for scenario {}".format(
             self.emme_scenario.id))
 
