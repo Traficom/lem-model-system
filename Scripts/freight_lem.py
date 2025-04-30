@@ -63,7 +63,7 @@ def main(args):
             ass_model.freight_network.save_network_volumes(purpose.name)
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
-        for mode in ("truck", "trailer_truck"):
+        for mode in param.truck_classes:
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
         write_purpose_summary(purpose.name, demand, impedance, resultdata)
         write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
