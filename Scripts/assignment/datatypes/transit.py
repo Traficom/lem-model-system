@@ -167,7 +167,7 @@ class TransitMode(AssignmentMode):
         for mtx_name in param.impedance_output:
             if mtx_name in self._matrices:
                 mtxs[mtx_name] = self._matrices[mtx_name].data
-        self._release_matrices()
+        self._soft_release_matrices()
         return mtxs
 
 

@@ -55,9 +55,6 @@ def main(args):
     #     raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
-    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
-    time_periods = ({"vrk": "WholeDayPeriod"} if calculate_long_dist_demand
-        else param.time_periods)
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")
@@ -79,10 +76,14 @@ def main(args):
             float(operator["firstb_single"])
             float(operator["dist_single"])
 
+        calc_long_dist_demand = args.long_dist_demand_forecast[i] == "calc"
+        time_periods = ({"vrk": "WholeDayPeriod"} if calc_long_dist_demand
+            else param.time_periods)
+
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
-                args.results_path, args.scenario_name, "Matrices",
+                args.results_path, args.scenario_name[i], "Matrices",
                 args.submodel[i])
             if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
@@ -176,7 +177,7 @@ def main(args):
             app.close()
 
     for submodel in zone_numbers:
-        if not calculate_long_dist_demand:
+        if submodel != "koko_suomi":
             # Check base matrices
             base_matrices_path = Path(
                 args.baseline_data_path, "Matrices", submodel)
@@ -191,7 +192,15 @@ def main(args):
                     for ass_class in param.simple_transport_classes:
                         a = mtx[ass_class]
 
-    for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
+    long_dist_result_paths = []
+    for name, long_dist in zip(
+            args.scenario_name, args.long_dist_demand_forecast):
+        if long_dist == "calc":
+            long_dist_result_paths.append(
+                Path(args.results_path, name, "Matrices", "koko_suomi"))
+    for data_path, submodel, long_dist_forecast, freight_path in zip(
+            forecast_zonedata_paths, args.submodel,
+            args.long_dist_demand_forecast, args.freight_matrix_paths):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
             msg = "Forecast data file '{}' does not exist.".format(
@@ -200,6 +209,28 @@ def main(args):
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
             Path(data_path), zone_numbers[submodel], submodel)
+
+        # Check long-distance base matrices
+        if long_dist_forecast not in ("calc", "base"):
+            long_dist_classes = (param.car_classes
+                                 + param.long_distance_transit_classes)
+            long_dist_path = Path(long_dist_forecast)
+            if long_dist_path not in long_dist_result_paths:
+                long_dist_matrices = MatrixData(long_dist_path)
+                with long_dist_matrices.open(
+                        "demand", "vrk", zone_numbers[submodel],
+                        forecast_zonedata.mapping, long_dist_classes) as mtx:
+                    for ass_class in long_dist_classes:
+                        a = mtx[ass_class]
+
+        # Check freight matrices
+        if freight_path != "none":
+            freight_matrices = MatrixData(Path(freight_path))
+            with freight_matrices.open(
+                    "demand", "vrk", zone_numbers[submodel],
+                    forecast_zonedata.mapping, param.truck_classes) as mtx:
+                for ass_class in param.truck_classes:
+                    a = mtx[ass_class]
 
     log.info("Successfully validated all input files")
 
@@ -224,12 +255,21 @@ if __name__ == "__main__":
         help="Using this flag runs only end assignment of base demand matrices.",
     )
     parser.add_argument(
-        "-f", "--long-dist-demand-forecast",
+        "-l", "--long-dist-demand-forecast",
         type=str,
+        nargs="+",
+        required=True,
         help=("If 'calc', runs assigment with free-flow speed and "
               + "calculates demand for long-distance trips. "
               + "If 'base', takes long-distance trips from base matrices. "
               + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-paths",
+        type=str,
+        nargs="+",
+        required=True,
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "--do-not-use-emme",
@@ -244,6 +284,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scenario-name",
         type=str,
+        nargs="+",
+        required=True,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",

@@ -328,7 +328,7 @@ waiting_time_perception_factor = 1.5
 aux_time_perception_factor = 1.75
 aux_time_perception_factor_long = 2.5
 aux_time_perception_factor_car = 7.5
-
+aux_time_perception_factor_truck = 30
 # Stochastic bike assignment distribution
 bike_dist = {
     "type": "UNIFORM", 
@@ -562,13 +562,14 @@ intermodals = {
 assignment_classes = {
     "hb_work": "work",
     "hb_edu_basic": "work",
-    "hb_edu_upsec": "work",
-    "hb_edu_higher": "work",
+    "hb_edu_student": "work",
     "hb_grocery": "leisure",
     "hb_other_shop": "leisure",
     "hb_leisure": "leisure",
     "hb_sport": "leisure",
     "hb_visit": "leisure",
+    "hb_overnight": "leisure",
+    "hb_business": "work",
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
@@ -699,6 +700,7 @@ park_cost_attr_n = "#park_cost_n"
 park_cost_attr_l = "@park_cost_l"
 freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
+extra_freight_cost_attr = "#extra_cost"
 railtypes = {
     2: "tram",
     3: "metro",

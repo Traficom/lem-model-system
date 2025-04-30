@@ -29,16 +29,11 @@
             "firstb_single": 70.0,
             "dist_single": 0.3
         },
-        "freight train": {
-            "id": 4,
-            "firstb_single": 0.0,
-            "dist_single": 0.1
-         },
          "ferry": {
             "id": 5,
             "firstb_single": 1.5,
             "dist_single": 0.2
-         }
+        }
     },
     "cost_changes": {
         "cost": {
@@ -52,7 +47,7 @@
                 "truck": {
                     "time": 0.5,
                     "dist": 0.55,
-                    "toll": 1.0,
+                    "toll_cost": 1.0,
                     "terminal_cost": 2.0,
                     "avg_load": 7.0,
                     "empty_share": 1.5,
@@ -61,7 +56,7 @@
                 "trailer_truck": {
                     "time": 0.9,
                     "dist": 0.7,
-                    "toll": 1.0,
+                    "toll_cost": 1.0,
                     "terminal_cost": 1.5,
                     "avg_load": 32,
                     "empty_share": 1.5,

@@ -7,6 +7,8 @@ from utils.calc_noise import NoiseModel
 class GeometryType:
     name: str
     geom_type: str
+    attrs = ["data1", "data2", "data3"]
+
     def __new__(cls, obj):
         pass
 
@@ -22,6 +24,7 @@ class Node(GeometryType):
 class Link(GeometryType):
     name = "LINK"
     geom_type = "LineString"
+    attrs = GeometryType.attrs + ["type",  "num_lanes", "volume_delay_func"]
 
     def __new__(cls, link):
         return LineString(link.shape)
@@ -60,14 +63,14 @@ def geometries(attr_names: Iterable[str],
         "geometry": geom_type(obj),
         "properties": {
             "id": obj.id,
-            **{attr[1:]: obj[attr] for attr in attr_names},
+            **{attr.lstrip("@#"): obj[attr] for attr in attr_names},
         }
     } for obj in objects)
     schema = {
         "geometry": geom_type.geom_type,
         "properties": {
             "id": "str",
-            **{attr[1:]: "float" for attr in attr_names}
+            **{attr.lstrip("@#"): "float" for attr in attr_names}
         }
     }
     return recs, schema

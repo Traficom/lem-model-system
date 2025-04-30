@@ -25,19 +25,25 @@ def validate(network, time_periods=param.time_periods, fares=None):
     fares : pandas.DataFrame
             Transit fare zone specification (optional)
     """
-    if fares is not None:
-        op_attr = param.line_operator_attr.replace("ut", "data")
-        for line in network.transit_lines():
-            if line[op_attr] not in fares:
+    transit_modes = list({m for lst in param.long_dist_transit_modes.values()
+        for m in lst}) + param.local_transit_modes
+    op_attr = param.line_operator_attr.replace("ut", "data")
+    hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
+    for line in network.transit_lines():
+        if line.mode.id in transit_modes:
+            for hdwy in hdw_attrs:
+                if line[hdwy] < 0.02:
+                    msg = "Headway missing for line {}".format(line.id)
+                    log.error(msg)
+                    raise ValueError(msg)
+            if fares is not None and line[op_attr] not in fares:
                 msg = f"No transit fares for operator id {int(line[op_attr])}"
                 log.error(msg)
                 raise ValueError(msg)
     validate_mode(network, param.main_mode, EMME_AUTO_MODE)
     for m in param.assignment_modes.values():
         validate_mode(network, m, EMME_AUX_AUTO_MODE)
-    for m in param.local_transit_modes:
-        validate_mode(network, m, EMME_TRANSIT_MODE)
-    for m in (n for l in param.long_dist_transit_modes.values() for n in l):
+    for m in transit_modes:
         validate_mode(network, m, EMME_TRANSIT_MODE)
     for m in param.aux_modes + [param.bike_mode]:
         validate_mode(network, m, EMME_AUX_TRANSIT_MODE)
@@ -46,6 +52,7 @@ def validate(network, time_periods=param.time_periods, fares=None):
     for modes in param.official_node_numbers:
         modesets.append({network.mode(m) for m in modes})
         intervals += param.official_node_numbers[modes]
+    car_time_attrs = [f"#car_time_{tp}" for tp in time_periods]
     for link in network.links():
         if not link.modes:
             msg = "No modes defined for link {}. At minimum mode h and one more mode needs to be defined for the simulation to work".format(link.id)
@@ -74,13 +81,12 @@ def validate(network, time_periods=param.time_periods, fares=None):
                 msg = "Link type missing for link {}".format(link.id)
                 log.error(msg)
                 raise ValueError(msg)
-    hdw_attrs = [f"#hdw_{tp}" for tp in time_periods]
-    for line in network.transit_lines():
-        for hdwy in hdw_attrs:
-            if line[hdwy] < 0.02:
-                msg = "Headway missing for line {}".format(line.id)
-                log.error(msg)
-                raise ValueError(msg)
+            for attr in car_time_attrs:
+                if link[attr] < 0:
+                    msg = f"Negative {attr} on car link {link.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
+
 
 def validate_mode(network, m, mode_type):
     mode = network.mode(m)

@@ -52,6 +52,10 @@ class WholeDayPeriod(AssignmentPeriod):
 
     def init_assign(self):
          self._set_car_vdfs(use_free_flow_speeds=True)
+         return []
+
+    def get_soft_mode_impedances(self):
+        return []
 
     def assign_trucks_init(self):
          pass
