@@ -253,7 +253,7 @@ class ModeDestModel(LogitModel):
             # Separate sub-region parameters
             money_utility = 1 / b[0]
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-        self.money_utility = money_utility
+        self.money_utility: float = money_utility
 
     def calc_soft_mode_exps(self, impedance: dict):
         """Calculate utility exponentials for walk and bike.
@@ -296,7 +296,7 @@ class ModeDestModel(LogitModel):
             probs[mode] = sum(self.soft_mode_probs[mode]) * dest_prob
         return probs
 
-    def calc_prob(self, impedance: dict) -> dict:
+    def calc_prob(self, impedance: dict, calc_accessibility=False) -> dict:
         """Calculate matrix of choice probabilities.
 
         First calculates basic probabilities. Then inserts individual
@@ -313,6 +313,8 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
 
         Returns
         -------
@@ -322,6 +324,8 @@ class ModeDestModel(LogitModel):
         """
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
             impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
         if mode_probs is None:
             self._stashed_exps += [dest_exps, dest_expsums]
@@ -353,7 +357,7 @@ class ModeDestModel(LogitModel):
             mode: mode_probs[mode] for mode in self.soft_mode_exps}
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
-    def calc_basic_prob(self, impedance: dict):
+    def calc_basic_prob(self, impedance: dict, calc_accessibility=False):
         """Calculate utilities and cumulative destination choice probabilities.
 
         Only used in agent simulation.
@@ -365,8 +369,12 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
         """
-        _, _, dest_exps, _ = self._calc_utils(impedance)
+        mode_exps, mode_expsum, dest_exps, _ = self._calc_utils(impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
@@ -510,22 +518,13 @@ class ModeDestModel(LogitModel):
             prob[mode] = sum(mode_probs[mode]) * dest_prob
         return prob
 
-
-class AccessibilityModel(ModeDestModel):
-    def calc_accessibility(self, impedance):
+    def _calc_accessibility(self, mode_exps: Dict[str, numpy.ndarray],
+                            mode_expsum: numpy.ndarray):
         """Calculate logsum-based accessibility measures.
 
         Individual dummy variables are not included.
-
-        Parameters
-        ----------
-        impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2-d matrix
-                    Impedances
         """
-        mode_exps, mode_expsum, _, _ = self._calc_utils(impedance)
-        self.accessibility = {}
+        self.accessibility: Dict[str, pandas.Series] = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
         sustainable_expsum = numpy.zeros_like(mode_expsum)
         car_expsum = numpy.zeros_like(mode_expsum)
@@ -581,7 +580,7 @@ class DestModeModel(LogitModel):
     def calc_soft_mode_prob(self, impedance):
         return []
 
-    def calc_prob(self, impedance):
+    def calc_prob(self, impedance, calc_accessibility=False):
         """Calculate matrix of choice probabilities.
         
         Parameters
@@ -643,9 +642,6 @@ class DestModeModel(LogitModel):
         cumsum = dest_exps.T.cumsum(axis=0)
         self.cumul_dest_prob = cumsum / cumsum[-1]
 
-    def calc_accessibility(self, *args):
-        """Placeholder for accessibility measuring"""
-        pass
 
 class SecDestModel(LogitModel):
     """Logit model for secondary destination choice.
