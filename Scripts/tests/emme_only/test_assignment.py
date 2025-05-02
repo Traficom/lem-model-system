@@ -54,7 +54,7 @@ class EmmeAssignmentTest:
             "transit_vehicles": 35,
             "transit_lines": 30,
             "transit_segments": 750,
-            "extra_attribute_values": 1100000,
+            "extra_attribute_values": 1300000,
             "functions": 99,
             "operators": 5000,
             "sola_analyses": 240,
@@ -158,7 +158,15 @@ class EmmeAssignmentTest:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
             ap.assign_trucks_init()
-            ap.end_assign()
+            travel_cost = ap.end_assign()
+            costs_files = MatrixData(
+                TEST_DATA_PATH / "Results" / "assignment" / "Matrices")
+            for mtx_type in travel_cost:
+                zone_numbers = self.ass_model.zone_numbers
+                with costs_files.open(mtx_type, ap.name, zone_numbers, m='w') as mtx:
+                    for ass_class in travel_cost[mtx_type]:
+                        cost_data = travel_cost[mtx_type][ass_class]
+                        mtx[ass_class] = cost_data
             ap.transit_results_links_nodes()
 
     def test_transit_cost(self):

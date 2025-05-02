@@ -264,7 +264,7 @@ class TourPurpose(Purpose):
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
-        self.connection_models = {}
+        self.connection_models: Dict[str, logit.LogitModel] = {}
         for mode in intermodals:
             if mode in self.modes:
                 self.modes += intermodals[mode]
@@ -354,16 +354,16 @@ class TourPurpose(Purpose):
 
         #If the trip is long-distance, calculate unimodal/intermodal
         # probability split for each main mode
-        if "long" in self.name:
+        if "vrk" in impedance:
             acc_splits = {}
             matrixdata = MatrixData(self.resultdata.path / "Matrices")
-            with matrixdata.open(f"logsum_{self.name}", "vrk") as mtx:
+            with matrixdata.open(f"logsum_{self.name}", "vrk", m='w') as mtx:
                 for main_mode, acc_modes in intermodals.items():
                     mode_impedance = {mode: purpose_impedance.pop(mode)
                         for mode in [main_mode] + acc_modes}
                     acc_splits[main_mode], logsum = self.split_connection_mode(
                         mode_impedance, main_mode, acc_modes)
-                    purpose_impedance[main_mode]["logsum"] = logsum
+                    purpose_impedance[main_mode] = {"logsum": logsum}
                     mtx[main_mode] = logsum
 
         # Calculate main mode probability after access mode probability
@@ -373,7 +373,7 @@ class TourPurpose(Purpose):
 
         # If the trip is long-distance, calculate joint main mode/access
         # mode probability for each intermodal class in EMME assignment
-        if "long" in self.name:
+        if "vrk" in impedance:
             for main_mode, split in acc_splits.items():
                 for acc_mode in split:
                     self.prob[acc_mode] = split[acc_mode] * self.prob[main_mode]
@@ -388,12 +388,13 @@ class TourPurpose(Purpose):
                 self.reweight_parking_cost(impedance[mode], tour_duration[mode])
         model = self.connection_models[pt_mode]
         prob, logsum = model.calc_mode_prob(impedance)
-        prob["l_first_mile"] += prob.pop("l_first_taxi")
+        if "l_first_taxi" in prob:
+            prob["l_first_mile"] += prob.pop("l_first_taxi")
         return prob, logsum
 
     def reweight_parking_cost(self, impedance, duration):
         impedance["park_cost"] = (impedance["park_cost"]
-                                  * duration[self.name[3:-5]]
+                                  * duration[self.name]
                                   / duration["avg"])
 
     def calc_basic_prob(self, impedance, is_last_iteration):

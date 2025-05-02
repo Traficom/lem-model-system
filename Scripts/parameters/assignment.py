@@ -191,21 +191,31 @@ vot_inv = {
 tour_duration = {  # TODO What about last-mile??
     "j_first_mile": {
         "avg": 2.18,
-        "business": 1.12,
-        "leisure": 2.64,
-        "work": 1.41,
+        "hb_business_long": 1.12,
+        "hb_private_day": 2,
+        "hb_private_week": 9,
+        "hb_work_long": 1.41,
+    },
+    "j_first_taxi": {
+        "avg": 2.18,
+        "hb_business_long": 1.12,
+        "hb_private_day": 2,
+        "hb_private_week": 9,
+        "hb_work_long": 1.41,
     },
     "e_first_mile": {
         "avg": 2.62,
-        "business": 2.43,
-        "leisure": 3.06,
-        "work": 0.89,
+        "hb_business_long": 2.43,
+        "hb_private_day": 2,
+        "hb_private_week": 14,
+        "hb_work_long": 0.89,
     },
     "l_first_mile": {
         "avg": 2.39,
-        "business": 2.01,
-        "leisure": 2.51,
-        "work": 1.12,
+        "hb_business_long": 2.01,
+        "hb_private_day": 2,
+        "hb_private_week": 9,
+        "hb_work_long": 1.12,
     },
 }
 freight_terminal_cost = {

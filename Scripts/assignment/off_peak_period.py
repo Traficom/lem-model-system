@@ -45,7 +45,7 @@ class OffPeakPeriod(AssignmentPeriod):
         self._prepare_walk_and_bike(save_matrices=False)
         long_dist_transit_modes = {mode: TransitMode(
                 mode, self, day_scenario, save_matrices, save_matrices)
-            for mode in param.long_distance_transit_classes}
+            for mode in param.long_dist_simple_classes}
         self.assignment_modes.update(long_dist_transit_modes)
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,

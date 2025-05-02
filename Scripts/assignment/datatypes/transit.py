@@ -198,9 +198,10 @@ class MixedMode(TransitMode):
             "time": param.aux_car_time_attr,
             "time_perception_factor": aux_perception_factor,
         })
-        for mode_cost in aux_transit_times:
-            mode_cost["cost"] = param.park_cost_attr_l
-            mode_cost["cost_perception_factor"] = self.vot_inv
+        if "taxi" not in self.name:
+            for mode_cost in aux_transit_times:
+                mode_cost["cost"] = param.park_cost_attr_l
+                mode_cost["cost_perception_factor"] = self.vot_inv
         self.park_and_ride_results = f"@{self.name[0]}{self.name[2:]}_aux"
         self.emme_project.create_extra_attribute(
             "LINK", self.park_and_ride_results, self.name,

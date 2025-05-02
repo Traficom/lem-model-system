@@ -34,7 +34,32 @@
                 1.0,
                 1.0
               ]
+            },
+        "l_first_mile": {
+            "vrk": [
+                2.0,
+                0.0
+                ]
+            },
+        "j_first_mile": {
+            "vrk": [
+                2.0,
+                0.0
+                ]
+            },
+        "j_first_taxi": {
+            "vrk": [
+                2.0,
+                0.0
+                ]
+            },
+        "e_first_mile": {
+            "vrk": [
+                2.0,
+                0.0
+                ]
             }
+
     },
     "distance_boundaries": {
         "car_leisure": [
@@ -49,11 +74,31 @@
             100,
             9999
         ],
+        "l_first_mile": [
+            100,
+            9999
+        ],
+        "l_first_taxi": [
+            100,
+            9999
+        ],
         "train": [
             100,
             9999
         ],
+        "j_first_mile": [
+            100,
+            9999
+        ],
+        "j_first_taxi": [
+            100,
+            9999
+        ],
         "long_d_bus": [
+            100,
+            9999
+        ],
+        "e_first_mile": [
             100,
             9999
         ]
@@ -64,8 +109,7 @@
                 "Lappi": 1.30889
             },
             "impedance": {
-                "time": -0.00072,
-                "cost": -0.00184
+                "logsum": 0.15224
             },
             "log": {
                 "attraction_size": 1
@@ -80,8 +124,7 @@
                 "Lappi": 1.30889
             },
             "impedance": {
-                "time": -0.00045,
-                "cost": -0.00184
+                "logsum": 0.08405
             },
             "log": {
                 "attraction_size": 1
@@ -96,8 +139,7 @@
                 "Lappi": 1.30889
             },
             "impedance": {
-                "time": -0.00261,
-                "cost": -0.00184
+                "logsum": 0.12369
             },
             "log": {
                 "attraction_size": 1
@@ -374,6 +416,54 @@
                 1.0,
                 1.0
               ]
+        },
+        "l_first_mile": {
+            "vrk": [
+                1.0,
+                0.0
+              ]
+        },
+        "j_first_mile": {
+            "vrk": [
+                1.0,
+                0.0
+              ]
+        },
+        "j_first_taxi": {
+            "vrk": [
+                1.0,
+                0.0
+              ]
+        },
+        "e_first_mile": {
+            "vrk": [
+                1.0,
+                0.0
+              ]
+        },
+        "l_last_mile": {
+            "vrk": [
+                0.0,
+                1.0
+                ]
+        },
+        "j_last_mile": {
+            "vrk": [
+                0.0,
+                1.0
+                ]
+        },
+        "j_last_taxi": {
+            "vrk": [
+                0.0,
+                1.0
+                ]
+        },
+        "e_last_mile": {
+            "vrk": [
+                0.0,
+                1.0
+                ]
         }
     }
 }
