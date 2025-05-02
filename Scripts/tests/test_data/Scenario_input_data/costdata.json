@@ -30,16 +30,11 @@
             "firstb_single": 70.0,
             "dist_single": 0.3
         },
-        "freight train": {
-            "id": 4,
-            "firstb_single": 0.0,
-            "dist_single": 0.1
-         },
          "ferry": {
             "id": 5,
             "firstb_single": 1.5,
             "dist_single": 0.2
-         }
+        }
     },
     "cost_changes": {
         "cost": {

@@ -11,6 +11,8 @@ import parameters.zone as param
 import utils.log as log
 from datatypes.zone import Zone, ZoneAggregations, avg
 
+def divide(a, b):
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class ZoneData:
     """Container for zone data read from input file.
@@ -48,7 +50,10 @@ class ZoneData:
         self.aggregations = ZoneAggregations(aggs)
         for col in data:
             if col not in agg_keys:
-                self[col] = data[col]
+                if col.startswith("sh_"):
+                    self.share[col] = data[col]
+                else:
+                    self[col] = data[col]
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.nr_zones = len(self.zone_numbers)
@@ -62,6 +67,7 @@ class ZoneData:
         share_7_99 = pandas.Series(0, self.zone_numbers, dtype=numpy.float32)
         pop = data["population"]
         wp = data["workplaces"]
+        hh = data["households"]
         for col in data:
             if col.startswith("sh_age"):
                 pop_share = data[col]
@@ -75,7 +81,21 @@ class ZoneData:
                 self[col.replace("sh_", "")] = data[col] * pop
             if col.startswith("sh_wrk_"):
                 self[col.replace("sh_wrk_", "")] = data[col] * wp
+            if col.startswith("sh_hh"):
+                self[col.replace("sh_", "")] = data[col] * hh
         self.share["share_age_7-99"] = share_7_99
+        # Convert household shares to population shares
+        hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
+        self.share["sh_pop_hh1"] = divide(self["sh_hh1"], hh_population)
+        self.share["sh_pop_hh2"] = divide(2*self["sh_hh2"], hh_population)
+        self.share["sh_pop_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
+        self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
+        self.share["sh_cars1_hh2"] = divide((2*self["sh_cars1_hh2"]
+                                             + 4.13*self["sh_cars1_hh3"]),
+                                            hh_population)
+        self.share["sh_cars2_hh2"] = divide((2*self["sh_cars2_hh2"]
+                                             + 4.13*self["sh_cars2_hh3"]),
+                                            hh_population)
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
@@ -94,7 +114,7 @@ class ZoneData:
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
         self["Lappi"] = self.dummy("county", "Lappi")
-        for key in data["aggregate_results_submodel"].unique():
+        for key in ["Uusimaa", "Lounais-Suomi", "Ita-Suomi", "Pohjois-Suomi"]:
             self["population_" + key] = self.dummy("submodel", key) * pop
 
     def dummy(self, division_type, name, bounds=slice(None)):

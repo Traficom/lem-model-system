@@ -105,7 +105,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 overwrite=True, copy_paths=False, copy_strategies=False)
         else:
             self.day_scenario = self.mod_scenario
-        self.assignment_periods = []
+        self.assignment_periods: List[periods.AssignmentPeriod] = []
         for i, tp in enumerate(self.time_periods):
             if self.separate_emme_scenarios:
                 scen_id = self.mod_scenario.number + i + 2
@@ -131,6 +131,8 @@ class EmmeAssignmentModel(AssignmentModel):
             self._create_transit_attributes(ap.emme_scenario, ap.extra)
             ap.prepare(
                 car_dist_unit_cost, self.day_scenario, self.save_matrices)
+            log.debug(
+                f"Created extra attrs for scen {ap.emme_scenario}, {ap.name}")
         self._init_functions()
         #add ferry wait time
         self.emme_project.set_extra_function_parameters(el1=param.ferry_wait_attr)
@@ -385,6 +387,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 if attr.type == geom_type.name]
             attrs += [attr.name for attr in self.day_scenario.network_fields()
                 if attr.type == geom_type.name and attr.atype == "REAL"]
+            attrs += geom_type.attrs
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")
@@ -488,8 +491,6 @@ class EmmeAssignmentModel(AssignmentModel):
             self.emme_project.create_extra_attribute(
                 "LINK", extra("toll_cost"), "toll cost",
                 overwrite=True, scenario=scenario)
-        log.debug("Created extra attributes for scenario {}".format(
-            scenario))
 
     def _create_transit_attributes(self,
                                    scenario: Any,
@@ -532,8 +533,6 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", extra(param.uncongested_transit_time),
             "uncongested transit time", overwrite=True, scenario=scenario)
-        log.debug("Created extra attributes for scenario {}".format(
-            scenario))
 
     def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.

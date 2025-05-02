@@ -125,13 +125,14 @@ class AssignmentPeriod(Period):
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
                       save_matrices: bool,
+                      car_classes: Iterable[str] = param.car_and_van_classes,
                       truck_classes: Iterable[str] = param.truck_classes):
         include_toll_cost = self.emme_scenario.network_field(
             "LINK", self.netfield("hinta")) is not None
         car_modes = {mode: CarMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
-            for mode in param.car_and_van_classes}
+            for mode in car_classes}
         truck_modes = {mode: TruckMode(
                 mode, self, dist_unit_cost[mode], include_toll_cost,
                 save_matrices)
@@ -236,7 +237,10 @@ class AssignmentPeriod(Period):
         self._assign_trucks()
         self._assign_transit(param.transit_classes)
         self._calc_transit_network_results()
-        return self._get_impedances(self._end_assignment_classes)
+        mtxs = self._get_impedances(self._end_assignment_classes)
+        for tc in self.assignment_modes:
+            self.assignment_modes[tc].release_matrices()
+        return mtxs
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {tc: self.assignment_modes[tc].get_matrices()
@@ -248,6 +252,9 @@ class AssignmentPeriod(Period):
                     f"OD speed (km/h) {mode}")
             except KeyError:
                 pass
+            for mtx_type, mtx in mtxs[mode].items():
+                if numpy.any(mtx > 1e10):
+                    log.warn(f"Matrix with infinite values: {mtx_type} {mode}")
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
                 for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in param.impedance_output}
@@ -264,20 +271,22 @@ class AssignmentPeriod(Period):
         network = self.emme_scenario.get_network()
         penalty_attr = param.line_penalty_attr.replace("us", "data")
         op_attr = param.line_operator_attr.replace("ut", "data")
-        long_dist_transit_modes = {mode for mode_set
-            in param.long_dist_transit_modes.values() for mode in mode_set}
+        long_dist_transit_modes = list({mode for mode_set
+            in param.long_dist_transit_modes.values() for mode in mode_set})
+        transit_modes = long_dist_transit_modes + param.local_transit_modes
         for mode in long_dist_transit_modes:
             if network.mode(mode) is None:
                 raise AttributeError(f"Long-dist mode {mode} does not exist.")
         for line in network.transit_lines():
-            fare = fares[line[op_attr]]
-            for segment in line.segments():
-                segment[param.dist_fare_attr] = (fare["dist_single"]
-                                                 * segment.link.length)
-                segment[penalty_attr] = segment[param.dist_fare_attr]
-            line[param.board_fare_attr] = fare["firstb_single"]
-            line[param.board_long_dist_attr] = (line[param.board_fare_attr]
-                if line.mode.id in long_dist_transit_modes else 0)
+            if line.mode.id in transit_modes:
+                fare = fares[line[op_attr]]
+                for segment in line.segments():
+                    segment[param.dist_fare_attr] = (fare["dist_single"]
+                                                    * segment.link.length)
+                    segment[penalty_attr] = segment[param.dist_fare_attr]
+                line[param.board_fare_attr] = fare["firstb_single"]
+                line[param.board_long_dist_attr] = (line[param.board_fare_attr]
+                    if line.mode.id in long_dist_transit_modes else 0)
         self.emme_scenario.publish_network(network)
 
     def transit_results_links_nodes(self):
@@ -368,7 +377,7 @@ class AssignmentPeriod(Period):
                     link.data1 = roadclass.lane_capacity
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
-            if self.use_stored_speeds:
+            if self.use_stored_speeds and link.volume_delay_func < 90:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
@@ -566,10 +575,21 @@ class AssignmentPeriod(Period):
                      stopping_criteria: Dict[str, Union[int, float]]):
         """Perform car_work traffic assignment for one scenario."""
         log.info("Car assignment started...")
-        car_spec = self._car_spec.light_spec()
-        car_spec["stopping_criteria"] = stopping_criteria
-        assign_report = self.emme_project.car_assignment(
-            car_spec, self.emme_scenario)
+        if self.use_stored_speeds:
+            for car_spec in self._car_spec.separate_light_specs():
+                car_spec["stopping_criteria"] = stopping_criteria
+                self.emme_project.car_assignment(car_spec, self.emme_scenario)
+        else:
+            car_spec = self._car_spec.light_spec()
+            car_spec["stopping_criteria"] = stopping_criteria
+            assign_report = self.emme_project.car_assignment(
+                car_spec, self.emme_scenario)
+            log.info("Stopping criteria: {}, iteration {} / {}".format(
+                assign_report["stopping_criterion"],
+                len(assign_report["iterations"]),
+                stopping_criteria["max_iterations"]))
+            if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
+                log.warn("Car assignment not fully converged.")
         network = self.emme_scenario.get_network()
         time_attr = self.netfield("car_time")
         truck_time_attr = self.extra("truck_time")
@@ -580,21 +600,14 @@ class AssignmentPeriod(Period):
         self.emme_scenario.publish_network(network)
         log.info("Car assignment performed for scenario {}".format(
             self.emme_scenario.id))
-        log.info("Stopping criteria: {}, iteration {} / {}".format(
-            assign_report["stopping_criterion"],
-            len(assign_report["iterations"]),
-            stopping_criteria["max_iterations"]
-            ))
-        if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
-            log.warn("Car assignment not fully converged.")
 
     def _assign_trucks(self):
-        truck_spec = self._car_spec.truck_spec()
         stopping_criteria = copy.deepcopy(param.stopping_criteria["coarse"])
         stopping_criteria["max_iterations"] = 0
-        truck_spec["stopping_criteria"] = stopping_criteria
-        self.emme_project.car_assignment(
-            truck_spec, self.emme_scenario)
+        for truck_spec in self._car_spec.truck_specs():
+            truck_spec["stopping_criteria"] = stopping_criteria
+            self.emme_project.car_assignment(
+                truck_spec, self.emme_scenario)
         log.info("Truck assignment performed for scenario {}".format(
             self.emme_scenario.id))
 
@@ -622,80 +635,62 @@ class AssignmentPeriod(Period):
         log.info("Calculates effective headways "
                  + "and cumulative travel times for scenario "
                  + str(self.emme_scenario.id))
+        long_dist_transit_modes = list({mode for mode_set
+            in param.long_dist_transit_modes.values() for mode in mode_set})
+        transit_modes = long_dist_transit_modes + param.local_transit_modes
         headway_attr = self.netfield("hdw")
-        effective_headway_attr = param.effective_headway_attr.replace(
+        effective_hdw_attr = param.effective_headway_attr.replace(
             "ut", "data")
         delay_attr = param.transit_delay_attr.replace("us", "data")
         func = param.effective_headway
         for line in network.transit_lines():
-            hw = line[headway_attr]
-            for interval in func:
-                if interval[0] <= hw < interval[1]:
-                    effective_hw = func[interval](hw - interval[0])
-                    break
-            line[effective_headway_attr] = effective_hw
-            cumulative_length = 0
-            cumulative_time = 0
-            cumulative_speed = 0
-            headway_sd = 0
-            for segment in line.segments():
-                if segment.dwell_time >= 2:
-                    # Time-point stops reset headway deviation
-                    cumulative_length = 0
-                    cumulative_time = 0
-                cumulative_length += segment.link.length
-                # Travel time for buses in mixed traffic
-                if segment.transit_time_func == 1:
-                    cumulative_time += (segment.link.auto_time
-                                        + segment.dwell_time)
-                # Travel time for buses on bus lanes
-                if segment.transit_time_func == 2:
-                    cumulative_time += (segment.link.length/segment.link.data2
-                                        * 60
-                                        + segment.dwell_time)
-                # Travel time for trams AHT
-                if segment.transit_time_func == 3:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 5-6 from end (1-2 from beg.) represent AHT
-                    # speed. If AHT speed is less than 10, data1 will 
-                    # have only 5 digits.
-                    speed = int(speedstr[:-4])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for trams PT
-                if segment.transit_time_func == 4:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 3-4 from end represent PT speed.
-                    speed = int(speedstr[-4:-2])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for trams IHT
-                if segment.transit_time_func == 5:
-                    speedstr = str(int(segment.link.data1))
-                    # Digits 1-2 from end represent IHT speed.
-                    speed = int(speedstr[-2:])
-                    cumulative_time += ((segment.link.length / speed) * 60
-                                        + segment.dwell_time)
-                # Travel time for rail
-                if segment.transit_time_func == 6:
-                    cumulative_time += segment[delay_attr] + segment.dwell_time
-                if cumulative_time > 0:
-                    cumulative_speed = (cumulative_length
-                                        / cumulative_time
-                                        * 60)
-                # Headway standard deviation for buses and trams
-                if line.mode.id in param.headway_sd_func:
-                    b = param.headway_sd_func[line.mode.id]
-                    headway_sd = (b["asc"]
-                                  + b["ctime"]*cumulative_time
-                                  + b["cspeed"]*cumulative_speed)
-                # Estimated waiting time addition caused by headway deviation
-                segment["@wait_time_dev"] = (headway_sd**2
-                                             / (2.0*line[effective_headway_attr]))
+            if line.mode.id in transit_modes:
+                hdw = line[headway_attr]
+                for interval in func:
+                    if interval[0] <= hdw < interval[1]:
+                        effective_hdw = func[interval](hdw - interval[0])
+                        break
+                line[effective_hdw_attr] = effective_hdw
+                cumulative_length = 0
+                cumulative_time = 0
+                cumulative_speed = 0
+                headway_sd = 0
+                for segment in line.segments():
+                    if segment.dwell_time >= 2:
+                        # Time-point stops reset headway deviation
+                        cumulative_length = 0
+                        cumulative_time = 0
+                    cumulative_length += segment.link.length
+                    # Travel time for buses in mixed traffic
+                    if segment.transit_time_func == 1:
+                        cumulative_time += (segment.link.auto_time
+                                            + segment.dwell_time)
+                    # Travel time for buses on bus lanes
+                    if segment.transit_time_func == 2:
+                        cumulative_time += (segment.link.length
+                                            / segment.link.data2
+                                            * 60
+                                            + segment.dwell_time)
+                    # Travel time for rail
+                    if segment.transit_time_func == 6:
+                        cumulative_time += (segment[delay_attr]
+                                            + segment.dwell_time)
+                    if cumulative_time > 0:
+                        cumulative_speed = (cumulative_length
+                                            / cumulative_time
+                                            * 60)
+                    # Headway standard deviation for buses and trams
+                    if line.mode.id in param.headway_sd_func:
+                        b = param.headway_sd_func[line.mode.id]
+                        headway_sd = (b["asc"]
+                                    + b["ctime"]*cumulative_time
+                                    + b["cspeed"]*cumulative_speed)
+                    # Estimated waiting time addition caused by headway dev
+                    segment["@wait_time_dev"] = (headway_sd**2
+                                                / (2.0*line[effective_hdw_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self, transit_classes=param.local_transit_classes,
-                        add_volumes=False):
+    def _assign_transit(self, transit_classes=param.local_transit_classes):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -705,8 +700,7 @@ class AssignmentPeriod(Period):
             spec.init_matrices()
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
-                add_volumes=(i or add_volumes), save_strategies=True,
-                class_name=transit_class)
+                add_volumes=i, save_strategies=True, class_name=transit_class)
             self.emme_project.matrix_results(
                 spec.transit_result_spec, scenario=self.emme_scenario,
                 class_name=transit_class)

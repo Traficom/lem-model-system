@@ -80,7 +80,7 @@ class CarMode(AssignmentMode):
         m = {"cost": cost, "time": time, **self.dist.item}
         if self._include_toll_cost:
             m.update(self.toll_cost.item)
-        self._release_matrices()
+        self._soft_release_matrices()
         # fix the emme path analysis results
         # (dist and cost are zero if path not found but we want it to
         # be the default value 999999)

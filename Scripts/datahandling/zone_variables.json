@@ -32,7 +32,20 @@
             "sport_facility_outdoor",
             "area_leisure_buildings",
             "area_university_buildings",
-            "students_comprehensive"
+            "students_comprehensive",
+            {
+                "total": "households",
+                "shares": [
+                    "sh_hh1",
+                    "sh_hh2",
+                    "sh_hh3",
+                    "sh_cars1_hh1",
+                    "sh_cars1_hh2",
+                    "sh_cars1_hh3",
+                    "sh_cars2_hh2",
+                    "sh_cars2_hh3"
+                ]
+            }
         ],
         "mean": [
             "avg_park_cost",
@@ -40,9 +53,7 @@
             "car_density",
             "avg_building_distance",
             "sh_office",
-            "sh_cars1_hh1",
-            "sh_cars1_hh2",
-            "sh_cars2_hh2"
+            "sh_row_or_detached"
         ],
         "first": [
             "aggregate_results_municipality",

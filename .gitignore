@@ -62,5 +62,10 @@ Scripts/tests/test_data/Results/*
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/time*
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/inv_time*
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/beeline*
+!Scripts/tests/test_data/Results/test/Matrices/koko_suomi/cost*
+!Scripts/tests/test_data/Results/test/Matrices/koko_suomi/dist*
+!Scripts/tests/test_data/Results/test/Matrices/koko_suomi/time*
+!Scripts/tests/test_data/Results/test/Matrices/koko_suomi/inv_time*
+!Scripts/tests/test_data/Results/test/Matrices/koko_suomi/beeline*
 project.mtbx-shm
 project.mtbx-wal

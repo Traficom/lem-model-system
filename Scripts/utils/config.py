@@ -89,6 +89,7 @@ def create_config(config: dict):
         "DEL_STRAT_FILES": False,
         "USE_FIXED_TRANSIT_COST": False,
         "DELETE_EXTRA_MATRICES": False,
+        "SPECIFY_COMMODITY_NAMES": []
     })
     for key in config.pop("OPTIONAL_FLAGS"):
         c[key] = True

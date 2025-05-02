@@ -68,8 +68,8 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.beeline_dist
         for ap in ass_model.assignment_periods:
             for ass_class in demand:
-                ap.set_matrix(
-                    ass_class, car_matrix)
+                if ass_class in ap.assignment_modes:
+                    ap.set_matrix(ass_class, car_matrix)
             ap.assign_trucks_init()
             imp = ap.assign(demand + ["car_pax"])
             for mtx_type in imp:

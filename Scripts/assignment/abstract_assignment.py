@@ -7,6 +7,8 @@ import numpy
 class AssignmentModel:
     __metaclass__ = ABCMeta
 
+    assignment_periods: List[Period]
+
     @property
     @abstractmethod
     def mapping(self) -> Dict[int,int]:
@@ -45,6 +47,9 @@ class AssignmentModel:
 
 class Period:
     __metaclass__ = ABCMeta
+
+    name: str
+    assignment_modes: List[str]
 
     @abstractmethod
     def assign_trucks_init(self):

@@ -86,31 +86,6 @@ class OffPeakPeriod(AssignmentPeriod):
         del mtxs["toll_cost"]
         return mtxs
 
-    def end_assign(self) -> Dict[str, Dict[str, ndarray]]:
-        """Assign bikes, cars and trucks for one time period.
-
-        Get travel impedance matrices for one time period from assignment.
-        Transit impedance is fetched from free-flow init assignment.
-
-        Returns
-        -------
-        dict
-            Type (time/cost/dist) : dict
-                Assignment class (car_work/transit/...) : numpy 2-d matrix
-        """
-        self._set_bike_vdfs()
-        self._assign_bikes()
-        self._set_car_vdfs()
-        if not self._separate_emme_scenarios:
-            self._calc_background_traffic(include_trucks=True)
-        self._assign_cars(self.stopping_criteria["fine"])
-        self._set_car_vdfs(use_free_flow_speeds=True)
-        self._assign_trucks()
-        self._assign_transit(
-            param.long_distance_transit_classes, add_volumes=True)
-        self._calc_transit_network_results()
-        return self._get_impedances(self._end_assignment_classes)
-
 
 class TransitAssignmentPeriod(OffPeakPeriod):
     """Transit-only assignment period.
@@ -121,6 +96,12 @@ class TransitAssignmentPeriod(OffPeakPeriod):
 
     Car assignment is not performed at all.
     """
+    def __init__(self, *args, **kwargs):
+        AssignmentPeriod.__init__(self, *args, **kwargs)
+        self.transport_classes = param.local_transit_classes
+        self._end_assignment_classes -= set(
+            param.private_classes + param.truck_classes)
+
 
     def prepare(self, dist_unit_cost: Dict[str, float],
                 day_scenario: int, save_matrices: bool):
@@ -141,7 +122,9 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         save_matrices : bool
             Whether matrices will be saved in Emme format for all time periods.
         """
-        self._prepare_cars(dist_unit_cost, save_matrices=False)
+        self._prepare_cars(
+            dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
+            truck_classes=[])
         self._prepare_other(day_scenario, save_matrices)
 
     def assign_trucks_init(self):
@@ -172,12 +155,12 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
-        self._assign_transit(
-            param.long_distance_transit_classes, add_volumes=True)
+        self._assign_transit(param.transit_classes)
         self._calc_transit_network_results()
-        self._end_assignment_classes -= set(
-            param.private_classes + param.truck_classes)
-        return self._get_impedances(self._end_assignment_classes)
+        mtxs = self._get_impedances(self._end_assignment_classes)
+        for tc in self.assignment_modes:
+            self.assignment_modes[tc].release_matrices()
+        return mtxs
 
 
 class EndAssignmentOnlyPeriod(AssignmentPeriod):
