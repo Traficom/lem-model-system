@@ -257,7 +257,7 @@ a'Finnair-AY285-2' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
    249881         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    249870        lay=0.00
 c 'Finnair-AY285-2' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-1' p   7   8.90  30.00 'It�keskus-Keilaniemi'      0      0      0
+a'Helsingin-15-1' p   7   8.90  30.00 'Itakeskus-Keilaniemi'      0      0      0
   path=no
    831111      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249857      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -294,7 +294,7 @@ a'Helsingin-15-1' p   7   8.90  30.00 'It�keskus-Keilaniemi'      0      0    
    249867      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    249869        lay=0.00
 c 'Helsingin-15-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-It�keskus'      0      0      0
+a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itakeskus'      0      0      0
   path=no
    249869      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249867      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
