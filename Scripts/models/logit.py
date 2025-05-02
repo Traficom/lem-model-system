@@ -49,6 +49,12 @@ class LogitModel:
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
 
+    def calc_mode_prob(self, impedance):
+        expsum, mode_exps = self._calc_mode_utils(impedance)
+        prob = {mode: divide(mode_exps[mode], expsum).T
+            for mode in self.mode_choice_param}
+        return prob, numpy.log(expsum)
+
     def _calc_mode_util(self, mode: str, impedance: Dict[str, numpy.ndarray],
                         dummy: Optional[str] = None):
         b = self.mode_choice_param[mode]
@@ -98,8 +104,6 @@ class LogitModel:
             l, u = self.distance_boundary[mode]
             dist = self.purpose.dist
             dest_exp[(dist < l) | (dist >= u)] = 0
-        if mode == "airplane":
-            dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):

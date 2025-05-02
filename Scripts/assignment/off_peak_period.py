@@ -45,7 +45,7 @@ class OffPeakPeriod(AssignmentPeriod):
         self._prepare_walk_and_bike(save_matrices=False)
         long_dist_transit_modes = {mode: TransitMode(
                 mode, self, day_scenario, save_matrices, save_matrices)
-            for mode in param.long_distance_transit_classes}
+            for mode in param.long_dist_simple_classes}
         self.assignment_modes.update(long_dist_transit_modes)
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
@@ -155,8 +155,8 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
-        self._assign_transit(param.transit_classes)
-        self._calc_transit_network_results()
+        self._assign_transit(param.simple_transit_classes)
+        self._calc_transit_network_results(param.simple_transit_classes)
         mtxs = self._get_impedances(self._end_assignment_classes)
         for tc in self.assignment_modes:
             self.assignment_modes[tc].release_matrices()

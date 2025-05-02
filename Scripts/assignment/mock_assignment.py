@@ -147,8 +147,10 @@ class MockPeriod(Period):
         """
         return self._get_impedances(self._end_assignment_classes)
 
-    def _get_impedances(self, assignment_classes: Iterable[str]):
-        impedance_output = [mtx_type for mtx_type in param.impedance_output
+    def _get_impedances(
+            self, assignment_classes: Iterable[str],
+            impedance_output: Iterable[str] = param.basic_impedance_output):
+        impedance_output = [mtx_type for mtx_type in impedance_output
             if mtx_type != "toll_cost"]
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
             for mtx_type in impedance_output}
@@ -228,6 +230,10 @@ class WholeDayPeriod(MockPeriod):
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
         return self._get_impedances(self.assignment_modes)
+
+    def _get_impedances(self, assignment_classes):
+        return MockPeriod._get_impedances(
+            self, assignment_classes, param.impedance_output)
 
 
 class OffPeakPeriod(MockPeriod):

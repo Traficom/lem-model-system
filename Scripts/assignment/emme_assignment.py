@@ -65,7 +65,9 @@ class EmmeAssignmentModel(AssignmentModel):
         self.save_matrices = save_matrices
         self.use_free_flow_speeds = use_free_flow_speeds
         self.transit_classes = (param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transit_classes)
+            if self.use_free_flow_speeds else param.simple_transit_classes)
+        self.simple_transit_classes = (param.long_dist_simple_classes
+            if self.use_free_flow_speeds else param.simple_transit_classes)
         self.delete_extra_matrices = delete_extra_matrices
         self.time_periods = time_periods
         EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
@@ -485,6 +487,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
+            "LINK", param.aux_car_time_attr, "walk time",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
             "LINK", extra("truck_time"), "truck time",
             overwrite=True, scenario=scenario)
         if scenario.network_field("LINK", netfield("hinta")) is not None:
@@ -510,6 +515,12 @@ class EmmeAssignmentModel(AssignmentModel):
         # Create link attributes
         self.emme_project.create_extra_attribute(
             "LINK", extra("aux_transit"), "aux transit volume",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.park_cost_attr_l, "terminal parking cost",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.aux_transit_time_attr, "walk time",
             overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(
@@ -656,7 +667,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:10] + 'n_' + attr
-            for transit_class in self.transit_classes}
+            for transit_class in self.simple_transit_classes}
         extras = self._extras(attrs)
         # save node volumes to result network
         for node in network.nodes():
@@ -681,7 +692,7 @@ class EmmeAssignmentModel(AssignmentModel):
             Attribute name that is usually in param.segment_results
         """
         attrs = {transit_class: transit_class[:11] + '_' + attr
-            for transit_class in self.transit_classes}
+            for transit_class in self.simple_transit_classes}
         extras = self._extras(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():
