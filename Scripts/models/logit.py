@@ -86,24 +86,13 @@ class LogitModel:
         size = numpy.zeros_like(utility)
         self._add_zone_util(size, b["attraction_size"])
         impedance["attraction_size"] = size
+        if "transform" in b:
+            b_transf = b["transform"]
+            transimp = numpy.zeros_like(utility)
+            self._add_zone_util(transimp, b_transf["attraction"])
+            self._add_impedance(transimp, impedance, b_transf["impedance"])
+            impedance["transform"] = transimp
         self._add_log_impedance(utility, impedance, b["log"])
-        too_small = (size > 0) & (utility < -90) & (utility > -numpy.inf)
-        # The utility of these destinations is so small that they would
-        # get zero probability
-        if too_small.any():
-            too_small_dests = size[too_small]
-            chunk_size = 50
-            too_small_dests_padded = numpy.pad(
-                too_small_dests, (0, -too_small_dests.size % chunk_size))
-            chunks = too_small_dests_padded.reshape(-1, chunk_size).sum(axis=1)
-            upscaled_size = numpy.zeros_like(too_small_dests)
-            upscaled_size[::chunk_size] = chunks
-            size[too_small] = upscaled_size
-            impedance["attraction_size"] = size
-            utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
-            self._add_zone_util(utility, b["attraction"])
-            self._add_impedance(utility, impedance, b["impedance"])
-            self._add_log_impedance(utility, impedance, b["log"])
         dest_exp = numpy.exp(utility)
         if mode != "logsum":
             l, u = self.distance_boundary[mode]
