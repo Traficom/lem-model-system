@@ -5,7 +5,7 @@ c Scenario 5:     test network
 t lines
 c Transit Lines
 c Line  Mod Veh Headwy Speed Description             Data1  Data2  Data3
-a'10000_S' S  22   1.00  30.00 'Kotkahamina-Turku'       4      0      0
+a'10000_S' S  22   1.00  30.00 'Kotkahamina-Turku'       4      10      0
   path=no
    834513      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834495      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -32,7 +32,7 @@ a'10000_S' S  22   1.00  30.00 'Kotkahamina-Turku'       4      0      0
    834493      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    834516        lay=0.00
 c '10000_S' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10001_S' S  22   1.00  30.00 'Turku-Kotkahamina'       4      0      0
+a'10001_S' S  22   1.00  30.00 'Turku-Kotkahamina'       4      10      0
   path=no
    834516      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834493      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -59,7 +59,7 @@ a'10001_S' S  22   1.00  30.00 'Turku-Kotkahamina'       4      0      0
    834495         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    834513        lay=0.00
 c '10001_S' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'10002_W' W  20   1.00  30.00 'Kantvik-Turku'           4      0      0
+a'10002_W' W  20   1.00  30.00 'Kantvik-Turku'           4      10      0
   path=no
    834538      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834065      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -78,7 +78,7 @@ a'10002_W' W  20   1.00  30.00 'Kantvik-Turku'           4      0      0
    834493      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    834516        lay=0.00
 c '10002_W' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10003_W' W  20   1.00  30.00 'Turku-Kantvik'           4      0      0
+a'10003_W' W  20   1.00  30.00 'Turku-Kantvik'           4      10      0
   path=no
    834516      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834493      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -97,7 +97,7 @@ a'10003_W' W  20   1.00  30.00 'Turku-Kantvik'           4      0      0
    834065         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    834538        lay=0.00
 c '10003_W' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'10004_s' s  21   1.00  30.00 'Kotkahamina-Kantvik'      4      0      0
+a'10004_s' s  21   1.00  30.00 'Kotkahamina-Kantvik'      4      10      0
   path=no
    834513      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834495      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -119,7 +119,7 @@ a'10004_s' s  21   1.00  30.00 'Kotkahamina-Kantvik'      4      0      0
    834065      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    834538        lay=0.00
 c '10004_s' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10005_s' s  21   1.00  30.00 'Kantvik-Kotkahamina'      4      0      0
+a'10005_s' s  21   1.00  30.00 'Kantvik-Kotkahamina'      4      10      0
   path=no
    834538      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    834065      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -141,7 +141,7 @@ a'10005_s' s  21   1.00  30.00 'Kantvik-Kotkahamina'      4      0      0
    834495         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    834513        lay=0.00
 c '10005_s' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'10006_d' d  30   1.00  30.00 'Loviisa-Hameenlinna'      4      0      0
+a'10006_d' d  30   1.00  30.00 'Loviisa-Hameenlinna'      4      10      0
   path=no
    247457      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247400      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -171,7 +171,7 @@ a'10006_d' d  30   1.00  30.00 'Loviisa-Hameenlinna'      4      0      0
    247428      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    247362        lay=0.00
 c '10006_d' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10007_d' d  30   1.00  30.00 'Hameenlinna-Loviisa'      4      0      0
+a'10007_d' d  30   1.00  30.00 'Hameenlinna-Loviisa'      4      10      0
   path=no
    247362      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247428      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -201,7 +201,7 @@ a'10007_d' d  30   1.00  30.00 'Hameenlinna-Loviisa'      4      0      0
    247400      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    247457        lay=0.00
 c '10007_d' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10008_J' J  31   1.00  30.00 'Turku-Tampere'           4      0      0
+a'10008_J' J  31   1.00  30.00 'Turku-Tampere'           4      10      0
   path=no
    247507      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247629      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -217,7 +217,7 @@ a'10008_J' J  31   1.00  30.00 'Turku-Tampere'           4      0      0
    247436      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    247437        lay=0.00
 c '10008_J' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10009_J' J  31   1.00  30.00 'Tampere-Turku'           4      0      0
+a'10009_J' J  31   1.00  30.00 'Tampere-Turku'           4      10      0
   path=no
    247437      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247436      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -257,7 +257,7 @@ a'Finnair-AY285-2' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
    249881         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    249870        lay=0.00
 c 'Finnair-AY285-2' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-1' p   7   8.90  30.00 'Itäkeskus-Keilaniemi'      0      0      0
+a'Helsingin-15-1' p   7   8.90  30.00 'Itakeskus-Keilaniemi'      0      0      0
   path=no
    831111      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249857      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -294,7 +294,7 @@ a'Helsingin-15-1' p   7   8.90  30.00 'Itäkeskus-Keilaniemi'      0      0      
    249867      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    249869        lay=0.00
 c 'Helsingin-15-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itäkeskus'      0      0      0
+a'Helsingin-15-2' p   7   8.90  30.00 'Keilaniemi-Itakeskus'      0      0      0
   path=no
    249869      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    249867      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0

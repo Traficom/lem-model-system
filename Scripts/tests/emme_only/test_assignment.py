@@ -104,7 +104,8 @@ class EmmeAssignmentTest:
         self.ass_model.init_assign()
         for ap in self.ass_model.assignment_periods:
             for ass_class in demand:
-                ap.set_matrix(ass_class, car_matrix)
+                if ass_class in ap.assignment_modes:
+                    ap.set_matrix(ass_class, car_matrix)
             travel_cost[ap.name] = ap.end_assign()
         mapping = pandas.Series({
             "Helsinki": "Uusimaa",
@@ -153,7 +154,7 @@ class EmmeAssignmentTest:
                 self.ass_model.freight_network.set_matrix(mode, demand)
             self.ass_model.freight_network.save_network_volumes(purpose)
             self.ass_model.freight_network.output_traversal_matrix(
-                self.resultdata.path)
+                {"freight_train", "ship"}, self.resultdata.path)
 
 if emme_available:
     em = EmmeAssignmentTest()
