@@ -194,6 +194,9 @@ freight_terminal_cost = {
     'W': 0,
     's': 0,
 }
+in_vehicle_weight = {
+    'j': 0.7,
+}
 # Boarding penalties for different transit modes
 boarding_penalty = {
     'b': 3, # Bus
@@ -579,6 +582,7 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
+in_vehice_weight_attr = "ut3"
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
