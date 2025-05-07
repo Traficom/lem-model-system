@@ -120,7 +120,7 @@
             },
             "log": {
                 "cost": -0.15839,
-                "transform": -0.15839
+                "transform": -0.1
             },
             "individual_dummy": {
                 "sh_cars1_hh1": 4.49717,
