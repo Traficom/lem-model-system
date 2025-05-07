@@ -178,6 +178,7 @@
         "car_leisure": {
             "constant": -30.47458,
             "generation": {},
+            "attraction": {},
             "transform": {
                 "attraction": {
                     "cost*within_zone": 1
