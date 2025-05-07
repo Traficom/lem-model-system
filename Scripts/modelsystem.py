@@ -2,7 +2,7 @@ import threading
 import multiprocessing
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Set, Union, Optional, cast
+from typing import Any, Callable, Dict, List, Set, Union, Iterable, Optional, cast
 import numpy # type: ignore
 import pandas
 import random
@@ -189,52 +189,21 @@ class ModelSystem:
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
-                             long_dist_matrices,
-                             long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)):
-        # If we want to assign all trips with traffic congestion,
-        # then add long-distance trips as background demand
+                             long_dist_matrices: MatrixData,
+                             long_dist_classes: Iterable[str]):
+        class_list = ", ".join(long_dist_classes)
+        log.info(f"Get matrices for {class_list}...")
         zone_numbers = self.ass_model.zone_numbers
         car_matrices = {}
-        if long_dist_matrices is not None:
-            # Try getting long-distance trips from separate file
-            with long_dist_matrices.open(
-                    "demand", "vrk", zone_numbers,
-                    self.zdata_forecast.mapping, long_dist_classes) as mtx:
-                log.info("Get matrices from model run...")
-                for ass_class in long_dist_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    if ass_class in param.car_classes:
-                        car_matrices[ass_class] = demand.matrix
-        else:
-            log.info(
-                ("Matrices from model run not provided, "
-                    + "getting trips from base matrices..."))
-            # Long car trips must be in separate file
-            car_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class in param.car_classes]
-            other_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class not in param.car_classes]
-            if car_classes:
-                with self.basematrices.open(
-                        "demand", "vrk", zone_numbers,
-                        transport_classes=car_classes) as mtx:
-                    for ass_class in car_classes:
-                        demand = Demand(
-                            self.em.purpose, ass_class, mtx[ass_class])
-                        self.dtm.add_demand(demand)
-                        car_matrices[ass_class] = demand.matrix
-            if other_classes:
-                for ap in self.ass_model.assignment_periods:
-                    tp = ap.name
-                    ass_classes = [ass_class for ass_class in other_classes
-                        if ass_class in ap.assignment_modes]
-                    with self.basematrices.open(
-                            "demand", tp, zone_numbers,
-                            transport_classes=ass_classes) as mtx:
-                        for ass_class in ass_classes:
-                            self.dtm.demand[tp][ass_class] = mtx[ass_class]
+        with long_dist_matrices.open(
+                "demand", "vrk", zone_numbers,
+                self.zdata_forecast.mapping, long_dist_classes) as mtx:
+            for ass_class in long_dist_classes:
+                demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                self.dtm.add_demand(demand)
+                if ass_class in param.car_classes:
+                    car_matrices[ass_class] = demand.matrix
+            log.info(f"Demand imported from {long_dist_matrices.path}")
         if car_matrices:
             with self.resultmatrices.open(
                     "demand", "vrk", zone_numbers, m='w') as mtx:
@@ -272,13 +241,6 @@ class ModelSystem:
         self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
-        if not self.ass_model.use_free_flow_speeds:
-            log.info("Get long-distance trip matrices")
-            self._add_external_demand(self.long_dist_matrices)
-            log.info("Get freight matrices")
-            self._add_external_demand(
-                self.freight_matrices, param.truck_classes)
-            log.info("Long-distance and freight matrices imported")
         self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
         if not isinstance(self.ass_model, MockAssignmentModel):
@@ -297,6 +259,15 @@ class ModelSystem:
                     for ass_class in ap.transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
+        if self.long_dist_matrices is not None:
+            self.dtm.init_demand(param.long_distance_transit_classes)
+            self._add_external_demand(
+                self.long_dist_matrices, param.long_distance_transit_classes)
+        if self.freight_matrices is not None:
+            self.dtm.init_demand(param.truck_classes)
+            self._add_external_demand(
+                self.freight_matrices, param.truck_classes)
+
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
             for purpose in self.dm.tour_purposes:
@@ -362,8 +333,9 @@ class ModelSystem:
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
         if not self.ass_model.use_free_flow_speeds:
-            self._add_external_demand(
-                self.long_dist_matrices, param.car_classes)
+            car_matrices = (self.basematrices if self.long_dist_matrices is None
+                else self.long_dist_matrices)
+            self._add_external_demand(car_matrices, param.car_classes)
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
