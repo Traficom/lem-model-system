@@ -178,10 +178,19 @@
         "car_leisure": {
             "constant": -5.25159,
             "generation": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.56498
+                "logsum": 0.56498,
+                "transform": -0.1
             },
             "individual_dummy": {
                 "wb_other_parent_car_work_share": 5.22706

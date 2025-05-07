@@ -173,10 +173,19 @@
         "car_leisure": {
             "constant": -11.6253,
             "generation": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.31747
+                "logsum": 0.31747,
+                "transform": -0.1
             },
             "individual_dummy": {
                 "sh_cars1_hh1": 9.59294,

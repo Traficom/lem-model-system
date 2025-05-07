@@ -165,10 +165,19 @@
         "car_work": {
             "constant": -2.25056,
             "generation": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 1
+                "logsum": 1,
+                "transform": -0.1
             },
             "individual_dummy": {
                 "wb_business_parent_car_work_share": 2.31318

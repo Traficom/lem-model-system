@@ -173,10 +173,19 @@
         "car_work": {
             "constant": -5.53183,
             "generation": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.80495
+                "logsum": 0.80495,
+                "transform": -0.1
             },
             "individual_dummy": {
                 "sh_cars1_hh1": 4.69889,

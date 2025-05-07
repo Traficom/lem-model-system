@@ -169,9 +169,18 @@
             "constant": -4.89571,
             "generation": {},
             "attraction": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "impedance": {},
             "log": {
-                "logsum": 0.94768
+                "logsum": 0.94768,
+                "transform": -0.1
             },
             "individual_dummy": {
                 "sh_cars1_hh1": 2.65747,
