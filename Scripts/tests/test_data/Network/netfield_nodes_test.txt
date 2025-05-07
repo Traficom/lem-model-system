@@ -38,6 +38,10 @@ inode #municipality #subarea #transit_stop_b #transit_stop_e #transit_stop_g #tr
 17278 'Jyvaskyla' 0 0 0 0 0 0
 19419 'Kotka' 0 0 0 0 0 0
 23678 'Lahti' 0 0 0 0 0 0
+50107 'Ulkomaa' 0 0 0 0 0 0
+50127 'Ulkomaa' 0 0 0 0 0 0
+50201 'Ulkomaa' 0 0 0 0 0 0
+50205 'Ulkomaa' 0 0 0 0 0 0
 100097 'Vantaa' 2 0 0 0 0 0
 100351 'Espoo' 2 0 0 0 0 0
 100352 'Espoo' 2 1 0 1 0 0
@@ -1854,3 +1858,9 @@ inode #municipality #subarea #transit_stop_b #transit_stop_e #transit_stop_g #tr
 900235 'Helsinki' 2 1 0 0 0 0
 900300 'Helsinki' 2 0 0 0 0 0
 900301 'Espoo' 2 0 0 0 0 0
+900400 'Ulkomaa' 0 0 0 0 0 0
+900401 'Ulkomaa' 0 0 0 0 0 0
+900402 'Ulkomaa' 0 0 0 0 0 0
+900403 'Ulkomaa' 0 0 0 0 0 0
+900404 'Ulkomaa' 0 0 0 0 0 0
+900405 'Ulkomaa' 0 0 0 0 0 0
