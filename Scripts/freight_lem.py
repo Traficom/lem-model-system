@@ -12,9 +12,9 @@ from datahandling.zonedata import FreightZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
-from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
 
+from utils.freight_utils import create_purposes
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -57,7 +57,7 @@ def main(args):
             ass_model.freight_network.set_matrix(mode, demand[mode])
             if purpose.name not in args.specify_commodity_names:
                 continue
-            with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+            with resultmatrices.open("freight_demand_tons", "vrk", zone_numbers, m="a") as mtx:
                 mtx[f"{purpose}_{mode}"] = demand[mode]
         if purpose.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose.name)
@@ -77,23 +77,12 @@ def main(args):
 
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
+        with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+            mtx[ass_class] = total_demand[ass_class]
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
-def create_purposes(parameters_path: Path, purpose_args: list):
-    """Creates instances of FreightPurpose class for each model parameter json file
-    in parameters path. Include information whether estimated model type is
-    either 'domestic' or 'foreign'.
-    """
-    purposes = {}
-    for file in parameters_path.rglob("*.json"):
-        args = purpose_args.copy()
-        commodity_params = json.loads(file.read_text("utf-8"))
-        commodity = commodity_params["name"]
-        args.insert(0, commodity_params)
-        args[-1] = args[-1][commodity_conversion[commodity]]
-        purposes[commodity] = FreightPurpose(*args, parameters_path.stem)
-    return purposes
+
 
 def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
                           resultdata: ResultsData):
