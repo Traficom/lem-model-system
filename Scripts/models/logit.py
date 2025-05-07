@@ -80,14 +80,11 @@ class LogitModel:
 
     def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
         b = self.dest_choice_param[mode]
-        utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
-        self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
-        size = numpy.zeros_like(utility)
+        size = numpy.zeros_like(next(iter(impedance.values())))
         self._add_zone_util(size, b["attraction_size"])
         impedance["attraction_size"] = size
-        self._add_log_impedance(utility, impedance, b["log"])
-        too_small = (size > 0) & (utility < -90) & (utility > -numpy.inf)
+        utility: numpy.ndarray = self._add_dest_utils(b, impedance)
+        too_small = (utility > -numpy.inf) & (utility < -90)
         # The utility of these destinations is so small that they would
         # get zero probability
         if too_small.any():
@@ -100,10 +97,7 @@ class LogitModel:
             upscaled_size[::chunk_size] = chunks
             size[too_small] = upscaled_size
             impedance["attraction_size"] = size
-            utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
-            self._add_zone_util(utility, b["attraction"])
-            self._add_impedance(utility, impedance, b["impedance"])
-            self._add_log_impedance(utility, impedance, b["log"])
+            utility: numpy.ndarray = self._add_dest_utils(b, impedance)
         dest_exp = numpy.exp(utility)
         if mode != "logsum":
             l, u = self.distance_boundary[mode]
@@ -112,7 +106,20 @@ class LogitModel:
         if mode == "airplane":
             dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
-    
+
+    def _add_dest_utils(self, b: dict, impedance: dict):
+        utility= numpy.zeros_like(next(iter(impedance.values())))
+        self._add_zone_util(utility, b["attraction"])
+        self._add_impedance(utility, impedance, b["impedance"])
+        if "transform" in b:
+            b_transf = b["transform"]
+            transimp = numpy.zeros_like(utility)
+            self._add_zone_util(transimp, b_transf["attraction"])
+            self._add_impedance(transimp, impedance, b_transf["impedance"])
+            impedance["transform"] = transimp
+        self._add_log_impedance(utility, impedance, b["log"])
+        return utility
+
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
         b = self.dest_choice_param[mode]
         utility = numpy.zeros_like(next(iter(impedance.values())))
