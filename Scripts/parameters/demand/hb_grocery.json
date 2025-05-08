@@ -97,8 +97,7 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.54117,
-                "transform": -0.1
+                "transform": -0.54117
             },
             "attraction_size": {
                 "shop": 207.44163,

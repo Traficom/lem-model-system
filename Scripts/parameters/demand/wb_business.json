@@ -98,19 +98,10 @@
                 "time": -0.05918
             },
             "log": {
-                "attraction_size": 1,
-                "transform": -0.1
+                "attraction_size": 1
             },
             "attraction_size": {
                 "workplaces": 1
-            },
-            "transform": {
-                "attraction": {
-                    "cost*within_zone": 1
-                },
-                "impedance": {
-                    "cost": 1
-                }
             }
         },
         "car_pax": {

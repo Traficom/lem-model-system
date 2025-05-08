@@ -97,8 +97,7 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -1.00399,
-                "transform": -0.1
+                "transform": -1.00399
             },
             "attraction_size": {
                 "area_leisure_buildings": 1

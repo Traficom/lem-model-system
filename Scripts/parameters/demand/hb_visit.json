@@ -97,8 +97,7 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.54397,
-                "transform": -0.1
+                "transform": -0.54397
             },
             "attraction_size": {
                 "population": 1

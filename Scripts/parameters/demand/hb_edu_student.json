@@ -97,8 +97,7 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.28318,
-                "transform": -0.1
+                "transform": -0.28318
             },
             "attraction_size": {
                 "edu_higher": 1,
