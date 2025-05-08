@@ -49,25 +49,37 @@ class LogitModel:
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
 
+    def _calc_alt_util(self, mode: str, utility: numpy.ndarray,
+                       impedance: Dict[str, numpy.ndarray],
+                       b: Dict[str, Dict[str, float]]):
+        self._add_zone_util(utility, b["attraction"])
+        self._add_impedance(utility, impedance, b["impedance"])
+        if "transform" in b:
+            b_transf = b["transform"]
+            transimp = numpy.zeros_like(utility)
+            self._add_zone_util(transimp, b_transf["attraction"])
+            self._add_impedance(transimp, impedance, b_transf["impedance"])
+            impedance["transform"] = transimp
+        self._add_log_impedance(utility, impedance, b["log"])
+        exps = numpy.exp(utility)
+        dist = self.purpose.dist
+        if mode != "logsum" and dist.shape == exps.shape:
+            # If this is the lower level in nested model
+            l, u = self.distance_boundary[mode]
+            exps[(dist < l) | (dist >= u)] = 0
+        return exps
+
     def _calc_mode_util(self, mode: str, impedance: Dict[str, numpy.ndarray],
                         dummy: Optional[str] = None):
         b = self.mode_choice_param[mode]
         utility = numpy.zeros_like(next(iter(impedance.values())))
-        self._add_constant(utility, b["constant"])
+        utility += b["constant"]
+        if dummy in b["individual_dummy"]:
+            utility += b["individual_dummy"][dummy]
         utility = self._add_zone_util(
             utility.T, b["generation"], generation=True).T
-        self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
-        self._add_log_impedance(utility, impedance, b["log"])
-        if dummy in b["individual_dummy"]:
-            self._add_constant(utility, b["individual_dummy"][dummy])
+        exps = self._calc_alt_util(mode, utility, impedance, b)
         self.mode_utils[mode] = utility
-        exps = numpy.exp(utility)
-        dist = self.purpose.dist
-        if dist.shape == exps.shape:
-            # If this is the lower level in nested model
-            l, u = self.distance_boundary[mode]
-            exps[(dist < l) | (dist >= u)] = 0
         return exps
 
     def _calc_mode_utils(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
@@ -80,24 +92,10 @@ class LogitModel:
 
     def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
         b = self.dest_choice_param[mode]
-        utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
-        self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
-        size = numpy.zeros_like(utility)
-        self._add_zone_util(size, b["attraction_size"])
-        impedance["attraction_size"] = size
-        if "transform" in b:
-            b_transf = b["transform"]
-            transimp = numpy.zeros_like(utility)
-            self._add_zone_util(transimp, b_transf["attraction"])
-            self._add_impedance(transimp, impedance, b_transf["impedance"])
-            impedance["transform"] = transimp
-        self._add_log_impedance(utility, impedance, b["log"])
-        dest_exp = numpy.exp(utility)
-        if mode != "logsum":
-            l, u = self.distance_boundary[mode]
-            dist = self.purpose.dist
-            dest_exp[(dist < l) | (dist >= u)] = 0
+        utility = numpy.zeros_like(next(iter(impedance.values())))
+        impedance["attraction_size"] = self._add_zone_util(
+            numpy.zeros_like(utility), b["attraction_size"])
+        dest_exp = self._calc_alt_util(mode, utility, impedance, b)
         if mode == "airplane":
             dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
@@ -117,18 +115,6 @@ class LogitModel:
             dest_exps[(impedance["dist"] < l) | (impedance["dist"] >= u)] = 0
         return dest_exps
 
-    def _add_constant(self, utility, b):
-        """Add constant term to utility.
-        
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the constant b will be added
-        b : float or tuple
-            The value of the constant
-        """
-        utility += b
-    
     def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
         
