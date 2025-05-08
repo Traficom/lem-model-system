@@ -98,10 +98,19 @@
                 "time": -0.05918
             },
             "log": {
-                "attraction_size": 1
+                "attraction_size": 1,
+                "transform": -0.1
             },
             "attraction_size": {
                 "workplaces": 1
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {
@@ -165,19 +174,10 @@
         "car_work": {
             "constant": -2.25056,
             "generation": {},
-            "transform": {
-                "attraction": {
-                    "cost*within_zone": 1
-                },
-                "impedance": {
-                    "cost": 1
-                }
-            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 1,
-                "transform": -0.1
+                "logsum": 1
             },
             "individual_dummy": {
                 "wb_business_parent_car_work_share": 2.31318

@@ -97,11 +97,20 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.59043
+                "cost": -0.59043,
+                "transform": -0.1
             },
             "attraction_size": {
                 "hospitality": 1,
                 "recreation": 1.49347
+            },
+                        "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {
@@ -175,19 +184,10 @@
         "car_leisure": {
             "constant": -6.12939,
             "generation": {},
-            "transform": {
-                "attraction": {
-                    "cost*within_zone": 1
-                },
-                "impedance": {
-                    "cost": 1
-                }
-            },
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.6067,
-                "transform": -0.1
+                "logsum": 0.6067
             },
             "individual_dummy": {
                 "sh_cars1_hh1": 5.12282,
