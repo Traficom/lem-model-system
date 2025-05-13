@@ -64,7 +64,7 @@ class CarUseModel(LogitModel):
         """
         b = self.param
         utility = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
-        self._add_constant(utility, b["constant"])
+        utility += b["constant"]
         self._add_zone_util(utility, b["generation"], True)
         self.exps = numpy.exp(utility)
         self._add_log_zone_util(self.exps, b["log"], True)

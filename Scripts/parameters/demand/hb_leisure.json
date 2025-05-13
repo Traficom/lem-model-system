@@ -97,11 +97,19 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.59043
+                "transform": -0.59043
             },
             "attraction_size": {
                 "hospitality": 1,
                 "recreation": 1.49347
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {

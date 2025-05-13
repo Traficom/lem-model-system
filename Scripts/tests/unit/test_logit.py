@@ -29,6 +29,8 @@ class LogitModelTest(unittest.TestCase):
         zi = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
         zd = ZoneData(ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
+        zd["cost"] = pandas.Series(0.0, index=zi)
+        zd["within_zone"] = pandas.Series(1, index=zi)
         mtx = numpy.arange(720, dtype=numpy.float32)
         mtx.shape = (24, 30)
         mtx[numpy.diag_indices(24)] = 0
