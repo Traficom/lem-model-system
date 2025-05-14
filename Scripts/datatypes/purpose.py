@@ -10,7 +10,8 @@ from datahandling.zonedata import ZoneData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import (
+    assignment_classes, car_classes, ec_mode, cp_mode, ecp_mode, pax_modes)
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -56,6 +57,13 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
+        self.car_modes: Dict[str, str] = {cp_mode: ecp_mode}
+        if self.name in assignment_classes:
+            self.car_modes["car_" + assignment_classes[self.name]] = ec_mode
+        for mode, electric_mode in self.car_modes.items():
+            if mode in self.impedance_share:
+                car_imp_share = self.impedance_share[mode]
+                self.impedance_share[electric_mode] = car_imp_share
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
@@ -117,7 +125,10 @@ class Purpose:
         day_imp = defaultdict(lambda: defaultdict(float))
         for mode in self.impedance_share:
             share_sum = 0
-            ass_class = mode.replace("pax", assignment_classes[self.name])
+            if mode == ecp_mode:
+                ass_class = ec_mode
+            else:
+                ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
                     if ass_class in impedance[time_period][mtx_type]:
@@ -166,14 +177,14 @@ class Purpose:
                                                     self.zone_data["avg_park_cost"].values)
                     except KeyError:
                         pass
-                if mtx_type == "cost" and mode in ["car_work", "car_leisure"]:
+                if mtx_type == "cost" and mode in car_classes:
                     try:
                         day_imp[mode][mtx_type] *= (1 - cost.sharing_factor[self.name] *
                                                     (cost.car_drv_occupancy[self.name] - 1) /
                                                     cost.car_drv_occupancy[self.name])
                     except KeyError:
                         pass
-                if mtx_type == "cost" and mode == "car_pax":
+                if mtx_type == "cost" and mode in pax_modes:
                     try:
                         day_imp[mode][mtx_type] *= (cost.sharing_factor[self.name] /
                                                     cost.car_pax_occupancy[self.name])
@@ -259,7 +270,10 @@ class TourPurpose(Purpose):
             self.model = logit.ModeDestModel(*args)
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
-        self.modes = list(self.model.mode_choice_param)
+        for mode, electric_mode in self.car_modes.items():
+            if mode in self.demand_share:
+                self.demand_share[electric_mode] = self.demand_share[mode]
+        self.modes = list(self.impedance_share)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
