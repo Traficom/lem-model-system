@@ -43,10 +43,7 @@ def main(args):
                                              zonedata,
                                              resultdata,
                                              costdata["freight"][commodity_conversion[commodity]])
-    purps_to_assign = list(filter(lambda purposes: purposes[0] in
-                                  list(purposes), args.specify_commodity_names))
-    
-    ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
+    ass_model.prepare_freight_network(costdata["car_cost"], args.specify_commodity_names)
     impedance = ass_model.freight_network.assign()
     truck_distances = {key: impedance["dist"][key] for key in param.truck_classes}
     del impedance["cost"]
@@ -61,12 +58,10 @@ def main(args):
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
             ass_model.freight_network.set_matrix(mode, demand[mode])
-            if purpose.name not in args.specify_commodity_names:
-                continue
-            with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
-                mtx[f"{purpose}_{mode}"] = demand[mode]
-        if purpose.name in args.specify_commodity_names:
-            ass_model.freight_network.save_network_volumes(purpose.name)
+            if purpose.name in args.specify_commodity_names:
+                ass_model.freight_network.save_network_volumes(purpose.name)
+                with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+                    mtx[f"{purpose.name}_{mode}"] = demand[mode]
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
         for mode in ("truck", "trailer_truck"):
@@ -75,6 +70,7 @@ def main(args):
         write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
+    log.info("Setting vehicle matrices and performing end assignment.")
     for ass_class in total_demand:
         ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
     ass_model.freight_network._assign_trucks()
