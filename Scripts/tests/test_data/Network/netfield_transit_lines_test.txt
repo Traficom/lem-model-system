@@ -13,8 +13,8 @@ end network_fields
     line #agency_name #departures_per_day  #hdw_aht  #hdw_iht   #hdw_it   #hdw_pt  #hdw_vrk #keep_stops #route_short_name #trip_short_name
 '10002_W' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
 '10003_W' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
-'10006_d' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
-'10007_d' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
+'10006_D' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
+'10007_D' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
 '10008_J' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
 '10009_J' 'None'         0.0      0.0      0.0      0.0      0.0      0.0        1 'None'    'None'   
 '1000_w' 'None'         2.0   999.99   999.99    500.0   999.99   999.99        1 'None'    'None'   

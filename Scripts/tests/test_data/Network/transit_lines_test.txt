@@ -1,5 +1,5 @@
 c Modeller - Transit Line Transaction
-c Date: 2025-05-07 17:19:49
+c Date: 2025-05-15 14:57:13
 c Project:        mock_project
 c Scenario 5:     test network
 t lines
@@ -43,7 +43,7 @@ a'10003_W' W  20   1.00  30.00 'Turku-Kantvik'           4     10      0
    834065         dwt=>0   ttf=0   us1=0   us2=0   us3=0
    834538        lay=0.00
 c '10003_W' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
-a'10006_d' d  30   1.00  30.00 'Loviisa-Hameenlinna'      4     10      0
+a'10006_D' D  30   1.00  30.00 'Loviisa-Hameenlinna'      4     10      0
   path=no
    247457      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247400      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -72,8 +72,8 @@ a'10006_d' d  30   1.00  30.00 'Loviisa-Hameenlinna'      4     10      0
    247749      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247428      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    247362        lay=0.00
-c '10006_d' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
-a'10007_d' d  30   1.00  30.00 'Hameenlinna-Loviisa'      4     10      0
+c '10006_D' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
+a'10007_D' D  30   1.00  30.00 'Hameenlinna-Loviisa'      4     10      0
   path=no
    247362      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247428      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
@@ -102,7 +102,7 @@ a'10007_d' d  30   1.00  30.00 'Hameenlinna-Loviisa'      4     10      0
    247650      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
    247400      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
    247457        lay=0.00
-c '10007_d' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
+c '10007_D' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
 a'10008_J' J  31   1.00  30.00 'Turku-Tampere'           4     10      0
   path=no
    247507      dwt=+0.01   ttf=0   us1=0   us2=0   us3=0
