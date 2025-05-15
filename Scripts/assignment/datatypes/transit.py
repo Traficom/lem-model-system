@@ -39,7 +39,7 @@ class TransitMode(AssignmentMode):
         self.segment_results: Dict[str, str] = {}
         self.node_results: Dict[str, str] = {}
         for scenario, tp in (
-                (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
+                (day_scenario, "vrk"), (self.emme_scenario, self.time_period)):
             for res, attr in param.segment_results.items():
                 attr_name = f"@{self.name[:11]}_{attr}_{tp}"
                 self.segment_results[res] = attr_name
@@ -167,5 +167,5 @@ class TransitMode(AssignmentMode):
         for mtx_name in param.impedance_output:
             if mtx_name in self._matrices:
                 mtxs[mtx_name] = self._matrices[mtx_name].data
-        self._release_matrices()
+        self._soft_release_matrices()
         return mtxs

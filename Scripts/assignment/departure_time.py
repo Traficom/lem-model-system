@@ -5,10 +5,9 @@ import numpy # type: ignore
 from datatypes.demand import Demand
 from datatypes.tour import Tour
 import utils.log as log
-from assignment.abstract_assignment import AssignmentModel
+from assignment.abstract_assignment import AssignmentModel, Period
 import parameters.departure_time as param
-from parameters.assignment import (
-   transport_classes, car_classes, long_distance_transit_classes)
+from parameters.assignment import transport_classes
 
 
 class DepartureTimeModel:
@@ -18,18 +17,18 @@ class DepartureTimeModel:
     ----------
     nr_zones : int
         Number of zones in assignment model
-    time_periods : list of str (optional)
-        Time period names, default is aht, pt, iht
+    assignment_periods : list of Period
+        Assignment periods defining the period-specific modes
     modes : List of str (optional)
             Assignment classes for which initialization is done.
             Default is all assignment classes.
     """
     def __init__(self,
                  nr_zones: int,
-                 time_periods: List[str] = list(param.backup_demand_share),
+                 assignment_periods: List[Period],
                  modes: Sequence[str] = transport_classes):
         self.nr_zones = nr_zones
-        self.time_periods = time_periods
+        self.assignment_periods = assignment_periods
         self.old_car_demand: Union[int,numpy.ndarray] = 0
         self._create_container(modes)
         self.init_demand(modes)
@@ -47,19 +46,21 @@ class DepartureTimeModel:
             max_gap : float
                 Maximum gap for OD pair in car work demand matrix
         """
-        car_demand = self.demand[next(iter(self.time_periods))]["car_work"]
+        car_demand = next(iter(self.demand.values()))["car_work"]
         max_gap = numpy.abs(car_demand - self.old_car_demand).max()
         try:
             old_sum = self.old_car_demand.sum()
-            relative_gap = abs((car_demand.sum()-old_sum) / old_sum)
         except AttributeError:
             relative_gap = 0
-        self.old_car_demand = car_demand
+        else:
+            relative_gap = abs((car_demand.sum()-old_sum) / old_sum)
+        self.old_car_demand = None
         return {"rel_gap": relative_gap, "max_gap": max_gap}
 
     def _create_container(self, modes: Sequence[str] = transport_classes):
-        self.demand = {tp: {tc: 0 for tc in modes if tc in transport_classes}
-            for tp in self.time_periods}
+        self.demand = {ap.name: {tc: 0 for tc in modes
+                if tc in ap.assignment_modes}
+            for ap in self.assignment_periods}
 
     def init_demand(self, modes: Sequence[str] = transport_classes):
         """Initialize/reset demand for all time periods.
@@ -70,11 +71,16 @@ class DepartureTimeModel:
             Assignment classes for which initialization is done.
             Default is all assignment classes.
         """
+        try:
+            self.old_car_demand = next(iter(self.demand.values()))["car_work"]
+        except FileNotFoundError:
+            pass
         n = self.nr_zones
-        for tp in self.time_periods:
+        for ap in self.assignment_periods:
             for tc in modes:
-                if tc in transport_classes:
-                    self.demand[tp][tc] = numpy.zeros((n, n), numpy.float32)
+                if tc in ap.assignment_modes:
+                    self.demand[ap.name][tc] = numpy.zeros(
+                        (n, n), numpy.float32)
 
     def add_demand(self, demand: Union[Demand, Tour]):
         """Add demand matrix for whole day.
@@ -85,19 +91,20 @@ class DepartureTimeModel:
             Travel demand matrix or number of travellers
         """
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
-        if demand.mode in transport_classes:
-            position: Sequence[int] = demand.position
-            if len(position) == 2:
-                share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
-                for time_period in self.time_periods:
+        position: Sequence[int] = demand.position
+        if len(position) == 2:
+            share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
+            for ap in self.assignment_periods:
+                if demand.mode in ap.assignment_modes:
                     self._add_2d_demand(
-                        share[time_period], demand.mode, time_period,
+                        share[ap.name], demand.mode, ap.name,
                         demand.matrix, position)
-            elif len(position) == 3:
-                for time_period in self.time_periods:
-                    self._add_3d_demand(demand, demand.mode, time_period)
-            else:
-                raise IndexError("Tuple position has wrong dimensions.")
+        elif len(position) == 3:
+            for ap in self.assignment_periods:
+                if demand.mode in ap.assignment_modes:
+                    self._add_3d_demand(demand, demand.mode, ap.name)
+        else:
+            raise IndexError("Tuple position has wrong dimensions.")
 
     def _add_2d_demand(self,
                        demand_share: Any,
@@ -149,23 +156,23 @@ class DepartureTimeModel:
         nr_zones : int
             Number of zones in model area (metropolitan + peripheral)
         """
-        n = nr_zones
-        mtx = self.demand[time_period]
-        car_demand = (mtx["car_work"][0:n, 0:n] + mtx["car_leisure"][0:n, 0:n])
-        share = param.demand_share["freight"]["van"][time_period]
-        self._add_2d_demand(share, "van", time_period, car_demand, (0, 0))
-        self._add_2d_demand(
-            (1, 0), "van", time_period, mtx["truck"][0:n, 0:n], (0, 0))
+        if time_period in param.demand_share["freight"]["van"]:
+            n = nr_zones
+            mtx = self.demand[time_period]
+            car_demand = (mtx["car_work"][0:n, 0:n]
+                          + mtx["car_leisure"][0:n, 0:n])
+            share = param.demand_share["freight"]["van"][time_period]
+            self._add_2d_demand(share, "van", time_period, car_demand, (0, 0))
+            self._add_2d_demand(
+                (1, 0), "van", time_period, mtx["truck"][0:n, 0:n], (0, 0))
 
 
 class DirectDepartureTimeModel (DepartureTimeModel):
     def __init__(self, assignment_model: AssignmentModel):
         self._ass_model = assignment_model
-        modes = (car_classes + long_distance_transit_classes
-            if assignment_model.use_free_flow_speeds else transport_classes)
         DepartureTimeModel.__init__(
-            self, assignment_model.nr_zones, assignment_model.time_periods,
-            modes)
+            self, assignment_model.nr_zones,
+            assignment_model.assignment_periods)
 
     def _create_container(self, *args):
         self.demand = {ap.name: EmmeMatrixContainer(ap)

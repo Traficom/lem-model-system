@@ -16,6 +16,7 @@ import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
 from utils.freight_costs import calc_cost
+from utils.calibrate import attempt_calibration
 
 
 class Purpose:
@@ -70,7 +71,9 @@ class Purpose:
         self.resultdata = resultdata
         self.mtx_adjustment = mtx_adjustment
         self.generated_tours: Dict[str, numpy.array] = {}
+        self.generated_distance: Dict[str, numpy.array] = {}
         self.attracted_tours: Dict[str, numpy.array] = {}
+        self.attracted_distance: Dict[str, numpy.array] = {}
 
     @property
     def zone_numbers(self):
@@ -111,10 +114,9 @@ class Purpose:
         """
         rows = self.bounds
         cols = self.dest_interval
-        day_imp = {}
+        day_imp = defaultdict(lambda: defaultdict(float))
         for mode in self.impedance_share:
             share_sum = 0
-            day_imp[mode] = defaultdict(float)
             ass_class = mode.replace("pax", assignment_classes[self.name])
             for time_period in self.impedance_share[mode]:
                 for mtx_type in impedance[time_period]:
@@ -124,8 +126,9 @@ class Purpose:
                         share_sum += sum(share)
                         day_imp[mode][mtx_type] += share[0] * imp[rows, cols]
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
-            if abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
+            if mode in day_imp and abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
+        day_imp = dict(day_imp)
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:
@@ -252,10 +255,8 @@ class TourPurpose(Purpose):
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
-            self.accessibility_model = self.model
         else:
             self.model = logit.ModeDestModel(*args)
-            self.accessibility_model = logit.AccessibilityModel(*args)
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
@@ -275,6 +276,16 @@ class TourPurpose(Purpose):
         return pandas.Series(
             sum(self.generated_tours.values()), self.zone_numbers)
     
+    @property
+    def generated_dist_all(self):
+        return pandas.Series(
+            sum(self.generated_distance.values()), self.zone_numbers)
+    
+    @property
+    def attracted_dist_all(self):
+        return pandas.Series(
+            sum(self.attracted_distance.values()), self.zone_numbers)
+
     @property
     def attracted_tours_all(self):
         return pandas.Series(
@@ -304,20 +315,31 @@ class TourPurpose(Purpose):
             self.within_zone_tours[mode] = pandas.Series(
                 0, self.zone_numbers, name="{}_{}".format(self.name, mode))
 
+    def calc_soft_mode_prob(self, impedance):
+        """Calculate walk and bike utilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Time period (aht/pt/iht/it) : dict
+                Type (time/dist) : dict
+                    Mode (bike/walk) : numpy.ndarray
+        """
+        purpose_impedance = self.transform_impedance(impedance)
+        self.model.calc_soft_mode_exps(purpose_impedance)
+
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
         
         Parameters
         ----------
         impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/cost/dist) : dict
+                    Mode (car/transit/bike/...) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
-        if is_last_iteration:
-            self.accessibility_model.calc_accessibility(
-                copy(purpose_impedance))
-        self.prob = self.model.calc_prob(purpose_impedance)
+        self.prob = self.model.calc_prob(purpose_impedance, is_last_iteration)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_basic_prob(self, impedance, is_last_iteration):
@@ -330,8 +352,9 @@ class TourPurpose(Purpose):
         Parameters
         ----------
         impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+            Time period (aht/pt/iht/it) : dict
+                Type (time/cost/dist) : dict
+                    Mode (car/transit/bike/...) : numpy.ndarray
 
         Returns
         -------
@@ -339,16 +362,21 @@ class TourPurpose(Purpose):
             Empty list
         """
         purpose_impedance = self.transform_impedance(impedance)
-        if is_last_iteration and self.name[0] != 's':
-            self.accessibility_model.calc_accessibility(
-                copy(purpose_impedance))
-        self.model.calc_basic_prob(purpose_impedance)
+        self.model.calc_basic_prob(
+            purpose_impedance, is_last_iteration and self.name[0] != 's')
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 
-    def calc_demand(self) -> Iterator[Demand]:
+    def calc_demand(self, impedance) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
-              
+
+        Parameters
+        ----------
+        impedance : dict
+            Time period (aht/pt/iht/it) : dict
+                Type (time/dist) : dict
+                    Mode (bike/walk) : numpy.ndarray
+
         Yields
         -------
         Demand
@@ -357,6 +385,8 @@ class TourPurpose(Purpose):
         tours = self.gen_model.get_tours()
         if self.prob is None:
             self.prob = self.model.calc_prob_again()
+        purpose_impedance = self.transform_impedance(impedance)
+        self.prob.update(self.model.calc_soft_mode_prob(purpose_impedance))
         agg = self.zone_data.aggregations
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
@@ -366,6 +396,8 @@ class TourPurpose(Purpose):
                 pass
             self.attracted_tours[mode] = mtx.sum(0)
             self.generated_tours[mode] = mtx.sum(1)
+            self.attracted_distance[mode] = (self.dist*mtx).sum(0)
+            self.generated_distance[mode] = (self.dist*mtx).sum(1)
             self.histograms[mode].count_tour_dists(mtx, self.dist)
             for mapping in self.aggregates:
                 self.aggregates[mapping][mode] = agg.aggregate_mtx(
@@ -521,44 +553,6 @@ class SecDestPurpose(Purpose):
                 sum(self.attracted_tours.values()),
                 self.zone_data.zone_numbers, name=self.name),
             "attraction.txt")
-
-def attempt_calibration(spec: dict):
-    """Check if specification includes "calibration" trees.
-
-    Transform regular parameters to include calibration,
-    remove separate calibration parameters.
-    A calibration (named "calibration") tree can be anywhere in the dict,
-    but must refer to existing adjacent parameters or trees of parameters.
-    """
-    try:
-        param_names = list(spec.keys())
-    except AttributeError:
-        # No calibration parameters in this branch, return up
-        return
-    for param_name in param_names:
-        if param_name == "calibration":
-            calibrate(spec, spec.pop(param_name))
-        elif param_name == "scaling":
-            scale(spec, spec.pop(param_name))
-        else:
-            # Search deeper
-            attempt_calibration(spec[param_name])
-
-def calibrate(spec: dict, calib_spec: dict):
-    for param_name in calib_spec:
-        try:
-            spec[param_name] += calib_spec[param_name]
-        except TypeError:
-            # Search deeper
-            calibrate(spec[param_name], calib_spec[param_name])
-
-def scale(spec: dict, calib_spec: dict):
-    for param_name in calib_spec:
-        try:
-            spec[param_name] *= calib_spec[param_name]
-        except TypeError:
-            # Search deeper
-            scale(spec[param_name], calib_spec[param_name])
 
 class FreightPurpose(Purpose):
 

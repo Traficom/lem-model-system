@@ -32,6 +32,12 @@ class EmmeAssignmentTest(unittest.TestCase):
             {i: {"firstb_single": firstb_single[i],
                  "dist_single": dist_single[i]}
              for i in range(0, len(firstb_single))})
+        self.mapping = pandas.Series({
+            "Helsinki": "Uusimaa",
+            "Espoo": "Uusimaa",
+            "Lohja": "Uusimaa",
+            "Salo": "Varsinais-Suomi",
+        })
         self.resultdata = ResultsData(RESULTS_PATH)
 
     def test_assignment(self):
@@ -60,8 +66,8 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.beeline_dist
         for ap in ass_model.assignment_periods:
             for ass_class in demand:
-                ap.set_matrix(
-                    ass_class, car_matrix)
+                if ass_class in ap.assignment_modes:
+                    ap.set_matrix(ass_class, car_matrix)
             ap.assign_trucks_init()
             imp = ap.assign(demand + ["car_pax"])
             for mtx_type in imp:
@@ -69,14 +75,8 @@ class EmmeAssignmentTest(unittest.TestCase):
                     self.assertEqual(
                         imp[mtx_type][ass_class].dtype, numpy.float32)
             ap.end_assign()
-        mapping = pandas.Series({
-            "Helsinki": "Uusimaa",
-            "Espoo": "Uusimaa",
-            "Lohja": "Uusimaa",
-            "Salo": "Varsinais-Suomi",
-        })
-        ass_model.aggregate_results(self.resultdata, mapping)
-        ass_model.calc_noise(mapping)
+        ass_model.aggregate_results(self.resultdata, self.mapping)
+        ass_model.calc_noise(self.mapping)
         self.resultdata.flush()
 
     def test_long_dist_assignment(self):
@@ -101,6 +101,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             ap.assign_trucks_init()
             ap.assign(demand + ["car_pax"])
             ap.end_assign()
+        ass_model.aggregate_results(self.resultdata, self.mapping)
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)

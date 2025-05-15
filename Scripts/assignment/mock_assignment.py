@@ -80,6 +80,7 @@ class MockPeriod(Period):
         self.matrices = matrices
         self.transport_classes = (param.private_classes
                                   + param.local_transit_classes)
+        self.assignment_modes = param.transport_classes
         self._end_assignment_classes = set(end_assignment_classes)
 
     @property
@@ -90,7 +91,18 @@ class MockPeriod(Period):
         return zone_numbers
 
     def init_assign(self):
-        pass
+        return self.get_soft_mode_impedances()
+
+    def get_soft_mode_impedances(self):
+        """Get travel impedance matrices for walk and bike.
+
+        Returns
+        -------
+        dict
+            Type (time/cost/dist) : dict
+                Assignment class (walk/bike) : numpy 2-d matrix
+        """
+        return self._get_impedances(["walk", "bike"])
 
     def assign_trucks_init(self):
         pass
@@ -201,6 +213,11 @@ class MockPeriod(Period):
 
 
 class WholeDayPeriod(MockPeriod):
+    def __init__(self, *args, **kwargs):
+        MockPeriod.__init__(self, *args, **kwargs)
+        self.assignment_modes = (param.car_classes
+                                 + param.long_distance_transit_classes)
+
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """ Get travel impedance matrices for whole day from files.
 
@@ -210,8 +227,7 @@ class WholeDayPeriod(MockPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        return self._get_impedances(
-            param.car_classes + param.long_distance_transit_classes)
+        return self._get_impedances(self.assignment_modes)
 
 
 class OffPeakPeriod(MockPeriod):
@@ -238,6 +254,12 @@ class OffPeakPeriod(MockPeriod):
 
 
 class TransitAssignmentPeriod(MockPeriod):
+    def __init__(self, *args, **kwargs):
+        MockPeriod.__init__(self, *args, **kwargs)
+        self.assignment_modes = param.transit_classes
+        self._end_assignment_classes -= set(
+            param.private_classes + param.truck_classes)
+
     def assign(self, *args) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Get local transit impedance matrices for one time period.
 
@@ -265,8 +287,6 @@ class TransitAssignmentPeriod(MockPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
-        self._end_assignment_classes -= set(
-            param.private_classes + param.truck_classes)
         return self._get_impedances(self._end_assignment_classes)
 
 class EndAssignmentOnlyPeriod(MockPeriod):
