@@ -61,82 +61,82 @@
     "destination_choice": {
         "airplane": {
             "attraction": {
-                "Lappi": 1.30889
+                "Lappi": 1.33213
             },
             "impedance": {
-                "time": -0.00072,
-                "cost": -0.00184
+                "time": -0.00069,
+                "cost": -0.00247
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "hospitality": 452.6232
+                "hospitality": 439.06611
             }
         },
         "train": {
             "attraction": {
-                "Lappi": 1.30889
+                "Lappi": 1.33213
             },
             "impedance": {
                 "time": -0.00045,
-                "cost": -0.00184
+                "cost": -0.00247
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "hospitality": 452.6232
+                "hospitality": 439.06611
             }
         },
         "long_d_bus": {
             "attraction": {
-                "Lappi": 1.30889
+                "Lappi": 1.33213
             },
             "impedance": {
-                "time": -0.00261,
-                "cost": -0.00184
+                "time": -0.00241,
+                "cost": -0.00247
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "hospitality": 452.6232
+                "hospitality": 439.06611
             }
         },
         "car_leisure": {
             "attraction": {
-                "Lappi": 1.30889
+                "Lappi": 1.33213
             },
             "impedance": {
-                "time": -0.00307,
-                "cost": -0.00184
+                "time": -0.00317,
+                "cost": -0.00247
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "hospitality": 452.6232
+                "hospitality": 439.06611
             }
         },
         "car_pax": {
             "attraction": {
-                "Lappi": 1.30889
+                "Lappi": 1.33213
             },
             "impedance": {
-                "time": -0.00359,
-                "cost": -0.00184
+                "time": -0.00342,
+                "cost": -0.00247
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "hospitality": 452.6232
+                "hospitality": 439.06611
             }
         }
     },
@@ -147,81 +147,81 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.403
+                "logsum": 0.59003
             },
             "individual_dummy": {}
         },
         "train": {
-            "constant": 2.26279,
+            "constant": 0.82497,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.403
+                "logsum": 0.59003
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": 4.28431,
+            "constant": 2.55186,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.403
+                "logsum": 0.59003
             },
             "individual_dummy": {}
         },
         "car_leisure": {
-            "constant": -0.04616,
+            "constant": -0.20256,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.403
+                "logsum": 0.59003
             },
             "individual_dummy": {
-                "sh_cars1_hh1": 7.80448,
-                "sh_cars2_hh2": 7.80448,
-                "sh_cars1_hh2": 7.84577
+                "sh_cars1_hh1": 5.36956,
+                "sh_cars2_hh2": 5.36956,
+                "sh_cars1_hh2": 5.19401
             }
         },
         "car_pax": {
-            "constant": 2.73809,
+            "constant": 1.26171,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.403
+                "logsum": 0.59003
             },
             "individual_dummy": {
-                "sh_cars1_hh2": 4.81722,
-                "sh_cars2_hh2": 4.81722
+                "sh_cars1_hh2": 3.39671,
+                "sh_cars2_hh2": 3.39671
             }
         },
         "scaling": {
             "car_leisure": {
-                "constant": 0.403,
+                "constant": 0.59003,
                 "individual_dummy": {
-                    "sh_cars1_hh1": 0.403,
-                    "sh_cars2_hh2": 0.403,
-                    "sh_cars1_hh2": 0.403
+                    "sh_cars1_hh1": 0.59003,
+                    "sh_cars2_hh2": 0.59003,
+                    "sh_cars1_hh2": 0.59003
                 }
             },
             "car_pax": {
-                "constant": 0.403,
+                "constant": 0.59003,
                 "individual_dummy": {
-                    "sh_cars1_hh2": 0.403,
-                    "sh_cars2_hh2": 0.403
+                    "sh_cars1_hh2": 0.59003,
+                    "sh_cars2_hh2": 0.59003
                 }
             },
             "airplane": {
-                "constant": 0.403
+                "constant": 0.59003
             },
             "train": {
-                "constant": 0.403
+                "constant": 0.59003
             },
             "long_d_bus": {
-                "constant": 0.403
+                "constant": 0.59003
             }
         }
     },
