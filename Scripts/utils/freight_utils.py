@@ -53,7 +53,7 @@ def create_purposes(parameters_path: Path, zonedata: FreightZoneData,
 def store_demand(freight_network: FreightAssignmentPeriod, resultmatrices: MatrixData, 
                  all_zones: numpy.ndarray, zones: numpy.ndarray, 
                  mode: str, demand: numpy.ndarray, 
-                 save_demand: bool, omx_filename: str, key_suffix: str = ""):
+                 save_demand: bool, omx_filename: str, key_prefix: str = ""):
     """Handle storing demand matrices by assessing dimensions compatibility with
     Emme network and whether demand should be saved on drive. 
 
@@ -75,15 +75,15 @@ def store_demand(freight_network: FreightAssignmentPeriod, resultmatrices: Matri
         if demand matrix should be saved
     omx_filename : str
         name of an external .omx file for saving results
-    key_suffix : str, by default empty string
-        optional name suffix for matrix e.g. purpose name
+    key_prefix : str, by default empty string
+        optional name prefix for matrix e.g. purpose name
     """
     emme_mtx = assess_demand_dimensions(demand, all_zones.size, zones.size)
     freight_network.set_matrix(mode, emme_mtx)
     if save_demand:
         with resultmatrices.open(omx_filename, freight_network.name, 
                                  all_zones, m="a") as mtx:
-            keyname = f"{mode}_{key_suffix}" if key_suffix else mode
+            keyname = f"{key_prefix}_{mode}_" if key_prefix else mode
             mtx[keyname] = emme_mtx
 
 def assess_demand_dimensions(demand: numpy.ndarray, nr_all_zones: int, 
