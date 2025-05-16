@@ -83,7 +83,7 @@ def store_demand(freight_network: FreightAssignmentPeriod, resultmatrices: Matri
     if save_demand:
         with resultmatrices.open(omx_filename, freight_network.name, 
                                  all_zones, m="a") as mtx:
-            keyname = f"{key_prefix}_{mode}_" if key_prefix else mode
+            keyname = f"{key_prefix}_{mode}" if key_prefix else mode
             mtx[keyname] = emme_mtx
 
 def assess_demand_dimensions(demand: numpy.ndarray, nr_all_zones: int, 

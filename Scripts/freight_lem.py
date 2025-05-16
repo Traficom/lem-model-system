@@ -79,7 +79,7 @@ def main(args):
     
     log.info("Starting end assigment")
     for ass_class in total_demand:
-        store_demand(*set_mtx_args, mode, total_demand[ass_class], 
+        store_demand(*set_mtx_args, ass_class, total_demand[ass_class], 
                      save_demand=True, omx_filename="freight_demand")
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
