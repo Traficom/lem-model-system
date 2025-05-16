@@ -29,8 +29,8 @@ class FreightModelTest(unittest.TestCase):
         resultdata = ResultsData(RESULT_PATH)
         with open(TEST_DATA_PATH / "costdata.json") as file:
             costdata = json.load(file)
-        purposes = create_purposes(PARAMETERS_PATH, 
-                                   [zonedata, resultdata, costdata["freight"]])
+        purposes = create_purposes(PARAMETERS_PATH, zonedata, 
+                                   resultdata, costdata["freight"])
         
         time_impedance = omx.open_file(TEST_MATRICES / "freight_time.omx", "r")
         dist_impedance = omx.open_file(TEST_MATRICES / "freight_dist.omx", "r")
