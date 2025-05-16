@@ -53,15 +53,15 @@
                     "empty_share": 1.5,
                     "distribution": 0.1
                 },
-				"semi_trailer": {
+                "semi_trailer": {
                     "time": 0.75,
                     "dist": 0.63,
                     "toll_cost": 1.0,
                     "terminal_cost": 1.75,
                     "avg_load": 15.0,
-					"empty_share": 1.5,
+                    "empty_share": 1.5,
                     "distribution": 0.3
-				},
+                },
                 "trailer_truck": {
                     "time": 0.9,
                     "dist": 0.7,
