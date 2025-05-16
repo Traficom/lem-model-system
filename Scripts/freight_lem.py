@@ -35,8 +35,8 @@ def main(args):
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
-    purposes = create_purposes(parameters_path / "domestic", 
-                               [zonedata, resultdata, costdata["freight"]])
+    purposes = create_purposes(parameters_path / "domestic", zonedata, 
+                               resultdata, costdata["freight"])
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
@@ -69,8 +69,8 @@ def main(args):
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
     
-    purposes = create_purposes(parameters_path / "foreign",
-                               [zonedata, resultdata, costdata["freight"]])
+    purposes = create_purposes(parameters_path / "foreign", zonedata, 
+                               resultdata, costdata["freight"])
     for purpose in purposes.values():
         log.info(f"Calculating demand for foreign purpose: {purpose.name}")
     
