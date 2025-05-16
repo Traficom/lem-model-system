@@ -188,8 +188,13 @@ def main(args):
                 raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
-                with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
-                    for ass_class in param.transport_classes:
+                tc = (param.transit_classes
+                      if param.time_periods[tp] == "TransitAssignmentPeriod"
+                      else param.transport_classes)
+                with matrixdata.open(
+                        "demand", tp, zone_numbers[submodel],
+                        transport_classes=tc) as mtx:
+                    for ass_class in tc:
                         a = mtx[ass_class]
 
     long_dist_result_paths = []
