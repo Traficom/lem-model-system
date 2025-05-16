@@ -31,9 +31,9 @@ def main(args):
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
     zone_numbers = ass_model.zone_numbers
-    zonedata = FreightZoneData(zonedata_path, zone_numbers, "municipality_center")
+    zonedata = FreightZoneData(zonedata_path, zone_numbers, "koko_suomi")
     resultdata = ResultsData(results_path)
-    resultmatrices = MatrixData(results_path / "Matrices" / "municipality_center")
+    resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
     purposes = create_purposes(parameters_path / "domestic", 
                                [zonedata, resultdata, costdata["freight"]])
