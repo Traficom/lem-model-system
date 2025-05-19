@@ -20,8 +20,6 @@ class WholeDayPeriod(AssignmentPeriod):
         AssignmentPeriod.__init__(self, *args, **kwargs)
         for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self.transport_classes = (param.car_classes
-                                  + param.long_distance_transit_classes)
 
     def prepare(self, dist_unit_cost: Dict[str, float],
                 day_scenario: int, save_matrices: bool):
@@ -100,4 +98,5 @@ class WholeDayPeriod(AssignmentPeriod):
             self._assign_transit(param.long_distance_transit_classes)
         self._calc_transit_network_results(
             param.long_distance_transit_classes)
-        return self._get_impedances(self.transport_classes)
+        return self._get_impedances(param.car_classes
+                                    + param.long_distance_transit_classes)

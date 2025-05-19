@@ -63,9 +63,8 @@ class AssignmentPeriod(Period):
         if use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
-        self._end_assignment_classes = set(self.transport_classes
+        self._end_assignment_classes = set(param.private_classes
+                                           + param.local_transit_classes
             if delete_extra_matrices else param.transport_classes)
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 

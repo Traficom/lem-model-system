@@ -78,8 +78,6 @@ class MockPeriod(Period):
                  end_assignment_classes: Iterable[str]):
         self.name = name
         self.matrices = matrices
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
         self.assignment_modes = param.transport_classes
         self._end_assignment_classes = set(end_assignment_classes)
 
@@ -256,7 +254,6 @@ class OffPeakPeriod(MockPeriod):
 class TransitAssignmentPeriod(MockPeriod):
     def __init__(self, *args, **kwargs):
         MockPeriod.__init__(self, *args, **kwargs)
-        self.transport_classes = param.local_transit_classes
         self.assignment_modes = param.transit_classes
         self._end_assignment_classes -= set(
             param.private_classes + param.truck_classes)
