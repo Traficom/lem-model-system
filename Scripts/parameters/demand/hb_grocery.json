@@ -97,11 +97,19 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.54117
+                "transform": -0.54117
             },
             "attraction_size": {
                 "shop": 207.44163,
                 "population": 1
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {

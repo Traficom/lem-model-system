@@ -84,12 +84,21 @@ CELL_INDICES = {
     },
     "car_miles": {
         "cols": {
-            # Column index for each volume-delay function
-            1: 'I',
-            2: 'J',
-            3: 'K',
-            4: 'L',
-            5: 'M',
+            0: {  # Before
+                # Column index for each volume-delay function
+                1: 'R',
+                2: 'S',
+                3: 'T',
+                4: 'U',
+                5: 'V',
+            },
+            1: {  # After
+                1: "AA",
+                2: "AB",
+                3: "AC",
+                4: "AD",
+                5: "AE",
+            },
         },
         "rows": {
             1: {
@@ -195,14 +204,15 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
     for scen in (scenario_0, scenario_1):
         df = read(VEHICLE_KMS_FILE, scen).set_index(["class", "v/d-func"])
         miles.append(df["veh_km"].unstack(level=0))
-    mile_diff = miles[1] - miles[0]
-    mile_diff["car"] = mile_diff["car_work"] + mile_diff["car_leisure"]
+    for mile in miles:
+        mile["car"] = mile["car_work"] + mile["car_leisure"]
     ws = workbook["Ulkoisvaikutukset"]
     cols = CELL_INDICES["car_miles"]["cols"]
     rows = CELL_INDICES["car_miles"]["rows"][year]
     for mode in rows:
-        for vdf in cols:
-            ws[cols[vdf]+rows[mode]] = mile_diff[mode][vdf]
+        for vdf in cols[0]:
+            ws[cols[0][vdf]+rows[mode]] = miles[0][mode][vdf]
+            ws[cols[1][vdf]+rows[mode]] = miles[1][mode][vdf]
 
     # Calculate noise effect difference
     noises = []
@@ -291,10 +301,10 @@ def run_cost_benefit_analysis(scenario_0, scenario_1, year, workbook, submodel):
                     revenue = calc_revenue(demand, cost)
                     revenues_car += revenue
                     results["car_revenue"] += vol_fac * revenue
-                ws = workbook[TRANSLATIONS[transport_class]]
-                row_type = "cost" if mtx_type == "toll_cost" else mtx_type
-                ws[cols[timeperiod]+rows[row_type][0]] = gains_existing.sum()
-                ws[cols[timeperiod]+rows[row_type][1]] = gains_additional.sum()
+                else:
+                    ws = workbook[TRANSLATIONS[transport_class]]
+                    ws[cols[timeperiod]+rows[mtx_type][0]] = gains_existing.sum()
+                    ws[cols[timeperiod]+rows[mtx_type][1]] = gains_additional.sum()
             log.info(f"Mode {transport_class} calculated for {timeperiod}")
         ws = workbook["Tuottajahyodyt"]
         rows = CELL_INDICES["transit_revenue"]["rows"][year]

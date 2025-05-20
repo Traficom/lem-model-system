@@ -49,25 +49,37 @@ class LogitModel:
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
 
+    def _calc_alt_util(self, mode: str, utility: numpy.ndarray,
+                       impedance: Dict[str, numpy.ndarray],
+                       b: Dict[str, Dict[str, float]]):
+        self._add_zone_util(utility, b["attraction"])
+        self._add_impedance(utility, impedance, b["impedance"])
+        if "transform" in b:
+            b_transf = b["transform"]
+            transimp = numpy.zeros_like(utility)
+            self._add_zone_util(transimp, b_transf["attraction"])
+            self._add_impedance(transimp, impedance, b_transf["impedance"])
+            impedance["transform"] = transimp
+        self._add_log_impedance(utility, impedance, b["log"])
+        exps = numpy.exp(utility)
+        dist = self.purpose.dist
+        if mode != "logsum" and dist.shape == exps.shape:
+            # If this is the lower level in nested model
+            l, u = self.distance_boundary[mode]
+            exps[(dist < l) | (dist >= u)] = 0
+        return exps
+
     def _calc_mode_util(self, mode: str, impedance: Dict[str, numpy.ndarray],
                         dummy: Optional[str] = None):
         b = self.mode_choice_param[mode]
         utility = numpy.zeros_like(next(iter(impedance.values())))
-        self._add_constant(utility, b["constant"])
+        utility += b["constant"]
+        if dummy in b["individual_dummy"]:
+            utility += b["individual_dummy"][dummy]
         utility = self._add_zone_util(
             utility.T, b["generation"], generation=True).T
-        self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
-        self._add_log_impedance(utility, impedance, b["log"])
-        if dummy in b["individual_dummy"]:
-            self._add_constant(utility, b["individual_dummy"][dummy])
+        exps = self._calc_alt_util(mode, utility, impedance, b)
         self.mode_utils[mode] = utility
-        exps = numpy.exp(utility)
-        dist = self.purpose.dist
-        if dist.shape == exps.shape:
-            # If this is the lower level in nested model
-            l, u = self.distance_boundary[mode]
-            exps[(dist < l) | (dist >= u)] = 0
         return exps
 
     def _calc_mode_utils(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
@@ -80,24 +92,10 @@ class LogitModel:
 
     def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
         b = self.dest_choice_param[mode]
-        utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
-        self._add_zone_util(utility, b["attraction"])
-        self._add_impedance(utility, impedance, b["impedance"])
-        size = numpy.zeros_like(utility)
-        self._add_zone_util(size, b["attraction_size"])
-        impedance["attraction_size"] = size
-        if "transform" in b:
-            b_transf = b["transform"]
-            transimp = numpy.zeros_like(utility)
-            self._add_zone_util(transimp, b_transf["attraction"])
-            self._add_impedance(transimp, impedance, b_transf["impedance"])
-            impedance["transform"] = transimp
-        self._add_log_impedance(utility, impedance, b["log"])
-        dest_exp = numpy.exp(utility)
-        if mode != "logsum":
-            l, u = self.distance_boundary[mode]
-            dist = self.purpose.dist
-            dest_exp[(dist < l) | (dist >= u)] = 0
+        utility = numpy.zeros_like(next(iter(impedance.values())))
+        impedance["attraction_size"] = self._add_zone_util(
+            numpy.zeros_like(utility), b["attraction_size"])
+        dest_exp = self._calc_alt_util(mode, utility, impedance, b)
         if mode == "airplane":
             dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
@@ -117,18 +115,6 @@ class LogitModel:
             dest_exps[(impedance["dist"] < l) | (impedance["dist"] >= u)] = 0
         return dest_exps
 
-    def _add_constant(self, utility, b):
-        """Add constant term to utility.
-        
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the constant b will be added
-        b : float or tuple
-            The value of the constant
-        """
-        utility += b
-    
     def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
         
@@ -253,7 +239,7 @@ class ModeDestModel(LogitModel):
             # Separate sub-region parameters
             money_utility = 1 / b[0]
         money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-        self.money_utility = money_utility
+        self.money_utility: float = money_utility
 
     def calc_soft_mode_exps(self, impedance: dict):
         """Calculate utility exponentials for walk and bike.
@@ -296,7 +282,7 @@ class ModeDestModel(LogitModel):
             probs[mode] = sum(self.soft_mode_probs[mode]) * dest_prob
         return probs
 
-    def calc_prob(self, impedance: dict) -> dict:
+    def calc_prob(self, impedance: dict, calc_accessibility=False) -> dict:
         """Calculate matrix of choice probabilities.
 
         First calculates basic probabilities. Then inserts individual
@@ -313,6 +299,8 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
 
         Returns
         -------
@@ -322,6 +310,8 @@ class ModeDestModel(LogitModel):
         """
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
             impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
         if mode_probs is None:
             self._stashed_exps += [dest_exps, dest_expsums]
@@ -353,7 +343,7 @@ class ModeDestModel(LogitModel):
             mode: mode_probs[mode] for mode in self.soft_mode_exps}
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
 
-    def calc_basic_prob(self, impedance: dict):
+    def calc_basic_prob(self, impedance: dict, calc_accessibility=False):
         """Calculate utilities and cumulative destination choice probabilities.
 
         Only used in agent simulation.
@@ -365,8 +355,12 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
         """
-        _, _, dest_exps, _ = self._calc_utils(impedance)
+        mode_exps, mode_expsum, dest_exps, _ = self._calc_utils(impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
@@ -510,22 +504,13 @@ class ModeDestModel(LogitModel):
             prob[mode] = sum(mode_probs[mode]) * dest_prob
         return prob
 
-
-class AccessibilityModel(ModeDestModel):
-    def calc_accessibility(self, impedance):
+    def _calc_accessibility(self, mode_exps: Dict[str, numpy.ndarray],
+                            mode_expsum: numpy.ndarray):
         """Calculate logsum-based accessibility measures.
 
         Individual dummy variables are not included.
-
-        Parameters
-        ----------
-        impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2-d matrix
-                    Impedances
         """
-        mode_exps, mode_expsum, _, _ = self._calc_utils(impedance)
-        self.accessibility = {}
+        self.accessibility: Dict[str, pandas.Series] = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
         sustainable_expsum = numpy.zeros_like(mode_expsum)
         car_expsum = numpy.zeros_like(mode_expsum)
@@ -581,7 +566,7 @@ class DestModeModel(LogitModel):
     def calc_soft_mode_prob(self, impedance):
         return []
 
-    def calc_prob(self, impedance):
+    def calc_prob(self, impedance, calc_accessibility=False):
         """Calculate matrix of choice probabilities.
         
         Parameters
@@ -643,9 +628,6 @@ class DestModeModel(LogitModel):
         cumsum = dest_exps.T.cumsum(axis=0)
         self.cumul_dest_prob = cumsum / cumsum[-1]
 
-    def calc_accessibility(self, *args):
-        """Placeholder for accessibility measuring"""
-        pass
 
 class SecDestModel(LogitModel):
     """Logit model for secondary destination choice.

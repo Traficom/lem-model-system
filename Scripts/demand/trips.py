@@ -217,7 +217,7 @@ class DemandModel:
             return
         log.info("Calc car ownership based on hb_leisure accessibility...")
         purpose_impedance = acc_purpose.transform_impedance(impedance)
-        acc_purpose.accessibility_model.calc_accessibility(purpose_impedance)
+        acc_purpose.model.calc_prob(purpose_impedance, calc_accessibility=True)
         zd = self.zone_data
         prob = {hh_size: model.calc_prob()
             for hh_size, model in self.car_ownership_models.items()}

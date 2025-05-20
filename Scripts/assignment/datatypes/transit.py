@@ -39,7 +39,7 @@ class TransitMode(AssignmentMode):
         self.segment_results: Dict[str, str] = {}
         self.node_results: Dict[str, str] = {}
         for scenario, tp in (
-                (self.emme_scenario, self.time_period), (day_scenario, "vrk")):
+                (day_scenario, "vrk"), (self.emme_scenario, self.time_period)):
             for res, attr in param.segment_results.items():
                 attr_name = f"@{self.name[:11]}_{attr}_{tp}"
                 self.segment_results[res] = attr_name

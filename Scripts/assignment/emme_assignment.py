@@ -266,6 +266,23 @@ class EmmeAssignmentModel(AssignmentModel):
         log.info("Link attributes aggregated to 24h (scenario {})".format(
             self.day_scenario.id))
 
+        # Aggregate and print transit vehicle kms
+        transit_modes = [veh.description for veh in network.transit_vehicles()]
+        miles = {miletype: pandas.Series(0.0, transit_modes)
+            for miletype in ("dist", "time")}
+        for ap in self.assignment_periods:
+            volume_factor = param.volume_factors["bus"][ap.name]
+            time_attr = ap.extra(param.uncongested_transit_time)
+            for line in networks.pop(ap.name).transit_lines():
+                mode = line.vehicle.description
+                headway = line[ap.netfield("hdw")]
+                if 0 < headway < 990:
+                    departures = volume_factor * 60/headway
+                    for segment in line.segments():
+                        miles["dist"][mode] += departures * segment.link.length
+                        miles["time"][mode] += departures * segment[time_attr]
+        resultdata.print_data(miles, "transit_kms.txt")
+
         # Aggregate and print vehicle kms and link lengths
         kms = dict.fromkeys(ass_classes, 0.0)
         vdfs = {param.roadclasses[linktype].volume_delay_func
@@ -358,26 +375,7 @@ class EmmeAssignmentModel(AssignmentModel):
                     break
         resultdata.print_data(stations, "transit_stations.txt")
 
-        # Aggregate and print transit vehicle kms
-        transit_modes = [veh.description for veh in network.transit_vehicles()]
-        miles = {miletype: pandas.Series(0.0, transit_modes)
-            for miletype in ("dist", "time")}
-        for ap in self.assignment_periods:
-            network = ap.emme_scenario.get_network()
-            volume_factor = param.volume_factors["bus"][ap.name]
-            time_attr = ap.extra(param.uncongested_transit_time)
-            for line in network.transit_lines():
-                mode = line.vehicle.description
-                headway = line[ap.netfield("hdw")]
-                if 0 < headway < 990:
-                    departures = volume_factor * 60/headway
-                    for segment in line.segments():
-                        miles["dist"][mode] += departures * segment.link.length
-                        miles["time"][mode] += departures * segment[time_attr]
-        resultdata.print_data(miles, "transit_kms.txt")
-
         # Export link, node and segnment extra attributes to GeoPackage file
-        network = self.day_scenario.get_network()
         fname = "assignment_results.gpkg"
         for geom_type, objects in (
                 (Node, network.nodes()),

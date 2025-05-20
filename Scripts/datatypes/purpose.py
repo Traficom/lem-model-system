@@ -255,10 +255,8 @@ class TourPurpose(Purpose):
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
-            self.accessibility_model = self.model
         else:
             self.model = logit.ModeDestModel(*args)
-            self.accessibility_model = logit.AccessibilityModel(*args)
         for mode in self.demand_share:
             self.demand_share[mode]["vrk"] = [1, 1]
         self.modes = list(self.model.mode_choice_param)
@@ -328,8 +326,7 @@ class TourPurpose(Purpose):
                     Mode (bike/walk) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
-        self.model.calc_soft_mode_exps(copy(purpose_impedance))
-        self.accessibility_model.calc_soft_mode_exps(purpose_impedance)
+        self.model.calc_soft_mode_exps(purpose_impedance)
 
     def calc_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.
@@ -342,10 +339,7 @@ class TourPurpose(Purpose):
                     Mode (car/transit/bike/...) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
-        if is_last_iteration:
-            self.accessibility_model.calc_accessibility(
-                copy(purpose_impedance))
-        self.prob = self.model.calc_prob(purpose_impedance)
+        self.prob = self.model.calc_prob(purpose_impedance, is_last_iteration)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
 
     def calc_basic_prob(self, impedance, is_last_iteration):
@@ -368,10 +362,8 @@ class TourPurpose(Purpose):
             Empty list
         """
         purpose_impedance = self.transform_impedance(impedance)
-        if is_last_iteration and self.name[0] != 's':
-            self.accessibility_model.calc_accessibility(
-                copy(purpose_impedance))
-        self.model.calc_basic_prob(purpose_impedance)
+        self.model.calc_basic_prob(
+            purpose_impedance, is_last_iteration and self.name[0] != 's')
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 

@@ -97,11 +97,19 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.56034
+                "transform": -0.56034
             },
             "attraction_size": {
                 "sport_facility_indoor": 1,
                 "sport_facility_outdoor": 0.11914
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {
