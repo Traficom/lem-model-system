@@ -7,9 +7,10 @@ import utils.log as log
 from datatypes.purpose import FreightPurpose
 from datahandling.zonedata import FreightZoneData
 from datahandling.resultdata import ResultsData
-from parameters.commodity import commodity_conversion
 from datahandling.matrixdata import MatrixData
 from assignment.freight_assignment import FreightAssignmentPeriod
+
+from parameters.commodity import commodity_conversion
     
 
 def create_purposes(parameters_path: Path, zonedata: FreightZoneData, 
@@ -44,7 +45,8 @@ def create_purposes(parameters_path: Path, zonedata: FreightZoneData,
         try:
             purpose_cost = costdata[commodity_conversion[commodity]]
             purposes[commodity] = FreightPurpose(commodity_params, zonedata, 
-                                                 resultdata, purpose_cost)
+                                                 resultdata, purpose_cost, 
+                                                 parameters_path.stem)
         except KeyError:
             log.warn(f"Aggregated commodity class '{commodity_conversion[commodity]}' "
                       f"for commodity {commodity} not found in costs json.")
