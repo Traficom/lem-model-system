@@ -14,7 +14,7 @@ from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
 from datahandling.matrixdata import MatrixData
 
-from utils.freight_utils import create_purposes, store_demand
+from utils.freight_utils import create_purposes, StoreDemand
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -39,7 +39,9 @@ def main(args):
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
-    
+    store_demand = StoreDemand(ass_model.freight_network, resultmatrices, 
+                               zonedata.all_zone_numbers, zonedata.zone_numbers)
+
     impedance = ass_model.freight_network.assign()
     for mtx_type in impedance.keys():
         for ass_class, mtx in impedance[mtx_type].items():
@@ -52,15 +54,13 @@ def main(args):
     
     total_demand = {mode: numpy.zeros([zonedata.nr_zones, zonedata.nr_zones])
                     for mode in param.truck_classes}
-    set_mtx_args = (ass_model.freight_network, resultmatrices, 
-                    zonedata.all_zone_numbers, zonedata.zone_numbers)
     for purpose in purposes.values():
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
-            save_demand = True if purpose.name in args.specify_commodity_names else False
-            store_demand(*set_mtx_args, mode, demand[mode], 
-                         save_demand, "freight_demand_tons", purpose.name)
+            omx_filename = ("freight_demand_tons" if purpose.name 
+                            in args.specify_commodity_names else "")
+            store_demand.store(mode, demand[mode], omx_filename, purpose.name)
         if purpose.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose.name)
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
@@ -79,8 +79,7 @@ def main(args):
     
     log.info("Starting end assigment")
     for ass_class in total_demand:
-        store_demand(*set_mtx_args, ass_class, total_demand[ass_class], 
-                     save_demand=True, omx_filename="freight_demand")
+        store_demand.store(mode, total_demand[ass_class], "freight_demand")
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
