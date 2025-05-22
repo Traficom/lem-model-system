@@ -57,6 +57,7 @@ Scripts/.pytest_cache
 Scripts/tests/.pytest_cache
 Scripts/.env
 Scripts/tests/test_data/Results/*
+!Scripts/tests/test_data/Results/STRATS_s19/config
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/cost*
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/dist*
 !Scripts/tests/test_data/Results/test/Matrices/uusimaa/time*

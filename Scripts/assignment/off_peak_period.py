@@ -155,8 +155,8 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
-        self._assign_transit(param.transit_classes)
-        self._calc_transit_network_results()
+        self._assign_transit(param.transit_classes, calc_network_results=True)
+        self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
         for tc in self.assignment_modes:
             self.assignment_modes[tc].release_matrices()

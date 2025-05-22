@@ -2,6 +2,8 @@ from __future__ import annotations
 import numpy # type: ignore
 import pandas # type: ignore
 import copy
+import json
+from pathlib import Path
 
 from typing import TYPE_CHECKING, Dict, Union, Iterable
 import utils.log as log
@@ -235,8 +237,8 @@ class AssignmentPeriod(Period):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        self._assign_transit(param.transit_classes)
-        self._calc_transit_network_results()
+        self._assign_transit(param.transit_classes, calc_network_results=True)
+        self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
         for tc in self.assignment_modes:
             self.assignment_modes[tc].release_matrices()
@@ -690,7 +692,8 @@ class AssignmentPeriod(Period):
                                                 / (2.0*line[effective_hdw_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self, transit_classes=param.local_transit_classes):
+    def _assign_transit(self, transit_classes=param.local_transit_classes,
+                        calc_network_results=False, keep_strat_files=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -708,18 +711,19 @@ class AssignmentPeriod(Period):
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
-        log.info("Transit assignment performed for scenario {}".format(
-            str(self.emme_scenario.id)))
+            if calc_network_results:
+                self._calc_transit_network_results(transit_class)
+            if not keep_strat_files:
+                self._strategy_paths[transit_class].unlink(missing_ok=True)
+            log.info(f"Transit class {transit_class} assigned")
 
-    def _calc_transit_network_results(self,
-                                      transit_classes=param.transit_classes):
-        """Calculate transit network results for one scenario."""
-        log.info("Calculates transit network results")
-        for tc in transit_classes:
-            self.emme_project.network_results(
-                self.assignment_modes[tc].ntw_results_spec,
-                scenario=self.emme_scenario,
-                class_name=tc)
+    def _calc_transit_network_results(self, transit_class):
+        self.emme_project.network_results(
+            self.assignment_modes[transit_class].ntw_results_spec,
+            scenario=self.emme_scenario,
+            class_name=transit_class)
+
+    def _calc_transit_link_results(self):
         volax_attr = self.extra("aux_transit")
         network = self.emme_scenario.get_network()
         for link in network.links():
@@ -728,3 +732,12 @@ class AssignmentPeriod(Period):
         for segment in network.transit_segments():
             segment[time_attr] = segment.transit_time
         self.emme_scenario.publish_network(network)
+
+    @property
+    def _strategy_paths(self) -> Dict[str, Path]:
+        db_path = (Path(self.emme_project.modeller.emmebank.path).parent
+                   / f"STRATS_s{self.emme_scenario.id}")
+        with open(db_path / "config", "r") as f:
+            config = json.load(f)
+        return {strat["name"]: db_path / strat["path"]
+            for strat in config["strat_files"]}
