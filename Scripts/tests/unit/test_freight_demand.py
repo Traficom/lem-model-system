@@ -57,7 +57,8 @@ class FreightModelTest(unittest.TestCase):
             }
         }
         for purpose in purposes.values():
-            demand, costs = purpose.calc_traffic(impedance)
+            demand = purpose.calc_traffic(impedance)
+            costs = purpose.get_costs(impedance)
             for mode in demand:
                 self.assertTrue(numpy.isfinite(demand[mode]).all())
                 if mode == param.truck_classes[0]:
