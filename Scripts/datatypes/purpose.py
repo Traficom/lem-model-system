@@ -583,12 +583,13 @@ class FreightPurpose(Purpose):
         """
         costs = {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
             for mode in self.modes}
+        return_costs = copy(costs)
         self.dist = costs["truck"]["cost"]
         nr_zones = self.zone_data.nr_zones
         probs = self.model.calc_prob(costs)
         generation = numpy.tile(self.zone_data[f"gen_{self.name}"], (nr_zones, 1))
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
-        return demand
+        return demand, return_costs
 
     def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
         """Calculate vehicle matrix from ton matrix using ton-to-vehicles 
