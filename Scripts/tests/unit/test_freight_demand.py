@@ -56,6 +56,6 @@ class FreightModelTest(unittest.TestCase):
             }
         }
         for purpose in purposes.values():
-            demand = purpose.calc_traffic(impedance)
+            demand, costs = purpose.calc_traffic(impedance)
             for mode in demand:
                 self.assertFalse(numpy.isnan(demand[mode]).any())
