@@ -284,7 +284,7 @@ def read_zonedata(path: Path,
         (Path(__file__).parent / "zone_variables.json").read_text("utf-8")
     )[data_type]
     aggs = {}
-    shares: Dict[str, Dict[str, List]] = {}
+    shares: Dict[str, Dict[str, List[str]]] = {}
     for func, cols in zone_variables.items():
         for col in cols:
             try:
