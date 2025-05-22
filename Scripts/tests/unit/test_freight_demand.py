@@ -6,6 +6,7 @@ import numpy
 import unittest
 import openmatrix as omx
 
+import parameters.assignment as param
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import FreightZoneData
 from utils.freight_utils import create_purposes
@@ -58,4 +59,8 @@ class FreightModelTest(unittest.TestCase):
         for purpose in purposes.values():
             demand, costs = purpose.calc_traffic(impedance)
             for mode in demand:
-                self.assertFalse(numpy.isnan(demand[mode]).any())
+                self.assertTrue(numpy.isfinite(demand[mode]).all())
+                if mode == param.truck_classes[0]:
+                    self.assertTrue(numpy.isfinite(costs[mode]["cost"]).all())
+                else:
+                    self.assertFalse(numpy.isfinite(costs[mode]["cost"]).any())
