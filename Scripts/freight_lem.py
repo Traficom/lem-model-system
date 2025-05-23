@@ -13,6 +13,7 @@ from datahandling.resultdata import ResultsData
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
 from datahandling.matrixdata import MatrixData
+from datatypes.purpose import FreightPurpose
 
 from utils.freight_utils import create_purposes, StoreDemand
 from datahandling.traversaldata import transform_traversal_data
@@ -67,7 +68,7 @@ def main(args):
         demand["truck"] += transform_traversal_data(resultdata.path, zonedata.zone_numbers)
         for mode in param.truck_classes:
             total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
-        write_purpose_summary(purpose.name, demand, impedance, resultdata)
+        write_purpose_summary(purpose, demand, impedance, resultdata)
         write_zone_summary(purpose.name, zonedata.zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
@@ -83,24 +84,29 @@ def main(args):
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
-def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
+def write_purpose_summary(purpose: FreightPurpose, demand: dict, impedance: dict, 
                           resultdata: ResultsData):
     """Write purpose-mode specific summary as txt-file containing mode shares 
     calculated from demand (tons), mode specific demand (tons), mode shares 
-    calculated from mileage, and mode specific ton-mileage.
+    calculated from mileage, mode specific ton-mileage and total eur-ton product.
     """
     modes = list(demand)
     mode_tons = [numpy.sum(demand[mode])+0.01 for mode in modes]
     shares_tons = [tons / sum(mode_tons) for tons in mode_tons]
     mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
     shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
+    costs = {mode: c["cost"] for mode, c in purpose.get_costs(impedance).items()}
+    for cost in costs.values():
+        cost[cost == numpy.inf] = 0
+    ton_costs = [numpy.sum(costs.pop(mode)*demand[mode]) for mode in modes]
     df = DataFrame(data={
-        "Commodity": [purpose_name]*len(modes),
+        "Commodity": [purpose.name]*len(modes),
         "Mode": modes,
         "Mode share from tons (%)": [round(i, 3) for i in shares_tons],
         "Tons (t/annual)": [int(i) for i in mode_tons],
         "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
-        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
+        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist],
+        "Costs (eur-ton/annual)": [int(i) for i in ton_costs]
         })
     filename = "freight_purpose_summary.txt"
     resultdata.print_concat(df, filename)
