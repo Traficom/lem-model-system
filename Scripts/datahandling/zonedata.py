@@ -65,10 +65,6 @@ class ZoneData:
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
-        for col in data:
-            if col.startswith("age"):
-                self[col + "_female"] = 0.5 * data[col]
-                self[col + "_male"] = 0.5 * data[col]
         # Convert household shares to population shares
         hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
         self.share["sh_pop_hh1"] = divide(self["sh_hh1"], hh_population)
