@@ -8,8 +8,8 @@ class TourLengthHistogram:
     _u = numpy.array(intervals[1:])
 
     def __init__(self, name):
-        index = [f"{i}-{j}" for i, j in zip(intervals[:-1], intervals[1:])]
-        index.append("total_kms")
+        index = pandas.MultiIndex.from_tuples(
+            zip(intervals[:-1] + ("total",), intervals[1:] + ("kms",)))
         self.histogram = pandas.concat(
             {name: pandas.Series(0.0, index, name="nr_tours")})
 
