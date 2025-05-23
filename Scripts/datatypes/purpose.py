@@ -604,7 +604,8 @@ class FreightPurpose(Purpose):
         dict
             Mode (truck/freight_train/...) : cost : numpy.ndarray
         """
-        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode], 
+                                         self.model_category)}
                 for mode in self.modes}
 
     def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):

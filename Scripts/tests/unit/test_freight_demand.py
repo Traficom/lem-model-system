@@ -15,7 +15,7 @@ TEST_PATH = Path(__file__).parent.parent / "test_data"
 TEST_DATA_PATH = TEST_PATH / "Scenario_input_data"
 TEST_MATRICES = TEST_PATH / "Scenario_input_data" / "Matrices" / "uusimaa"
 RESULT_PATH = TEST_PATH / "Results"
-PARAMETERS_PATH = TEST_PATH.parent.parent / "parameters" / "freight" / "domestic"
+PARAMETERS_PATH = TEST_PATH.parent.parent / "parameters" / "freight"
 ZONE_NUMBERS = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621,
                 2707, 2814, 2918, 3000, 3003, 3203, 3302, 3416, 3639, 3705,
                 3800, 4013, 4101, 4202, 7043, 8284, 12614, 17278, 19419, 23678]
@@ -30,7 +30,7 @@ class FreightModelTest(unittest.TestCase):
         resultdata = ResultsData(RESULT_PATH)
         with open(TEST_DATA_PATH / "costdata.json") as file:
             costdata = json.load(file)
-        purposes = create_purposes(PARAMETERS_PATH, zonedata, 
+        purposes = create_purposes(PARAMETERS_PATH / "domestic", zonedata, 
                                    resultdata, costdata["freight"])
         
         time_impedance = omx.open_file(TEST_MATRICES / "freight_time.omx", "r")
