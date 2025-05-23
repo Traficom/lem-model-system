@@ -31,7 +31,8 @@ class AssignmentPeriod(Period):
                  emme_context: EmmeProject,
                  separate_emme_scenarios: bool = False,
                  use_stored_speeds: bool = False,
-                 delete_extra_matrices: bool = False):
+                 delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False):
         """
         Initialize assignment period.
 
@@ -53,12 +54,15 @@ class AssignmentPeriod(Period):
         delete_extra_matrices : bool (optional)
             If True, only matrices needed for demand calculation will be
             returned from end assignment.
+        delete_strat_files : bool (optional)
+            If True, strategy files will be deleted immediately after usage.
         """
         self.name = name
         self.emme_scenario: Scenario = emme_context.modeller.emmebank.scenario(
             emme_scenario)
         self.emme_project = emme_context
         self._separate_emme_scenarios = separate_emme_scenarios
+        self._delete_strat_files = delete_strat_files
         self.use_stored_speeds = use_stored_speeds
         self.stopping_criteria = copy.deepcopy(
             param.stopping_criteria)
@@ -211,7 +215,7 @@ class AssignmentPeriod(Period):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        self._assign_transit()
+        self._assign_transit(delete_strat_files=self._delete_strat_files)
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
@@ -237,7 +241,9 @@ class AssignmentPeriod(Period):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        self._assign_transit(param.transit_classes, calc_network_results=True)
+        self._assign_transit(
+            param.transit_classes, calc_network_results=True,
+            delete_strat_files=self._delete_strat_files)
         self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
         for tc in self.assignment_modes:
@@ -693,7 +699,7 @@ class AssignmentPeriod(Period):
         self.emme_scenario.publish_network(network)
 
     def _assign_transit(self, transit_classes=param.local_transit_classes,
-                        calc_network_results=False, keep_strat_files=False):
+                        calc_network_results=False, delete_strat_files=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -713,7 +719,7 @@ class AssignmentPeriod(Period):
                     class_name=transit_class)
             if calc_network_results:
                 self._calc_transit_network_results(transit_class)
-            if not keep_strat_files:
+            if delete_strat_files:
                 self._strategy_paths[transit_class].unlink(missing_ok=True)
             log.info(f"Transit class {transit_class} assigned")
 

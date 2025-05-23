@@ -77,8 +77,7 @@ class WholeDayPeriod(AssignmentPeriod):
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
         self._assign_cars(self.stopping_criteria["coarse"])
-        self._assign_transit(
-            param.long_distance_transit_classes, keep_strat_files=True)
+        self._assign_transit(param.long_distance_transit_classes)
         self._long_distance_trips_assigned = True
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
@@ -99,9 +98,11 @@ class WholeDayPeriod(AssignmentPeriod):
         """
         self._assign_cars(self.stopping_criteria["fine"])
         if not self._long_distance_trips_assigned:
-            self._assign_transit(
-                param.long_distance_transit_classes, keep_strat_files=True)
+            self._assign_transit(param.long_distance_transit_classes)
+        strategy_paths = self._strategy_paths
         for transit_class in param.long_distance_transit_classes:
             self._calc_transit_network_results(transit_class)
+            if self._delete_strat_files:
+                strategy_paths[transit_class].unlink(missing_ok=True)
         self._calc_transit_link_results()
         return self._get_impedances(self.transport_classes)
