@@ -4,6 +4,7 @@ import numpy # type: ignore
 from collections import namedtuple
 import copy
 import os
+from pathlib import Path
 
 
 MODE_TYPES = {
@@ -478,6 +479,8 @@ Modeller = namedtuple("Modeller", "emmebank")
 
 class EmmeBank:
     def __init__(self):
+        self.path = (Path(__file__).parent.parent.parent
+                     / "tests" / "test_data" / "Results" / "test")
         self._scenarios = {}
         self._matrices = {}
         self._functions = {}

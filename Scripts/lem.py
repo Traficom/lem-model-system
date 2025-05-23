@@ -67,6 +67,7 @@ def main(args):
     kwargs = {
         "use_free_flow_speeds": calculate_long_dist_demand,
         "delete_extra_matrices": args.delete_extra_matrices,
+        "delete_strat_files": args.del_strat_files,
     }
     if calculate_long_dist_demand:
         kwargs["time_periods"] = {"vrk": "WholeDayPeriod"}
