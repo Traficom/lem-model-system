@@ -60,7 +60,7 @@
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 35.74856
+                "wrk_recreation": 35.74856
             }
         },
         "long_d_bus": {
@@ -74,7 +74,7 @@
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 35.74856
+                "wrk_recreation": 35.74856
             }
         },
         "car_leisure": {
@@ -88,7 +88,7 @@
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 35.74856
+                "wrk_recreation": 35.74856
             }
         },
         "car_pax": {
@@ -102,7 +102,7 @@
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 35.74856
+                "wrk_recreation": 35.74856
             }
         }
     },
