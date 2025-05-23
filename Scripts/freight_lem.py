@@ -95,12 +95,10 @@ def write_purpose_summary(purpose: FreightPurpose, demand: dict, impedance: dict
     shares_tons = [tons / sum(mode_tons) for tons in mode_tons]
     mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
     shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
-    costs = purpose.get_costs(impedance)
-    ton_costs = []
-    for mode in modes:
-        costs[mode] = numpy.where(costs[mode]["cost"] == numpy.inf, 
-                                  0, costs[mode]["cost"])
-        ton_costs.append(numpy.sum(costs.pop(mode)*demand[mode]))
+    costs = {mode: c["cost"] for mode, c in purpose.get_costs(impedance).items()}
+    for cost in costs.values():
+        cost[cost == numpy.inf] = 0
+    ton_costs = [numpy.sum(costs.pop(mode)*demand[mode]) for mode in modes]
     df = DataFrame(data={
         "Commodity": [purpose.name]*len(modes),
         "Mode": modes,
