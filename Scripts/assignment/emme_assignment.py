@@ -242,8 +242,9 @@ class EmmeAssignmentModel(AssignmentModel):
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
                 for ap in self.assignment_periods})
-        car_times.index.names = ("i_node", "j_node")
-        resultdata.print_data(car_times, "netfield_links.txt")
+        if not car_times.empty:
+            car_times.index.names = ("i_node", "j_node")
+            resultdata.print_data(car_times, "netfield_links.txt")
 
         # Aggregate results to 24h
         for ap in self.assignment_periods:
@@ -578,8 +579,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 speed = (60 * 2 * link.length
                          / (link[car_time_attr]+rlink[car_time_attr]))
             else:
-                speed = (0.3*(60*link.length/link[car_time_attr])
-                         + 0.7*link.data2)
+                try:
+                    speed = (0.3*(60*link.length/link[car_time_attr])
+                             + 0.7*link.data2)
+                except ZeroDivisionError:
+                    speed = link.data2
             speed = max(speed, 50.0)
 
             # Calculate start noise
