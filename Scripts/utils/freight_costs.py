@@ -31,12 +31,14 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
         case "freight_train":
             return calc_rail_cost(unit_costs, impedance, model_category)
         case "ship":
-            return calc_ship_cost(unit_costs, impedance, model_category)
+            if model_category == "domestic":
+                return get_domestic_ship_cost(unit_costs, impedance, model_category)
+            else:
+                return get_foreign_ship_cost(unit_costs, impedance)
         case _:
             msg = f"Unknown mode {mode}"
             log.error(msg)
             raise ValueError(msg)
-
 
 def calc_road_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray],
@@ -65,7 +67,6 @@ def calc_road_cost(unit_costs: Dict[str, Dict],
                            + params["terminal_cost"])
                            * params[f"{model_category}_distribution"])
     return sum(mode_cost.values())
-
 
 def calc_rail_cost(unit_costs: Dict[str, Dict],
                    impedance: Dict[str, numpy.ndarray],
@@ -97,12 +98,10 @@ def calc_rail_cost(unit_costs: Dict[str, Dict],
     rail_aux_cost = get_aux_cost(unit_costs, impedance, model_category)
     return rail_cost + rail_aux_cost
 
-
-def calc_ship_cost(unit_costs: Dict[str, Dict],
-                   impedance: Dict[str, numpy.ndarray],
-                   model_category: str):
-    """Calculate freight ship based costs. For foreign model types returns
-    cost for mode-draught relation with smallest general cost.
+def get_domestic_ship_cost(unit_costs: Dict[str, Dict],
+                           impedance: Dict[str, numpy.ndarray],
+                           model_category: str):
+    """Fetches domestic freight ship based costs. 
 
     Parameters
     ----------
@@ -121,28 +120,45 @@ def calc_ship_cost(unit_costs: Dict[str, Dict],
     ship_cost : numpy.ndarray
         impedance type cost : numpy 2d matrix
     """
-    ship_cost = None
-    if model_category == "domestic":
-        parameters = unit_costs["ship"]["domestic_vessel"]
-        ship_cost = get_ship_cost(impedance, parameters, model_category)
-    else:
-        for mode in unit_costs["ship"].keys():
-            if mode == "domestic_vessel":
-                continue
-            for params in unit_costs["ship"][mode].values():
-                cost = get_ship_cost(impedance, params, model_category)
-                if ship_cost is None:
-                    ship_cost = cost
-                else:
-                    ship_cost = (
-                        cost if numpy.sum(cost) < numpy.sum(ship_cost) else ship_cost)
+    parameters = unit_costs["ship"]["domestic_vessel"]
+    ship_cost = calc_ship_cost(impedance, parameters, model_category)
     ship_aux_cost = get_aux_cost(unit_costs, impedance, model_category)
     return ship_cost + ship_aux_cost
 
+def get_foreign_ship_cost(unit_costs: Dict[str, Dict],
+                          impedance: Dict[str, numpy.ndarray]):
+    """Fetches smallest general cost among given foreign ship types and their draughts.
+    
+    Parameters
+    ----------
+    unit_costs : Dict[str, Dict]
+        Freight mode (truck/freight_train/ship) : mode
+            Mode (other_dry_cargo...) : draught
+                draught (4m...) : unit cost name
+                    unit cost name : unit cost value
+    impedance : Dict[str, numpy.ndarray]
+        Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
 
-def get_ship_cost(parameters: Dict[str, float],
-                  impedance: Dict[str, numpy.ndarray],
-                  model_category: str) -> numpy.ndarray:
+    Returns
+    ----------
+    ship_cost : Tuple[str, str, numpy.ndarray]
+        ship type, draught, cost matrix
+    """
+    ship_info = None
+    for mode in unit_costs["ship"].keys():
+        if mode == "domestic_vessel":
+            continue
+        for draught, params in unit_costs["ship"][mode].items():
+            cost = calc_ship_cost(impedance, params)
+            if ship_info is None:
+                ship_info = (mode, draught, cost)
+            elif cost.sum() < ship_info[-1].sum():
+                ship_info = (mode, draught, cost)
+    return ship_info
+
+def calc_ship_cost(parameters: Dict[str, float],
+                   impedance: Dict[str, numpy.ndarray],
+                   model_category: str = "") -> numpy.ndarray:
     """Calculates ship mode specific cost parts
     
     Parameters
@@ -151,23 +167,20 @@ def get_ship_cost(parameters: Dict[str, float],
         unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/canal_cost) : numpy 2d matrix
-    model_category : str
-        purpose estimation category, domestic or foreign
+    model_category : str, by default empty string
+        purpose estimation category, domestic or foreign, optional
     
     Returns
     ----------
     ship_cost
         numpy.ndarray
     """
-    ship_cost = (
-        impedance["time"] * parameters["time"]
-        + impedance["dist"] * parameters["dist"]
-        + parameters["terminal_cost"]
-    )
+    ship_cost = (impedance["time"] * parameters["time"]
+                 + impedance["dist"] * parameters["dist"]
+                 + parameters["terminal_cost"])
     if model_category == "domestic":
         ship_cost += impedance["canal_cost"] * parameters["canal_cost"]
     return ship_cost
-
 
 def get_aux_cost(unit_costs: Dict[str, Dict],
                  impedance: Dict[str, numpy.ndarray],
