@@ -27,7 +27,10 @@ def main(args):
     emme_project_path = Path(args.emme_path)
     parameters_path = Path(__file__).parent / "parameters" / "freight"
     save_matrices = True if args.specify_commodity_names else False
-    ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
+    ep = EmmeProject(emme_project_path)
+    ep.try_open_db("koko_suomi")
+    ep.start()
+    ass_model = EmmeAssignmentModel(ep,
                                     first_scenario_id=args.first_scenario_id,
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
