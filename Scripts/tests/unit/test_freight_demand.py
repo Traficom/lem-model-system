@@ -19,7 +19,7 @@ RESULT_PATH = TEST_PATH / "Results"
 PARAMETERS_PATH = TEST_PATH.parent.parent / "parameters" / "freight"
 ZONE_NUMBERS = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621,
                 2707, 2814, 2918, 3000, 3003, 3203, 3302, 3416, 3639, 3705,
-                3800, 4013, 4101, 4202, 7043, 8284, 12614, 17278, 19419, 23678]
+                3800, 4013, 4102, 4202, 7043, 8284, 12614, 17278, 19401, 23678]
 
 
 class FreightModelTest(unittest.TestCase):
