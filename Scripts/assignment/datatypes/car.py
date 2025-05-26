@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from assignment.assignment_period import AssignmentPeriod
 
 
-class CarMode(AssignmentMode):
+class VehicleMode(AssignmentMode):
     def __init__(self, name: str, assignment_period: AssignmentPeriod,
                  dist_unit_cost: float, include_toll_cost: bool,
                  save_matrices: bool = False):
@@ -92,9 +92,22 @@ class CarMode(AssignmentMode):
     def _get_time(self, cost):
         return self.gen_cost.data - self.vot_inv*cost
 
-class TruckMode(CarMode):
+
+class CarMode(VehicleMode):
     def __init__(self, *args, **kwargs):
-        CarMode.__init__(self, *args, **kwargs)
+        VehicleMode.__init__(self, *args, **kwargs)
+        self.free_flow_time = self._create_matrix("free_flow_time")
+        self.add_analysis(param.free_flow_time_attr, self.free_flow_time.id)
+
+    def _get_time(self, cost):
+        time = self.gen_cost.data - self.vot_inv*cost
+        # Weight congested time (time - free_flow_time) by 1.5
+        return 1.5*time - 0.5*self.free_flow_time.data
+
+
+class TruckMode(VehicleMode):
+    def __init__(self, *args, **kwargs):
+        VehicleMode.__init__(self, *args, **kwargs)
         self.time = self._create_matrix("time")
         self.add_analysis(f"@truck_time_{self.time_period}", self.time.id)
 

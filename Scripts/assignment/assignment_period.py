@@ -354,6 +354,8 @@ class AssignmentPeriod(Period):
                         link.volume_delay_func = roadclass.volume_delay_func
                 link.data1 = roadclass.lane_capacity
                 link.data2 = roadclass.free_flow_speed
+                link[param.free_flow_time_attr] = (60 * link.length
+                                                   / roadclass.free_flow_speed)
             elif linktype in param.custom_roadtypes:
                 # Custom car link
                 if link.volume_delay_func != 90:
@@ -361,6 +363,8 @@ class AssignmentPeriod(Period):
                         link.volume_delay_func = 91
                     else:
                         link.volume_delay_func = linktype - 90
+                link[param.free_flow_time_attr] = (60 * link.length
+                                                   / link.data2)
                 for linktype in param.roadclasses:
                     roadclass = param.roadclasses[linktype]
                     if (link.volume_delay_func == roadclass.volume_delay_func
