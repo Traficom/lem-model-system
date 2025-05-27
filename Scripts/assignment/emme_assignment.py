@@ -42,6 +42,8 @@ class EmmeAssignmentModel(AssignmentModel):
     delete_extra_matrices : bool (optional)
         If True, only matrices needed for demand calculation will be
         returned from end assignment.
+    delete_strat_files : bool (optional)
+            If True, strategy files will be deleted immediately after usage.
     time_periods : dict (optional)
         key : str
             Time period names, default is aht, pt, iht
@@ -59,6 +61,7 @@ class EmmeAssignmentModel(AssignmentModel):
                  save_matrices: bool = False,
                  use_free_flow_speeds: bool = False,
                  delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False,
                  time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
@@ -67,6 +70,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.transit_classes = (param.long_distance_transit_classes
             if self.use_free_flow_speeds else param.transit_classes)
         self.delete_extra_matrices = delete_extra_matrices
+        self._delete_strat_files = delete_strat_files
         self.time_periods = time_periods
         EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
         self.emme_project = emme_context
@@ -119,7 +123,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 tp, scen_id, self.emme_project,
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_stored_speeds=(car_time_files is not None),
-                delete_extra_matrices=self.delete_extra_matrices))
+                delete_extra_matrices=self.delete_extra_matrices,
+                delete_strat_files=self._delete_strat_files))
         ass_classes = param.transport_classes + ("bus",)
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield)
