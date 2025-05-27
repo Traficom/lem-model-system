@@ -293,9 +293,11 @@ class TourPurpose(Purpose):
     
     @property
     def generation_mode_shares(self):
-        shares = {mode: (self.generated_tours[mode].sum() 
-                          / self.generated_tours_all.sum()) for mode in self.modes}
-        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")}, 
+        idx = self.zone_data.is_in_submodel
+        shares = {mode: (self.generated_tours[mode][idx].sum()
+                          / self.generated_tours_all[idx].sum())
+            for mode in self.modes}
+        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")},
                              names=["purpose", "mode"])
     
     @property
