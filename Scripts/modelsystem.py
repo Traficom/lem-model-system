@@ -2,13 +2,14 @@ import threading
 import multiprocessing
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Set, Union, Optional, cast
+from typing import Any, Callable, Dict, List, Set, Union, Iterable, Optional, cast
 import numpy # type: ignore
 import pandas
 import random
 from collections import defaultdict
 from assignment.abstract_assignment import AssignmentModel
 from assignment.emme_assignment import EmmeAssignmentModel
+from assignment.assignment_period import AssignmentPeriod
 from assignment.mock_assignment import MockAssignmentModel
 
 import utils.log as log
@@ -19,7 +20,7 @@ from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
 from demand.external import ExternalModel
 from datatypes.purpose import new_tour_purpose
-from datatypes.purpose import Purpose, SecDestPurpose
+from datatypes.purpose import Purpose, TourPurpose, SecDestPurpose
 from datatypes.person import Person
 from datatypes.tour import Tour
 from datatypes.demand import Demand
@@ -33,7 +34,9 @@ class ModelSystem:
     Parameters
     ----------
     zone_data_path : Path
-        Directory path where input data for forecast year are found
+        Path where input data for forecast year are found
+    cost_data_path : Path
+        Path where cost data for forecast year are found
     base_zone_data_path : Path
         Directory path where input data for base year are found
     base_matrices_path : Path
@@ -55,6 +58,7 @@ class ModelSystem:
 
     def __init__(self,
                  zone_data_path: Path,
+                 cost_data_path: Path,
                  base_zone_data_path: Path,
                  base_matrices_path: Path,
                  results_path: Path,
@@ -71,38 +75,55 @@ class ModelSystem:
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
+        cost_data = json.loads(cost_data_path.read_text("utf-8"))
+        self.car_dist_cost = cost_data["car_cost"]
+        self.transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
         self.zdata_forecast = ZoneData(
             zone_data_path, self.zone_numbers, submodel)
+        self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
+                                       * self.car_dist_cost["car_work"])
 
         # Output data
         self.resultdata = ResultsData(results_path)
         self.resultmatrices = MatrixData(results_path / "Matrices" / submodel)
         parameters_path = Path(__file__).parent / "parameters" / "demand"
-        home_based_purposes = []
+        home_based_work_purposes = []
+        home_based_leisure_purposes = []
         sec_dest_purposes = []
-        other_purposes = []
+        other_work_purposes = []
+        other_leisure_purposes = []
         for file in parameters_path.rglob("*.json"):
             purpose = new_tour_purpose(
                 json.loads(file.read_text("utf-8")), self.zdata_forecast,
-                self.resultdata)
-            if (sorted(next(iter(purpose.impedance_share.values())))
-                    == sorted(assignment_model.time_periods)):
+                self.resultdata, cost_data["cost_changes"])
+            required_time_periods = sorted(
+                {tp for m in purpose.impedance_share.values() for tp in m})
+            if required_time_periods == sorted(assignment_model.time_periods):
                 if isinstance(purpose, SecDestPurpose):
                     sec_dest_purposes.append(purpose)
                 elif purpose.orig == "home":
-                    home_based_purposes.append(purpose)
+                    if param.assignment_classes[purpose.name] == "work":
+                        home_based_work_purposes.append(purpose)
+                    else:
+                        home_based_leisure_purposes.append(purpose)
                 else:
-                    other_purposes.append(purpose)
+                    if param.assignment_classes[purpose.name] == "work":
+                        other_work_purposes.append(purpose)
+                    else:
+                        other_leisure_purposes.append(purpose)
         self.dm = self._init_demand_model(
-            home_based_purposes + other_purposes + sec_dest_purposes)
+            home_based_work_purposes + other_work_purposes
+            + home_based_leisure_purposes + other_leisure_purposes
+            + sec_dest_purposes)
         self.travel_modes = {mode: True for purpose in self.dm.tour_purposes
             for mode in purpose.modes}  # Dict instead of set, to preserve order
         self.em = ExternalModel(
             self.basematrices, self.zdata_forecast, self.zone_numbers)
         self.mode_share: List[Dict[str,Any]] = []
-        self.convergence = pandas.DataFrame()
+        self.convergence = []
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         return DemandModel(
             self.zdata_forecast, self.resultdata, tour_purposes,
             is_agent_model=False)
@@ -135,19 +156,21 @@ class ModelSystem:
         # as logsums from probability calculation are used in tour generation.
         self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose.gen_model.init_tours()
-            else:
-                purpose.calc_prob(previous_iter_impedance, is_last_iteration)
-        
+            if param.assignment_classes[purpose.name] == "leisure":
+                for tp_imp in previous_iter_impedance.values():
+                    for imp in tp_imp.values():
+                        for mode in ("car_work", "transit_work", "walk", "bike"):
+                            imp.pop(mode, None)
+            purpose_impedance = purpose.calc_prob(
+                previous_iter_impedance, is_last_iteration)
+        previous_iter_impedance.clear()
+
         # Tour generation
         self.dm.generate_tours()
-        
-        for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose_impedance = purpose.transform_impedance(
-                    previous_iter_impedance)
-        previous_iter_impedance.clear()
+
+        soft_mode_impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            soft_mode_impedance[ap.name] = ap.get_soft_mode_impedances()
 
         # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
@@ -161,57 +184,26 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                demand = purpose.calc_demand()
-                if purpose.dest != "source":
-                    for mode in demand:
-                        self.dtm.add_demand(demand[mode])
+                for mode_demand in purpose.calc_demand(soft_mode_impedance):
+                    self.dtm.add_demand(mode_demand)
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
-                             long_dist_matrices,
-                             long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)):
-        # If we want to assign all trips with traffic congestion,
-        # then add long-distance trips as background demand
+                             long_dist_matrices: MatrixData,
+                             long_dist_classes: Iterable[str]):
+        class_list = ", ".join(long_dist_classes)
+        log.info(f"Get matrices for {class_list}...")
         zone_numbers = self.ass_model.zone_numbers
         car_matrices = {}
-        if long_dist_matrices is not None:
-            # Try getting long-distance trips from separate file
-            with long_dist_matrices.open(
-                    "demand", "vrk", zone_numbers,
-                    self.mapping, long_dist_classes) as mtx:
-                log.info("Get matrices from model run...")
-                for ass_class in long_dist_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    if ass_class in param.car_classes:
-                        car_matrices[ass_class] = demand.matrix
-        else:
-            log.info(
-                ("Matrices from model run not provided, "
-                    + "getting trips from base matrices..."))
-            # Long car trips must be in separate file
-            car_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class in param.car_classes]
-            other_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class not in param.car_classes]
-            if car_classes:
-                with self.basematrices.open(
-                        "demand", "vrk", zone_numbers,
-                        transport_classes=car_classes) as mtx:
-                    for ass_class in car_classes:
-                        demand = Demand(
-                            self.em.purpose, ass_class, mtx[ass_class])
-                        self.dtm.add_demand(demand)
-                        car_matrices[ass_class] = demand.matrix
-            if other_classes:
-                for ap in self.ass_model.assignment_periods:
-                    tp = ap.name
-                    with self.basematrices.open(
-                            "demand", tp, zone_numbers,
-                            transport_classes=other_classes) as mtx:
-                        for ass_class in other_classes:
-                            self.dtm.demand[tp][ass_class] = mtx[ass_class]
+        with long_dist_matrices.open(
+                "demand", "vrk", zone_numbers,
+                self.zdata_forecast.mapping, long_dist_classes) as mtx:
+            for ass_class in long_dist_classes:
+                demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                self.dtm.add_demand(demand)
+                if ass_class in param.car_classes:
+                    car_matrices[ass_class] = demand.matrix
+            log.info(f"Demand imported from {long_dist_matrices.path}")
         if car_matrices:
             with self.resultmatrices.open(
                     "demand", "vrk", zone_numbers, m='w') as mtx:
@@ -220,7 +212,8 @@ class ModelSystem:
 
     # possibly merge with init
     def assign_base_demand(self, 
-            is_end_assignment: bool = False) -> Dict[str, Dict[str, numpy.ndarray]]:
+            is_end_assignment: bool = False,
+            car_time_files: Optional[List[str]] = None) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign base demand to network (before first iteration).
 
         Parameters
@@ -238,49 +231,60 @@ class ModelSystem:
                     Impedance type (time/cost/dist)
                 value : numpy.ndarray
                     Impedance (float 2-d matrix)
+        car_time_files : list (optional)
+            List of paths, where car time data is stored.
+            If set, traffic assignment is all-or-nothing with speeds stored
+            in `#car_time_xxx`. Overrides `use_free_flow_speeds`.
+            List can be empty, if car times are already stored on network.
         """
-        impedance = {}
-
         # create attributes and background variables to network
-        self.ass_model.prepare_network(self.zdata_forecast.car_dist_cost)
+        self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
-        if not self.ass_model.use_free_flow_speeds:
-            self.ass_model.init_assign()
-            log.info("Get long-distance trip matrices")
-            self._add_external_demand(self.long_dist_matrices)
-            log.info("Get freight matrices")
-            self._add_external_demand(
-                self.freight_matrices, param.freight_classes)
-            log.info("Long-distance and freight matrices imported")
-        self.ass_model.calc_transit_cost(self.zdata_forecast.transit_zone)
+        self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
-        with self.resultmatrices.open(
-                "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
-            mtx["all"] = Purpose.distance
-
-        # Perform traffic assignment and get result impedance, 
-        # for each time period
+        if not isinstance(self.ass_model, MockAssignmentModel):
+            with self.resultmatrices.open(
+                    "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
+                mtx["all"] = Purpose.distance
+        soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period {}...".format(tp))
-            if is_end_assignment or not self.ass_model.use_free_flow_speeds:
-                if not self.ass_model.use_free_flow_speeds:
-                    transport_classes = (param.private_classes
-                                        + param.local_transit_classes)
-                else:
-                    transport_classes = (param.car_classes
-                                         + param.long_distance_transit_classes)
+            log.info(f"Initializing assignment for period {tp}...")
+            if is_end_assignment or (not self.ass_model.use_free_flow_speeds
+                                     and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=transport_classes) as mtx:
-                    for ass_class in transport_classes:
+                        transport_classes=ap.transport_classes) as mtx:
+                    for ass_class in ap.transport_classes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
+            soft_mode_impedance[tp] = ap.init_assign()
+        if self.long_dist_matrices is not None:
+            self.dtm.init_demand(param.long_distance_transit_classes)
+            self._add_external_demand(
+                self.long_dist_matrices, param.long_distance_transit_classes)
+        if self.freight_matrices is not None:
+            self.dtm.init_demand(param.truck_classes)
+            self._add_external_demand(
+                self.freight_matrices, param.truck_classes)
+
+        if not is_end_assignment:
+            log.info("Calculate probabilities for bike and walk...")
+            for purpose in self.dm.tour_purposes:
+                purpose.calc_soft_mode_prob(soft_mode_impedance)
+            log.info("Bike and walk calculation completed")
+        # Perform traffic assignment and get result impedance,
+        # for each time period
+        impedance = {}
+        for ap in self.ass_model.assignment_periods:
+            tp = ap.name
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             ap.assign_trucks_init()
             impedance[tp] = (ap.end_assign() if is_end_assignment
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
-                self._save_to_omx(impedance[tp], tp)
+                if not isinstance(self.ass_model, MockAssignmentModel):
+                    self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
@@ -288,7 +292,6 @@ class ModelSystem:
                 self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
-        self.dtm.calc_gaps()
         return impedance
 
     def run_iteration(self, previous_iter_impedance, iteration=None):
@@ -325,68 +328,69 @@ class ModelSystem:
         self.dtm.init_demand(
             [mode for mode in self.travel_modes if mode != "walk"])
 
-        # Update car density
-        prediction = (self.zdata_forecast["car_density"][:self.zdata_forecast.nr_zones]
-                      .clip(upper=1.0))
-        self.zdata_forecast["car_density"] = prediction
-        self.zdata_forecast["cars_per_1000"] = 1000 * prediction
+        self.dm.calculate_car_ownership(previous_iter_impedance)
 
+        # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
         if not self.ass_model.use_free_flow_speeds:
-            self._add_external_demand(
-                self.long_dist_matrices, param.car_classes)
+            car_matrices = (self.basematrices if self.long_dist_matrices is None
+                else self.long_dist_matrices)
+            self._add_external_demand(car_matrices, param.car_classes)
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
             self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
-                self._save_demand_to_omx(ap.name)
+                self._save_demand_to_omx(ap)
+
+        # Log mode shares
+        tours_mode = self._get_mode_tours()
+        sum_all = sum(tours_mode["tours"].values())
+        mode_shares = {}
+        for mode in tours_mode["tours"]:
+            share = tours_mode["tours"][mode].sum() / sum_all.sum()
+            mode_shares[mode] = share
+            log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
+        self.mode_share.append(mode_shares)
+
+        if iteration == "last":
+            self._export_model_results()
+            self._export_accessibility()
+
+        # Calculate convergence and empty result buffer
+        gap = self.dtm.calc_gaps()
+        log.info("Demand model convergence in iteration {} is {:1.5f}".format(
+            iteration, gap["rel_gap"]))
+        self.convergence.append(gap)
+        self.resultdata._df_buffer["demand_convergence.txt"] = pandas.DataFrame(
+            self.convergence)
+        self.resultdata.flush()
 
         # Calculate and return traffic impedance
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
-            log.info("Assigning period " + tp)
+            log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             impedance[tp] = (ap.end_assign() if iteration=="last"
                              else ap.assign(self.travel_modes))
             if iteration=="last":
-                self._save_to_omx(impedance[tp], tp)
+                if not isinstance(self.ass_model, MockAssignmentModel):
+                    self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata,
                 self.zdata_forecast.aggregations.municipality_mapping)
             self._calculate_noise_areas()
-            self._export_accessibility()
-
-        # Log mode shares
-        tours_mode = {mode: self._generated_tours_mode(mode) for mode in self.travel_modes}
-        sum_all = sum(tours_mode.values())
-        mode_shares = {}
-        for mode in tours_mode:
-            share = tours_mode[mode].sum() / sum_all.sum()
-            mode_shares[mode] = share
-            log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
-        self.mode_share.append(mode_shares)
-        
-        if iteration == "last":
-            self._export_model_results()
-
-        # Reset time-period specific demand matrices (DTM),
-        # and empty result buffer
-        gap = self.dtm.calc_gaps()
-        log.info("Demand model convergence in iteration {} is {:1.5f}".format(
-            iteration, gap["rel_gap"]))
-        self.convergence = self.convergence.append(gap, ignore_index=True)
-        self.resultdata._df_buffer["demand_convergence.txt"] = self.convergence
-        self.resultdata.flush()
+            self.resultdata.flush()
         return impedance
 
-    def _save_demand_to_omx(self, tp):
+    def _save_demand_to_omx(self, ap: AssignmentPeriod):
         zone_numbers = self.ass_model.zone_numbers
+        tp = ap.name
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in param.transport_classes:
+            for ass_class in ap.assignment_modes.keys():
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
@@ -412,10 +416,7 @@ class ModelSystem:
 
     def _export_accessibility(self):
         for purpose in self.dm.tour_purposes:
-            accessibility = purpose.accessibility_model.accessibility
-            for key in accessibility:
-                logsum = pandas.Series(numpy.log(accessibility[key]), 
-                    purpose.zone_numbers, name=f"{purpose.name}_{key}")
+            for logsum in purpose.model.accessibility.values():
                 self.resultdata.print_data(logsum, f"accessibility.txt")
     
     def _export_model_results(self):
@@ -429,14 +430,26 @@ class ModelSystem:
                               for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
             attr_tours_purpose, "zone_attraction_by_purpose.txt")
-        gen_tours_mode = {mode: self._generated_tours_mode(mode)
-                           for mode in self.travel_modes}
+        gen_dist_purpose = {
+            purpose.name: purpose.generated_dist_all / purpose.generated_tours_all
+                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
-            gen_tours_mode, "zone_generation_by_mode.txt")
-        attr_tours_mode = {mode: self._attracted_tours_mode(mode)
-                           for mode in self.travel_modes}
+            gen_dist_purpose, "zone_generation_dist_by_purpose.txt")
+        attr_dist_purpose = {
+            purpose.name: purpose.attracted_dist_all / purpose.attracted_tours_all
+                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
-            attr_tours_mode, "zone_attraction_by_mode.txt")
+            attr_dist_purpose, "zone_attraction_dist_by_purpose.txt")
+        gen_tours_mode = self._get_mode_tours()
+        attr_tours_mode = self._get_mode_tours(False)
+        self.resultdata.print_data(
+            gen_tours_mode["tours"], "zone_generation_by_mode.txt")
+        self.resultdata.print_data(
+            gen_tours_mode["dist"], "zone_generation_dist_by_mode.txt")
+        self.resultdata.print_data(
+            attr_tours_mode["tours"], "zone_attraction_by_mode.txt")
+        self.resultdata.print_data(
+            attr_tours_mode["dist"], "zone_attraction_dist_by_mode.txt")
         for purpose in self.dm.tour_purposes:
             self.resultdata.print_concat(
                 purpose.generation_mode_shares, "purpose_mode_shares.txt")
@@ -450,26 +463,27 @@ class ModelSystem:
                 self.resultdata.print_data(
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
-    def _generated_tours_mode(self, mode):
-        int_demand = pandas.Series(
-            0, self.zdata_forecast.zone_numbers, name=mode)
-        for purpose in self.dm.tour_purposes:
-            if mode in purpose.modes and purpose.dest != "source":
-                bounds = (next(iter(purpose.sources)).bounds
-                    if isinstance(purpose, SecDestPurpose)
-                    else purpose.bounds)
-                int_demand[bounds] += purpose.generated_tours[mode]
-        return int_demand
-    
-    def _attracted_tours_mode(self, mode):
-        int_demand = pandas.Series(0, self.zdata_forecast.zone_numbers, name=mode)
-        for purpose in self.dm.tour_purposes:
-            if mode in purpose.modes and purpose.dest != "source":
-                bounds = (next(iter(purpose.sources)).bounds
-                    if isinstance(purpose, SecDestPurpose)
-                    else purpose.bounds)
-                int_demand[bounds] += purpose.attracted_tours[mode]
-        return int_demand
+    def _get_mode_tours(self, generation = True):
+        tours = {"tours": {}, "dist": {}}
+        for mode in self.travel_modes:
+            demand = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            dist = pandas.Series(
+                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            for purpose in self.dm.tour_purposes:
+                if mode in purpose.modes and purpose.dest != "source":
+                    bounds = (next(iter(purpose.sources)).bounds
+                        if isinstance(purpose, SecDestPurpose)
+                        else purpose.bounds)
+                    if generation:
+                        demand[bounds] += purpose.generated_tours[mode]
+                        dist[bounds] += purpose.generated_distance[mode]
+                    else:
+                        demand[bounds] += purpose.attracted_tours[mode]
+                        dist[bounds] += purpose.attracted_distance[mode]
+            tours["tours"][mode] = demand
+            tours["dist"][mode] = dist / demand
+        return tours
 
     def _distribute_sec_dests(self, purpose, mode, impedance):
         threads = []
@@ -560,7 +574,7 @@ class AgentModelSystem(ModelSystem):
         Name of scenario, used for results subfolder
     """
 
-    def _init_demand_model(self, tour_purposes: List[Purpose]):
+    def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
         return DemandModel(
@@ -592,23 +606,10 @@ class AgentModelSystem(ModelSystem):
         random.seed(None)
         self.dm.car_use_model.calc_basic_prob()
         for purpose in self.dm.tour_purposes:
-            if isinstance(purpose, SecDestPurpose):
-                purpose.init_sums()
-            else:
-                if (purpose.area == "peripheral" or purpose.dest == "source"
-                        or purpose.name == "oop"):
-                    purpose.calc_prob(
-                        previous_iter_impedance, is_last_iteration)
-                    purpose.gen_model.init_tours()
-                    purpose.gen_model.add_tours()
-                    demand = purpose.calc_demand()
-                    if purpose.dest != "source":
-                        for mode in demand:
-                            self.dtm.add_demand(demand[mode])
-                else:
-                    purpose.init_sums()
-                    purpose.calc_basic_prob(
-                        previous_iter_impedance, is_last_iteration)
+            for mode_demand in purpose.calc_basic_prob(
+                    previous_iter_impedance, is_last_iteration):
+                # `demand` contains matrices only for non-agent purposes
+                self.dtm.add_demand(mode_demand)
         tour_probs = self.dm.generate_tour_probs()
         log.info("Assigning mode and destination for {} agents ({} % of total population)".format(
             len(self.dm.population), int(zone_param.agent_demand_fraction*100)))
@@ -695,7 +696,7 @@ class AgentModelSystem(ModelSystem):
         sec_dest_purpose = self.dm.purpose_dict["hoo"]
         for orig in origs:
                 dests = list(sec_dest_tours[orig])
-                probs = sec_dest_purpose.calc_prob(
+                probs = sec_dest_purpose.calc_sec_dest_prob(
                     mode, impedance, orig, dests).cumsum(axis=0)
                 for j, dest in enumerate(dests):
                     for tour in sec_dest_tours[orig][dest]:

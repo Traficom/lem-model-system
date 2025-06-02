@@ -64,7 +64,7 @@ class CarUseModel(LogitModel):
         """
         b = self.param
         utility = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
-        self._add_constant(utility, b["constant"])
+        utility += b["constant"]
         self._add_zone_util(utility, b["generation"], True)
         self.exps = numpy.exp(utility)
         self._add_log_zone_util(self.exps, b["log"], True)
@@ -150,7 +150,7 @@ class CarUseModel(LogitModel):
             # Comparison data has car user shares of population
             # over 6 years old (from HEHA)
             population_7_99 = (self.zone_data["population"][self.bounds]
-                               * self.zone_data["share_age_7-99"][self.bounds])
+                               * self.zone_data["sh_age_7_99"][self.bounds])
         # print car use share by municipality and area
         for area_type in self.zone_data.aggregations.mappings:
             prob_area = self.zone_data.aggregations.averages(

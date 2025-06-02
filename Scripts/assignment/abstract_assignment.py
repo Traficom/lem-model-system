@@ -7,6 +7,8 @@ import numpy
 class AssignmentModel:
     __metaclass__ = ABCMeta
 
+    assignment_periods: List[Period]
+
     @property
     @abstractmethod
     def mapping(self) -> Dict[int,int]:
@@ -36,7 +38,7 @@ class AssignmentModel:
         pass
 
     @abstractmethod
-    def prepare_network(self, car_dist_unit_cost=None):
+    def prepare_network(self, car_dist_unit_cost=None, *args):
         pass
 
     @abstractmethod
@@ -45,6 +47,9 @@ class AssignmentModel:
 
 class Period:
     __metaclass__ = ABCMeta
+
+    name: str
+    assignment_modes: List[str]
 
     @abstractmethod
     def assign_trucks_init(self):
@@ -59,9 +64,7 @@ class Period:
         pass
 
     @abstractmethod
-    def get_matrix(self,
-                    ass_class: str,
-                    matrix_type: str) -> numpy.ndarray:
+    def get_matrix(self, ass_class: str) -> numpy.ndarray:
         pass
 
     @abstractmethod

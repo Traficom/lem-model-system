@@ -29,26 +29,31 @@ demand_share: Dict[str,Dict[str,Any]] = {
             "aht": (0.042, 0.028),
             "pt": (0.05, 0.05),
             "iht": (0.045, 0.055),
+            "it": (0.0, 0.0),
         },
         "car_leisure": {
             "aht": (0.042, 0.028),
             "pt": (0.05, 0.05),
             "iht": (0.045, 0.055),
+            "it": (0.0, 0.0),
         },
         "train": {
             "aht": (0.101, 0.034),
             "pt": (0.05, 0.05),
             "iht": (0.064, 0.119),
+            "it": (0.0, 0.0),
         },
         "airplane": {
             "aht": (0.101, 0.034),
             "pt": (0.05, 0.05),
             "iht": (0.064, 0.119),
+            "it": (0.0, 0.0),
         },
         "long_d_bus": {
             "aht": (0.101, 0.034),
             "pt": (0.05, 0.05),
             "iht": (0.064, 0.119),
+            "it": (0.0, 0.0),
         },
         "trailer_truck": {
             "aht": (0.033, 0.033),
@@ -67,10 +72,6 @@ demand_share: Dict[str,Dict[str,Any]] = {
         },
     },
 }
-for purpose in demand_share:
-    for mode in demand_share[purpose]:
-        demand_share[purpose][mode]["vrk"] = (((1, 1), (1, 1))
-            if purpose == "hoo" else (1, 1))
 backup_demand_share = {
     "aht": (0.042, 0.028),
     "pt": (0.05, 0.05),

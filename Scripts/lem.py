@@ -7,11 +7,12 @@ import utils.config
 import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
+from assignment.assignment_period import AssignmentPeriod
 from modelsystem import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
-BASE_ZONEDATA_DIR = "2018_zonedata"
+BASE_ZONEDATA_FILE = "2016_zonedata.gpkg"
 
 
 def main(args):
@@ -28,11 +29,12 @@ def main(args):
     else:
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
     base_matrices_path = Path(args.baseline_data_path, "Matrices")
     freight_matrices_path = (Path(args.freight_matrix_path)
         if args.freight_matrix_path is not None else None)
     forecast_zonedata_path = Path(args.forecast_data_path)
+    cost_data_path = Path(args.cost_data_path)
     results_path = Path(args.results_path, args.scenario_name)
     emme_project_path = Path(args.emme_path)
     log_extra = {
@@ -43,7 +45,7 @@ def main(args):
             "completed": 0,
             "failed": 0,
             "total": iterations,
-            "log": log.filename,
+            "log": str(log.filename),
             "converged": 0,
         }
     }
@@ -56,18 +58,19 @@ def main(args):
         raise NameError(
             "Baseline matrix directory '{}' does not exist.".format(
                 base_matrices_path))
-    if not forecast_zonedata_path.is_dir():
+    if not forecast_zonedata_path.is_file():
         raise NameError(
-            "Forecast data directory '{}' does not exist.".format(
+            "Forecast data file '{}' does not exist.".format(
                 forecast_zonedata_path))
 
     # Choose and initialize the Traffic Assignment (supply)model
     kwargs = {
         "use_free_flow_speeds": calculate_long_dist_demand,
         "delete_extra_matrices": args.delete_extra_matrices,
+        "delete_strat_files": args.del_strat_files,
     }
     if calculate_long_dist_demand:
-        kwargs["time_periods"] = ["vrk"]
+        kwargs["time_periods"] = {"vrk": "WholeDayPeriod"}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
         mock_result_path = results_path / "Matrices" / args.submodel
@@ -83,18 +86,19 @@ def main(args):
                     emme_project_path))
         log.info("Initializing Emme...")
         from assignment.emme_bindings.emme_project import EmmeProject
+        ep = EmmeProject(emme_project_path)
+        ep.try_open_db(args.submodel)
+        ep.start()
         ass_model = EmmeAssignmentModel(
-            EmmeProject(emme_project_path),
-            first_scenario_id=args.first_scenario_id,
+            ep, first_scenario_id=args.first_scenario_id,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
-            first_matrix_id=args.first_matrix_id,
-            use_stored_speeds=args.stored_speed_assignment, **kwargs)
+            first_matrix_id=args.first_matrix_id, **kwargs)
     # Initialize model system (wrapping Assignment-model,
     # and providing demand calculations as Python modules)
     # Read input matrices (.omx) and zonedata (.csv)
     log.info("Initializing matrices and models...", extra=log_extra)
-    model_args = (forecast_zonedata_path, base_zonedata_path,
+    model_args = (forecast_zonedata_path, cost_data_path, base_zonedata_path,
                   base_matrices_path, results_path, ass_model, args.submodel,
                   long_dist_matrices_path, freight_matrices_path)
     model = (AgentModelSystem(*model_args) if args.is_agent_model
@@ -107,7 +111,10 @@ def main(args):
     log.info(
         "Starting simulation with {} iterations...".format(iterations),
         extra=log_extra)
-    impedance = model.assign_base_demand(iterations==0)
+    stored_speed_assignment = (None if args.stored_speed_assignment is None
+        else [Path(path) for path in args.stored_speed_assignment])
+    impedance = model.assign_base_demand(
+        iterations==0, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -124,7 +131,7 @@ def main(args):
             log.error(
                 "Fatal error occured, simulation aborted.", extra=log_extra)
             break
-        gap = model.convergence.iloc[-1, :] # Last iteration convergence
+        gap = model.convergence[-1] # Last iteration convergence
         convergence_criteria_fulfilled = gap["max_gap"] < args.max_gap or gap["rel_gap"] < args.rel_gap
         if i == iterations:
             log_extra["status"]['state'] = 'finished'
@@ -201,8 +208,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-x", "--stored-speed-assignment",
-        action="store_true",
-        help="Using this flag runs assigment with stored (fixed) speed."
+        type=str,
+        nargs="*",
+        help=("Using this flag runs assigment with stored (fixed) speed. "
+              + "If argument is followed by list of scenarios, "
+              + "stored speeds will be imported from result path "
+              + "for these scenarios.")
     )
     parser.add_argument(
         "-a", "--run-agent-simulation",
@@ -264,6 +275,10 @@ if __name__ == "__main__":
         "--forecast-data-path",
         type=str,
         help="Path to folder containing forecast zonedata"),
+    parser.add_argument(
+        "--cost-data-path",
+        type=str,
+        help="Path to file containing transport cost data"),
     parser.add_argument(
         "--iterations",
         type=int,

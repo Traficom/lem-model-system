@@ -50,7 +50,7 @@ class JourneyLevel:
         this is park-and-ride assignment, else False
     """
     def __init__(self, level: int, transit_class: str,
-            park_and_ride: Union[str, bool] = False):
+                 park_and_ride: Union[str, bool] = False):
         # Boarding transit modes allowed only on levels 0-4
         if level <= BOARDED_LOCAL:
             next = BOARDED_LOCAL

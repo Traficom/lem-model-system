@@ -8,21 +8,17 @@ class ZoneAggregations:
 	aggregating data.
     """
 
-    def __init__(self, mappings: pandas.DataFrame,
-                 municipality_centre_mapping: pandas.Series):
+    def __init__(self, mappings: pandas.DataFrame):
         """Initialize mappings.
 
         Parameters
         ----------
         mapping : pandas.Dataframe
             Zone numbers as index and different zone mappings as columns
-        municipality_centre_mapping : pandas.Series
-            Mapping between zone id and municipality centre index
         """
         self.mappings = mappings
         self.municipality_mapping = mappings.groupby(
             "municipality").agg("first")["county"]
-        self.municipality_centre_mapping = municipality_centre_mapping
 
     def averages(self,
                  array: pandas.Series,
@@ -44,8 +40,7 @@ class ZoneAggregations:
         pandas.Series
             Aggregated array
         """
-        avg = lambda a, w: numpy.ma.average(a, weights=w[a.index])
-        agg = array.groupby(self.mappings[area_type]).agg(avg, w=weights)
+        agg = array.groupby(self.mappings[area_type]).agg(avg, weights=weights)
         agg["all"] = avg(array, weights)
         return agg
 
@@ -98,3 +93,10 @@ class Zone:
         Zone.counter += 1
         self.county = aggregations.mappings["county"][number]
         self.municipality = aggregations.mappings["municipality"][number]
+
+
+def avg(data, weights):
+    try:
+        return numpy.average(data, weights=weights[data.index])
+    except ZeroDivisionError:
+        return 0

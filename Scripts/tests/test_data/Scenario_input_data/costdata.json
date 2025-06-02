@@ -1,0 +1,104 @@
+{
+    "car_cost": {
+        "car_work": 0.12,
+        "car_leisure": 0.12,
+        "car_electric": 0.04,
+        "van": 0.20,
+        "truck": 0.23,
+        "semi_trailer": 0.35,
+        "trailer_truck": 0.44
+    },
+    "transit_cost": {
+        "HSL": {
+            "id": 0,
+            "firstb_single": 2.0,
+            "dist_single": 0.1
+        },
+        "long-distance train": {
+            "id": 1,
+            "firstb_single": 3.0,
+            "dist_single": 0.3
+        },
+        "long-distance bus": {
+            "id": 2,
+            "firstb_single": 5.0,
+            "dist_single": 0.1
+        },
+        "airplane": {
+            "id": 3,
+            "firstb_single": 70.0,
+            "dist_single": 0.3
+        },
+         "ferry": {
+            "id": 5,
+            "firstb_single": 1.5,
+            "dist_single": 0.2
+        }
+    },
+    "cost_changes": {
+        "cost": {
+            "car_work": 1.0,
+            "car_pax": 1.0
+        }
+    },
+    "freight": {
+        "mameka": {
+            "truck": {
+                "truck": {
+                    "time": 0.5,
+                    "dist": 0.55,
+                    "toll_cost": 1.0,
+                    "terminal_cost": 2.0,
+                    "avg_load": 7.0,
+                    "empty_share": 1.5,
+                    "distribution": 0.1
+                },
+                "semi_trailer": {
+                    "time": 0.75,
+                    "dist": 0.63,
+                    "toll_cost": 1.0,
+                    "terminal_cost": 1.75,
+                    "avg_load": 15.0,
+                    "empty_share": 1.5,
+                    "distribution": 0.3
+                },
+                "trailer_truck": {
+                    "time": 0.9,
+                    "dist": 0.7,
+                    "toll_cost": 1.0,
+                    "terminal_cost": 1.5,
+                    "avg_load": 32,
+                    "empty_share": 1.5,
+                    "distribution": 0.6
+                }
+            },
+            "freight_train": {
+                "electric_train": {
+                    "time": 7.0,
+                    "dist": 4.0,
+                    "terminal_cost": 3.0,
+                    "wagon_annual_cost": 10.0,
+                    "avg_load": 300
+                },
+                "diesel_train": {
+                    "time": 6.0,
+                    "dist": 8.0,
+                    "terminal_cost": 2.5,
+                    "wagon_annual_cost": 10.0,
+                    "avg_load": 300
+                }
+            },
+            "ship": {
+                "other_dry_cargo": {
+                    "4m": {
+                        "time": 0.001,
+                        "terminal_cost": 9.0,
+                        "other_costs": 0.2,
+                        "empty_share": 1.9,
+                        "speed": 0.3
+                    }
+                }
+            }
+        }
+    }
+}

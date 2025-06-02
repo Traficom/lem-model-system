@@ -26,25 +26,27 @@ class EmmeAssignmentTest(unittest.TestCase):
             "truck": 0.3,
             "van": 0.2,
         }
+        firstb_single = (2, 3, 5, 70, 0, 1.5)
+        dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
+        self.fares = pandas.DataFrame(
+            {i: {"firstb_single": firstb_single[i],
+                 "dist_single": dist_single[i]}
+             for i in range(0, len(firstb_single))})
+        self.mapping = pandas.Series({
+            "Helsinki": "Uusimaa",
+            "Espoo": "Uusimaa",
+            "Lohja": "Uusimaa",
+            "Salo": "Varsinais-Suomi",
+        })
+        self.resultdata = ResultsData(RESULTS_PATH)
 
     def test_assignment(self):
-        fares = pandas.DataFrame({
-            "firstb": {
-                0: 60,
-                1: 80,
-            },
-            "dist": {
-                0: 1.0,
-                1: 0.5,
-            }
-        })
         validate(
             self.context.modeller.emmebank.scenario(
                 self.scenario_id).get_network())
-        ass_model = EmmeAssignmentModel(
-            self.context, self.scenario_id, use_stored_speeds=True)
-        ass_model.prepare_network(self.dist_cost)
-        ass_model.calc_transit_cost(fares)
+        ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
+        ass_model.prepare_network(self.dist_cost, car_time_files=[])
+        ass_model.calc_transit_cost(self.fares)
         nr_zones = ass_model.nr_zones
         car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
         demand = [
@@ -62,24 +64,53 @@ class EmmeAssignmentTest(unittest.TestCase):
         ]
         ass_model.init_assign()
         ass_model.beeline_dist
-        for ass_class in demand:
-            ass_model.assignment_periods[0].set_matrix(
-                ass_class, car_matrix)
-        ass_model.assignment_periods[0].assign(demand + ["car_pax"])
-        ass_model.assignment_periods[0].end_assign()
-        resultdata = ResultsData(RESULTS_PATH)
-        mapping = pandas.Series({
-            "Helsinki": "Uusimaa",
-            "Espoo": "Uusimaa",
-            "Lohja": "Uusimaa",
-            "Salo": "Varsinais-Suomi",
-        })
-        ass_model.aggregate_results(resultdata, mapping)
-        ass_model.calc_noise(mapping)
-        resultdata.flush()
+        for ap in ass_model.assignment_periods:
+            for ass_class in demand:
+                if ass_class in ap.assignment_modes:
+                    ap.set_matrix(ass_class, car_matrix)
+            ap.assign_trucks_init()
+            imp = ap.assign(demand + ["car_pax"])
+            for mtx_type in imp:
+                for ass_class in imp[mtx_type]:
+                    self.assertEqual(
+                        imp[mtx_type][ass_class].dtype, numpy.float32)
+            ap.end_assign()
+        ass_model.aggregate_results(self.resultdata, self.mapping)
+        ass_model.calc_noise(self.mapping)
+        self.resultdata.flush()
+
+    def test_long_dist_assignment(self):
+        ass_model = EmmeAssignmentModel(
+            self.context, self.scenario_id, use_free_flow_speeds=True,
+            time_periods={"vrk": "WholeDayPeriod"})
+        ass_model.prepare_network(self.dist_cost)
+        ass_model.calc_transit_cost(self.fares)
+        nr_zones = ass_model.nr_zones
+        car_matrix = numpy.arange(nr_zones**2).reshape(nr_zones, nr_zones)
+        demand = [
+            "car_work",
+            "car_leisure",
+            "train",
+            "long_d_bus",
+            "airplane",
+        ]
+        for ap in ass_model.assignment_periods:
+            for ass_class in demand:
+                ap.set_matrix(
+                    ass_class, car_matrix)
+            ap.assign_trucks_init()
+            ap.assign(demand + ["car_pax"])
+            ap.end_assign()
+        ass_model.aggregate_results(self.resultdata, self.mapping)
 
     def test_freight_assignment(self):
         ass_model = EmmeAssignmentModel(self.context, self.scenario_id)
         ass_model.prepare_freight_network(self.dist_cost, ["c1", "c2"])
         ass_model.freight_network.assign()
+        demand = numpy.full((ass_model.nr_zones, ass_model.nr_zones), 1.0)
+        for mode in ["truck", "freight_train", "ship"]:
+            ass_model.freight_network.set_matrix(mode, demand)
         ass_model.freight_network.save_network_volumes("c1")
+        ass_model.freight_network.output_traversal_matrix({"freight_train", "ship"},
+                                                          self.resultdata.path)
+        self.resultdata.flush()

@@ -72,6 +72,7 @@ def create_config(config: dict):
         "LOG_FORMAT": None,
         "BASELINE_DATA_PATH": None,
         "FORECAST_DATA_PATH": None,
+        "COST_DATA_PATH": None,
         "RESULTS_PATH": None,
         "SUBMODEL": None,
         "EMME_PATH": None,
@@ -80,7 +81,7 @@ def create_config(config: dict):
         "END_ASSIGNMENT_ONLY": False,
         "LONG_DIST_DEMAND_FORECAST": None,
         "FREIGHT_MATRIX_PATH": None,
-        "STORED_SPEED_ASSIGNMENT": False,
+        "STORED_SPEED_ASSIGNMENT": None,
         "RUN_AGENT_SIMULATION": False,
         "DO_NOT_USE_EMME": False,
         "SEPARATE_EMME_SCENARIOS": False,
@@ -88,6 +89,7 @@ def create_config(config: dict):
         "DEL_STRAT_FILES": False,
         "USE_FIXED_TRANSIT_COST": False,
         "DELETE_EXTRA_MATRICES": False,
+        "SPECIFY_COMMODITY_NAMES": []
     })
     for key in config.pop("OPTIONAL_FLAGS"):
         c[key] = True

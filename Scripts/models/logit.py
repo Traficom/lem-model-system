@@ -2,14 +2,23 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, cast
 import numpy # type: ignore
 import pandas
-import math
+import copy
+from collections import defaultdict
+
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
     from datahandling.zonedata import ZoneData
     from datatypes.purpose import TourPurpose
 
-import parameters.zone as param
+import utils.log
 
+
+def log(a: numpy.array):
+    with numpy.errstate(divide="ignore"):
+        return numpy.log(a)
+
+def divide(a, b):
+    return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class LogitModel:
     """Generic logit model with mode/destination choice.
@@ -34,50 +43,59 @@ class LogitModel:
         self.resultdata = resultdata
         self.purpose = purpose
         self.bounds = purpose.bounds
-        self.sub_bounds = purpose.sub_bounds
         self.zone_data = zone_data
-        self.mode_exps: Dict[str, numpy.array] = {}
+        self.mode_utils: Dict[str, numpy.array] = {}
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
 
-    def _calc_mode_util(self, impedance):
-        expsum = numpy.zeros_like(
-            next(iter(next(iter(impedance.values())).values())))
-        for mode in self.mode_choice_param:
-            b = self.mode_choice_param[mode]
-            utility = numpy.zeros_like(expsum)
-            self._add_constant(utility, b["constant"])
-            utility = self._add_zone_util(
-                utility.T, b["generation"], generation=True).T
-            self._add_zone_util(utility, b["attraction"])
-            self._add_impedance(utility, impedance[mode], b["impedance"])
-            exps = numpy.exp(utility)
-            self._add_log_impedance(exps, impedance[mode], b["log"])
-            self.mode_exps[mode] = exps
-            expsum += exps
-        return expsum
-    
-    def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
-        b = self.dest_choice_param[mode]
-        utility: numpy.array = numpy.zeros_like(next(iter(impedance.values())))
+    def _calc_alt_util(self, mode: str, utility: numpy.ndarray,
+                       impedance: Dict[str, numpy.ndarray],
+                       b: Dict[str, Dict[str, float]]):
         self._add_zone_util(utility, b["attraction"])
         self._add_impedance(utility, impedance, b["impedance"])
-        dest_exp = numpy.exp(utility)
-        size = numpy.zeros_like(utility)
-        self._add_zone_util(size, b["attraction_size"])
-        impedance["attraction_size"] = size
         if "transform" in b:
             b_transf = b["transform"]
             transimp = numpy.zeros_like(utility)
             self._add_zone_util(transimp, b_transf["attraction"])
             self._add_impedance(transimp, impedance, b_transf["impedance"])
             impedance["transform"] = transimp
-        self._add_log_impedance(dest_exp, impedance, b["log"])
-        if mode != "logsum":
+        self._add_log_impedance(utility, impedance, b["log"])
+        exps = numpy.exp(utility)
+        dist = self.purpose.dist
+        if mode != "logsum" and dist.shape == exps.shape:
+            # If this is the lower level in nested model
             l, u = self.distance_boundary[mode]
-            dist = self.purpose.dist
-            dest_exp[(dist < l) | (dist >= u)] = 0
+            exps[(dist < l) | (dist >= u)] = 0
+        return exps
+
+    def _calc_mode_util(self, mode: str, impedance: Dict[str, numpy.ndarray],
+                        dummy: Optional[str] = None):
+        b = self.mode_choice_param[mode]
+        utility = numpy.zeros_like(next(iter(impedance.values())))
+        utility += b["constant"]
+        if dummy in b["individual_dummy"]:
+            utility += b["individual_dummy"][dummy]
+        utility = self._add_zone_util(
+            utility.T, b["generation"], generation=True).T
+        exps = self._calc_alt_util(mode, utility, impedance, b)
+        self.mode_utils[mode] = utility
+        return exps
+
+    def _calc_mode_utils(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
+                         dummy: Optional[str] = None):
+        mode_exps: Dict[str, numpy.ndarray] = {}
+        for mode in self.mode_choice_param:
+            mode_exps[mode] = self._calc_mode_util(mode, impedance[mode], dummy)
+        expsum: numpy.ndarray = sum(mode_exps.values())
+        return expsum, mode_exps
+
+    def _calc_dest_util(self, mode: str, impedance: dict) -> numpy.ndarray:
+        b = self.dest_choice_param[mode]
+        utility = numpy.zeros_like(next(iter(impedance.values())))
+        impedance["attraction_size"] = self._add_zone_util(
+            numpy.zeros_like(utility), b["attraction_size"])
+        dest_exp = self._calc_alt_util(mode, utility, impedance, b)
         return dest_exp
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
@@ -95,33 +113,8 @@ class LogitModel:
             dest_exps[(impedance["dist"] < l) | (impedance["dist"] >= u)] = 0
         return dest_exps
 
-    def _add_constant(self, utility, b):
-        """Add constant term to utility.
-
-        If parameter b is a tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
-        
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the constant b will be added
-        b : float or tuple
-            The value of the constant
-        """
-        try: # If only one parameter
-            utility += b
-        except ValueError: # Separate sub-region parameters
-            for i, bounds in enumerate(self.sub_bounds):
-                if utility.ndim == 1: # 1-d array calculation
-                    utility[bounds] += b[i]
-                else: # 2-d matrix calculation
-                    utility[bounds, :] += b[i]
-    
     def _add_impedance(self, utility, impedance, b):
         """Adds simple linear impedances to utility.
-
-        If parameter in b is tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
         
         Parameters
         ----------
@@ -134,23 +127,11 @@ class LogitModel:
             The parameters for different impedance matrices.
         """
         for i in b:
-            try: # If only one parameter
-                utility += b[i] * impedance[i]
-            except ValueError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    utility[bounds, :] += b[i][j] * impedance[i][bounds, :]
+            utility += b[i] * impedance[i]
         return utility
 
-    def _add_log_impedance(self, exps, impedance, b):
+    def _add_log_impedance(self, utility, impedance, b):
         """Adds log transformations of impedance to utility.
-        
-        This is an optimized way of calculating log terms. Calculates
-        impedance1^b1 * ... * impedanceN^bN in the following equation:
-        e^(linear_terms + b1*log(impedance1) + ... + bN*log(impedanceN))
-        = e^(linear_terms) * impedance1^b1 * ... * impedanceN^bN
-
-        If parameter in b is tuple of two terms, they will be multiplied for
-        capital region and surrounding region respectively.
 
         Parameters
         ----------
@@ -163,22 +144,12 @@ class LogitModel:
             The parameters for different impedance matrices
         """
         for i in b:
-            try: # If only one parameter
-                imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
-                exps *= numpy.power(imp, b[i])
-            except TypeError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    imp = impedance[i][bounds, :]
-                    if b[i][j] < 0:
-                        imp += 1
-                    exps[bounds, :] *= numpy.power(imp, b[i][j])
-        return exps
+            imp = impedance[i] + 1 if b[i] < 0 else impedance[i]
+            utility += b[i] * log(imp)
+        return utility
 
     def _add_zone_util(self, utility, b, generation=False):
         """Adds simple linear zone terms to utility.
-
-        If parameter in b is tuple of two terms, they will be added for
-        capital region and surrounding region respectively.
         
         Parameters
         ----------
@@ -193,25 +164,13 @@ class LogitModel:
         """
         zdata = self.zone_data
         for i in b:
-            try: # If only one parameter
-                utility += b[i] * zdata.get_data(i, self.bounds, generation)
-            except ValueError: # Separate sub-region parameters
-                for j, bounds in enumerate(self.sub_bounds):
-                    data = zdata.get_data(i, bounds, generation)
-                    if utility.ndim == 1: # 1-d array calculation
-                        utility[bounds] += b[i][j] * data
-                    else: # 2-d matrix calculation
-                        utility[bounds, :] += b[i][j] * data
+            utility += b[i] * zdata.get_data(i, self.bounds, generation)
         return utility
     
-    def _add_sec_zone_util(self, utility, b, orig=None, dest=None):
+    def _add_sec_zone_util(self, utility, b):
         for i in b:
             data = self.zone_data.get_data(i, self.bounds, generation=True)
-            try: # If only one parameter
-                utility += b[i] * data
-            except ValueError: # Separate params for orig and dest
-                utility += b[i][0] * data[orig, self.bounds]
-                utility += b[i][1] * data[dest, self.bounds]
+            utility += b[i] * data
         return utility
 
     def _add_log_zone_util(self, exps, b, generation=False):
@@ -222,13 +181,10 @@ class LogitModel:
         e^(linear_terms + b1*log(zonedata1) + ... + bN*log(zonedataN))
         = e^(linear_terms) * zonedata1^b1 * ... * zonedataN^bN
 
-        If parameter in b is tuple of two terms, they will be multiplied for
-        capital region and surrounding region respectively.
-
         Parameters
         ----------
-        exps : ndarray
-            Numpy array to which the impedances will be multiplied
+        utility : ndarray
+            Numpy array to which the impedances will be added
         b : dict
             The parameters for different zone data.
         generation : bool
@@ -266,39 +222,126 @@ class ModeDestModel(LogitModel):
     resultdata : ResultData
         Writer object to result directory
     """
+    def __init__(self, *args, **kwargs):
+        LogitModel.__init__(self, *args, **kwargs)
+        try:
+            b = self.dest_choice_param["car"]["impedance"]["cost"]
+        except KeyError:
+            # School tours do not have a constant cost parameter
+            # Use value of time conversion from CBA guidelines instead
+            b = -0.46738697
+        try:
+            # Convert utility into euros
+            money_utility = 1 / b
+        except TypeError:
+            # Separate sub-region parameters
+            money_utility = 1 / b[0]
+        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
+        self.money_utility: float = money_utility
 
-    def calc_prob(self, impedance: dict) -> dict:
+    def calc_soft_mode_exps(self, impedance: dict):
+        """Calculate utility exponentials for walk and bike.
+
+        The exponentials will be used for mode choice at a later stage.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2-d matrix
+                    Impedances
+        """
+        self.soft_mode_exps, _, _, = self._calc_exps(impedance)
+
+    def calc_soft_mode_prob(self, impedance: dict) -> dict:
+        """Calculate matrix of walk and bike choice probabilities.
+
+        Parameters
+        ----------
+        impedance : dict
+            Mode (bike/walk) : dict
+                Type (time/cost/dist) : numpy 2-d matrix
+                    Impedances
+
+        Returns
+        -------
+        dict
+            Mode (bike/walk) : numpy 2-d matrix
+                Choice probabilities
+        """
+        probs = {}
+        for mode in list(impedance):
+            dest_exps = self._calc_dest_util(mode, impedance.pop(mode))
+            try:
+                expsum = dest_exps.sum(1)
+            except ValueError:
+                expsum = dest_exps.sum()
+            dest_prob = divide(dest_exps.T, expsum)
+            probs[mode] = sum(self.soft_mode_probs[mode]) * dest_prob
+        return probs
+
+    def calc_prob(self, impedance: dict, calc_accessibility=False) -> dict:
         """Calculate matrix of choice probabilities.
 
         First calculates basic probabilities. Then inserts individual
         dummy variables by calling `calc_individual_prob()`.
-        
+
+        If model for non-home-based tours has individual dummy variables
+        representing parent tour mode choice, None will be returned,
+        because it requires parent tour demand to be calculated first.
+        In this case, `calc_prob_again` will be called later.
+
         Parameters
         ----------
         impedance : dict
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
-        
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
+
         Returns
         -------
         dict
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        prob = self._calc_prob(*self._calc_utils(impedance))
-        for mod_mode in self.mode_choice_param:
-            for i in self.mode_choice_param[mod_mode]["individual_dummy"]:
-                dummy_share = self.zone_data.get_data(
-                    i, self.bounds, generation=True)
-                ind_prob = self.calc_individual_prob(mod_mode, i)
-                for mode in prob:
-                    no_dummy = (1 - dummy_share) * prob[mode]
-                    dummy = dummy_share * ind_prob[mode]
-                    prob[mode] = no_dummy + dummy
-        return prob
-    
-    def calc_basic_prob(self, impedance: dict):
+        mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
+            impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
+        mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
+        if mode_probs is None:
+            self._stashed_exps += [dest_exps, dest_expsums]
+            return None
+        else:
+            try:
+                self.soft_mode_probs = {
+                    mode: mode_probs[mode] for mode in self.soft_mode_exps}
+            except AttributeError:
+                pass
+            return self._calc_prob(mode_probs, dest_exps, dest_expsums)
+
+    def calc_prob_again(self) -> dict:
+        """Return matrix of choice probabilities.
+
+        First recovers basic probabilities. Then inserts individual
+        dummy variables by calling `calc_individual_prob()`.
+
+        Returns
+        -------
+        dict
+            Mode (car/transit/bike/walk) : numpy 2-d matrix
+                Choice probabilities
+        """
+        mode_exps, mode_expsum, dest_exps, dest_expsums = self._stashed_exps
+        del self._stashed_exps
+        mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
+        self.soft_mode_probs = {
+            mode: mode_probs[mode] for mode in self.soft_mode_exps}
+        return self._calc_prob(mode_probs, dest_exps, dest_expsums)
+
+    def calc_basic_prob(self, impedance: dict, calc_accessibility=False):
         """Calculate utilities and cumulative destination choice probabilities.
 
         Only used in agent simulation.
@@ -310,61 +353,63 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : dict
                 Type (time/cost/dist) : numpy 2-d matrix
                     Impedances
+        calc_accessibility : bool (optional)
+            Whether to calclulate and store accessibility indicators
         """
-        _, dest_exps, _ = self._calc_utils(impedance)
+        mode_exps, mode_expsum, dest_exps, _ = self._calc_utils(impedance)
+        if calc_accessibility:
+            self._calc_accessibility(mode_exps, mode_expsum)
         self.cumul_dest_prob = {}
         for mode in self.mode_choice_param:
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
     
-    def calc_individual_prob(self, mod_mode: str, dummy: str) -> dict:
-        """Calculate matrix of probabilities with individual dummies.
-        
-        Calculate matrix of mode and destination choice probabilities
-        with individual dummy variable included.
-        
+    def _calc_individual_prob(self, mod_modes: list[str], dummy: str,
+                              mode_exps: Dict[str, numpy.ndarray]):
+        """Calculate utilities with individual dummies included.
+
         Parameters
         ----------
-        mod_mode : str
-            The mode for which the utility will be modified
+        mod_modes : str
+            The modes for which the utility will be modified
         dummy : str
             The name of the individual dummy
-        
+        mode_exps : dict
+            key : str
+                Mode
+            value : numpy.ndarray
+                Utility exponentials to modify
         Returns
         -------
         dict
-            Mode (car/transit/bike/walk) : numpy 2-d matrix
-                Choice probabilities
+            key : str
+                Mode
+            value : numpy.ndarray
+                Modified utility exponentials
         """
-        b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
-        try:
-            self.mode_exps[mod_mode] *= numpy.exp(b)
-        except ValueError:
-            for i, bounds in enumerate(self.sub_bounds):
-                self.mode_exps[mod_mode][bounds] *= numpy.exp(b[i])
-        mode_expsum = numpy.zeros_like(self.mode_exps[mod_mode])
-        for mode in self.mode_choice_param:
-            mode_expsum += self.mode_exps[mode]
-        return self._calc_prob(mode_expsum)
+        mode_exps2 = copy.deepcopy(mode_exps)
+        for mod_mode in mod_modes:
+            b = self.mode_choice_param[mod_mode]["individual_dummy"][dummy]
+            mode_exps2[mod_mode] *= numpy.exp(b)
+        return mode_exps2
     
-    def calc_individual_mode_prob(self, 
-                                  is_car_user: bool, 
-                                  zone: int) -> Tuple[numpy.ndarray, float]:
+    def calc_individual_mode_prob(self, zone: int,
+                                  individual_dummy: Optional[str] = None,
+                                  ) -> Tuple[numpy.ndarray, float]:
         """Calculate individual choice probabilities with individual dummies.
         
         Calculate mode choice probabilities for individual
-        agent with individual dummy variable "car_users" included.
+        agent with individual dummy variable included.
 
         Additionally save and rescale logsum values for agent based accessibility 
         analysis.
         
         Parameters
         ----------
-        is_car_user : bool
-            Whether the agent is car user or not
         zone : int
             Index of zone where the agent lives
-        
+        individual_dummy : str (optional)
+            Name of individual dummy to take into account in utility
         Returns
         -------
         numpy.ndarray
@@ -372,44 +417,36 @@ class ModeDestModel(LogitModel):
         float
             Total accessibility for individual (eur)
         """
-        mode_exps = {}
-        mode_expsum = 0
         modes = self.purpose.modes
-        for mode in modes:
-            mode_exps[mode] = self.mode_exps[mode][zone]
-            self.mode_choice_param = cast(Dict[str, Dict[str, Any]], self.mode_choice_param) #type checker help
-            b = self.mode_choice_param[mode]["individual_dummy"]
-            if is_car_user and "car_users" in b:
-                try:
-                    mode_exps[mode] *= math.exp(b["car_users"])
-                except TypeError:
-                    # Separate sub-region parameters
-                    i = self.purpose.sub_intervals.searchsorted(
-                        zone, side="right")
-                    mode_exps[mode] *= math.exp(b["car_users"][i])
-            mode_expsum += mode_exps[mode]
-        probs = numpy.empty(len(modes))
+        mode_utils = numpy.empty(len(modes))
         for i, mode in enumerate(modes):
-            probs[i] = mode_exps[mode] / mode_expsum
-        # utils to money
-        logsum = numpy.log(mode_expsum)
-        b = self._get_cost_util_coefficient()
-        try:
-            # Convert utility into euros
-            money_utility = 1 / b
-        except TypeError:
-            # Separate sub-region parameters
-            i = self.purpose.sub_intervals.searchsorted(zone, side="right")
-            money_utility = 1 / b[i]
-        self.mode_choice_param = cast(Dict[str, Dict[str, Any]], self.mode_choice_param) #type checker help
-        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
-        accessibility = -money_utility * logsum
-        return probs, accessibility
+            mode_utils[i] = self.mode_utils[mode][zone]
+            b = self.mode_choice_param[mode]["individual_dummy"]
+            if individual_dummy in b:
+                mode_utils[i] += b[individual_dummy]
+        return mode_utils
 
-    def _calc_utils(self, impedance: dict) -> Tuple[numpy.ndarray, dict, dict]:
-        dest_expsums = {}
-        dest_exps = {}
-        for mode in self.dest_choice_param:
+    def _calc_utils(self,
+                    impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
+        mode_exps, dest_exps, dest_expsums = self._calc_exps(impedance)
+        try:
+            for mode in self.soft_mode_exps:
+                mode_exps[mode] = self.soft_mode_exps[mode]
+        except AttributeError:
+            pass
+        mode_expsum: numpy.ndarray = sum(mode_exps.values())
+        logsum = pandas.Series(
+            log(mode_expsum), self.purpose.zone_numbers,
+            name=self.purpose.name)
+        self.zone_data._values[self.purpose.name] = logsum
+        return mode_exps, mode_expsum, dest_exps, dest_expsums
+
+    def _calc_exps(self,
+                   impedance: Dict[str, Dict[str, Dict[str, numpy.ndarray]]]):
+        dest_expsums: Dict[str, numpy.ndarray] = {}
+        dest_exps: Dict[str, numpy.ndarray] = {}
+        mode_exps: Dict[str, numpy.ndarray] = {}
+        for mode in list(impedance):
             dest_exps[mode] = self._calc_dest_util(mode, impedance.pop(mode))
             try:
                 expsum = dest_exps[mode].sum(1)
@@ -418,173 +455,83 @@ class ModeDestModel(LogitModel):
             dest_expsums[mode] = {"logsum": expsum}
             label = self.purpose.name + "_" + mode
             logsum = pandas.Series(
-                numpy.log(expsum), self.purpose.zone_numbers, name=label)
+                log(expsum), self.purpose.zone_numbers, name=label)
             self.zone_data._values[label] = logsum
-        mode_expsum = self._calc_mode_util(dest_expsums)
-        logsum = pandas.Series(
-            numpy.log(mode_expsum), self.purpose.zone_numbers,
-            name=self.purpose.name)
-        self.zone_data._values[self.purpose.name] = logsum
-        return mode_expsum, dest_exps, dest_expsums
+            mode_exps[mode] = self._calc_mode_util(mode, dest_expsums[mode])
+        return mode_exps, dest_exps, dest_expsums
 
-    def _calc_prob(self, mode_expsum: numpy.ndarray,
-                   dest_exps: dict,
-                   dest_expsums: dict) -> dict:
-        prob = {}
+    def _calc_mode_prob(self, mode_exps: Dict[str, numpy.ndarray],
+                        mode_expsum: numpy.ndarray,
+                        ) -> Dict[str, numpy.ndarray]:
+        dummies: defaultdict[str, list] = defaultdict(list)
         for mode in self.mode_choice_param:
-            mode_exps = self.mode_exps[mode]
-            mode_prob = numpy.divide(
-                mode_exps, mode_expsum, out=numpy.zeros_like(mode_exps),
-                where=mode_expsum!=0)
+            if mode not in mode_exps:
+                msg = f"Mode {mode} missing from {self.purpose.name} impedance"
+                raise KeyError(msg)
+            for i in self.mode_choice_param[mode]["individual_dummy"]:
+                dummies[i].append(mode)
+        mode_probs: defaultdict[str, list] = defaultdict(list)
+        no_dummy_share = 1.0
+        for dummy, modes in dummies.items():
+            try:
+                dummy_share = self.zone_data.get_data(
+                    dummy, self.bounds, generation=True)
+            except KeyError:
+                self._stashed_exps = [mode_exps, mode_expsum]
+                return None
+            no_dummy_share -= dummy_share
+            mode_exps2 = self._calc_individual_prob(modes, dummy, mode_exps)
+            mode_expsum2 = sum(mode_exps2.values())
+            for mode2 in mode_exps2:
+                mode_probs[mode2].append(
+                    dummy_share * divide(mode_exps2[mode2], mode_expsum2))
+        for mode in self.mode_choice_param:
+            mode_probs[mode].append(
+                no_dummy_share * divide(mode_exps[mode], mode_expsum))
+        return mode_probs
+
+    def _calc_prob(self, mode_probs: Dict[str, numpy.ndarray],
+                   dest_exps: Dict[str, numpy.ndarray],
+                   dest_expsums: Dict[str, numpy.ndarray]
+                   ) -> Dict[str, numpy.ndarray]:
+        prob = {}
+        for mode in dest_expsums:
             dest_exp = dest_exps.pop(mode).T
             dest_expsum = dest_expsums[mode]["logsum"]
-            dest_prob = numpy.divide(
-                dest_exp, dest_expsum, out=numpy.zeros_like(dest_exp),
-                where=dest_expsum!=0)
-            prob[mode] = mode_prob * dest_prob
+            dest_prob = divide(dest_exp, dest_expsum)
+            prob[mode] = sum(mode_probs[mode]) * dest_prob
         return prob
 
-    def _get_cost_util_coefficient(self):
-        try:
-            b = next(iter(self.dest_choice_param.values()))["impedance"]["cost"]
-        except KeyError:
-            # School tours do not have a constant cost parameter
-            # Use value of time conversion from CBA guidelines instead
-            b = -0.46738697
-        return b
-
-
-class AccessibilityModel(ModeDestModel):
-    def calc_accessibility(self, impedance):
+    def _calc_accessibility(self, mode_exps: Dict[str, numpy.ndarray],
+                            mode_expsum: numpy.ndarray):
         """Calculate logsum-based accessibility measures.
 
         Individual dummy variables are not included.
-
-        Parameters
-        ----------
-        impedance : dict
-            Mode (car/transit/bike/walk) : dict
-                Type (time/cost/dist) : numpy 2-d matrix
-                    Impedances
         """
-        mode_expsum, _, _ = self._calc_utils(impedance)
-        self.accessibility = {}
+        self.accessibility: Dict[str, pandas.Series] = {}
         self.accessibility["all"] = self.zone_data[self.purpose.name]
-        self.accessibility["sustainable"] = numpy.zeros_like(mode_expsum)
-        self.accessibility["car"] = numpy.zeros_like(mode_expsum)
+        sustainable_expsum = numpy.zeros_like(mode_expsum)
+        car_expsum = numpy.zeros_like(mode_expsum)
         for mode in self.mode_choice_param:
             logsum = self.zone_data[f"{self.purpose.name}_{mode}"]
             self.accessibility[mode] = logsum
-            if mode.split('_')[0] == "car":
-                self.accessibility["car"] += logsum
+            if "car" in mode:
+                car_expsum += mode_exps[mode]
             else:
-                self.accessibility["sustainable"] += numpy.log(self.mode_exps[mode])
-        # Scale logsum value to eur
-        b = self._get_cost_util_coefficient()
-        try:
-            money_utility = 1 / b
-        except TypeError:  # Separate params for cap region and surrounding
-            money_utility = 1 / b[0]
-        money_utility /= next(iter(self.mode_choice_param.values()))["log"]["logsum"]
+                sustainable_expsum += mode_exps[mode]
+        label = f"{self.purpose.name}_sustainable"
+        logsum_sustainable = pandas.Series(
+            log(sustainable_expsum), self.purpose.zone_numbers, name=label)
+        self.zone_data._values[label] = logsum_sustainable
+        self.accessibility["sustainable"] = logsum_sustainable
+        self.accessibility["car"] = pandas.Series(
+            log(car_expsum), self.purpose.zone_numbers,
+            name=f"{self.purpose.name}_car")
         for key in ["all", "sustainable", "car"]:
-            self.accessibility[f"{key}_scaled"] = money_utility * self.accessibility[key]
-
-    def _add_constant(self, utility, b):
-        """Add constant term to utility.
-
-        If parameter b is a tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the constant b will be added
-        b : float or tuple
-            The value of the constant
-        """
-        try: # If only one parameter
-            utility += b
-        except ValueError: # Separate params for cap region and surrounding
-            utility += b[0]
-
-    def _add_impedance(self, utility, impedance, b):
-        """Adds simple linear impedances to utility.
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the impedances will be added
-        impedance : dict
-            A dictionary of time-averaged impedance matrices. Includes keys
-            `time`, `cost`, and `dist` of which values are all ndarrays.
-        b : dict
-            The parameters for different impedance matrices.
-        """
-        for i in b:
-            try: # If only one parameter
-                utility += b[i] * impedance[i]
-            except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * impedance[i]
-        return utility
-
-    def _add_log_impedance(self, exps, impedance, b):
-        """Adds log transformations of impedance to utility.
-
-        This is an optimized way of calculating log terms. Calculates
-        impedance1^b1 * ... * impedanceN^bN in the following equation:
-        e^(linear_terms + b1*log(impedance1) + ... + bN*log(impedanceN))
-        = e^(linear_terms) * impedance1^b1 * ... * impedanceN^bN
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        exps : ndarray
-            Numpy array to which the impedances will be multiplied
-        impedance : dict
-            A dictionary of time-averaged impedance matrices. Includes keys
-            `time`, `cost`, and `dist` of which values are all ndarrays.
-        b : dict
-            The parameters for different impedance matrices
-        """
-        for i in b:
-            try: # If only one parameter
-                exps *= numpy.power(impedance[i] + 1, b[i])
-            except ValueError: # Separate params for cap region and surrounding
-                exps *= numpy.power(impedance[i] + 1, b[i][0])
-        return exps
-
-    def _add_zone_util(self, utility, b, generation=False):
-        """Adds simple linear zone terms to utility.
-
-        If parameter in b is tuple of two terms,
-        capital region will be picked.
-
-        Parameters
-        ----------
-        utility : ndarray
-            Numpy array to which the impedances will be added
-        b : dict
-            The parameters for different zone data.
-        generation : bool
-            Whether the effect of the zone term is added only to the
-            geographical area in which this model is used based on the
-            `self.bounds` attribute of this class.
-        """
-        zdata = self.zone_data
-        for i in b:
-            try: # If only one parameter
-                # Remove area dummies from accessibility indicators
-                data = zdata.get_data(i, self.bounds, generation)
-                if data.dtype != bool:
-                    utility += b[i] * data
-            except ValueError: # Separate params for cap region and surrounding
-                utility += b[i][0] * zdata.get_data(i, self.bounds, generation)
-        return utility
+            scaled_access = self.money_utility * self.accessibility[key]
+            name = f"{scaled_access.name}_scaled"
+            scaled_access.rename(name, inplace=True)
+            self.accessibility[name] = scaled_access
 
 
 class DestModeModel(LogitModel):
@@ -611,8 +558,13 @@ class DestModeModel(LogitModel):
     resultdata : ResultData
         Writer object to result directory
     """
+    def calc_soft_mode_exps(self, impedance):
+        return []
 
-    def calc_prob(self, impedance):
+    def calc_soft_mode_prob(self, impedance):
+        return []
+
+    def calc_prob(self, impedance, calc_accessibility=False):
         """Calculate matrix of choice probabilities.
         
         Parameters
@@ -628,15 +580,51 @@ class DestModeModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        mode_expsum = self._calc_mode_util(impedance)
-        logsum = {"logsum": mode_expsum}
-        dest_expsum, dest_exps = self._calc_dest_util("logsum", logsum)
-        prob = {}
-        dest_prob = dest_exps.T / dest_expsum
+        dummies: set[str] = set()
         for mode in self.mode_choice_param:
-            mode_prob = (self.mode_exps[mode] / mode_expsum).T
+            for i in self.mode_choice_param[mode]["individual_dummy"]:
+                dummies.add(i)
+        no_dummy_share = 1.0
+        prob = defaultdict(float)
+        for dummy in dummies:
+            dummy_share = self.zone_data.get_data(
+                dummy, self.bounds, generation=True)
+            no_dummy_share -= dummy_share
+            tmp_prob = self._calc_prob(impedance, dummy)
+            for mode in self.mode_choice_param:
+                prob[mode] += dummy_share * tmp_prob.pop(mode)
+        tmp_prob = self._calc_prob(impedance, store_logsum=True)
+        for mode in self.mode_choice_param:
+            prob[mode] += no_dummy_share * tmp_prob.pop(mode)
+        return prob
+
+    def _calc_prob(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
+                   dummy: Optional[str] = None, store_logsum: bool = False):
+        mode_expsum, mode_exps = self._calc_mode_utils(impedance, dummy)
+        self.mode_utils = {}
+        dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
+        try:
+            dest_expsum = dest_exps.sum(1)
+        except ValueError:
+            dest_expsum = dest_exps.sum()
+        if store_logsum:
+            logsum = pandas.Series(
+                log(dest_expsum), self.purpose.zone_numbers,
+                name=self.purpose.name)
+            self.accessibility = {"all": logsum}
+            self.zone_data._values[self.purpose.name] = logsum
+        prob: Dict[str, numpy.ndarray] = {}
+        dest_prob = divide(dest_exps.T, dest_expsum)
+        for mode in self.mode_choice_param:
+            mode_prob = divide(mode_exps.pop(mode), mode_expsum).T
             prob[mode] = mode_prob * dest_prob
         return prob
+
+    def calc_basic_prob(self, impedance):
+        mode_expsum, _ = self._calc_mode_utils(impedance)
+        dest_exps = self._calc_dest_util("logsum", {"logsum": mode_expsum})
+        cumsum = dest_exps.T.cumsum(axis=0)
+        self.cumul_dest_prob = cumsum / cumsum[-1]
 
 
 class SecDestModel(LogitModel):

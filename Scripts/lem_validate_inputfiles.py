@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 import os
 import sys
+import json
 from pathlib import Path
 import numpy
 from typing import List, Dict, Union
@@ -12,11 +13,11 @@ from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_DIR
+from lem import BASE_ZONEDATA_FILE
 
 
 def main(args):
-    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_DIR)
+    base_zonedata_path = Path(args.baseline_data_path, BASE_ZONEDATA_FILE)
     emme_paths: Union[str,List[str]] = args.emme_paths
     first_scenario_ids: Union[int,List[int]] = args.first_scenario_ids
     forecast_zonedata_paths: Union[str,List[str]] = args.forecast_data_paths
@@ -46,28 +47,43 @@ def main(args):
         raise ValueError(msg)
 
     # Check basedata input
-    log.info("Checking base inputdata...")
-    # Check filepaths (& first .emp path for zone_numbers in base zonedata)
-    if not base_zonedata_path.exists():
-        msg = "Baseline zonedata directory '{}' does not exist.".format(
-            base_zonedata_path)
-        log.error(msg)
-        raise ValueError(msg)
+    # log.info("Checking base inputdata...")
+    # if not (args.end_assignment_only or base_zonedata_path.exists()):
+    #     msg = "Baseline zonedata file '{}' does not exist.".format(
+    #         base_zonedata_path)
+    #     log.error(msg)
+    #     raise ValueError(msg)
 
     zone_numbers: Dict[str, numpy.array] = {}
-    calculate_long_dist_demand = args.long_dist_demand_forecast == "calc"
-    time_periods = (["vrk"] if calculate_long_dist_demand
-        else param.time_periods)
 
     # Check scenario based input data
     log.info("Checking base zonedata & scenario-based input data...")
     for i, emp_path in enumerate(emme_paths):
         log.info("Checking input data for scenario #{} ...".format(i))
 
+        data_path = args.cost_data_paths[i]
+        if not os.path.exists(data_path):
+            msg = "Forecast data file '{}' does not exist.".format(
+                data_path)
+            log.error(msg)
+            raise ValueError(msg)
+        cost_data = json.loads(Path(data_path).read_text("utf-8"))
+        for ass_class in cost_data["car_cost"]:
+            float(cost_data["car_cost"][ass_class])
+        transit_cost = {data.pop("id"): data for data
+            in cost_data["transit_cost"].values()}
+        for operator in transit_cost.values():
+            float(operator["firstb_single"])
+            float(operator["dist_single"])
+
+        calc_long_dist_demand = args.long_dist_demand_forecast[i] == "calc"
+        time_periods = ({"vrk": "WholeDayPeriod"} if calc_long_dist_demand
+            else param.time_periods)
+
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
-                args.results_path, args.scenario_name, "Matrices",
+                args.results_path, args.scenario_name[i], "Matrices",
                 args.submodel[i])
             if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
@@ -86,7 +102,22 @@ def main(args):
             import inro.emme.desktop.app as _app # type: ignore
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
-            emmebank = app.data_explorer().active_database().core_emmebank
+            data_expl = app.data_explorer()
+            databases = data_expl.databases()
+            if len(databases) > 1:
+                for db in databases:
+                    if db.title() == args.submodel[i]:
+                        emmebank = db.core_emmebank
+                        break
+                else:
+                    for db in databases:
+                        if db.title() == "alueelliset_osamallit":
+                            emmebank = db.core_emmebank
+                            break
+                    else:
+                        emmebank = data_expl.active_database().core_emmebank
+            else:
+                emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
@@ -98,10 +129,10 @@ def main(args):
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
             attrs = {
-                "NODE": ["#transit_stop_b", "#transit_stop_e", "#transit_stop_g",
-                         "#transit_stop_t", "#transit_stop_p"],
+                "NODE": (list(param.stop_codes.values())
+                         + [param.subarea_attr, param.municipality_attr]),
                 "LINK": ["#buslane"],
-                "TRANSIT_LINE": ["#keep_stops"],
+                "TRANSIT_LINE": [param.keep_stops_attr],
             }
             for tp in time_periods:
                 attrs["LINK"].append(f"#car_time_{tp}")
@@ -113,15 +144,20 @@ def main(args):
                             attr, scen.id)
                         log.error(msg)
                         raise ValueError(msg)
+            for attr in (param.ferry_wait_attr, param.freight_gate_attr):
+                if scen.extra_attribute(attr) is None:
+                    msg = f"Attribute {attr} missing from scenario {scen.id}"
+                    log.error(msg)
+                    raise ValueError(msg)
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
             nr_segment_results = len(param.segment_results)
-            nr_veh_classes = len(param.emme_matrices)
+            nr_veh_classes = len(param.transport_classes)
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + len(param.park_and_ride_classes) + 1,
+                "links": nr_veh_classes + 3,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
@@ -131,13 +167,17 @@ def main(args):
                     link_costs_defined = True
             if link_costs_defined:
                 nr_new_attr["links"] += nr_assignment_modes + 1
+            sc_name = emmebank.scenario(first_scenario_ids[i]).title
+            if len(sc_name)>56:
+                msg = "Scenario name: {} too long, time period extension might exceed Emme's 60 characters limit.".format(
+                    sc_name)
+                log.error(msg)
+                raise ValueError(msg)
             if not args.separate_emme_scenarios:
                 # If results from all time periods are stored in same
                 # EMME scenario
                 for key in nr_new_attr:
                     nr_new_attr[key] *= len(time_periods) + 1
-            # Attributes created during congested transit assignment
-            nr_new_attr["transit_segments"] += 3
             dim = emmebank.dimensions
             dim["nodes"] = dim["centroids"] + dim["regular_nodes"]
             attr_space = 0
@@ -148,34 +188,64 @@ def main(args):
                     attr_space)
                 log.error(msg)
                 raise ValueError(msg)
-            validate(scen.get_network(), time_periods)
+            validate(scen.get_network(), time_periods, transit_cost)
             app.close()
 
     for submodel in zone_numbers:
-        # Check base matrices
-        base_matrices_path = Path(
-            args.baseline_data_path, "Matrices", submodel)
-        if not base_matrices_path.exists():
-            msg = "Baseline matrices' directory '{}' does not exist.".format(
-                base_matrices_path)
-            log.error(msg)
-            raise ValueError(msg)
-        if not calculate_long_dist_demand:
+        if submodel != "koko_suomi":
+            # Check base matrices
+            base_matrices_path = Path(
+                args.baseline_data_path, "Matrices", submodel)
+            if not base_matrices_path.exists():
+                msg = "Baseline matrices' directory '{}' does not exist.".format(
+                    base_matrices_path)
+                log.error(msg)
+                raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
                 with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
                     for ass_class in param.transport_classes:
                         a = mtx[ass_class]
 
-    for data_path, submodel in zip(forecast_zonedata_paths, args.submodel):
+    long_dist_result_paths = []
+    for name, long_dist in zip(
+            args.scenario_name, args.long_dist_demand_forecast):
+        if long_dist == "calc":
+            long_dist_result_paths.append(
+                Path(args.results_path, name, "Matrices", "koko_suomi"))
+    for data_path, submodel, long_dist_forecast, freight_path in zip(
+            forecast_zonedata_paths, args.submodel,
+            args.long_dist_demand_forecast, args.freight_matrix_paths):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
-            msg = "Forecast data directory '{}' does not exist.".format(
+            msg = "Forecast data file '{}' does not exist.".format(
                 data_path)
             log.error(msg)
             raise ValueError(msg)
         forecast_zonedata = ZoneData(
             Path(data_path), zone_numbers[submodel], submodel)
+
+        # Check long-distance base matrices
+        if long_dist_forecast not in ("calc", "base"):
+            long_dist_classes = (param.car_classes
+                                 + param.long_distance_transit_classes)
+            long_dist_path = Path(long_dist_forecast)
+            if long_dist_path not in long_dist_result_paths:
+                long_dist_matrices = MatrixData(long_dist_path)
+                with long_dist_matrices.open(
+                        "demand", "vrk", zone_numbers[submodel],
+                        forecast_zonedata.mapping, long_dist_classes) as mtx:
+                    for ass_class in long_dist_classes:
+                        a = mtx[ass_class]
+
+        # Check freight matrices
+        if freight_path != "none":
+            freight_matrices = MatrixData(Path(freight_path))
+            with freight_matrices.open(
+                    "demand", "vrk", zone_numbers[submodel],
+                    forecast_zonedata.mapping, param.truck_classes) as mtx:
+                for ass_class in param.truck_classes:
+                    a = mtx[ass_class]
 
     log.info("Successfully validated all input files")
 
@@ -195,12 +265,26 @@ if __name__ == "__main__":
         choices={"TEXT", "JSON"},
     )
     parser.add_argument(
-        "-f", "--long-dist-demand-forecast",
+        "-o", "--end-assignment-only",
+        action="store_true",
+        help="Using this flag runs only end assignment of base demand matrices.",
+    )
+    parser.add_argument(
+        "-l", "--long-dist-demand-forecast",
         type=str,
+        nargs="+",
+        required=True,
         help=("If 'calc', runs assigment with free-flow speed and "
               + "calculates demand for long-distance trips. "
               + "If 'base', takes long-distance trips from base matrices. "
               + "If path, takes long-distance trips from that path.")
+    )
+    parser.add_argument(
+        "-f", "--freight-matrix-paths",
+        type=str,
+        nargs="+",
+        required=True,
+        help=("If specified, take freight demand matrices from path.")
     )
     parser.add_argument(
         "--do-not-use-emme",
@@ -215,6 +299,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--scenario-name",
         type=str,
+        nargs="+",
+        required=True,
         help="Name of HELMET scenario. Influences result folder name and log file name."),
     parser.add_argument(
         "--results-path",
@@ -250,6 +336,12 @@ if __name__ == "__main__":
         nargs="+",
         required=True,
         help="List of paths to folder containing forecast zonedata"),
+    parser.add_argument(
+        "--cost-data-paths",
+        type=str,
+        nargs="+",
+        required=True,
+        help="List of paths to files containing transport cost data"),
     parser.set_defaults(
         **{key.lower(): val for key, val in config.items()})
     args = parser.parse_args()
