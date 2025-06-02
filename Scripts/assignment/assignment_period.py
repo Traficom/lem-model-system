@@ -599,10 +599,12 @@ class AssignmentPeriod(Period):
             if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
                 log.warn("Car assignment not fully converged.")
         network = self.emme_scenario.get_network()
-        time_attr = self.netfield("car_time")
+        if not self.use_stored_speeds:
+            time_attr = self.netfield("car_time")
+            for link in network.links():
+                link[time_attr] = link.auto_time
         truck_time_attr = self.extra("truck_time")
         for link in network.links():
-            link[time_attr] = link.auto_time
             # Truck speed limited to 90 km/h
             link[truck_time_attr] = max(link.auto_time, link.length * 0.67)
         self.emme_scenario.publish_network(network)
