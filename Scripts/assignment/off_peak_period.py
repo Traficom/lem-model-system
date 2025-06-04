@@ -82,6 +82,7 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["coarse"])
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
+        self._check_congestion()
         del mtxs["dist"]
         del mtxs["toll_cost"]
         return mtxs

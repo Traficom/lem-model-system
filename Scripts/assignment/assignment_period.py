@@ -211,6 +211,7 @@ class AssignmentPeriod(Period):
         self._assign_cars(self.stopping_criteria["coarse"])
         self._assign_transit()
         mtxs = self._get_impedances(modes)
+        self._check_congestion()
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
         del mtxs["toll_cost"]
@@ -238,6 +239,7 @@ class AssignmentPeriod(Period):
         self._assign_transit(param.transit_classes)
         self._calc_transit_network_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
+        self._check_congestion()
         for tc in self.assignment_modes:
             self.assignment_modes[tc].release_matrices()
         return mtxs
@@ -259,6 +261,14 @@ class AssignmentPeriod(Period):
                 for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in param.impedance_output}
         return impedance
+
+    def _check_congestion(self):
+        for car_class in param.car_classes:
+            mode: CarMode = self.assignment_modes[car_class]
+            log.debug(f"Maximum {self.name} {car_class} link congestion "
+                      + f"is {mode.max_congestion:.0%} of free flow time")
+            if mode.max_congestion == 0:
+                log.warn(f"No car congestion in time period {self.name}!")
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.

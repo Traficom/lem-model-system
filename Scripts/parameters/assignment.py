@@ -188,6 +188,7 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
+congested_time_weight = 1.5
 freight_terminal_cost = {
     'd': 0,
     'J': 0,
