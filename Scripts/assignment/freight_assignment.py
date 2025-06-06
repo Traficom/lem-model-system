@@ -218,7 +218,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                 Border id (FIHEL/SESTO...)
             value : int
                 Index number (0, 1, 2, ...)
-        orig_mapping : dict
+        dest_mapping : dict
             key : str
                 Border id (FIHEL/SESTO...)
             value : int
@@ -231,17 +231,16 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         numpy.ndarray
             Impedance matrix with index inserted transit line attribute data
         """
-        network = self.emme_scenario.get_network()
         attribute = attribute.replace("ut", "data")
         impedance_matrix = numpy.full(
             (len(orig_mapping), len(dest_mapping)), numpy.inf, dtype="float32")
-        for line in network.transit_lines():
+        for line in self.emme_scenario.get_network().transit_lines():
             starts_in_fi = line.id[0:2] == "FI"
             if (line.mode.id == ship_mode
                 and ((starts_in_fi and is_export)
                      or (not starts_in_fi and not is_export))):
                 line_od = line.id.split("_")[0].split("-")
                 o_index = orig_mapping[line_od[0]]
-                d_index = orig_mapping[line_od[1]]
+                d_index = dest_mapping[line_od[1]]
                 impedance_matrix[o_index, d_index] = line[attribute]
         return impedance_matrix
