@@ -157,8 +157,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             destinations = finland_border_points
         origins = self._filter_border_points(origins)
         destinations = self._filter_border_points(destinations)
-        orig_mapping = {idx: pid for idx, pid in enumerate(origins)}
-        dest_mapping = {idx: pid for idx, pid in enumerate(destinations)}
+        orig_mapping = {pid: idx for idx, pid in enumerate(origins)}
+        dest_mapping = {pid: idx for idx, pid in enumerate(destinations)}
         ship_impedances = {}
         for ship, modes in param.freight_marine_modes.items():
             ship_impedances[ship] = {}
@@ -168,7 +168,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
                     ship_mode, attr, orig_mapping, dest_mapping, is_export)
         return ship_impedances, origins, destinations
 
-    def _filter_border_points(self, border_data: dict) -> numpy.ndarray:
+    def _filter_border_points(self, border_data: dict) -> Dict[str, int]:
         """Filter out border centroids that don't exist in scenario's network.
 
         Parameters
