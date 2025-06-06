@@ -599,8 +599,10 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
-ship_dist_attr = "ut1"
-ship_freq_attr = "ut2"
+ship_attrs = {
+    "dist": "ut1",
+    "frequency": "ut2",
+}
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"

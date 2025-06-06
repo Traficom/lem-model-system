@@ -163,8 +163,8 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         for ship, modes in param.freight_marine_modes.items():
             ship_impedances[ship] = {}
             ship_mode = next(iter(modes))
-            for attr in (param.ship_dist_attr, param.ship_freq_attr):
-                ship_impedances[ship][attr] = self._line_data_to_matrix(
+            for key, attr in param.ship_attrs.items():
+                ship_impedances[ship][key] = self._line_data_to_matrix(
                     ship_mode, attr, orig_mapping, dest_mapping, is_export)
         return ship_impedances, origins, destinations
 
@@ -231,7 +231,7 @@ class FreightAssignmentPeriod(AssignmentPeriod):
         numpy.ndarray
             Impedance matrix with index inserted transit line attribute data
         """
-        attribute = attribute.replace("ut", "data")
+        attr = attribute.replace("ut", "data")
         impedance_matrix = numpy.full(
             (len(orig_mapping), len(dest_mapping)), numpy.inf, dtype="float32")
         for line in self.emme_scenario.get_network().transit_lines():
@@ -239,8 +239,6 @@ class FreightAssignmentPeriod(AssignmentPeriod):
             if (line.mode.id == ship_mode
                 and ((starts_in_fi and is_export)
                      or (not starts_in_fi and not is_export))):
-                line_od = line.id.split("_")[0].split("-")
-                o_index = orig_mapping[line_od[0]]
-                d_index = dest_mapping[line_od[1]]
-                impedance_matrix[o_index, d_index] = line[attribute]
+                o, d = line.id.split("_")[0].split("-")
+                impedance_matrix[orig_mapping[o], dest_mapping[d]] = line[attr]
         return impedance_matrix
