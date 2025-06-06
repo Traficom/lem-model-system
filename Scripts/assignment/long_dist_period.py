@@ -103,5 +103,5 @@ class WholeDayPeriod(AssignmentPeriod):
             if self._delete_strat_files:
                 strategy_paths[transit_class].unlink(missing_ok=True)
         self._calc_transit_link_results()
-        return self._get_impedances((param.car_classes
+        return self._get_impedances(param.car_classes
                                     + param.long_distance_transit_classes)
