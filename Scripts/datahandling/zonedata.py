@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Any, List, Sequence, Union
+from typing import Any, List, Sequence, Union, Dict
 from pathlib import Path
+from collections import defaultdict
 import numpy # type: ignore
 import pandas
 import fiona
@@ -64,26 +65,6 @@ class ZoneData:
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
-        share_7_99 = pandas.Series(0, self.zone_numbers, dtype=numpy.float32)
-        pop = data["population"]
-        wp = data["workplaces"]
-        hh = data["households"]
-        for col in data:
-            if col.startswith("sh_age"):
-                pop_share = data[col]
-                self.share[col] = pop_share
-                col_name = col.replace("sh_", "")
-                self[col_name] = pop_share * pop
-                self[col_name + "_female"] = 0.5 * pop_share * pop
-                self[col_name + "_male"] = 0.5 * pop_share * pop
-                share_7_99 += pop_share
-            if col.startswith("sh_income"):
-                self[col.replace("sh_", "")] = data[col] * pop
-            if col.startswith("sh_wrk_"):
-                self[col.replace("sh_wrk_", "")] = data[col] * wp
-            if col.startswith("sh_hh"):
-                self[col.replace("sh_", "")] = data[col] * hh
-        self.share["share_age_7-99"] = share_7_99
         # Convert household shares to population shares
         hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
         self.share["sh_pop_hh1"] = divide(self["sh_hh1"], hh_population)
@@ -114,6 +95,7 @@ class ZoneData:
         for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
             self[dummy] = self.dummy("subarea", dummy)
         self["Lappi"] = self.dummy("county", "Lappi")
+        pop = data["population"]
         for key in ["Uusimaa", "Lounais-Suomi", "Ita-Suomi", "Pohjois-Suomi"]:
             self["population_" + key] = self.dummy("submodel", key) * pop
 
@@ -210,6 +192,17 @@ class ZoneData:
         else:  # Return matrix (purpose zones -> all zones)
             return val[bounds, :]
 
+    @property
+    def is_in_submodel(self) -> pandas.Series:
+        """Boolean mapping of zones, whether in proper sub-model area."""
+        mapping = self.aggregations.mappings["submodel"]
+        submodels = mapping.drop_duplicates()
+        for submodel in submodels:
+            if self.mapping.name == submodel.lower().replace('-', '_'):
+                return mapping == submodel
+        else:
+            return slice(None)
+
 
 class FreightZoneData(ZoneData):
     """Container for freight zone data read from input file.
@@ -294,20 +287,23 @@ def read_zonedata(path: Path,
         data.sort_index(inplace=True)
         log.warn("File {} is not sorted in ascending order".format(path))
     zone_mapping = data[zone_mapping_name]
-    zone_variables = json.loads(
+    zone_variables: dict = json.loads(
         (Path(__file__).parent / "zone_variables.json").read_text("utf-8")
     )[data_type]
     aggs = {}
+    shares: Dict[str, Dict[str, List[str]]] = {}
     for func, cols in zone_variables.items():
         for col in cols:
             try:
                 total = col["total"]
+                shares[total] = defaultdict(list)
             except TypeError:
                 aggs[col] = func
             else:
                 aggs[total] = func
                 for share in col["shares"]:
                     aggs[share] = lambda x: avg(x, weights=data[total])
+                    shares[total][share.split('_')[1]].append(share)
     data = data.groupby(zone_mapping_name).agg(aggs)
     data.index = data.index.astype(int)
     data.index.name = "analysis_zone_id"
@@ -327,4 +323,16 @@ def read_zonedata(path: Path,
         msg = "Zone numbers did not match for file {}".format(path)
         log.error(msg)
         raise IndexError(msg)
+    for total in shares:
+        for share_type, type_shares in shares[total].items():
+            for share in type_shares:
+                data[share.replace("sh_", "")] = data[share] * data[total]
+            if len(type_shares[0].split('_')) == 4:
+                # Example: Sum sh_age_7_17 .. sh_age_65_99 in sh_age_7_99
+                total_interval = "sh_{}_{}_{}".format(
+                    share_type, type_shares[0].split('_')[2],
+                    type_shares[-1].split('_')[3])
+            else:
+                total_interval = f"sh_{share_type}_all"
+            data[total_interval] = data[type_shares].sum(axis="columns")
     return data, zone_mapping

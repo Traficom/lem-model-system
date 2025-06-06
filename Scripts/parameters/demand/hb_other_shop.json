@@ -1,7 +1,7 @@
 {
     "name": "hb_other_shop",
     "orig": "home",
-    "dest": "shop",
+    "dest": "wrk_shop",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -97,11 +97,19 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.42901
+                "transform": -0.42901
             },
             "attraction_size": {
-                "shop": 1,
-                "healthcare": 0.14018
+                "wrk_shop": 1,
+                "wrk_healthcare": 0.14018
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {
@@ -117,8 +125,8 @@
                 "cost": -0.42901
             },
             "attraction_size": {
-                "shop": 1,
-                "healthcare": 0.14018
+                "wrk_shop": 1,
+                "wrk_healthcare": 0.14018
             }
         },
         "transit_leisure": {
@@ -136,8 +144,8 @@
                 "cost": -0.42901
             },
             "attraction_size": {
-                "shop": 1,
-                "healthcare": 0.14018
+                "wrk_shop": 1,
+                "wrk_healthcare": 0.14018
             }
         },
         "bike": {
@@ -151,8 +159,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "healthcare": 0.14018
+                "wrk_shop": 1,
+                "wrk_healthcare": 0.14018
             }
         },
         "walk": {
@@ -166,8 +174,8 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "healthcare": 0.14018
+                "wrk_shop": 1,
+                "wrk_healthcare": 0.14018
             }
         }
     },

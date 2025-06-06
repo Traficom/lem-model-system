@@ -97,11 +97,19 @@
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.28318
+                "transform": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
+            },
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
             }
         },
         "car_pax": {
@@ -117,8 +125,8 @@
                 "cost": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "transit_work": {
@@ -134,8 +142,8 @@
                 "cost": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "bike": {
@@ -149,8 +157,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "walk": {
@@ -164,8 +172,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         }
     },
