@@ -544,6 +544,26 @@ freight_modes = {
         's': "@ship_9m",
     },
 }
+freight_marine_modes = {
+    "container_ship": {
+        "C": "@container_ship"
+    },
+    "general_cargo": {
+        "G": "@general_cargo"
+    },
+    "lng_carrier": {
+        "L": "@lng_carrier"
+    },
+    "oil_tanker": {
+        "O": "@oil_tanker"
+    },
+    "product_tanker": {
+        "P": "@product_tanker"
+    },
+    "roro_vessel": {
+        "R": "@roro_vessel"
+    }
+}
 external_modes = [
     "car_leisure",
     "transit_leisure",

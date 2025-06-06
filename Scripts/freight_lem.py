@@ -15,7 +15,7 @@ from assignment.emme_bindings.emme_project import EmmeProject
 from datahandling.matrixdata import MatrixData
 from datatypes.purpose import FreightPurpose
 
-from utils.freight_utils import create_purposes, StoreDemand
+from utils.freight_utils import StoreDemand, ReadShipImpedances, create_purposes
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -80,6 +80,8 @@ def main(args):
                                resultdata, costdata["freight"])
     for purpose in purposes.values():
         log.info(f"Calculating demand for foreign purpose: {purpose.name}")
+        ship_impedances = ReadShipImpedances(zonedata.all_zone_numbers, "export")
+        impedance["ship"], ext_zones = ship_impedances.form_matrices(ass_model.freight_network)
     
     log.info("Starting end assigment")
     for ass_class in total_demand:
