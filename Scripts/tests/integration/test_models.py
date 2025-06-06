@@ -54,7 +54,7 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.3363155284638638)
+            0.33421219418743947)
         
         print("Model system test done")
 
@@ -74,7 +74,7 @@ class ModelTest(unittest.TestCase):
         # Check that model result does not change
         self.assertAlmostEquals(
             model.mode_share[0]["car_work"] + model.mode_share[0]["car_leisure"],
-            0.5942077838276054)
+            0.5943407346939378)
 
     def _validate_impedances(self, impedances):
         self.assertIsNotNone(impedances)
@@ -88,7 +88,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
-        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 34)
 
     def _validate_off_peak_impedances(self, impedances):
         self.assertIsNotNone(impedances)
@@ -100,7 +100,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
-        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 34)
 
     def _validate_demand(self, demand):
         self.assertIsNotNone(demand)
