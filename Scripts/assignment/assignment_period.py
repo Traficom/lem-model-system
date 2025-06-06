@@ -356,7 +356,8 @@ class AssignmentPeriod(Period):
                 # Car link with standard attributes
                 roadclass = param.roadclasses[linktype]
                 if link.volume_delay_func != 90:
-                    if self.use_stored_speeds or use_free_flow_speeds:
+                    if ((self.use_stored_speeds or use_free_flow_speeds)
+                        and roadclass.type != "connector"):
                         link.volume_delay_func = 91
                     else:
                         link.volume_delay_func = roadclass.volume_delay_func
@@ -385,7 +386,7 @@ class AssignmentPeriod(Period):
                     link.data1 = roadclass.lane_capacity
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
-            if self.use_stored_speeds and link.volume_delay_func < 90:
+            if self.use_stored_speeds and link.volume_delay_func == 91:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
