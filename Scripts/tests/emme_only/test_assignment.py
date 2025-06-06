@@ -41,6 +41,7 @@ class EmmeAssignmentTest:
             db_dir.mkdir(parents=True, exist_ok=True)
         except FileExistsError:
             project_path = project_dir / project_name / (project_name + ".emp")
+        emme_context = EmmeProject(project_path)
         dim = {
             "scalar_matrices": 100,
             "origin_matrices": 100,
@@ -62,12 +63,14 @@ class EmmeAssignmentTest:
         scenario_num = 19
         try:
             eb = _eb.create(db_dir / "emmebank", dim)
+        except RuntimeError:
+            pass
+        else:
             eb.create_scenario(scenario_num)
             emmebank_path = eb.path
             eb.dispose()
-        except RuntimeError:
-            emmebank_path = None
-        emme_context = EmmeProject(project_path, emmebank_path, "test")
+            emme_context.add_db(emmebank_path, "test")
+        emme_context.start()
         emme_context.import_scenario(
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
