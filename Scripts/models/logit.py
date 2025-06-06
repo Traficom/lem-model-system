@@ -11,13 +11,14 @@ if TYPE_CHECKING:
     from datatypes.purpose import TourPurpose
 
 import utils.log
+from parameters.assignment import ec_mode
 
 
-def log(a: numpy.array):
+def log(a: numpy.ndarray):
     with numpy.errstate(divide="ignore"):
         return numpy.log(a)
 
-def divide(a, b):
+def divide(a, b) -> numpy.ndarray:
     return numpy.divide(a, b, out=numpy.zeros_like(a), where=b!=0)
 
 class LogitModel:
@@ -200,6 +201,19 @@ class LogitModel:
                 zdata.get_data(i, self.bounds, generation) + 1, b[i])
         return exps
 
+    def _calc_electric_car_shares(self, probs: Dict[str, numpy.ndarray],
+                                  ec_probs: Dict[str, numpy.ndarray]):
+        ec_share = self.zone_data.get_data(
+            "share_electric_cars", self.bounds, generation=True)
+        for mode in self.mode_choice_param:
+            if mode in self.purpose.car_modes:
+                probs[mode] = (1-ec_share) * probs[mode]
+                probs[self.purpose.car_modes[mode]] = ec_share * ec_probs[mode]
+            else:
+                probs[mode] = ((1-ec_share) * probs[mode]
+                                    + ec_share * ec_probs[mode])
+        return probs
+
 
 class ModeDestModel(LogitModel):
     """Nested logit model with mode choice in upper level.
@@ -308,15 +322,26 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
+        ec_impedance = {}
+        for mode, electric_mode in self.purpose.car_modes.items():
+            if electric_mode in impedance:
+                ec_impedance[mode] = impedance.pop(electric_mode)
         mode_exps, mode_expsum, dest_exps, dest_expsums = self._calc_utils(
             impedance)
         if calc_accessibility:
             self._calc_accessibility(mode_exps, mode_expsum)
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
         if mode_probs is None:
-            self._stashed_exps += [dest_exps, dest_expsums]
+            self._stashed_exps += [dest_exps, dest_expsums, ec_impedance]
             return None
         else:
+            if ec_impedance:
+                (
+                    mode_probs, ec_dest_exps, ec_dest_expsums
+                ) = self._calc_electric_car_prob(
+                    ec_impedance, mode_exps, mode_probs)
+                dest_exps.update(ec_dest_exps)
+                dest_expsums.update(ec_dest_expsums)
             try:
                 self.soft_mode_probs = {
                     mode: mode_probs[mode] for mode in self.soft_mode_exps}
@@ -336,9 +361,15 @@ class ModeDestModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
-        mode_exps, mode_expsum, dest_exps, dest_expsums = self._stashed_exps
+        (
+            mode_exps, mode_expsum, dest_exps, dest_expsums, impedance
+        ) = self._stashed_exps
         del self._stashed_exps
         mode_probs = self._calc_mode_prob(mode_exps, mode_expsum)
+        mode_probs, ec_dest_exps, ec_dest_expsums = self._calc_electric_car_prob(
+            impedance, mode_exps, mode_probs)
+        dest_exps.update(ec_dest_exps)
+        dest_expsums.update(ec_dest_expsums)
         self.soft_mode_probs = {
             mode: mode_probs[mode] for mode in self.soft_mode_exps}
         return self._calc_prob(mode_probs, dest_exps, dest_expsums)
@@ -365,7 +396,22 @@ class ModeDestModel(LogitModel):
         for mode in self.mode_choice_param:
             cumsum = dest_exps.pop(mode).T.cumsum(axis=0)
             self.cumul_dest_prob[mode] = cumsum / cumsum[-1]
-    
+
+    def _calc_electric_car_prob(self, impedance: Dict[str, numpy.ndarray],
+                                mode_exps: Dict[str, numpy.ndarray],
+                                mode_probs: Dict[str, numpy.ndarray]):
+        ec_mode_exps, _, dest_exps, dest_expsums = self._calc_utils(
+            impedance)
+        for mode, electric_mode in self.purpose.car_modes.items():
+            for d in (dest_exps, dest_expsums):
+                if mode in d:
+                    d[electric_mode] = d.pop(mode)
+        mode_exps.update(ec_mode_exps)
+        ec_mode_probs = self._calc_mode_prob(
+            mode_exps, sum(mode_exps.values()))
+        mode_probs = self._calc_electric_car_shares(mode_probs, ec_mode_probs)
+        return mode_probs, dest_exps, dest_expsums
+
     def _calc_individual_prob(self, mod_modes: list[str], dummy: str,
                               mode_exps: Dict[str, numpy.ndarray]):
         """Calculate utilities with individual dummies included.
@@ -582,6 +628,22 @@ class DestModeModel(LogitModel):
             Mode (car/transit/bike/walk) : numpy 2-d matrix
                 Choice probabilities
         """
+        prob = self._calc_dummy_prob(impedance, store_logsum=True)
+
+        # Calculate electric car probability and add to prob
+        includes_electric = False
+        for mode, electric_mode in self.purpose.car_modes.items():
+            if electric_mode in impedance:
+                impedance[mode] = impedance[electric_mode]
+                includes_electric = True
+        if includes_electric:
+            ec_prob = self._calc_dummy_prob(impedance)
+            prob = self._calc_electric_car_shares(prob, ec_prob)
+
+        return prob
+
+    def _calc_dummy_prob(self, impedance: Dict[str, Dict[str, numpy.ndarray]],
+                         store_logsum: bool = False):
         dummies: set[str] = set()
         for mode in self.mode_choice_param:
             for i in self.mode_choice_param[mode]["individual_dummy"]:
@@ -595,7 +657,7 @@ class DestModeModel(LogitModel):
             tmp_prob = self._calc_prob(impedance, dummy)
             for mode in self.mode_choice_param:
                 prob[mode] += dummy_share * tmp_prob.pop(mode)
-        tmp_prob = self._calc_prob(impedance, store_logsum=True)
+        tmp_prob = self._calc_prob(impedance, store_logsum=store_logsum)
         for mode in self.mode_choice_param:
             prob[mode] += no_dummy_share * tmp_prob.pop(mode)
         return prob

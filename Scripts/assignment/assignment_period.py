@@ -252,7 +252,7 @@ class AssignmentPeriod(Period):
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
         mtxs = {tc: self.assignment_modes[tc].get_matrices()
-            for tc in assignment_classes if tc != "car_pax"}
+            for tc in assignment_classes if tc not in param.pax_modes}
         for mode in mtxs:
             try:
                 divide_matrices(

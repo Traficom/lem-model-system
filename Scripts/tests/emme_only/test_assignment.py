@@ -78,6 +78,7 @@ class EmmeAssignmentTest:
         self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
+            "car_electric": 0.04,
             "trailer_truck": 0.5,
             "semi_trailer": 0.4,
             "truck": 0.3,
