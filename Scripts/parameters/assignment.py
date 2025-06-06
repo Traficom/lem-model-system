@@ -542,6 +542,26 @@ freight_modes = {
         'W': "@ship",
     },
 }
+freight_marine_modes = {
+    "container_ship": {
+        "C": "@container_ship"
+    },
+    "general_cargo": {
+        "G": "@general_cargo"
+    },
+    "lng_carrier": {
+        "L": "@lng_carrier"
+    },
+    "oil_tanker": {
+        "O": "@oil_tanker"
+    },
+    "product_tanker": {
+        "P": "@product_tanker"
+    },
+    "roro_vessel": {
+        "R": "@roro_vessel"
+    }
+}
 external_modes = [
     "car_leisure",
     "transit_leisure",
@@ -577,6 +597,10 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
+ship_attrs = {
+    "dist": "ut1",
+    "frequency": "ut2",
+}
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
