@@ -142,7 +142,7 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
-    parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
+    parser = ArgumentParser(epilog="VALMA freight model-system entry point script.")
     config = utils.config.read_from_file()
     
     parser.add_argument(
