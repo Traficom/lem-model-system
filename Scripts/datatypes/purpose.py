@@ -609,7 +609,25 @@ class FreightPurpose(Purpose):
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
 
-    def get_costs(self, impedance: dict):
+    def calc_route(self, impedance: dict, origs: dict, dests: dict):
+        """Calculates route choice for foreign freight trade. 
+        
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/dist...) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        
+        """
+        costs = self.get_costs(impedance, origs, dests)
+
+    def get_costs(self, impedance: dict, origs: dict = None, dests: dict = None):
         """Fetches calculated costs for each mode in model's mode choice.
 
         Parameters
@@ -617,6 +635,12 @@ class FreightPurpose(Purpose):
         impedance : dict 
             Mode (truck/train/...) : dict
                 Type (time/cost/dist) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
 
         Returns
         -------
@@ -624,7 +648,7 @@ class FreightPurpose(Purpose):
             Mode (truck/freight_train/...) : cost : numpy.ndarray
         """
         return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode],
-                                         self.model_category)}
+                                         self.model_category, origs, dests)}
                 for mode in self.modes}
 
     def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
