@@ -38,14 +38,15 @@ def main(args):
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
-    purposes = create_purposes(parameters_path / "domestic", zonedata, 
-                               resultdata, costdata["freight"])
-    purps_to_assign = list(filter(lambda purposes: purposes[0] in
-                                  list(purposes), args.specify_commodity_names))
-    ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
-    store_demand = StoreDemand(ass_model.freight_network, resultmatrices, 
-                               zonedata.all_zone_numbers, zonedata.zone_numbers)
-
+    purposes = {}
+    for file in parameters_path.rglob("*.json"):
+        commodity_params = json.loads(file.read_text("utf-8"))
+        commodity = commodity_params["name"]
+        purposes[commodity] = FreightPurpose(commodity_params,
+                                             zonedata,
+                                             resultdata,
+                                             costdata["freight"][commodity_conversion[commodity]])
+    ass_model.prepare_freight_network(costdata["car_cost"], args.specify_commodity_names)
     impedance = ass_model.freight_network.assign()
     for mtx_type in impedance.keys():
         for ass_class, mtx in impedance[mtx_type].items():
@@ -62,11 +63,12 @@ def main(args):
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
-            omx_filename = ("freight_demand_tons" if purpose.name 
-                            in args.specify_commodity_names else "")
-            store_demand.store(mode, demand[mode], omx_filename, purpose.name)
-        if purpose.name in args.specify_commodity_names:
-            ass_model.freight_network.save_network_volumes(purpose.name)
+            ass_model.freight_network.set_matrix(mode, demand[mode])
+            if purpose.name in args.specify_commodity_names:
+                ass_model.freight_network.save_network_volumes(purpose.name)
+                with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
+                    mtx[f"{purpose.name}_{mode}"] = demand[mode]
+
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
         demand["truck"] += transform_traversal_data(resultdata.path, zonedata.zone_numbers)
         for mode in param.truck_classes:
@@ -75,15 +77,7 @@ def main(args):
         write_zone_summary(purpose.name, zonedata.zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
-    
-    purposes = create_purposes(parameters_path / "foreign", zonedata, 
-                               resultdata, costdata["freight"])
-    for purpose in purposes.values():
-        log.info(f"Calculating demand for foreign purpose: {purpose.name}")
-        imp, origs, dests = ass_model.freight_network.read_ship_impedances(
-            is_export=True)
-        impedance["ship"] = imp
-    log.info("Starting end assigment")
+    log.info("Setting vehicle matrices and performing end assignment.")
     for ass_class in total_demand:
         store_demand.store(mode, total_demand[ass_class], "freight_demand")
     ass_model.freight_network._assign_trucks()
