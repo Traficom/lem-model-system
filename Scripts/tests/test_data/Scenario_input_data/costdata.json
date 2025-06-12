@@ -93,6 +93,30 @@
                     "dist": 0.0032,
                     "terminal_cost": 22.0,
                     "canal_cost": 1.0
+                },
+                "container_ship": {
+                    "4m": {
+                        "time": 0.00199,
+                        "dist": 0.00172,
+                        "terminal_cost": 25.7523
+                    },
+                    "8m": {
+                        "time": 0.00061,
+                        "dist": 0.00132,
+                        "terminal_cost": 25.7994
+                    },
+                    "15m": {
+                        "time": 0.00032,
+                        "dist": 0.0009,
+                        "terminal_cost": 28.03951
+                    }
+                },
+                "roro_vessel": {
+                    "5m": {
+                        "time": 0.00554,
+                        "dist": 0.01407,
+                        "terminal_cost": 22.7679
+                    }
                 }
             }
         }
