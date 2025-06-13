@@ -18,7 +18,7 @@ def calc_cost(mode: str, unit_costs: Dict[str, Dict],
             Mode (truck/trailer_truck) : unit cost name
                 unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
-        Type (time/dist/toll_cost) : numpy 2d matrix
+        Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
     model_category : str
         purpose modelling category, within Finland as 'domestic, 
         outside Finland as 'foreign'
@@ -117,9 +117,8 @@ def get_domestic_ship_cost(unit_costs: Dict[str, Dict],
     ----------
     unit_costs : Dict[str, Dict]
         Freight mode (truck/freight_train/ship) : mode
-            Mode (other_dry_cargo...) : draught
-                draught (4m...) : unit cost name
-                    unit cost name : unit cost value
+            Mode (domestic_vessel) : unit cost name
+                unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
     model_category : str
@@ -135,7 +134,7 @@ def get_domestic_ship_cost(unit_costs: Dict[str, Dict],
     ship_aux_cost = get_aux_cost(unit_costs, impedance, model_category)
     return ship_cost + ship_aux_cost
 
-def calc_ship_cost(ship_params: Dict[str, float], 
+def calc_ship_cost(unit_costs: Dict[str, float], 
                    impedance: Dict[str, numpy.ndarray],
                    model_category: str,
                    draught_mask: numpy.ndarray = 1):
@@ -143,7 +142,7 @@ def calc_ship_cost(ship_params: Dict[str, float],
     
     Parameters
     ----------
-    unit_params : Dict[str, float]
+    unit_costs : Dict[str, float]
         unit cost name : unit cost value
     impedance : Dict[str, numpy.ndarray]
         Type (time/dist/canal_cost) : numpy 2d matrix
@@ -157,11 +156,11 @@ def calc_ship_cost(ship_params: Dict[str, float],
     ship_cost : numpy.ndarray
         impedance type cost : numpy 2d matrix
     """
-    ship_cost = (impedance["time"] * ship_params["time"] * draught_mask
-                 + impedance["dist"] * ship_params["dist"] * draught_mask
-                 + ship_params["terminal_cost"])
+    ship_cost = (impedance["time"] * unit_costs["time"] * draught_mask
+                 + impedance["dist"] * unit_costs["dist"] * draught_mask
+                 + unit_costs["terminal_cost"])
     if model_category == "domestic":
-        ship_cost += impedance["canal_cost"] * ship_params["canal_cost"]
+        ship_cost += impedance["canal_cost"] * unit_costs["canal_cost"]
     return ship_cost
 
 def get_aux_cost(unit_costs: Dict[str, Dict],
@@ -206,8 +205,8 @@ def get_foreign_ship_cost(unit_costs: Dict[str, dict], impedance: Dict[str, dict
     ----------
     unit_costs : Dict[str, dict]
         Freight mode (truck/freight_train/ship) : mode
-            Mode (other_dry_cargo...) : draught
-                draught (4m...) : unit cost name
+            Mode (general_cargo/container_ship...) : draught
+                draught (4/5/8...) : unit cost name
                     unit cost name : unit cost value
     impedance : Dict[str, dict]
         Sub ship mode (general_cargo/container_ship...) : attribute
@@ -227,27 +226,27 @@ def get_foreign_ship_cost(unit_costs: Dict[str, dict], impedance: Dict[str, dict
         Marine ship type (general_cargo/container ship...) : matrix
             Mtx type (cost/mode/draught) : numpy.ndarray
     """
-    none_mtx = numpy.full((len(origs), len(dests)), None, dtype="float64")
+    inf_mtx = numpy.full((len(origs), len(dests)), numpy.inf, dtype="float32")
     ship_info = {}
     for mode in unit_costs["ship"].keys():
         if mode == "domestic_vessel":
             continue
         ship_info[mode] = {
-            "cost": none_mtx.copy(),
-            "draught": none_mtx.astype("object")
+            "cost": inf_mtx.copy(),
+            "draught": inf_mtx.copy()
         }
-        for ship_draught, ship_params in unit_costs["ship"][mode].items():
-            draught = int(ship_draught[:-1])
+        for draught in map(int, unit_costs["ship"][mode]):
             impedance[mode]["time"] = (impedance[mode]["dist"] 
-                                       / ship_draught_speed[mode][ship_draught]
+                                       / ship_draught_speed[mode][draught]
                                        * 60)
             mask = evaluate_port_draught(draught, port_draught_limit[mode], 
                                          origs, dests)
-            cost = calc_ship_cost(ship_params, impedance[mode], 
-                                  model_category, draught_mask=mask)
+            cost = calc_ship_cost(unit_costs["ship"][mode][f"{draught}"], 
+                                  impedance[mode], model_category, 
+                                  draught_mask=mask)
             mask = minimize(ship_info[mode]["cost"], cost)
             ship_info[mode]["cost"][mask] = cost[mask]
-            ship_info[mode]["draught"][mask] = ship_draught
+            ship_info[mode]["draught"][mask] = draught
     return ship_info
 
 def evaluate_port_draught(draught: int, port_draught: dict, 
@@ -260,7 +259,7 @@ def evaluate_port_draught(draught: int, port_draught: dict,
     Parameters
     ----------
     ship_draught : int
-        draught for marine ship type in unit costs
+        draught (4/5/8...) for marine ship type in unit costs
     port_draught : dict[str, int]
         Finnish port name id (FIHEL/FISKV...) : draught limit
     ext_origin : dict
@@ -273,17 +272,14 @@ def evaluate_port_draught(draught: int, port_draught: dict,
     numpy.ndarray
         Mask (1/np.inf)
     """
-    mask = numpy.ones((len(ext_origin.values()), len(ext_dest.values())))
-    if set(ext_origin.keys()).issubset(set(port_draught.keys())):
-        origin_based = True
-        fin_ports = list(ext_origin)
-    else:
-        origin_based = False
-        fin_ports = list(ext_dest)
-    for index, port in enumerate(fin_ports):
-        if draught > port_draught[port]:
-            mask[index][0:] = numpy.inf
-    return mask if origin_based else mask.T
+    mask = numpy.ones((len(ext_origin), len(ext_dest)))
+    for index, port in enumerate(ext_origin):
+        if port in port_draught and draught > port_draught[port]:
+            mask[index, :] = numpy.inf
+    for index, port in enumerate(ext_dest):
+        if port in port_draught and draught > port_draught[port]:
+            mask[:, index] = numpy.inf
+    return mask
 
 def minimize(current_cost: numpy.ndarray, calc_cost: numpy.ndarray):
     """Evaluate if calculated cost for ship type and draught can minimize
@@ -302,6 +298,6 @@ def minimize(current_cost: numpy.ndarray, calc_cost: numpy.ndarray):
         bool mask matrix
     """
     return (
-        (~numpy.isfinite(current_cost) & (~numpy.isinf(calc_cost))) 
+        (~numpy.isinf(current_cost) & (~numpy.isinf(calc_cost))) 
         | ((~numpy.isinf(calc_cost)) & (calc_cost < current_cost))
     )

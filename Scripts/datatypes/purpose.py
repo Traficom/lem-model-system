@@ -594,7 +594,7 @@ class FreightPurpose(Purpose):
         ----------
         impedance : dict
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
 
         Return
         ------
@@ -616,7 +616,7 @@ class FreightPurpose(Purpose):
         ----------
         impedance : dict
             Mode (truck/train/...) : dict
-                Type (time/dist...) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
         origs : dict
             Origin border id (FIHEL/SESTO...) : str
                 Centroid id : int
@@ -634,7 +634,7 @@ class FreightPurpose(Purpose):
         ----------
         impedance : dict 
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
         origs : dict
             Origin border id (FIHEL/SESTO...) : str
                 Centroid id : int

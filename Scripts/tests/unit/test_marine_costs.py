@@ -11,10 +11,6 @@ from utils.freight_costs import calc_cost
 TEST_PATH = Path(__file__).parent.parent / "test_data"
 TEST_DATA_PATH = TEST_PATH / "Scenario_input_data"
 TEST_MATRICES = TEST_PATH / "Scenario_input_data" / "Matrices" / "uusimaa"
-ZONE_NUMBERS = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519, 2621,
-                2707, 2814, 2918, 3000, 3003, 3203, 3302, 3416, 3639, 3705,
-                3800, 4013, 4102, 4202, 7043, 8284, 12614, 17278, 19401, 23678,
-                50107, 50127, 50201, 50205]
 
 class MarineCostTest(unittest.TestCase):
 
@@ -70,7 +66,7 @@ class MarineCostTest(unittest.TestCase):
                                           container_mask))
         self.assertTrue(numpy.array_equal(numpy.isfinite(roro["cost"]), 
                                           roro_mask))
-        self.assertTrue(container["cost"][1][1] == 27.312939999999998)
-        self.assertTrue(roro["cost"][0][0] == 26.278578921161827)
-        self.assertTrue(container["draught"][1][1] == "8m")
-        self.assertTrue(roro["draught"][0][0] == "5m")
+        self.assertEqual(container["cost"][1][1], numpy.float32(27.31294))
+        self.assertEqual(roro["cost"][0][0], numpy.float32(26.27858))
+        self.assertEqual(container["draught"][1][1], 8)
+        self.assertEqual(roro["draught"][0][0], 5)
