@@ -38,16 +38,20 @@ class MarineCostTest(unittest.TestCase):
             },
             "ship": {
                 "container_ship": {
-                    "dist": numpy.array([[numpy.inf, numpy.inf], [numpy.inf, 532]]),
-                    "frequency": numpy.array([[numpy.inf, numpy.inf], [numpy.inf, 38]])
+                    "dist": numpy.full((3,2), numpy.inf, dtype="float32"),
+                    "frequency": numpy.full((3,2), numpy.inf, dtype="float32")
                 },
                 "roro_vessel": {
-                    "dist": numpy.array([[126, numpy.inf], [numpy.inf, numpy.inf]]),
-                    "frequency": numpy.array([[162, numpy.inf], [numpy.inf, numpy.inf]])
+                    "dist": numpy.full((3,2), numpy.inf, dtype="float32"),
+                    "frequency": numpy.full((3,2), numpy.inf, dtype="float32")
                 }
             }
         }
-        origs = {"FIHMN": 19401, "FIHNK": 4102}
+        impedance["ship"]["container_ship"]["dist"][1][1] = 532
+        impedance["ship"]["container_ship"]["frequency"][1][1] = 38
+        impedance["ship"]["roro_vessel"]["dist"][0][0] = 126
+        impedance["ship"]["roro_vessel"]["frequency"][0][0] = 162
+        origs = {"FIHMN": 19401, "FIHNK": 4102, "FIHEL": 524}
         dests = {"EETLL": 50107, "SESTO": 50127}
 
         costs = {mode: {"cost": calc_cost(mode, costdata["freight"][purpose_name], 
