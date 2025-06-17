@@ -80,7 +80,9 @@ def main(args):
                                resultdata, costdata["freight"])
     for purpose in purposes.values():
         log.info(f"Calculating demand for foreign purpose: {purpose.name}")
-    
+        imp, origs, dests = ass_model.freight_network.read_ship_impedances(
+            is_export=True)
+        impedance["ship"] = imp
     log.info("Starting end assigment")
     for ass_class in total_demand:
         store_demand.store(mode, total_demand[ass_class], "freight_demand")
