@@ -282,8 +282,8 @@ def evaluate_port_draught(draught: int, port_draught: dict,
     return mask
 
 def minimize(current_cost: numpy.ndarray, calc_cost: numpy.ndarray):
-    """Evaluate if calculated cost for ship type and draught can minimize
-    costs while being finite.
+    """Evaluate if calculated finite cost for ship type and draught can minimize
+    ship mode cost
     
     Parameters
     ----------
@@ -297,7 +297,4 @@ def minimize(current_cost: numpy.ndarray, calc_cost: numpy.ndarray):
     numpy.ndarray
         bool mask matrix
     """
-    return (
-        (~numpy.isinf(current_cost) & (~numpy.isinf(calc_cost))) 
-        | ((~numpy.isinf(calc_cost)) & (calc_cost < current_cost))
-    )
+    return (~numpy.isinf(calc_cost)) & (calc_cost < current_cost)
