@@ -13,7 +13,7 @@ from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_FILE
+from valma_travel import BASE_ZONEDATA_FILE
 
 
 def main(args):
