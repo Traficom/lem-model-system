@@ -255,8 +255,8 @@ class ModelSystem:
                                      and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=ap.transport_classes) as mtx:
-                    for ass_class in ap.transport_classes:
+                        transport_classes=ap.assignment_modes) as mtx:
+                    for ass_class in ap.assignment_modes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
         if self.long_dist_matrices is not None:
@@ -391,7 +391,7 @@ class ModelSystem:
         tp = ap.name
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in ap.assignment_modes.keys():
+            for ass_class in ap.assignment_modes:
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
