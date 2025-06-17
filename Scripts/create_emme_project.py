@@ -11,9 +11,10 @@ import parameters.assignment as param
 def create_emme_project(args):
     project_dir = args.emme_path
     project_name = args.project_name
-    db_dir = Path(project_dir, project_name, "Database")
-    project_path = _app.create_project(project_dir, project_name)
-    db_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        project_path = _app.create_project(project_dir, project_name)
+    except FileExistsError:
+            project_path = Path(project_dir, project_name, project_name + ".emp")
     default_dimensions = {
         "scalar_matrices": 100,
         "origin_matrices": 100,
@@ -72,14 +73,17 @@ def create_emme_project(args):
 
     dim.update(default_dimensions)
     scenario_num = args.first_scenario_id
+    db_dir = Path(project_dir, project_name, args.submodel)
+    db_dir.mkdir(parents=True, exist_ok=True)
     eb = _eb.create(db_dir / "emmebank", dim)
     eb.text_encoding = 'utf-8'
-    eb.title = project_name
+    eb.title = args.submodel
     eb.coord_unit_length = 0.001
     eb.create_scenario(scenario_num)
     emmebank_path = eb.path
     eb.dispose()
-    EmmeProject(project_path, emmebank_path, project_name, visible=True)
+    ep = EmmeProject(project_path, visible=True)
+    ep.add_db(emmebank_path, project_name)
 
 if __name__ == "__main__":
     # Initially read defaults from config file ("dev-config.json")

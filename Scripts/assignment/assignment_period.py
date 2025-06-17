@@ -2,6 +2,8 @@ from __future__ import annotations
 import numpy # type: ignore
 import pandas # type: ignore
 import copy
+import json
+from pathlib import Path
 
 from typing import TYPE_CHECKING, Dict, Union, Iterable
 import utils.log as log
@@ -29,7 +31,8 @@ class AssignmentPeriod(Period):
                  emme_context: EmmeProject,
                  separate_emme_scenarios: bool = False,
                  use_stored_speeds: bool = False,
-                 delete_extra_matrices: bool = False):
+                 delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False):
         """
         Initialize assignment period.
 
@@ -51,12 +54,15 @@ class AssignmentPeriod(Period):
         delete_extra_matrices : bool (optional)
             If True, only matrices needed for demand calculation will be
             returned from end assignment.
+        delete_strat_files : bool (optional)
+            If True, strategy files will be deleted immediately after usage.
         """
         self.name = name
         self.emme_scenario: Scenario = emme_context.modeller.emmebank.scenario(
             emme_scenario)
         self.emme_project = emme_context
         self._separate_emme_scenarios = separate_emme_scenarios
+        self._delete_strat_files = delete_strat_files
         self.use_stored_speeds = use_stored_speeds
         self.stopping_criteria = copy.deepcopy(
             param.stopping_criteria)
@@ -209,7 +215,7 @@ class AssignmentPeriod(Period):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        self._assign_transit()
+        self._assign_transit(delete_strat_files=self._delete_strat_files)
         mtxs = self._get_impedances(modes)
         self._check_congestion()
         for ass_cl in param.car_classes:
@@ -236,8 +242,10 @@ class AssignmentPeriod(Period):
         self._assign_cars(self.stopping_criteria["fine"])
         self._set_car_vdfs(use_free_flow_speeds=True)
         self._assign_trucks()
-        self._assign_transit(param.transit_classes)
-        self._calc_transit_network_results()
+        self._assign_transit(
+            param.transit_classes, calc_network_results=True,
+            delete_strat_files=self._delete_strat_files)
+        self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
         self._check_congestion()
         for tc in self.assignment_modes:
@@ -358,7 +366,8 @@ class AssignmentPeriod(Period):
                 # Car link with standard attributes
                 roadclass = param.roadclasses[linktype]
                 if link.volume_delay_func != 90:
-                    if self.use_stored_speeds or use_free_flow_speeds:
+                    if ((self.use_stored_speeds or use_free_flow_speeds)
+                        and roadclass.type != "connector"):
                         link.volume_delay_func = 91
                     else:
                         link.volume_delay_func = roadclass.volume_delay_func
@@ -391,7 +400,7 @@ class AssignmentPeriod(Period):
                     link.data1 = roadclass.lane_capacity
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
-            if self.use_stored_speeds and link.volume_delay_func < 90:
+            if self.use_stored_speeds and link.volume_delay_func == 91:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
@@ -605,10 +614,12 @@ class AssignmentPeriod(Period):
             if assign_report["stopping_criterion"] == "MAX_ITERATIONS":
                 log.warn("Car assignment not fully converged.")
         network = self.emme_scenario.get_network()
-        time_attr = self.netfield("car_time")
+        if not self.use_stored_speeds:
+            time_attr = self.netfield("car_time")
+            for link in network.links():
+                link[time_attr] = link.auto_time
         truck_time_attr = self.extra("truck_time")
         for link in network.links():
-            link[time_attr] = link.auto_time
             # Truck speed limited to 90 km/h
             link[truck_time_attr] = max(link.auto_time, link.length * 0.67)
         self.emme_scenario.publish_network(network)
@@ -704,7 +715,8 @@ class AssignmentPeriod(Period):
                                                 / (2.0*line[effective_hdw_attr]))
         self.emme_scenario.publish_network(network)
 
-    def _assign_transit(self, transit_classes=param.local_transit_classes):
+    def _assign_transit(self, transit_classes=param.local_transit_classes,
+                        calc_network_results=False, delete_strat_files=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
         self._set_walk_time()
@@ -722,18 +734,19 @@ class AssignmentPeriod(Period):
                 self.emme_project.matrix_results(
                     spec.local_result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
-        log.info("Transit assignment performed for scenario {}".format(
-            str(self.emme_scenario.id)))
+            if calc_network_results:
+                self._calc_transit_network_results(transit_class)
+            if delete_strat_files:
+                self._strategy_paths[transit_class].unlink(missing_ok=True)
+            log.info(f"Transit class {transit_class} assigned")
 
-    def _calc_transit_network_results(self,
-                                      transit_classes=param.transit_classes):
-        """Calculate transit network results for one scenario."""
-        log.info("Calculates transit network results")
-        for tc in transit_classes:
-            self.emme_project.network_results(
-                self.assignment_modes[tc].ntw_results_spec,
-                scenario=self.emme_scenario,
-                class_name=tc)
+    def _calc_transit_network_results(self, transit_class):
+        self.emme_project.network_results(
+            self.assignment_modes[transit_class].ntw_results_spec,
+            scenario=self.emme_scenario,
+            class_name=transit_class)
+
+    def _calc_transit_link_results(self):
         volax_attr = self.extra("aux_transit")
         network = self.emme_scenario.get_network()
         for link in network.links():
@@ -742,3 +755,12 @@ class AssignmentPeriod(Period):
         for segment in network.transit_segments():
             segment[time_attr] = segment.transit_time
         self.emme_scenario.publish_network(network)
+
+    @property
+    def _strategy_paths(self) -> Dict[str, Path]:
+        db_path = (Path(self.emme_project.modeller.emmebank.path).parent
+                   / f"STRATS_s{self.emme_scenario.id}")
+        with open(db_path / "config", "r") as f:
+            config = json.load(f)
+        return {strat["name"]: db_path / strat["path"]
+            for strat in config["strat_files"]}

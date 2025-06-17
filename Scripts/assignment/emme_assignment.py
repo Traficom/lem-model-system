@@ -42,6 +42,8 @@ class EmmeAssignmentModel(AssignmentModel):
     delete_extra_matrices : bool (optional)
         If True, only matrices needed for demand calculation will be
         returned from end assignment.
+    delete_strat_files : bool (optional)
+            If True, strategy files will be deleted immediately after usage.
     time_periods : dict (optional)
         key : str
             Time period names, default is aht, pt, iht
@@ -59,6 +61,7 @@ class EmmeAssignmentModel(AssignmentModel):
                  save_matrices: bool = False,
                  use_free_flow_speeds: bool = False,
                  delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False,
                  time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
         self.separate_emme_scenarios = separate_emme_scenarios
@@ -67,6 +70,7 @@ class EmmeAssignmentModel(AssignmentModel):
         self.transit_classes = (param.long_distance_transit_classes
             if self.use_free_flow_speeds else param.transit_classes)
         self.delete_extra_matrices = delete_extra_matrices
+        self._delete_strat_files = delete_strat_files
         self.time_periods = time_periods
         EmmeMatrix.id_counter = first_matrix_id if save_matrices else 0
         self.emme_project = emme_context
@@ -122,7 +126,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 tp, scen_id, self.emme_project,
                 separate_emme_scenarios=self.separate_emme_scenarios,
                 use_stored_speeds=(car_time_files is not None),
-                delete_extra_matrices=self.delete_extra_matrices))
+                delete_extra_matrices=self.delete_extra_matrices,
+                delete_strat_files=self._delete_strat_files))
         ass_classes = param.transport_classes + ("bus",)
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield)
@@ -248,8 +253,9 @@ class EmmeAssignmentModel(AssignmentModel):
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
                 for ap in self.assignment_periods})
-        car_times.index.names = ("i_node", "j_node")
-        resultdata.print_data(car_times, "netfield_links.txt")
+        if not car_times.empty:
+            car_times.index.names = ("i_node", "j_node")
+            resultdata.print_data(car_times, "netfield_links.txt")
 
         # Aggregate results to 24h
         for ap in self.assignment_periods:
@@ -584,8 +590,11 @@ class EmmeAssignmentModel(AssignmentModel):
                 speed = (60 * 2 * link.length
                          / (link[car_time_attr]+rlink[car_time_attr]))
             else:
-                speed = (0.3*(60*link.length/link[car_time_attr])
-                         + 0.7*link.data2)
+                try:
+                    speed = (0.3*(60*link.length/link[car_time_attr])
+                             + 0.7*link.data2)
+                except ZeroDivisionError:
+                    speed = link.data2
             speed = max(speed, 50.0)
 
             # Calculate start noise
