@@ -244,7 +244,7 @@ def get_foreign_ship_cost(unit_costs: Dict[str, dict], impedance: Dict[str, dict
             cost = calc_ship_cost(unit_costs["ship"][mode][f"{draught}"], 
                                   impedance[mode], model_category, 
                                   draught_mask=mask)
-            mask = minimize(ship_info[mode]["cost"], cost)
+            mask = cost < ship_info[mode]["cost"]
             ship_info[mode]["cost"][mask] = cost[mask]
             ship_info[mode]["draught"][mask] = draught
     return ship_info
@@ -280,21 +280,3 @@ def evaluate_port_draught(draught: int, port_draught: dict,
         if port in port_draught and draught > port_draught[port]:
             mask[:, index] = numpy.inf
     return mask
-
-def minimize(current_cost: numpy.ndarray, calc_cost: numpy.ndarray):
-    """Evaluate if calculated finite cost for ship type and draught can minimize
-    ship mode cost
-    
-    Parameters
-    ----------
-    current_cost : numpy.ndarray
-        currently allocated cost for marine mode-draught
-    calc_cost : numpy.ndarray
-        calculated cost for marine mode-draught to compare
-
-    Returns
-    -------
-    numpy.ndarray
-        bool mask matrix
-    """
-    return (~numpy.isinf(calc_cost)) & (calc_cost < current_cost)
