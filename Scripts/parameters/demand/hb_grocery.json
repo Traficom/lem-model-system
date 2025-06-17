@@ -1,7 +1,7 @@
 {
     "name": "hb_grocery",
     "orig": "home",
-    "dest": "shop",
+    "dest": "wrk_shop",
     "area": "all",
     "struct": "mode>dest",
     "impedance_share": {
@@ -100,7 +100,7 @@
                 "transform": -0.54117
             },
             "attraction_size": {
-                "shop": 207.44163,
+                "wrk_shop": 207.44163,
                 "population": 1
             },
             "transform": {
@@ -125,7 +125,7 @@
                 "cost": -0.54117
             },
             "attraction_size": {
-                "shop": 207.44163,
+                "wrk_shop": 207.44163,
                 "population": 1
             }
         },
@@ -141,7 +141,7 @@
                 "cost": -0.54117
             },
             "attraction_size": {
-                "shop": 207.44163,
+                "wrk_shop": 207.44163,
                 "population": 1
             }
         },
@@ -156,7 +156,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 207.44163,
+                "wrk_shop": 207.44163,
                 "population": 1
             }
         },
@@ -171,7 +171,7 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 207.44163,
+                "wrk_shop": 207.44163,
                 "population": 1
             }
         }
@@ -262,19 +262,19 @@
         },
         "calibration": {
             "bike": {
-                "constant": -0.42599
+                "constant": -0.454093215
             },
             "car_leisure": {
-                "constant": 0.16872
+                "constant": 0.177456331
             },
             "car_pax": {
-                "constant": 0.14514
+                "constant": 0.15523499
             },
             "transit_leisure": {
-                "constant": -0.44701
+                "constant": -0.398019227
             },
             "walk": {
-                "constant": -0.16221
+                "constant": -0.1772748
             }
         }
     },

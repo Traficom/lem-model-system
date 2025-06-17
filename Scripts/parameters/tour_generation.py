@@ -146,32 +146,34 @@ tour_generation = {
         "hb_overnight": 0.0346
     },
     "hb_work_long": {
-        "population_Uusimaa": 0.00268,
-        "population_Lounais-Suomi": 0.00532,
-        "population_Ita-Suomi": 0.00449,
-        "population_Pohjois-Suomi": 0.00472
+        "age_7_17": 0.00019,
+        "age_18_29": 0.00238,
+        "age_30_49": 0.00275,
+        "age_50_64": 0.00223,
+        "age_65_99": 0.0001
     },
     "hb_business_long": {
-        "population_Uusimaa": 0.00129,
-        "population_Lounais-Suomi": 0.00334,
-        "population_Ita-Suomi": 0.00283,
-        "population_Pohjois-Suomi": 0.00185
+        "age_7_17": 0.0000,
+        "age_18_29": 0.00036,
+        "age_30_49": 0.00287,
+        "age_50_64": 0.00119,
+        "age_65_99": 0.00027
     },
     "hb_private_day": {
-        "income_0_19": 0.00339,
-        "income_20_39": 0.00502,
-        "income_40_59": 0.00708,
-        "income_60_79": 0.00744,
-        "income_80_99": 0.00892,
-        "income_100_": 0.00762
+        "income_0_19": 0.00263,
+        "income_20_39": 0.00319,
+        "income_40_59": 0.00415,
+        "income_60_79": 0.00481,
+        "income_80_99": 0.00633,
+        "income_100_": 0.0058
     },
     "hb_private_week": {
-        "income_0_19": 0.00786,
-        "income_20_39": 0.00836,
-        "income_40_59": 0.01183,
-        "income_60_79": 0.01246,
-        "income_80_99": 0.0155,
-        "income_100_": 0.01712
+        "income_0_19": 0.00632,
+        "income_20_39": 0.0069,
+        "income_40_59": 0.01044,
+        "income_60_79": 0.01059,
+        "income_80_99": 0.01404,
+        "income_100_": 0.01448
     },
     "truck": {
         "population": 0.01,

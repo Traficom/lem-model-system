@@ -20,17 +20,11 @@ class EmmeProject:
     ----------
     project_path : str
         Path to EMME project (.emp) file
-    emmebank_path : str (optional)
-        Path to emmebank file (if EMME project is not initialized)
-    project_name : str (optional)
-        For naming project
     visible : bool (optional)
         Whether an EMME GUI window should be opened
     """
     def __init__(self,
                  project_path: str,
-                 emmebank_path: Optional[str] = None,
-                 project_name: Optional[str] = None,
                  visible: Optional[bool] = False):
         log.info("Starting Emme...")
         if TYPE_CHECKING: self.cm: Optional[ContentManager] = None #type checker hint
@@ -38,20 +32,56 @@ class EmmeProject:
             "project": project_path,
             "visible": visible,
             "user_initials": "TC"}
-        emme_desktop = (_app.start(**kwargs) if visible
+        self.emme_desktop = (_app.start(**kwargs) if visible
             else _app.start_dedicated(**kwargs))
-        if emmebank_path is not None:
-            db = emme_desktop.data_explorer().add_database(emmebank_path)
-            db.open()
-            emme_desktop.project.save()
-        if project_name is not None:
-            emme_desktop.project.name = project_name
-            emme_desktop.project.save()
+
+    def add_db(self, emmebank_path: str, project_name: str):
+        """Add emmebank file to project.
+
+        Parameters
+        ----------
+        emmebank_path : str
+            Path to emmebank file
+        project_name : str
+            For naming project
+        """
+        db = self.emme_desktop.data_explorer().add_database(emmebank_path)
+        db.open()
+        self.emme_desktop.project.name = project_name
+        self.emme_desktop.project.save()
+
+    def try_open_db(self, db_name: str):
+        """Try to open database.
+
+        If EMME project contains more than one database, open the one
+        with name db_name. If no matching name is found, try to find a
+        database called "alueelliset_osamallit". If project contains
+        only one database or no matching name is found, do nothing.
+
+        Parameters
+        ----------
+        db_name : str
+            Name of database to try to open
+        """
+        if len(self.emme_desktop.data_explorer().databases()) > 1:
+            if not self._open_db(db_name):
+                self._open_db("alueelliset_osamallit")
+
+    def _open_db(self, db_name: str) -> bool:
+        for db in self.emme_desktop.data_explorer().databases():
+            if db.title() == db_name:
+                db.open()
+                self.emme_desktop.project.save()
+                log.info(f"Database {db_name} opened")
+                return True
+        else:
+            return False
+
+    def start(self):
         # Add logging to EMME
         sh = logging.StreamHandler(stream=self)
         logging.getLogger().addHandler(sh)
-
-        self.modeller = _m.Modeller(emme_desktop)
+        self.modeller = _m.Modeller(self.emme_desktop)
         log.info("Emme started")
         self.import_scenario = self.modeller.tool(
             "inro.emme.data.scenario.import_scenario")

@@ -100,8 +100,8 @@
                 "transform": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             },
             "transform": {
                 "attraction": {
@@ -125,8 +125,8 @@
                 "cost": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "transit_work": {
@@ -142,8 +142,8 @@
                 "cost": -0.28318
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "bike": {
@@ -157,8 +157,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         },
         "walk": {
@@ -172,8 +172,8 @@
                 "attraction_size": 1.0
             },
             "attraction_size": {
-                "edu_higher": 1,
-                "edu_other": 0.42017
+                "wrk_edu_higher": 1,
+                "wrk_edu_other": 0.42017
             }
         }
     },
@@ -263,19 +263,19 @@
         },
         "calibration": {
             "bike": {
-                "constant": -0.21082
+                "constant": -0.285241141
             },
             "car_work": {
-                "constant": 0.14014
+                "constant": 0.198536402
             },
             "car_pax": {
-                "constant": -0.28148
+                "constant": -0.196394058
             },
             "transit_work": {
-                "constant": -0.06137
+                "constant": -0.04922475
             },
             "walk": {
-                "constant": 0.20389
+                "constant": 0.115581892
             }
         }
     },

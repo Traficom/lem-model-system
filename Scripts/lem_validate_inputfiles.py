@@ -102,7 +102,22 @@ def main(args):
             import inro.emme.desktop.app as _app # type: ignore
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
-            emmebank = app.data_explorer().active_database().core_emmebank
+            data_expl = app.data_explorer()
+            databases = data_expl.databases()
+            if len(databases) > 1:
+                for db in databases:
+                    if db.title() == args.submodel[i]:
+                        emmebank = db.core_emmebank
+                        break
+                else:
+                    for db in databases:
+                        if db.title() == "alueelliset_osamallit":
+                            emmebank = db.core_emmebank
+                            break
+                    else:
+                        emmebank = data_expl.active_database().core_emmebank
+            else:
+                emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:

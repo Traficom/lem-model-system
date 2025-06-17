@@ -104,9 +104,9 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "recreation": 1.52419,
-                "hospitality": 1.69511
+                "wrk_shop": 1,
+                "wrk_recreation": 1.52419,
+                "wrk_hospitality": 1.69511
             }
         },
         "car_pax": {
@@ -120,9 +120,9 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "recreation": 1.52419,
-                "hospitality": 1.69511
+                "wrk_shop": 1,
+                "wrk_recreation": 1.52419,
+                "wrk_hospitality": 1.69511
             }
         },
         "transit_leisure": {
@@ -136,9 +136,9 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "recreation": 1.52419,
-                "hospitality": 1.69511
+                "wrk_shop": 1,
+                "wrk_recreation": 1.52419,
+                "wrk_hospitality": 1.69511
             }
         },
         "bike": {
@@ -152,9 +152,9 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "recreation": 1.52419,
-                "hospitality": 1.69511
+                "wrk_shop": 1,
+                "wrk_recreation": 1.52419,
+                "wrk_hospitality": 1.69511
             }
         },
         "walk": {
@@ -168,9 +168,9 @@
                 "attraction_size": 1
             },
             "attraction_size": {
-                "shop": 1,
-                "recreation": 1.52419,
-                "hospitality": 1.69511
+                "wrk_shop": 1,
+                "wrk_recreation": 1.52419,
+                "wrk_hospitality": 1.69511
             }
         }
     },
@@ -259,19 +259,19 @@
         },
         "calibration": {
             "bike": {
-                "constant": 0.20031
+                "constant": 0.119716264
             },
             "car_leisure": {
-                "constant": -0.14954
+                "constant": -0.133381333
             },
             "car_pax": {
-                "constant": -0.32543
+                "constant": -0.303995691
             },
             "transit_leisure": {
-                "constant": 0.76064
+                "constant": 0.766913331
             },
             "walk": {
-                "constant": 0.16634
+                "constant": 0.163264108
             }
         }
     },

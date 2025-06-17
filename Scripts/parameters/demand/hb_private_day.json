@@ -17,12 +17,6 @@
                 1.0
               ]
             },
-        "airplane": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-            },
         "train": {
             "vrk": [
                 1.0,
@@ -45,10 +39,6 @@
             100,
             9999
         ],
-        "airplane": [
-            100,
-            9999
-        ],
         "train": [
             100,
             9999
@@ -59,159 +49,129 @@
         ]
     },
     "destination_choice": {
-        "airplane": {
-            "attraction": {},
-            "impedance": {
-                "time": -0.00414,
-                "cost": -0.02813
-            },
-            "log": {
-                "attraction_size": 1
-            },
-            "attraction_size": {
-                "population": 1,
-                "recreation": 23.26779
-            }
-        },
         "train": {
             "attraction": {},
             "impedance": {
-                "time": -0.00108,
-                "cost": -0.02813
+                "time": -0.00025,
+                "cost": -0.02855
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 23.26779
+                "wrk_recreation": 35.74856
             }
         },
         "long_d_bus": {
             "attraction": {},
             "impedance": {
-                "time": -0.00153,
-                "cost": -0.02813
+                "time": -0.00191,
+                "cost": -0.02855
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 23.26779
+                "wrk_recreation": 35.74856
             }
         },
         "car_leisure": {
             "attraction": {},
             "impedance": {
-                "time": -0.00661,
-                "cost": -0.02813
+                "time": -0.00552,
+                "cost": -0.02855
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 23.26779
+                "wrk_recreation": 35.74856
             }
         },
         "car_pax": {
             "attraction": {},
             "impedance": {
-                "time": -0.0102,
-                "cost": -0.02813
+                "time": -0.00818,
+                "cost": -0.02855
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "population": 1,
-                "recreation": 23.26779
+                "wrk_recreation": 35.74856
             }
         }
     },
     "mode_choice": {
-        "airplane": {
+        "train": {
             "constant": 0,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.31979
-            },
-            "individual_dummy": {}
-        },
-        "train": {
-            "constant": -2.41899,
-            "generation": {},
-            "attraction": {},
-            "impedance": {},
-            "log": {
-                "logsum": 0.31979
+                "logsum": 1
             },
             "individual_dummy": {}
         },
         "long_d_bus": {
-            "constant": 0.19824,
+            "constant": 1.78744,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.31979
+                "logsum": 1
             },
             "individual_dummy": {}
         },
         "car_leisure": {
-            "constant": 0.28162,
+            "constant": 1.3049,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.31979
+                "logsum": 1
             },
             "individual_dummy": {
-                "sh_cars1_hh1": 6.7855,
-                "sh_cars2_hh2": 6.7855,
-                "sh_cars1_hh2": 5.71598
+                "sh_cars1_hh1": 2.40277,
+                "sh_cars2_hh2": 2.40277,
+                "sh_cars1_hh2": 2.26578
             }
         },
         "car_pax": {
-            "constant": 2.31885,
+            "constant": 1.98432,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.31979
+                "logsum": 1
             },
             "individual_dummy": {
-                "sh_cars1_hh2": 3.22658,
-                "sh_cars2_hh2": 3.22658
+                "sh_cars1_hh2": 1.15115,
+                "sh_cars2_hh2": 1.15115
             }
         },
         "scaling": {
             "car_leisure": {
-                "constant": 0.31979,
+                "constant": 1,
                 "individual_dummy": {
-                    "sh_cars1_hh1": 0.31979,
-                    "sh_cars2_hh2": 0.31979,
-                    "sh_cars1_hh2": 0.31979
+                    "sh_cars1_hh1": 1,
+                    "sh_cars2_hh2": 1,
+                    "sh_cars1_hh2": 1
                 }
             },
             "car_pax": {
-                "constant": 0.31979,
+                "constant": 1,
                 "individual_dummy": {
-                    "sh_cars1_hh2": 0.31979,
-                    "sh_cars2_hh2": 0.31979
+                    "sh_cars1_hh2": 1,
+                    "sh_cars2_hh2": 1
                 }
             },
-            "airplane": {
-                "constant": 0.31979
-            },
-            "train": {
-                "constant": 0.31979
-            },
             "long_d_bus": {
-                "constant": 0.31979
+                "constant": 1
             }
         }
     },
@@ -223,12 +183,6 @@
               ]
         },
         "car_pax": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "airplane": {
             "vrk": [
                 1.0,
                 1.0
