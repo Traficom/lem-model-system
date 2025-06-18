@@ -79,10 +79,12 @@ def main(args):
     purposes = create_purposes(parameters_path / "foreign", zonedata, 
                                resultdata, costdata["freight"])
     for purpose in purposes.values():
-        log.info(f"Calculating demand for foreign purpose: {purpose.name}")
+        log.info(f"Calculating route for foreign purpose: {purpose.name}")
         imp, origs, dests = ass_model.freight_network.read_ship_impedances(
             is_export=True)
         impedance["ship"] = imp
+        purpose.calc_route(impedance, origs, dests)
+
     log.info("Starting end assigment")
     for ass_class in total_demand:
         store_demand.store(mode, total_demand[ass_class], "freight_demand")
