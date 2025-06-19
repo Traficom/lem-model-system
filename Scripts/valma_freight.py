@@ -32,6 +32,7 @@ def main(args):
     ep.start()
     ass_model = EmmeAssignmentModel(ep,
                                     first_scenario_id=args.first_scenario_id,
+                                    submodel="freight",
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
     zonedata = FreightZoneData(zonedata_path, ass_model.zone_numbers, "koko_suomi")
