@@ -330,6 +330,13 @@ class ModelSystem:
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
 
+        self.zdata_forecast["beeline_10km"] = self.ass_model.beeline_dist<10
+        self.zdata_forecast["beeline_100km"] = ((self.ass_model.beeline_dist>10) & 
+                                                (self.ass_model.beeline_dist<100))
+        self.zdata_forecast["beeline_200km"] = ((self.ass_model.beeline_dist>100) & 
+                                                (self.ass_model.beeline_dist<200))
+        self.zdata_forecast["beeline_9999km"] = self.ass_model.beeline_dist>200
+
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
         if not self.ass_model.use_free_flow_speeds:

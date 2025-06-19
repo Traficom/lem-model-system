@@ -4,7 +4,6 @@
     "dest": "other",
     "source": [
         "hb_work",
-        "hb_business",
         "hb_edu_basic",
         "hb_edu_student"
     ],
