@@ -1,8 +1,9 @@
 from pathlib import Path
 import parameters.assignment as param
 import numpy
+from typing import Dict
 
-def transform_traversal_data(result_path: Path, zones: list):
+def transform_traversal_data(result_path: Path, zones: list) -> Dict[str, numpy.ndarray]:
     """Processes freight model specific traversal files containing information 
     on amount of transported tons between gate pair as auxiliary demand.
 
@@ -16,7 +17,7 @@ def transform_traversal_data(result_path: Path, zones: list):
     Returns
     ----------
     dict
-        freight transit mode : auxiliary demand
+        freight transit mode : numpy.ndarray
     """
     aux_tons = {}
     for ass_class in param.freight_modes:
