@@ -293,9 +293,11 @@ class TourPurpose(Purpose):
     
     @property
     def generation_mode_shares(self):
-        shares = {mode: (self.generated_tours[mode].sum() 
-                          / self.generated_tours_all.sum()) for mode in self.modes}
-        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")}, 
+        idx = self.zone_data.is_in_submodel
+        shares = {mode: (self.generated_tours[mode][idx].sum()
+                          / self.generated_tours_all[idx].sum())
+            for mode in self.modes}
+        return pandas.concat({self.name: pandas.Series(shares, name="mode_share")},
                              names=["purpose", "mode"])
     
     @property
@@ -555,11 +557,29 @@ class SecDestPurpose(Purpose):
             "attraction.txt")
 
 class FreightPurpose(Purpose):
+    """Standard purpose for handling freight calculations.
 
-    def __init__(self, specification, zone_data, resultdata, costdata):
+    Parameters
+    ----------
+    specification : dict
+        Model parameter specifications
+    zone_data : ZoneData
+        Data used for all demand calculations
+    resultdata : ResultData
+        Writer object to result directory
+    costdata : Dict[str, dict]
+        Freight mode (truck/freight_train/ship) : mode
+            Mode (truck/trailer_truck...) : unit cost name
+                unit cost name : unit cost value
+    category : str
+        purpose modelling category, within Finland as 'domestic, 
+        outside Finland as 'foreign'
+    """
+    def __init__(self, specification, zone_data, resultdata, costdata, category):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
         self.costdata = costdata
+        self.model_category = category
 
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
@@ -574,7 +594,7 @@ class FreightPurpose(Purpose):
         ----------
         impedance : dict
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
 
         Return
         ------
@@ -589,21 +609,46 @@ class FreightPurpose(Purpose):
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
 
-    def get_costs(self, impedance: dict):
+    def calc_route(self, impedance: dict, origs: dict, dests: dict):
+        """Calculates route choice for foreign freight trade. 
+        
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        
+        """
+        costs = self.get_costs(impedance, origs, dests)
+
+    def get_costs(self, impedance: dict, origs: dict = None, dests: dict = None):
         """Fetches calculated costs for each mode in model's mode choice.
 
         Parameters
         ----------
         impedance : dict 
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
 
         Returns
         -------
         dict
             Mode (truck/freight_train/...) : cost : numpy.ndarray
         """
-        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode],
+                                         self.model_category, origs, dests)}
                 for mode in self.modes}
 
     def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
@@ -623,6 +668,7 @@ class FreightPurpose(Purpose):
             vehicle matrix
         """
         costdata = self.costdata["truck"][ass_class]
-        vehicles = matrix * costdata["distribution"] / costdata["avg_load"] / 365
-        vehicles += vehicles.T * (costdata["empty_share"] - 1)
+        vehicles = (matrix * costdata[f"{self.model_category}_distribution"] 
+                    / costdata["avg_load"] / 365)
+        vehicles += vehicles.T * costdata["empty_share"]
         return vehicles

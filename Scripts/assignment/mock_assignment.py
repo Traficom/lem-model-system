@@ -17,7 +17,8 @@ class MockAssignmentModel(AssignmentModel):
     def __init__(self, matrices: MatrixData,
                  use_free_flow_speeds: bool = False,
                  time_periods: Dict[str, str]=param.time_periods,
-                 delete_extra_matrices: bool = False):
+                 delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
         self.use_free_flow_speeds = use_free_flow_speeds
@@ -78,8 +79,6 @@ class MockPeriod(Period):
                  end_assignment_classes: Iterable[str]):
         self.name = name
         self.matrices = matrices
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
         self.assignment_modes = param.transport_classes
         self._end_assignment_classes = set(end_assignment_classes)
 

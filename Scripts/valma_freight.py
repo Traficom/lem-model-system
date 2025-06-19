@@ -27,7 +27,10 @@ def main(args):
     emme_project_path = Path(args.emme_path)
     parameters_path = Path(__file__).parent / "parameters" / "freight"
     save_matrices = True if args.specify_commodity_names else False
-    ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
+    ep = EmmeProject(emme_project_path)
+    ep.try_open_db("koko_suomi")
+    ep.start()
+    ass_model = EmmeAssignmentModel(ep,
                                     first_scenario_id=args.first_scenario_id,
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
@@ -76,8 +79,12 @@ def main(args):
     purposes = create_purposes(parameters_path / "foreign", zonedata, 
                                resultdata, costdata["freight"])
     for purpose in purposes.values():
-        log.info(f"Calculating demand for foreign purpose: {purpose.name}")
-    
+        log.info(f"Calculating route for foreign purpose: {purpose.name}")
+        imp, origs, dests = ass_model.freight_network.read_ship_impedances(
+            is_export=True)
+        impedance["ship"] = imp
+        purpose.calc_route(impedance, origs, dests)
+
     log.info("Starting end assigment")
     for ass_class in total_demand:
         store_demand.store(mode, total_demand[ass_class], "freight_demand")
@@ -137,7 +144,7 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
-    parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
+    parser = ArgumentParser(epilog="VALMA freight model-system entry point script.")
     config = utils.config.read_from_file()
     
     parser.add_argument(

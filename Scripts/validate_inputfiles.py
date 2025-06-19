@@ -13,7 +13,7 @@ from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData
 import parameters.assignment as param
-from lem import BASE_ZONEDATA_FILE
+from valma_travel import BASE_ZONEDATA_FILE
 
 
 def main(args):
@@ -102,7 +102,22 @@ def main(args):
             import inro.emme.desktop.app as _app # type: ignore
             app = _app.start_dedicated(
                 project=emp_path, visible=False, user_initials="HSL")
-            emmebank = app.data_explorer().active_database().core_emmebank
+            data_expl = app.data_explorer()
+            databases = data_expl.databases()
+            if len(databases) > 1:
+                for db in databases:
+                    if db.title() == args.submodel[i]:
+                        emmebank = db.core_emmebank
+                        break
+                else:
+                    for db in databases:
+                        if db.title() == "alueelliset_osamallit":
+                            emmebank = db.core_emmebank
+                            break
+                    else:
+                        emmebank = data_expl.active_database().core_emmebank
+            else:
+                emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
             zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
@@ -188,8 +203,13 @@ def main(args):
                 raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
-                with matrixdata.open("demand", tp, zone_numbers[submodel]) as mtx:
-                    for ass_class in param.transport_classes:
+                tc = (param.transit_classes
+                      if param.time_periods[tp] == "TransitAssignmentPeriod"
+                      else param.transport_classes)
+                with matrixdata.open(
+                        "demand", tp, zone_numbers[submodel],
+                        transport_classes=tc) as mtx:
+                    for ass_class in tc:
                         a = mtx[ass_class]
 
     long_dist_result_paths = []

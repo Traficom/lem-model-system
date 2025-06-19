@@ -113,4 +113,5 @@ class EmmeAssignmentTest(unittest.TestCase):
         ass_model.freight_network.save_network_volumes("c1")
         ass_model.freight_network.output_traversal_matrix({"freight_train", "ship"},
                                                           self.resultdata.path)
+        ass_model.freight_network.read_ship_impedances(is_export=True)
         self.resultdata.flush()

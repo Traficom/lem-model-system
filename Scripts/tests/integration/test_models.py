@@ -3,7 +3,7 @@ import numpy
 from pathlib import Path
 
 import utils.log as log
-from modelsystem import ModelSystem, AgentModelSystem
+from travel_iteration import ModelSystem, AgentModelSystem
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
 from datatypes.demand import Demand
@@ -88,7 +88,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
-        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 34)
 
     def _validate_off_peak_impedances(self, impedances):
         self.assertIsNotNone(impedances)
@@ -100,7 +100,7 @@ class ModelTest(unittest.TestCase):
         self.assertIsNotNone(impedances["time"]["transit_work"])
         self.assertIs(type(impedances["time"]["transit_work"]), numpy.ndarray)
         self.assertEquals(impedances["time"]["transit_work"].ndim, 2)
-        self.assertEquals(len(impedances["time"]["transit_work"]), 30)
+        self.assertEquals(len(impedances["time"]["transit_work"]), 34)
 
     def _validate_demand(self, demand):
         self.assertIsNotNone(demand)

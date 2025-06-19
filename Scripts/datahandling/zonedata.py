@@ -192,6 +192,17 @@ class ZoneData:
         else:  # Return matrix (purpose zones -> all zones)
             return val[bounds, :]
 
+    @property
+    def is_in_submodel(self) -> pandas.Series:
+        """Boolean mapping of zones, whether in proper sub-model area."""
+        mapping = self.aggregations.mappings["submodel"]
+        submodels = mapping.drop_duplicates()
+        for submodel in submodels:
+            if self.mapping.name == submodel.lower().replace('-', '_'):
+                return mapping == submodel
+        else:
+            return slice(None)
+
 
 class FreightZoneData(ZoneData):
     """Container for freight zone data read from input file.
