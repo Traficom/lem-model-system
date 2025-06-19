@@ -69,7 +69,7 @@ def create_emme_project(args):
 
     # calculate extra attribute dimensions:
     dim = submodel_dimensions.get(
-        args.submodel, default=submodel_dimensions["alueelliset_osamallit"])
+        args.submodel, submodel_dimensions["alueelliset_osamallit"])
     dim["extra_attribute_values"] = sum(dim[key]*nr_attr[key] for key in dim)
 
     dim.update(default_dimensions)
