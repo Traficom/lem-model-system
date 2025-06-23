@@ -85,7 +85,7 @@ class MockPeriod(Period):
     @property
     def zone_numbers(self):
         """Numpy array of all zone numbers.""" 
-        with self.matrices.open("time", self.name) as mtx:
+        with self.matrices.open("beeline", "") as mtx:
             zone_numbers = mtx.zone_numbers
         return zone_numbers
 
@@ -192,9 +192,12 @@ class MockPeriod(Period):
                 mtx_type, self.name, transport_classes=[]) as mtx:
             matrix_list = set(assignment_classes) & set(mtx.matrix_list)
             matrices = {mode: mtx[mode] for mode in matrix_list}
+            new_zone_numbers = mtx.zone_numbers
         for mode in matrices:
             if numpy.any(matrices[mode] > 1e10):
                 log.warn(f"Matrix with infinite values: {mtx_type} : {mode}.")
+            idx = numpy.where(numpy.isin(self.zone_numbers, new_zone_numbers))[0]
+            matrices[mode] = matrices[mode][idx[:, None], idx]
         return matrices
 
     def get_matrix(self,
@@ -202,7 +205,9 @@ class MockPeriod(Period):
                     matrix_type: str = "demand") -> numpy.ndarray:
         with self.matrices.open(matrix_type, self.name) as mtx:
             matrix = mtx[ass_class]
-        return matrix
+            new_zone_numbers = mtx.zone_numbers
+        idx = numpy.where(numpy.isin(self.zone_numbers, new_zone_numbers))[0]
+        return matrix[idx[:, None], idx]
 
     def set_matrix(self,
                     ass_class: str,
