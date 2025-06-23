@@ -5,8 +5,7 @@
     "source": [
         "hb_leisure",
         "hb_sport",
-        "hb_visit",
-        "hb_overnight"
+        "hb_visit"
     ],
     "area": "all",
     "struct": "mode>dest",

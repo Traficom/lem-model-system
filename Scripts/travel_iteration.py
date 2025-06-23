@@ -268,6 +268,15 @@ class ModelSystem:
             self._add_external_demand(
                 self.freight_matrices, param.truck_classes)
 
+        # Add beeline distance dummy
+        mtx = self.ass_model.beeline_dist
+        idx = numpy.where(numpy.isin(self.zdata_forecast.zone_numbers, self.zone_numbers))[0]
+        mtx = mtx[idx[:, None], idx]
+        self.zdata_forecast["beeline_10km"] = mtx<10
+        self.zdata_forecast["beeline_100km"] = (mtx>10) & (mtx<100)
+        self.zdata_forecast["beeline_200km"] = (mtx>100) & (mtx<200)
+        self.zdata_forecast["beeline_9999km"] = mtx>200
+
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
             for purpose in self.dm.tour_purposes:
