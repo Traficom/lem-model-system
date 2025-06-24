@@ -118,11 +118,11 @@
             },
             "impedance": {
                 "time": -0.08371,
-                "transform": -0.43255
+                "cost": -0.43255
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.03606
+                "transform": -0.03606
             },
             "attraction_size": {
                 "wrk_shop": 210.88016,

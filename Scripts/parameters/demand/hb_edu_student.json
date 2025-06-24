@@ -93,11 +93,11 @@
             },
             "impedance": {
                 "time": -0.02287,
-                "transform": -0.04489
+                "cost": -0.04489
             },
             "log": {
                 "attraction_size": 1,
-                "cost": -0.31915
+                "transform": -0.31915
             },
             "attraction_size": {
                 "wrk_edu_higher": 1,
