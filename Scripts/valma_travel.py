@@ -8,7 +8,7 @@ import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 from assignment.assignment_period import AssignmentPeriod
-from modelsystem import ModelSystem, AgentModelSystem
+from travel_iteration import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     # Initially read defaults from config file ("dev-config.json")
     # but allow override via command-line arguments
     config = utils.config.read_from_file()
-    parser = ArgumentParser(epilog="HELMET model system entry point script.")
+    parser = ArgumentParser(epilog="VALMA travel model-system entry point script.")
     parser.add_argument(
         "--version",
         action="version",

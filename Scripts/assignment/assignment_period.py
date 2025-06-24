@@ -69,9 +69,8 @@ class AssignmentPeriod(Period):
         if use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
-        self._end_assignment_classes = set(self.transport_classes
+        self._end_assignment_classes = set(param.private_classes
+                                           + param.local_transit_classes
             if delete_extra_matrices else param.transport_classes)
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
@@ -349,14 +348,14 @@ class AssignmentPeriod(Period):
         }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
         car_time_zero = []
-        car_time_ok = False
         for link in network.links():
             linktype = link.type % 100
             if link.type > 80 and linktype in param.roadclasses:
                 # Car link with standard attributes
                 roadclass = param.roadclasses[linktype]
                 if link.volume_delay_func != 90:
-                    if self.use_stored_speeds or use_free_flow_speeds:
+                    if ((self.use_stored_speeds or use_free_flow_speeds)
+                        and roadclass.type != "connector"):
                         link.volume_delay_func = 91
                     else:
                         link.volume_delay_func = roadclass.volume_delay_func
@@ -385,12 +384,11 @@ class AssignmentPeriod(Period):
                     link.data1 = roadclass.lane_capacity
                 if link.volume_delay_func not in (90, 91):
                     link.volume_delay_func += 5
-            if self.use_stored_speeds and link.volume_delay_func < 90:
+            if self.use_stored_speeds and link.volume_delay_func == 91:
                 if car_modes & link.modes:
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
-                        car_time_ok = True
                     elif car_time == 0:
                         car_time_zero.append(link.id)
                     else:
@@ -403,14 +401,15 @@ class AssignmentPeriod(Period):
                 link.modes -= {main_mode, park_and_ride_mode}
         self.emme_scenario.publish_network(network)
         if car_time_zero and not use_free_flow_speeds:
-            if car_time_ok:
+            if len(car_time_zero) < 50000:
                 links = ", ".join(car_time_zero)
                 log.warn(
                     f"Car_time attribute on links {links} "
                      + "is zero. Free flow speed used on these links.")
             else:
-                log.warn(
-                    "No car times on links. Demand calculation not reliable!")
+                msg = "No car times on links. Demand calculation not reliable!"
+                log.error(msg)
+                raise ValueError(msg)
 
     def _set_transit_vdfs(self):
         log.info("Sets transit functions for scenario {}".format(

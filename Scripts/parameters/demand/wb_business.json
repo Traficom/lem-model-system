@@ -70,15 +70,15 @@
     "distance_boundaries": {
         "car_work": [
             0,
-            100
+            300
         ],
         "car_pax": [
             0,
-            100
+            300
         ],
         "transit_work": [
             0,
-            100
+            300
         ],
         "bike": [
             0,
