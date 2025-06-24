@@ -96,8 +96,6 @@ class LogitModel:
         impedance["attraction_size"] = self._add_zone_util(
             numpy.zeros_like(utility), b["attraction_size"])
         dest_exp = self._calc_alt_util(mode, utility, impedance, b)
-        if mode == "airplane":
-            dest_exp[impedance["cost"] < 80] = 0
         return dest_exp
     
     def _calc_sec_dest_util(self, mode, impedance, orig, dest):
