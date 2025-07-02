@@ -33,6 +33,7 @@
             "area_leisure_buildings",
             "area_university_buildings",
             "students_comprehensive",
+            "land_area",
             {
                 "total": "households",
                 "shares": [
