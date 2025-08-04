@@ -76,7 +76,8 @@ class EmmeAssignmentTest:
         emme_context.import_scenario(
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
-        self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
+        self.ass_model = ass.EmmeAssignmentModel(
+            emme_context, scenario_num, "uusimaa")
         self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
