@@ -2,7 +2,7 @@ import threading
 import multiprocessing
 import json
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Set, Union, Optional, cast
+from typing import Any, Callable, Dict, List, Set, Union, Iterable, Optional, cast
 import numpy # type: ignore
 import pandas
 import random
@@ -189,52 +189,21 @@ class ModelSystem:
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
-                             long_dist_matrices,
-                             long_dist_classes = (param.car_classes
-                                 + param.long_dist_simple_classes)):
-        # If we want to assign all trips with traffic congestion,
-        # then add long-distance trips as background demand
+                             long_dist_matrices: MatrixData,
+                             long_dist_classes: Iterable[str]):
+        class_list = ", ".join(long_dist_classes)
+        log.info(f"Get matrices for {class_list}...")
         zone_numbers = self.ass_model.zone_numbers
         car_matrices = {}
-        if long_dist_matrices is not None:
-            # Try getting long-distance trips from separate file
-            with long_dist_matrices.open(
-                    "demand", "vrk", zone_numbers,
-                    self.zdata_forecast.mapping, long_dist_classes) as mtx:
-                log.info("Get matrices from model run...")
-                for ass_class in long_dist_classes:
-                    demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
-                    self.dtm.add_demand(demand)
-                    if ass_class in param.car_classes:
-                        car_matrices[ass_class] = demand.matrix
-        else:
-            log.info(
-                ("Matrices from model run not provided, "
-                    + "getting trips from base matrices..."))
-            # Long car trips must be in separate file
-            car_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class in param.car_classes]
-            other_classes = [ass_class for ass_class in long_dist_classes
-                if ass_class not in param.car_classes]
-            if car_classes:
-                with self.basematrices.open(
-                        "demand", "vrk", zone_numbers,
-                        transport_classes=car_classes) as mtx:
-                    for ass_class in car_classes:
-                        demand = Demand(
-                            self.em.purpose, ass_class, mtx[ass_class])
-                        self.dtm.add_demand(demand)
-                        car_matrices[ass_class] = demand.matrix
-            if other_classes:
-                for ap in self.ass_model.assignment_periods:
-                    tp = ap.name
-                    ass_classes = [ass_class for ass_class in other_classes
-                        if ass_class in ap.assignment_modes]
-                    with self.basematrices.open(
-                            "demand", tp, zone_numbers,
-                            transport_classes=ass_classes) as mtx:
-                        for ass_class in ass_classes:
-                            self.dtm.demand[tp][ass_class] = mtx[ass_class]
+        with long_dist_matrices.open(
+                "demand", "vrk", zone_numbers,
+                self.zdata_forecast.mapping, long_dist_classes) as mtx:
+            for ass_class in long_dist_classes:
+                demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                self.dtm.add_demand(demand)
+                if ass_class in param.car_classes:
+                    car_matrices[ass_class] = demand.matrix
+            log.info(f"Demand imported from {long_dist_matrices.path}")
         if car_matrices:
             with self.resultmatrices.open(
                     "demand", "vrk", zone_numbers, m='w') as mtx:
@@ -272,13 +241,6 @@ class ModelSystem:
         self.ass_model.prepare_network(self.car_dist_cost, car_time_files)
         self.dtm = dt.DirectDepartureTimeModel(self.ass_model)
 
-        if not self.ass_model.use_free_flow_speeds:
-            log.info("Get long-distance trip matrices")
-            self._add_external_demand(self.long_dist_matrices)
-            log.info("Get freight matrices")
-            self._add_external_demand(
-                self.freight_matrices, param.truck_classes)
-            log.info("Long-distance and freight matrices imported")
         self.ass_model.calc_transit_cost(self.transit_cost)
         Purpose.distance = self.ass_model.beeline_dist
         if not isinstance(self.ass_model, MockAssignmentModel):
@@ -293,10 +255,28 @@ class ModelSystem:
                                      and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=ap.transport_classes) as mtx:
-                    for ass_class in ap.transport_classes:
+                        transport_classes=ap.assignment_modes) as mtx:
+                    for ass_class in ap.assignment_modes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
+        if self.long_dist_matrices is not None:
+            self.dtm.init_demand(param.long_distance_transit_classes)
+            self._add_external_demand(
+                self.long_dist_matrices, param.long_distance_transit_classes)
+        if self.freight_matrices is not None:
+            self.dtm.init_demand(param.truck_classes)
+            self._add_external_demand(
+                self.freight_matrices, param.truck_classes)
+
+        # Add beeline distance dummy
+        mtx = self.ass_model.beeline_dist
+        idx = numpy.where(numpy.isin(self.zdata_forecast.zone_numbers, self.zone_numbers))[0]
+        mtx = mtx[idx[:, None], idx]
+        self.zdata_forecast["beeline_10km"] = mtx<10
+        self.zdata_forecast["beeline_100km"] = (mtx>10) & (mtx<100)
+        self.zdata_forecast["beeline_200km"] = (mtx>100) & (mtx<200)
+        self.zdata_forecast["beeline_9999km"] = mtx>200
+
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
             for purpose in self.dm.tour_purposes:
@@ -362,8 +342,9 @@ class ModelSystem:
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
         if not self.ass_model.use_free_flow_speeds:
-            self._add_external_demand(
-                self.long_dist_matrices, param.car_classes)
+            car_matrices = (self.basematrices if self.long_dist_matrices is None
+                else self.long_dist_matrices)
+            self._add_external_demand(car_matrices, param.car_classes)
 
         # Add vans and save demand matrices
         for ap in self.ass_model.assignment_periods:
@@ -373,11 +354,12 @@ class ModelSystem:
                 self._save_demand_to_omx(ap)
 
         # Log mode shares
-        tours_mode = self._get_mode_tours()
-        sum_all = sum(tours_mode["tours"].values())
+        idx = self.zdata_forecast.is_in_submodel
+        tours, _ = self._get_mode_tours()
+        sum_all = sum(tours.values())[idx].sum()
         mode_shares = {}
-        for mode in tours_mode["tours"]:
-            share = tours_mode["tours"][mode].sum() / sum_all.sum()
+        for mode in tours:
+            share = tours[mode][idx].sum() / sum_all
             mode_shares[mode] = share
             log.info(f"Mode shares ({iteration} iteration): {mode} : {round(100*share)} %")
         self.mode_share.append(mode_shares)
@@ -419,7 +401,7 @@ class ModelSystem:
         demand_sum_string = tp
         transport_classes = (param.car_classes + param.long_dist_simple_classes
             if self.ass_model.use_free_flow_speeds
-            else ap.assignment_modes.keys())
+            else ap.assignment_modes)
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
             for ass_class in transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
@@ -474,16 +456,12 @@ class ModelSystem:
                               for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
             attr_dist_purpose, "zone_attraction_dist_by_purpose.txt")
-        gen_tours_mode = self._get_mode_tours()
-        attr_tours_mode = self._get_mode_tours(False)
-        self.resultdata.print_data(
-            gen_tours_mode["tours"], "zone_generation_by_mode.txt")
-        self.resultdata.print_data(
-            gen_tours_mode["dist"], "zone_generation_dist_by_mode.txt")
-        self.resultdata.print_data(
-            attr_tours_mode["tours"], "zone_attraction_by_mode.txt")
-        self.resultdata.print_data(
-            attr_tours_mode["dist"], "zone_attraction_dist_by_mode.txt")
+        tours, dists = self._get_mode_tours()
+        self.resultdata.print_data(tours, "zone_generation_by_mode.txt")
+        self.resultdata.print_data(dists, "zone_generation_dist_by_mode.txt")
+        tours, dists = self._get_mode_tours(generation=False)
+        self.resultdata.print_data(tours, "zone_attraction_by_mode.txt")
+        self.resultdata.print_data(dists, "zone_attraction_dist_by_mode.txt")
         for purpose in self.dm.tour_purposes:
             self.resultdata.print_concat(
                 purpose.generation_mode_shares, "purpose_mode_shares.txt")
@@ -498,7 +476,8 @@ class ModelSystem:
                     purpose.within_zone_tours[mode], "within_zone_tours.txt")
 
     def _get_mode_tours(self, generation = True):
-        tours = {"tours": {}, "dist": {}}
+        tours: Dict[str, pandas.Series] = {}
+        dists: Dict[str, pandas.Series] = {}
         for mode in self.travel_modes:
             demand = pandas.Series(
                 0.0, self.zdata_forecast.zone_numbers, name=mode)
@@ -515,9 +494,9 @@ class ModelSystem:
                     else:
                         demand[bounds] += purpose.attracted_tours[mode]
                         dist[bounds] += purpose.attracted_distance[mode]
-            tours["tours"][mode] = demand
-            tours["dist"][mode] = dist / demand
-        return tours
+            tours[mode] = demand
+            dists[mode] = dist / demand
+        return tours, dists
 
     def _distribute_sec_dests(self, purpose, mode, impedance):
         threads = []

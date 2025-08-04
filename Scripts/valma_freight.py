@@ -12,9 +12,10 @@ from datahandling.zonedata import FreightZoneData
 from datahandling.resultdata import ResultsData
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.emme_bindings.emme_project import EmmeProject
-from datatypes.purpose import FreightPurpose
 from datahandling.matrixdata import MatrixData
+from datatypes.purpose import FreightPurpose
 
+from utils.freight_utils import create_purposes, StoreDemand
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -26,78 +27,100 @@ def main(args):
     emme_project_path = Path(args.emme_path)
     parameters_path = Path(__file__).parent / "parameters" / "freight"
     save_matrices = True if args.specify_commodity_names else False
-    ass_model = EmmeAssignmentModel(EmmeProject(emme_project_path),
+    ep = EmmeProject(emme_project_path)
+    ep.try_open_db("koko_suomi")
+    ep.start()
+    ass_model = EmmeAssignmentModel(ep,
                                     first_scenario_id=args.first_scenario_id,
+                                    submodel="freight",
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
-    zone_numbers = ass_model.zone_numbers
-    zonedata = FreightZoneData(zonedata_path, zone_numbers, "koko_suomi")
+    zonedata = FreightZoneData(zonedata_path, ass_model.zone_numbers, "koko_suomi")
     resultdata = ResultsData(results_path)
     resultmatrices = MatrixData(results_path / "Matrices" / "koko_suomi")
     costdata = json.loads(cost_data_path.read_text("utf-8"))
-    purposes = {}
-    for file in parameters_path.rglob("*.json"):
-        commodity_params = json.loads(file.read_text("utf-8"))
-        commodity = commodity_params["name"]
-        purposes[commodity] = FreightPurpose(commodity_params,
-                                             zonedata,
-                                             resultdata,
-                                             costdata["freight"][commodity_conversion[commodity]])
+    purposes = create_purposes(parameters_path / "domestic", zonedata, 
+                               resultdata, costdata["freight"])
     purps_to_assign = list(filter(lambda purposes: purposes[0] in
                                   list(purposes), args.specify_commodity_names))
-    
     ass_model.prepare_freight_network(costdata["car_cost"], purps_to_assign)
+    store_demand = StoreDemand(ass_model.freight_network, resultmatrices, 
+                               zonedata.all_zone_numbers, zonedata.zone_numbers)
+
     impedance = ass_model.freight_network.assign()
+    for mtx_type in impedance.keys():
+        for ass_class, mtx in impedance[mtx_type].items():
+            impedance[mtx_type][ass_class] = mtx[:zonedata.nr_zones, :zonedata.nr_zones]
     truck_distances = {key: impedance["dist"][key] for key in param.truck_classes}
     del impedance["cost"]
     impedance = {mode: {mtx_type: impedance[mtx_type][mode] for mtx_type in impedance
                         if mode in impedance[mtx_type]}
                         for mode in ("truck", "freight_train", "ship")}
     
-    total_demand = {mode: numpy.zeros([len(zone_numbers), len(zone_numbers)])
+    total_demand = {mode: numpy.zeros([zonedata.nr_zones, zonedata.nr_zones], 
+                                      dtype="float32")
                     for mode in param.truck_classes}
     for purpose in purposes.values():
-        log.info(f"Calculating demand for purpose: {purpose.name}")
+        log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         for mode in demand:
-            ass_model.freight_network.set_matrix(mode, demand[mode])
-            if purpose.name not in args.specify_commodity_names:
-                continue
-            with resultmatrices.open("freight_demand", "vrk", zone_numbers, m="a") as mtx:
-                mtx[f"{purpose}_{mode}"] = demand[mode]
+            omx_filename = ("freight_demand_tons" if purpose.name 
+                            in args.specify_commodity_names else "")
+            store_demand.store(mode, demand[mode], omx_filename, purpose.name)
         if purpose.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose.name)
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
-        demand["truck"] += transform_traversal_data(resultdata.path, zone_numbers)
-        for mode in ("truck", "trailer_truck"):
-            total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
-        write_purpose_summary(purpose.name, demand, impedance, resultdata)
-        write_zone_summary(purpose.name, zone_numbers, demand, resultdata)
+        aux_demand = transform_traversal_data(resultdata.path, zonedata.zone_numbers)
+        for mode in param.truck_classes:
+            ton_demand = demand["truck"] + sum(aux_demand.values())
+            total_demand[mode] += purpose.calc_vehicles(ton_demand, mode)
+        write_purpose_summary(purpose, demand, aux_demand, impedance, resultdata)
+        write_zone_summary(purpose.name, zonedata.zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
+    
+    purposes = create_purposes(parameters_path / "foreign", zonedata, 
+                               resultdata, costdata["freight"])
+    for purpose in purposes.values():
+        log.info(f"Calculating route for foreign purpose: {purpose.name}")
+        imp, origs, dests = ass_model.freight_network.read_ship_impedances(
+            is_export=True)
+        impedance["ship"] = imp
+        purpose.calc_route(impedance, origs, dests)
+
+    log.info("Starting end assigment")
     for ass_class in total_demand:
-        ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
+        store_demand.store(ass_class, total_demand[ass_class], "freight_demand")
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
-def write_purpose_summary(purpose_name: str, demand: dict, impedance: dict, 
-                          resultdata: ResultsData):
+def write_purpose_summary(purpose: FreightPurpose, demand: dict, aux_demand: dict, 
+                          impedance: dict, resultdata: ResultsData):
     """Write purpose-mode specific summary as txt-file containing mode shares 
     calculated from demand (tons), mode specific demand (tons), mode shares 
-    calculated from mileage, and mode specific ton-mileage.
+    calculated from mileage, mode specific ton-mileage, mode auxiliary ton-mileage
+    and total eur-ton product.
     """
     modes = list(demand)
     mode_tons = [numpy.sum(demand[mode])+0.01 for mode in modes]
     shares_tons = [tons / sum(mode_tons) for tons in mode_tons]
     mode_ton_dist = [numpy.sum(demand[mode]*impedance[mode]["dist"])+0.01 for mode in modes]
     shares_mileage = [share / sum(mode_ton_dist) for share in mode_ton_dist]
+    costs = {mode: c["cost"] for mode, c in purpose.get_costs(impedance).items()}
+    for cost in costs.values():
+        cost[cost == numpy.inf] = 0
+    ton_costs = [numpy.sum(costs.pop(mode)*demand[mode]) for mode in modes]
+    aux_ton_dist = [numpy.sum(aux_demand[mode]*impedance["truck"]["dist"]) 
+                    if mode != "truck" else 0 for mode in modes]
     df = DataFrame(data={
-        "Commodity": [purpose_name]*len(modes),
+        "Commodity": [purpose.name]*len(modes),
         "Mode": modes,
         "Mode share from tons (%)": [round(i, 3) for i in shares_tons],
         "Tons (t/annual)": [int(i) for i in mode_tons],
         "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
-        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist]
+        "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist],
+        "Aux ton mileage (tkm/annual)": [int(i) for i in aux_ton_dist],
+        "Costs (eur-ton/annual)": [int(i) for i in ton_costs]
         })
     filename = "freight_purpose_summary.txt"
     resultdata.print_concat(df, filename)
@@ -128,7 +151,7 @@ def write_vehicle_summary(demand: dict, dist: dict, resultdata: ResultsData):
     resultdata.print_data(df, filename)
 
 if __name__ == "__main__":
-    parser = ArgumentParser(epilog="Freight lem-model-system entry point script.")
+    parser = ArgumentParser(epilog="VALMA freight model-system entry point script.")
     config = utils.config.read_from_file()
     
     parser.add_argument(
@@ -175,7 +198,7 @@ if __name__ == "__main__":
         choices=commodity_conversion,
         help="Commodity names in 29 classification. Assigned and saved as mtx.")
     parser.add_argument(
-        "--trade-path",
+        "--trade-demand-data-path",
         type=str,
         help="Path to .omx file containing freight foreign trade demand.")
 

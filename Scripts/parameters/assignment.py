@@ -191,38 +191,29 @@ vot_inv = {
 tour_duration = {  # TODO What about last-mile??
     "j_first_mile": {
         "avg": 2.18,
-        "hb_business_long": 1.12,
-        "hb_private_day": 2,
-        "hb_private_week": 9,
-        "hb_work_long": 1.41,
+        "hb_business": 1.12,
+        "hb_leisure_overnight": 9,
     },
     "j_first_taxi": {
         "avg": 2.18,
-        "hb_business_long": 1.12,
-        "hb_private_day": 2,
-        "hb_private_week": 9,
-        "hb_work_long": 1.41,
+        "hb_business": 1.12,
+        "hb_leisure_overnight": 9,
     },
     "e_first_mile": {
         "avg": 2.62,
-        "hb_business_long": 2.43,
-        "hb_private_day": 2,
-        "hb_private_week": 14,
-        "hb_work_long": 0.89,
+        "hb_business": 2.43,
+        "hb_leisure_overnight": 14,
     },
     "l_first_mile": {
         "avg": 2.39,
-        "hb_business_long": 2.01,
-        "hb_private_day": 2,
-        "hb_private_week": 9,
-        "hb_work_long": 1.12,
+        "hb_business": 2.01,
+        "hb_leisure_overnight": 9,
     },
 }
 freight_terminal_cost = {
-    'd': 0,
+    'D': 0,
     'J': 0,
-    'W': 0,
-    's': 0,
+    'W': 0
 }
 # Boarding penalties for different transit modes
 boarding_penalty = {
@@ -578,15 +569,11 @@ assignment_classes = {
     "hb_leisure": "leisure",
     "hb_sport": "leisure",
     "hb_visit": "leisure",
-    "hb_overnight": "leisure",
+    "hb_leisure_overnight": "leisure",
     "hb_business": "work",
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
-    "hb_work_long": "work",
-    "hb_business_long": "work",
-    "hb_private_day": "leisure",
-    "hb_private_week": "leisure",
     "external": "leisure",
 }
 main_mode = 'h'
@@ -653,13 +640,32 @@ aux_modes = [
 park_and_ride_mode = 'u'
 freight_modes = {
     "freight_train": {
-        'd': "@diesel_train",
+        'D': "@diesel_train",
         'J': "@electric_train",
     },
     "ship": {
-        'W': "@ship_4m",
-        's': "@ship_9m",
+        'W': "@ship",
     },
+}
+freight_marine_modes = {
+    "container_ship": {
+        "C": "@container_ship"
+    },
+    "general_cargo": {
+        "G": "@general_cargo"
+    },
+    "lng_carrier": {
+        "L": "@lng_carrier"
+    },
+    "oil_tanker": {
+        "O": "@oil_tanker"
+    },
+    "product_tanker": {
+        "P": "@product_tanker"
+    },
+    "roro_vessel": {
+        "R": "@roro_vessel"
+    }
 }
 external_modes = [
     "car_leisure",
@@ -695,6 +701,10 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
+ship_attrs = {
+    "dist": "ut1",
+    "frequency": "ut2",
+}
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"

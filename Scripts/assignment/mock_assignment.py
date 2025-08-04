@@ -17,7 +17,8 @@ class MockAssignmentModel(AssignmentModel):
     def __init__(self, matrices: MatrixData,
                  use_free_flow_speeds: bool = False,
                  time_periods: Dict[str, str]=param.time_periods,
-                 delete_extra_matrices: bool = False):
+                 delete_extra_matrices: bool = False,
+                 delete_strat_files: bool = False):
         self.matrices = matrices
         log.info("Reading matrices from " + str(self.matrices.path))
         self.use_free_flow_speeds = use_free_flow_speeds
@@ -78,15 +79,13 @@ class MockPeriod(Period):
                  end_assignment_classes: Iterable[str]):
         self.name = name
         self.matrices = matrices
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
-        self.assignment_modes = param.transport_classes
+        self.assignment_modes = param.simple_transport_classes
         self._end_assignment_classes = set(end_assignment_classes)
 
     @property
     def zone_numbers(self):
         """Numpy array of all zone numbers.""" 
-        with self.matrices.open("time", self.name) as mtx:
+        with self.matrices.open("beeline", "") as mtx:
             zone_numbers = mtx.zone_numbers
         return zone_numbers
 
@@ -195,9 +194,12 @@ class MockPeriod(Period):
                 mtx_type, self.name, transport_classes=[]) as mtx:
             matrix_list = set(assignment_classes) & set(mtx.matrix_list)
             matrices = {mode: mtx[mode] for mode in matrix_list}
+            new_zone_numbers = mtx.zone_numbers
         for mode in matrices:
             if numpy.any(matrices[mode] > 1e10):
                 log.warn(f"Matrix with infinite values: {mtx_type} : {mode}.")
+            idx = numpy.where(numpy.isin(self.zone_numbers, new_zone_numbers))[0]
+            matrices[mode] = matrices[mode][idx[:, None], idx]
         return matrices
 
     def get_matrix(self,
@@ -205,7 +207,9 @@ class MockPeriod(Period):
                     matrix_type: str = "demand") -> numpy.ndarray:
         with self.matrices.open(matrix_type, self.name) as mtx:
             matrix = mtx[ass_class]
-        return matrix
+            new_zone_numbers = mtx.zone_numbers
+        idx = numpy.where(numpy.isin(self.zone_numbers, new_zone_numbers))[0]
+        return matrix[idx[:, None], idx]
 
     def set_matrix(self,
                     ass_class: str,
@@ -262,7 +266,7 @@ class OffPeakPeriod(MockPeriod):
 class TransitAssignmentPeriod(MockPeriod):
     def __init__(self, *args, **kwargs):
         MockPeriod.__init__(self, *args, **kwargs)
-        self.assignment_modes = param.transit_classes
+        self.assignment_modes = param.simple_transit_classes
         self._end_assignment_classes -= set(
             param.private_classes + param.truck_classes)
 

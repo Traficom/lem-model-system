@@ -18,10 +18,9 @@ class WholeDayPeriod(AssignmentPeriod):
     """
     def __init__(self, *args, **kwargs):
         AssignmentPeriod.__init__(self, *args, **kwargs)
+        self._long_distance_trips_assigned = False
         for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self.transport_classes = (param.car_classes
-                                  + param.long_distance_transit_classes)
 
     def prepare(self, dist_unit_cost: Dict[str, float],
                 day_scenario: int, save_matrices: bool):
@@ -100,9 +99,14 @@ class WholeDayPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["fine"])
         if not self._long_distance_trips_assigned:
             self._assign_transit(param.long_distance_transit_classes)
-        self._calc_transit_network_results(
-            param.long_distance_transit_classes)
-        return self._get_impedances(self.transport_classes)
+        strategy_paths = self._strategy_paths
+        for transit_class in param.long_distance_transit_classes:
+            self._calc_transit_network_results(transit_class)
+            if self._delete_strat_files:
+                strategy_paths[transit_class].unlink(missing_ok=True)
+        self._calc_transit_link_results()
+        return self._get_impedances(param.car_classes
+                                    + param.long_distance_transit_classes)
 
     @property
     def boarding_penalty(self):

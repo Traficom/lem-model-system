@@ -15,8 +15,8 @@ from tests.integration.test_data_handling import RESULTS_PATH, ZONEDATA_PATH
 
 INTERNAL_ZONES = [202, 1344, 1755, 2037, 2129, 2224, 2333, 2413, 2519,
                   2621, 2707, 2814, 2918, 3000, 3003, 3203, 3302, 3416,
-                  3639, 3705, 3800, 4013, 4101, 4202]
-EXTERNAL_ZONES = [7043, 8284, 12614, 17278, 19419, 23678]
+                  3639, 3705, 3800, 4013, 4102, 4202]
+EXTERNAL_ZONES = [7043, 8284, 12614, 17278, 19401, 23678, 50107, 50127, 50201, 50205]
 ZONE_INDEXES = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
 
 
@@ -29,6 +29,8 @@ class LogitModelTest(unittest.TestCase):
         zi = numpy.array(INTERNAL_ZONES + EXTERNAL_ZONES)
         zd = ZoneData(ZONEDATA_PATH, zi, "uusimaa")
         zd["car_users"] = pandas.Series(0.5, zd.zone_numbers)
+        zd["cost"] = pandas.Series(0.0, index=zd.zone_numbers)
+        zd["within_zone"] = pandas.Series(1, index=zd.zone_numbers)
         mtx = numpy.arange(720, dtype=numpy.float32)
         mtx.shape = (24, 30)
         mtx[numpy.diag_indices(24)] = 0
