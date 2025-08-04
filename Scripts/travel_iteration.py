@@ -255,8 +255,8 @@ class ModelSystem:
                                      and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=ap.transport_classes) as mtx:
-                    for ass_class in ap.transport_classes:
+                        transport_classes=ap.assignment_modes) as mtx:
+                    for ass_class in ap.assignment_modes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
         if self.long_dist_matrices is not None:
@@ -267,6 +267,15 @@ class ModelSystem:
             self.dtm.init_demand(param.truck_classes)
             self._add_external_demand(
                 self.freight_matrices, param.truck_classes)
+
+        # Add beeline distance dummy
+        mtx = self.ass_model.beeline_dist
+        idx = numpy.where(numpy.isin(self.zdata_forecast.zone_numbers, self.zone_numbers))[0]
+        mtx = mtx[idx[:, None], idx]
+        self.zdata_forecast["beeline_10km"] = mtx<10
+        self.zdata_forecast["beeline_100km"] = (mtx>10) & (mtx<100)
+        self.zdata_forecast["beeline_200km"] = (mtx>100) & (mtx<200)
+        self.zdata_forecast["beeline_9999km"] = mtx>200
 
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
@@ -391,7 +400,7 @@ class ModelSystem:
         tp = ap.name
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in ap.assignment_modes.keys():
+            for ass_class in ap.assignment_modes:
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())

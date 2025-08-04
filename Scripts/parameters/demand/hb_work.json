@@ -67,15 +67,15 @@
     "distance_boundaries": {
         "car_work": [
             0,
-            100
+            300
         ],
         "car_pax": [
             0,
-            100
+            300
         ],
         "transit_work": [
             0,
-            100
+            300
         ],
         "bike": [
             0,
@@ -92,7 +92,7 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1,
-                "logsum": 0.90458
+                "logsum": 0.99712
             },
             "attraction_size": {
                 "workplaces": 1
@@ -101,7 +101,7 @@
     },
     "mode_choice": {
         "car_work": {
-            "constant": -3.67245,
+            "constant": -3.72377,
             "generation": {},
             "transform": {
                 "attraction": {
@@ -112,65 +112,73 @@
                 }
             },
             "attraction": {
-                "time*within_zone": -0.04223
+                "time*within_zone": -0.03112
             },
             "impedance": {
-                "time": -0.04223,
-                "cost": -0.0672
+                "time": -0.03112,
+                "cost": -0.07278
             },
             "log": {
-                "transform": -0.15839
+                "transform": -0.11945
             },
             "individual_dummy": {
-                "sh_cars1_hh1": 4.49717,
-                "sh_cars2_hh2": 4.49717,
-                "sh_cars1_hh2": 3.04268
+                "sh_cars1_hh1": 4.46241,
+                "sh_cars2_hh2": 4.46241,
+                "sh_cars1_hh2": 3.01464
             }
         },
         "car_pax": {
-            "constant": -3.87329,
+            "constant": -3.68067,
             "generation": {},
+            "transform": {
+                "attraction": {
+                    "cost*within_zone": 1
+                },
+                "impedance": {
+                    "cost": 1
+                }
+            },
             "attraction": {
-                "time*within_zone": -0.06996
+                "time*within_zone": -0.0554
             },
             "impedance": {
-                "time": -0.06996,
-                "cost": -0.0672
+                "time": -0.0554,
+                "cost": -0.07278
             },
             "log": {
-                "cost": -0.15839
+                "transform": -0.11945
             },
             "individual_dummy": {
-                "sh_cars1_hh2": 0.85813,
-                "sh_cars2_hh2": 0.85813
+                "sh_cars1_hh2": 0.83799,
+                "sh_cars2_hh2": 0.83799
             }
         },
         "transit_work": {
-            "constant": -1.36313,
+            "constant": -1.63813,
             "generation": {},
             "attraction": {
                 "within_zone_inf": -1,
-                "Helsingin_kantakaupunki": 0.81511,
-                "Tampereen_kantakaupunki": 0.32545,
-                "sh_office": 0.61163
+                "Helsingin_kantakaupunki": 0.8942,
+                "Tampereen_kantakaupunki": 0.47799,
+                "sh_office": 0.63849
             },
             "impedance": {
-                "time": -0.01568,
-                "cost": -0.0672
+                "time": -0.01155,
+                "cost": -0.07278
             },
             "log": {
-                "cost": -0.15839
+                "cost": -0.11945
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.28467,
+            "constant": -1.23615,
             "generation": {},
             "attraction": {
-                "dist*within_zone": -0.15139
+                "dist*within_zone": -0.14072
             },
             "impedance": {
-                "dist": -0.15139
+                "dist": -0.14072
             },
             "log": {},
             "individual_dummy": {}
@@ -179,10 +187,10 @@
             "constant": 0,
             "generation": {},
             "attraction": {
-                "dist*within_zone": -0.46795
+                "dist*within_zone": -0.44712
             },
             "impedance": {
-                "dist": -0.46795
+                "dist": -0.44712
             },
             "log": {},
             "individual_dummy": {}

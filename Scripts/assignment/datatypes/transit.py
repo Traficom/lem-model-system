@@ -122,7 +122,7 @@ class TransitMode(AssignmentMode):
             self.park_and_ride_results = False
         self.transit_spec["journey_levels"] = [JourneyLevel(
                 level, self.name, self.park_and_ride_results).spec
-            for level in range(6)]
+            for level in range(7)]
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": self.demand.id,

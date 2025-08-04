@@ -1,11 +1,12 @@
 # Running the model system
 
-The main entry point is `lem.py`.
-Run `python lem.py --help` to see parameter syntax.
-You can also feed parameters from a json file (`lem.py --json your_file_path`).
-The json variable names are the same as `lem.py` parameters,
+The main entry points are `valma_travel.py` and `valma_freight.py`.
+Run `python valma_travel.py --help` to see parameter syntax.
+You can also feed parameters from a json file
+(`valma_travel.py --json your_file_path`).
+The json variable names are the same as `valma_travel.py` parameters,
 but with capital letters, and underscore instead of hyphen.
-If you run `python helmet.py` without parameters,
+If you run `python valma_travel.py` without parameters,
 all parameters will be taken from `dev-config.json`,
 which can be used to setup the model run in advance.
 

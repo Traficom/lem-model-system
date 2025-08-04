@@ -5,6 +5,7 @@ import logging
 import numpy
 import pandas
 
+import parameters.assignment as param
 import utils.log as log
 import assignment.emme_assignment as ass
 from datahandling.matrixdata import MatrixData
@@ -12,6 +13,7 @@ from datahandling.resultdata import ResultsData
 from tests.integration.test_data_handling import (
     TEST_DATA_PATH,
 )
+from datahandling.traversaldata import transform_traversal_data
 try:
     from assignment.emme_bindings.emme_project import EmmeProject
     import inro.emme.desktop.app as _app
@@ -48,13 +50,13 @@ class EmmeAssignmentTest:
             "destination_matrices": 100,
             "full_matrices": 9999,
             "scenarios": 5,
-            "centroids": 30,
+            "centroids": 35,
             "regular_nodes": 2000,
             "links": 6000,
             "turn_entries": 100,
             "transit_vehicles": 35,
-            "transit_lines": 30,
-            "transit_segments": 750,
+            "transit_lines": 40,
+            "transit_segments": 850,
             "extra_attribute_values": 1100000,
             "functions": 99,
             "operators": 5000,
@@ -74,7 +76,8 @@ class EmmeAssignmentTest:
         emme_context.import_scenario(
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
-        self.ass_model = ass.EmmeAssignmentModel(emme_context, scenario_num)
+        self.ass_model = ass.EmmeAssignmentModel(
+            emme_context, scenario_num, "uusimaa")
         self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
@@ -151,13 +154,25 @@ class EmmeAssignmentTest:
         self.ass_model.prepare_freight_network(self.dist_cost, purposes)
         temp_impedance = self.ass_model.freight_network.assign()
         nr_zones = self.ass_model.nr_zones
-        demand = numpy.full((nr_zones, nr_zones), 1.0)
+        freight_modes = ["truck", "freight_train", "ship"]
+        demand = {mode: numpy.full((nr_zones, nr_zones), 10.0) for mode in freight_modes}
+        truck_loads = (2, 4, 5)
+        truck_loads = dict(zip(param.truck_classes, truck_loads))
+        total_demand = {mode: numpy.full((nr_zones, nr_zones), 0.0)
+                    for mode in param.truck_classes}
         for purpose in purposes:
-            for mode in ["truck", "freight_train", "ship"]:
-                self.ass_model.freight_network.set_matrix(mode, demand)
+            for mode in freight_modes:
+                self.ass_model.freight_network.set_matrix(mode, demand[mode])
             self.ass_model.freight_network.save_network_volumes(purpose)
             self.ass_model.freight_network.output_traversal_matrix(
-                {"freight_train", "ship"}, self.resultdata.path)
+                set(demand), self.resultdata.path)
+            demand["truck"] += transform_traversal_data(self.resultdata.path, 
+                                                        self.ass_model.zone_numbers)
+            for mode in param.truck_classes:
+                total_demand[mode] += demand["truck"] / truck_loads[mode]
+        for ass_class in total_demand:
+            self.ass_model.freight_network.set_matrix(ass_class, total_demand[ass_class])
+        self.ass_model.freight_network._assign_trucks()
 
 if emme_available:
     em = EmmeAssignmentTest()

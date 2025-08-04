@@ -189,10 +189,9 @@ vot_inv = {
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
 freight_terminal_cost = {
-    'd': 0,
+    'D': 0,
     'J': 0,
-    'W': 0,
-    's': 0,
+    'W': 0
 }
 # Boarding penalties for different transit modes
 boarding_penalty = {
@@ -476,15 +475,11 @@ assignment_classes = {
     "hb_leisure": "leisure",
     "hb_sport": "leisure",
     "hb_visit": "leisure",
-    "hb_overnight": "leisure",
+    "hb_leisure_overnight": "leisure",
     "hb_business": "work",
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
-    "hb_work_long": "work",
-    "hb_business_long": "work",
-    "hb_private_day": "leisure",
-    "hb_private_week": "leisure",
     "external": "leisure",
 }
 main_mode = 'h'
@@ -520,6 +515,7 @@ local_transit_modes = [
     'r',
     't',
     'w',
+    'e',
 ]
 long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],
@@ -536,13 +532,32 @@ aux_modes = [
 park_and_ride_mode = 'u'
 freight_modes = {
     "freight_train": {
-        'd': "@diesel_train",
+        'D': "@diesel_train",
         'J': "@electric_train",
     },
     "ship": {
-        'W': "@ship_4m",
-        's': "@ship_9m",
+        'W': "@ship",
     },
+}
+freight_marine_modes = {
+    "container_ship": {
+        "C": "@container_ship"
+    },
+    "general_cargo": {
+        "G": "@general_cargo"
+    },
+    "lng_carrier": {
+        "L": "@lng_carrier"
+    },
+    "oil_tanker": {
+        "O": "@oil_tanker"
+    },
+    "product_tanker": {
+        "P": "@product_tanker"
+    },
+    "roro_vessel": {
+        "R": "@roro_vessel"
+    }
 }
 external_modes = [
     "car_leisure",
@@ -579,6 +594,10 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
+ship_attrs = {
+    "dist": "ut1",
+    "frequency": "ut2",
+}
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"
