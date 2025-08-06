@@ -166,8 +166,9 @@ class EmmeAssignmentTest:
             self.ass_model.freight_network.save_network_volumes(purpose)
             self.ass_model.freight_network.output_traversal_matrix(
                 set(demand), self.resultdata.path)
-            demand["truck"] += transform_traversal_data(self.resultdata.path, 
-                                                        self.ass_model.zone_numbers)
+            aux_demand = transform_traversal_data(
+                self.resultdata.path, self.ass_model.zone_numbers)
+            demand["truck"] += sum(aux_demand.values())
             for mode in param.truck_classes:
                 total_demand[mode] += demand["truck"] / truck_loads[mode]
         for ass_class in total_demand:
