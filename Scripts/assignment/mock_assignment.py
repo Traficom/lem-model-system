@@ -121,7 +121,6 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        self._end_assignment_classes.add("walk")
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
             mtxs["cost"][ass_cl] = (self.dist_unit_cost[ass_cl]
@@ -138,12 +137,16 @@ class MockPeriod(Period):
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """ Get travel impedance matrices for one time period from files.
 
+        Long-distance mode impedances are included if assignment period
+        was created with delete_extra_matrices option disabled.
+
         Returns
         -------
         dict
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
+        self._end_assignment_classes.add("walk")
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
@@ -235,29 +238,22 @@ class WholeDayPeriod(MockPeriod):
 
 
 class OffPeakPeriod(MockPeriod):
-    def assign(self, *args) -> Dict[str, Dict[str, numpy.ndarray]]:
+    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Get travel impedance matrices for one time period from files.
+
+        Long-distance mode impedances are included if assignment period
+        was created with delete_extra_matrices option disabled.
 
         Returns
         -------
         dict
             Type (time/cost/dist) : dict
-                Assignment class (car_work/transit/...) : numpy 2-d matrix
+                Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        mtxs = self._get_impedances(
-            param.car_classes + param.local_transit_classes)
-        for ass_cl in param.car_classes:
-            mtxs["cost"][ass_cl] += (self.dist_unit_cost[ass_cl]
-                                        * mtxs["dist"][ass_cl])
-        if "toll_cost" in mtxs:
-            for ass_cl in mtxs["toll_cost"]:
-                mtxs["cost"][ass_cl] += mtxs["toll_cost"][ass_cl]
-            del mtxs["toll_cost"]
-        del mtxs["dist"]
-        return mtxs
+        return self._get_impedances(self._end_assignment_classes)
 
 
-class TransitAssignmentPeriod(MockPeriod):
+class TransitAssignmentPeriod(OffPeakPeriod):
     def __init__(self, *args, **kwargs):
         MockPeriod.__init__(self, *args, **kwargs)
         self.assignment_modes = param.transit_classes
@@ -279,19 +275,6 @@ class TransitAssignmentPeriod(MockPeriod):
             del mtxs["toll_cost"]
         return mtxs
 
-    def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
-        """Get transit impedance matrices for one time period.
-
-        Long-distance mode impedances are included if assignment period
-        was created with delete_extra_matrices option disabled.
-
-        Returns
-        -------
-        dict
-            Type (time/cost/dist) : dict
-                Assignment class (transit_work/...) : numpy 2-d matrix
-        """
-        return self._get_impedances(self._end_assignment_classes)
 
 class EndAssignmentOnlyPeriod(MockPeriod):
     def assign(self, *args) -> None:
