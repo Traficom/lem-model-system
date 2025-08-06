@@ -119,12 +119,12 @@ def main(args):
             else:
                 emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
-            zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
                 msg = "Project {} has no scenario {}".format(
                     emp_path, first_scenario_ids[i])
                 log.error(msg)
                 raise ValueError(msg)
+            zone_numbers[args.submodel[i]] = scen.zone_numbers
             for scenario in emmebank.scenarios():
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
