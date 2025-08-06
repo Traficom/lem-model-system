@@ -164,6 +164,7 @@ class EmmeAssignmentTest:
         for ap in self.long_dist_model.assignment_periods:
             for ass_class in demand:
                 ap.set_matrix(ass_class, car_matrix)
+            ap.init_assign()
             ap.assign_trucks_init()
             travel_cost = ap.end_assign()
             costs_files = MatrixData(
