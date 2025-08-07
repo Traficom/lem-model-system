@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 import utils.log as log
-from utils.divide_matrices import divide_matrices
+from utils.validate_assignment import divide_matrices, output_od_los
 import parameters.assignment as param
 import parameters.zone as zone_param
 from assignment.abstract_assignment import AssignmentModel, Period
@@ -34,16 +34,14 @@ class MockAssignmentModel(AssignmentModel):
             for tp in time_periods]
 
     @property
-    def zone_numbers(self) -> numpy.array:
-        """Numpy array of all zone numbers.""" 
+    def zone_numbers(self) -> List[int]:
+        """List of all zone numbers."""
         return next(iter(self.assignment_periods)).zone_numbers
 
     @property
-    def mapping(self):
-        """dict: Dictionary of zone numbers and corresponding indices."""
-        with self.matrices.open("time", next(iter(self.assignment_periods))) as mtx:
-            mapping = mtx.mapping
-        return mapping
+    def mapping(self) -> Dict[int, int]:
+        """Dictionary of zone numbers and corresponding indices."""
+        return next(iter(self.assignment_periods)).mapping
 
     @property
     def nr_zones(self) -> int:
@@ -83,11 +81,18 @@ class MockPeriod(Period):
         self._end_assignment_classes = set(end_assignment_classes)
 
     @property
-    def zone_numbers(self):
-        """Numpy array of all zone numbers.""" 
+    def zone_numbers(self) -> List[int]:
+        """List of all zone numbers."""
         with self.matrices.open("beeline", "") as mtx:
             zone_numbers = mtx.zone_numbers
         return zone_numbers
+
+    @property
+    def mapping(self)  -> Dict[int, int]:
+        """Dictionary of zone numbers and corresponding indices."""
+        with self.matrices.open("beeline", "") as mtx:
+            mapping = mtx.mapping
+        return mapping
 
     def init_assign(self):
         return self.get_soft_mode_impedances()
@@ -163,6 +168,9 @@ class MockPeriod(Period):
                 "toll_cost", assignment_classes)
         except FileNotFoundError:
             pass
+        for mtx_type in mtxs:
+            for mode, mtx in mtxs[mtx_type].items():
+                output_od_los(mtx, self.mapping, mtx_type, mode)
         for mode in mtxs["time"]:
             try:
                 divide_matrices(
