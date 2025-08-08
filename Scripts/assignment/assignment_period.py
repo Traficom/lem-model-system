@@ -7,7 +7,7 @@ from pathlib import Path
 
 from typing import TYPE_CHECKING, Dict, Union, Iterable, Optional
 import utils.log as log
-from utils.divide_matrices import divide_matrices
+from utils.validate_assignment import divide_matrices, output_od_los
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode, BikeMode, WalkMode
 from assignment.datatypes.car import CarMode, TruckMode
@@ -267,12 +267,21 @@ class AssignmentPeriod(Period):
             except KeyError:
                 pass
             for mtx_type, mtx in mtxs[mode].items():
+                output_od_los(mtx, self.mapping, mtx_type, mode)
                 if numpy.any(mtx > 1e10):
                     log.warn(f"Matrix with infinite values: {mtx_type} {mode}")
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
                 for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in param.impedance_output}
         return impedance
+
+    @property
+    def mapping(self) -> Dict[int, int]:
+        """Dictionary of zone numbers and corresponding indices."""
+        mapping = {}
+        for idx, zone in enumerate(self.emme_scenario.zone_numbers):
+            mapping[zone] = idx
+        return mapping
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
