@@ -14,7 +14,15 @@
                     "sh_income_40_59",
                     "sh_income_60_79",
                     "sh_income_80_99",
-                    "sh_income_100_"
+                    "sh_income_100_",
+                    "sh_hh1",
+                    "sh_hh2",
+                    "sh_hh3",
+                    "sh_cars1_hh1",
+                    "sh_cars1_hh2",
+                    "sh_cars1_hh3",
+                    "sh_cars2_hh2",
+                    "sh_cars2_hh3"
                 ]
             },
             {
@@ -32,20 +40,7 @@
             "sport_facility_outdoor",
             "area_leisure_buildings",
             "area_university_buildings",
-            "students_comprehensive",
-            {
-                "total": "households",
-                "shares": [
-                    "sh_hh1",
-                    "sh_hh2",
-                    "sh_hh3",
-                    "sh_cars1_hh1",
-                    "sh_cars1_hh2",
-                    "sh_cars1_hh3",
-                    "sh_cars2_hh2",
-                    "sh_cars2_hh3"
-                ]
-            }
+            "students_comprehensive"
         ],
         "mean": [
             "avg_park_cost",

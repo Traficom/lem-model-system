@@ -65,18 +65,28 @@ class ZoneData:
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
+
         # Convert household shares to population shares
-        hh_population = (self["sh_hh1"] + 2*self["sh_hh2"] + 4.13*self["sh_hh3"])
-        self.share["sh_pop_hh1"] = divide(self["sh_hh1"], hh_population)
-        self.share["sh_pop_hh2"] = divide(2*self["sh_hh2"], hh_population)
-        self.share["sh_pop_hh3"] = divide(4.13*self["sh_hh3"], hh_population)
-        self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_population)
-        self.share["sh_cars1_hh2"] = divide((2*self["sh_cars1_hh2"]
-                                             + 4.13*self["sh_cars1_hh3"]),
-                                            hh_population)
-        self.share["sh_cars2_hh2"] = divide((2*self["sh_cars2_hh2"]
-                                             + 4.13*self["sh_cars2_hh3"]),
-                                            hh_population)
+        avg_hh_size = {
+            "hh1": 1,
+            "hh2": 2,
+            "hh3": 4.13,  # Average size of 3+ households
+        }
+        hh_pop = sum(avg_hh_size[hh] * self[f"sh_{hh}"] for hh in avg_hh_size)
+        for hh, avg_size in avg_hh_size.items():
+            self.share[f"sh_pop_{hh}"] = divide(
+                avg_size*self[f"sh_{hh}"], hh_pop)
+            self[hh] = (self[f"sh_pop_{hh}"] * self["population"] / avg_size)
+        self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_pop)
+        self.share["sh_cars1_hh2"] = divide(
+            (avg_hh_size["hh2"]*self["sh_cars1_hh2"]
+             + avg_hh_size["hh3"]*self["sh_cars1_hh3"]),
+            hh_pop)
+        self.share["sh_cars2_hh2"] = divide(
+            (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
+             + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
+            hh_pop)
+
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone"][numpy.diag_indices(self.nr_zones)] = 1.0
