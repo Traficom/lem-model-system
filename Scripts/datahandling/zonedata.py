@@ -76,7 +76,7 @@ class ZoneData:
         for hh, avg_size in avg_hh_size.items():
             self.share[f"sh_pop_{hh}"] = divide(
                 avg_size*self[f"sh_{hh}"], hh_pop)
-            self[hh] = (self[f"sh_pop_{hh}"] * self["population"] / avg_size)
+            self[hh] = self[f"sh_pop_{hh}"] * self["population"] / avg_size
         self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_pop)
         self.share["sh_cars1_hh2"] = divide(
             (avg_hh_size["hh2"]*self["sh_cars1_hh2"]
