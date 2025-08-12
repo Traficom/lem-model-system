@@ -40,7 +40,8 @@
             "sport_facility_outdoor",
             "area_leisure_buildings",
             "area_university_buildings",
-            "students_comprehensive"
+            "students_comprehensive",
+            "land_area"
         ],
         "mean": [
             "avg_park_cost",
