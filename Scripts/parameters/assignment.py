@@ -188,7 +188,7 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
-tour_duration = {  # TODO What about last-mile??
+tour_duration = {
     "j_first_mile": {
         "avg": 2.18,
         "hb_business": 1.12,
@@ -205,6 +205,26 @@ tour_duration = {  # TODO What about last-mile??
         "hb_leisure_overnight": 14,
     },
     "l_first_mile": {
+        "avg": 2.39,
+        "hb_business": 2.01,
+        "hb_leisure_overnight": 9,
+    },
+    "j_last_mile": {
+        "avg": 2.18,
+        "hb_business": 1.12,
+        "hb_leisure_overnight": 9,
+    },
+    "j_last_taxi": {
+        "avg": 2.18,
+        "hb_business": 1.12,
+        "hb_leisure_overnight": 9,
+    },
+    "e_last_mile": {
+        "avg": 2.62,
+        "hb_business": 2.43,
+        "hb_leisure_overnight": 14,
+    },
+    "l_last_mile": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
@@ -680,7 +700,7 @@ segment_results = {
 }
 uncongested_transit_time = "base_timtr"
 basic_impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time"]
-mixed_mode_output = ["car_time", "loc_time", "aux_time", "park_cost"]
+mixed_mode_output = ["car_time", "transfer_time", "park_cost"]
 impedance_output = basic_impedance_output + mixed_mode_output
 transit_impedance_matrices = {
     "total": {
@@ -695,6 +715,7 @@ transit_impedance_matrices = {
     },
     "local": {},
     "park_and_ride": {},
+    "park": {},
 }
 background_traffic_attr = "ul3"
 transit_delay_attr = "us1"

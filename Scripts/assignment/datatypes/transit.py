@@ -215,11 +215,13 @@ class MixedMode(TransitMode):
         }
 
     def _add_matrix_specs(self, modes):
+        local_transit_modes = [mode for mode in param.local_transit_modes
+            if mode not in param.long_dist_transit_modes[self.name]]
         subset = "by_mode_subset"
         self.local_result_spec = {
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             subset: {
-                "modes": param.local_transit_modes,
+                "modes": local_transit_modes + param.aux_modes,
                 "perceived_aux_transit_times": self.aux_time.id,
                 "perceived_in_vehicle_times": self.loc_time.id,
             },
@@ -230,6 +232,12 @@ class MixedMode(TransitMode):
                 "modes": [param.park_and_ride_mode],
                 "distance": self.car_dist.id,
                 "actual_aux_transit_times": self.car_time.id,
+            },
+        }
+        self.park_spec = {
+            "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+            subset: {
+                "modes": [param.park_and_ride_mode] + param.aux_modes,
                 "actual_aux_transit_costs": self.park_cost.id,
             },
         }
@@ -237,6 +245,7 @@ class MixedMode(TransitMode):
         result_specs += [
             self.local_result_spec[subset],
             self.park_and_ride_spec[subset],
+            self.park_spec[subset],
         ]
         return result_specs
 
@@ -244,4 +253,5 @@ class MixedMode(TransitMode):
         car_cost = self.dist_unit_cost * self.car_dist.data
         mtxs = TransitMode.get_matrices(self)
         mtxs["cost"] += car_cost
+        mtxs["transfer_time"] = self.loc_time.data + self.aux_time.data
         return mtxs

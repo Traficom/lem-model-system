@@ -77,7 +77,8 @@ class WholeDayPeriod(AssignmentPeriod):
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
         self._assign_cars(self.stopping_criteria["coarse"])
-        self._assign_transit(param.long_distance_transit_classes)
+        self._assign_transit(
+            param.long_dist_simple_classes + param.car_access_classes)
         self._long_distance_trips_assigned = True
         mtxs = self._get_impedances(modes)
         for ass_cl in param.car_classes:
@@ -97,13 +98,20 @@ class WholeDayPeriod(AssignmentPeriod):
                 Assignment class (car_work/transit/...) : numpy 2-d matrix
         """
         self._assign_cars(self.stopping_criteria["fine"])
-        if not self._long_distance_trips_assigned:
-            self._assign_transit(param.long_distance_transit_classes)
         strategy_paths = self._strategy_paths
-        for transit_class in param.long_distance_transit_classes:
-            self._calc_transit_network_results(transit_class)
-            if self._delete_strat_files:
-                strategy_paths[transit_class].unlink(missing_ok=True)
+        if self._long_distance_trips_assigned:
+            for transit_class in (param.long_dist_simple_classes
+                                  + param.car_access_classes):
+                self._calc_transit_network_results(transit_class)
+                if self._delete_strat_files:
+                    strategy_paths[transit_class].unlink(missing_ok=True)
+            self._assign_transit(
+                param.car_egress_classes, calc_network_results=True,
+                delete_strat_files=self._delete_strat_files)
+        else:
+            self._assign_transit(
+                param.long_distance_transit_classes, calc_network_results=True,
+                delete_strat_files=self._delete_strat_files)
         self._calc_transit_link_results()
         return self._get_impedances(param.car_classes
                                     + param.long_distance_transit_classes)

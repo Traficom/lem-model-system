@@ -271,8 +271,7 @@
                 "impedance": {
                     "cost": -0.047,
                     "time": -0.035,
-                    "loc_time": 0.018,
-                    "aux_time": 0.018
+                    "transfer_time": 0.018
                 },
                 "log": {},
                 "individual_dummy": {}
@@ -287,8 +286,7 @@
                     "cost": -0.047,
                     "park_cost": -0.047,
                     "time": -0.035,
-                    "loc_time": 0.018,
-                    "aux_time": 0.018,
+                    "transfer_time": 0.018,
                     "car_time": -0.524
                 },
                 "log": {},
@@ -303,8 +301,7 @@
                 "impedance": {
                     "cost": -0.047,
                     "time": -0.035,
-                    "loc_time": 0.018,
-                    "aux_time": 0.018,
+                    "transfer_time": 0.018,
                     "car_time": -0.057
                 },
                 "log": {},

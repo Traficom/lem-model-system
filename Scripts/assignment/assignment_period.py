@@ -736,6 +736,9 @@ class AssignmentPeriod(Period):
                 self.emme_project.matrix_results(
                     spec.park_and_ride_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
+                self.emme_project.matrix_results(
+                    spec.park_spec, scenario=self.emme_scenario,
+                    class_name=transit_class)
             if calc_network_results:
                 self._calc_transit_network_results(transit_class)
             if delete_strat_files:
