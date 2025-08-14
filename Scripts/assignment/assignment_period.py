@@ -726,18 +726,9 @@ class AssignmentPeriod(Period):
             self.emme_project.transit_assignment(
                 specification=spec.transit_spec, scenario=self.emme_scenario,
                 add_volumes=i, save_strategies=True, class_name=transit_class)
-            self.emme_project.matrix_results(
-                spec.transit_result_spec, scenario=self.emme_scenario,
-                class_name=transit_class)
-            if transit_class in param.mixed_mode_classes:
+            for result_spec in spec.transit_result_specs:
                 self.emme_project.matrix_results(
-                    spec.local_result_spec, scenario=self.emme_scenario,
-                    class_name=transit_class)
-                self.emme_project.matrix_results(
-                    spec.park_and_ride_spec, scenario=self.emme_scenario,
-                    class_name=transit_class)
-                self.emme_project.matrix_results(
-                    spec.park_spec, scenario=self.emme_scenario,
+                    result_spec, scenario=self.emme_scenario,
                     class_name=transit_class)
             if calc_network_results:
                 self._calc_transit_network_results(transit_class)

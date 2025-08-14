@@ -461,7 +461,8 @@ class MockProject:
         for category in ["on_links","on_segments","at_nodes"]:
             if category in specification:
                 for attr in specification[category].values():
-                    if scenario.extra_attribute(attr) is None:
+                    if (not isinstance(attr, list)
+                        and scenario.extra_attribute(attr) is None):
                         raise AttributeError(f"Attribute {attr} does not exist")
 
     def traversal_analysis(self, specification: Dict, output_file: str,
