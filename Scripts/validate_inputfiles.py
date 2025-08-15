@@ -233,7 +233,7 @@ def main(args):
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):
             long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)
+                                 + param.long_dist_simple_classes)
             long_dist_path = Path(long_dist_forecast)
             if long_dist_path not in long_dist_result_paths:
                 long_dist_matrices = MatrixData(long_dist_path)
