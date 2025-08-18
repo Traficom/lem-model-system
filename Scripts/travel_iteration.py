@@ -405,7 +405,8 @@ class ModelSystem:
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
             for ass_class in transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
-                if ass_class in param.intermodals:
+                if (self.ass_model.use_free_flow_speeds
+                    and ass_class in param.intermodals):
                     for intermodal in param.intermodals[ass_class]:
                         demand += self.dtm.demand[tp][intermodal]
                 mtx[ass_class] = demand
