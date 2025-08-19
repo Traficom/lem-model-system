@@ -75,12 +75,14 @@ class ModelSystem:
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
-        cost_data = json.loads(cost_data_path.read_text("utf-8"))
+        cost_data: dict = json.loads(cost_data_path.read_text("utf-8"))
         self.car_dist_cost = cost_data["car_cost"]
         self.transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
+        extra_dummies = cost_data.get("area_calibration", {})
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, submodel)
+            zone_data_path, self.zone_numbers, submodel,
+            extra_dummies=extra_dummies)
         self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
                                        * self.car_dist_cost["car_work"])
 
@@ -94,9 +96,16 @@ class ModelSystem:
         other_work_purposes = []
         other_leisure_purposes = []
         for file in parameters_path.rglob("*.json"):
+            specification = json.loads(file.read_text("utf-8"))
+            for dummies in extra_dummies.values():
+                for subarea in dummies:
+                    for mode, coeff in dummies[subarea].items():
+                        if mode in specification["mode_choice"]:
+                            (specification["mode_choice"][mode]
+                                          ["generation"][subarea]) = coeff
             purpose = new_tour_purpose(
-                json.loads(file.read_text("utf-8")), self.zdata_forecast,
-                self.resultdata, cost_data["cost_changes"])
+                specification, self.zdata_forecast, self.resultdata,
+                cost_data["cost_changes"])
             required_time_periods = sorted(
                 {tp for m in purpose.impedance_share.values() for tp in m})
             if required_time_periods == sorted(assignment_model.time_periods):
