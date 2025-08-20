@@ -71,17 +71,17 @@
     "destination_choice": {
         "car_pax": {
             "attraction": {
-                "time*within_zone": -0.13784
+                "time*within_zone": -0.1378
             },
             "impedance": {
-                "time": -0.13784
+                "time": -0.1378
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "students_comprehensive*within_municipality": 1,
-                "students_comprehensive*outside_municipality": 0.0842
+                "students_comprehensive*outside_municipality": 0.08416
             }
         },
         "transit_work": {
@@ -96,22 +96,22 @@
             },
             "attraction_size": {
                 "students_comprehensive*within_municipality": 1,
-                "students_comprehensive*outside_municipality": 0.0842
+                "students_comprehensive*outside_municipality": 0.08416
             }
         },
         "bike": {
             "attraction": {
-                "dist*within_zone": -0.43849
+                "dist*within_zone": -0.4385
             },
             "impedance": {
-                "dist": -0.43849
+                "dist": -0.4385
             },
             "log": {
                 "attraction_size": 1
             },
             "attraction_size": {
                 "students_comprehensive*within_municipality": 1,
-                "students_comprehensive*outside_municipality": 0.0842
+                "students_comprehensive*outside_municipality": 0.08416
             }
         },
         "walk": {
@@ -126,41 +126,41 @@
             },
             "attraction_size": {
                 "students_comprehensive*within_municipality": 1,
-                "students_comprehensive*outside_municipality": 0.0842
+                "students_comprehensive*outside_municipality": 0.08416
             }
         }
     },
     "mode_choice": {
         "car_pax": {
-            "constant": -7.4718,
+            "constant": -7.485,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.41923
+                "logsum": 0.4192
             },
             "individual_dummy": {
-                "sh_cars1_hh2": 5.07203,
-                "sh_cars2_hh2": 5.07203
+                "sh_cars1_hh2": 5.085,
+                "sh_cars2_hh2": 5.085
             }
         },
         "transit_work": {
-            "constant": -5.20697,
+            "constant": -5.208,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.41923
+                "logsum": 0.4192
             },
             "individual_dummy": {}
         },
         "bike": {
-            "constant": -1.50642,
+            "constant": -1.507,
             "generation": {},
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.41923
+                "logsum": 0.4192
             },
             "individual_dummy": {}
         },
@@ -170,26 +170,26 @@
             "attraction": {},
             "impedance": {},
             "log": {
-                "logsum": 0.41923
+                "logsum": 0.4192
             },
             "individual_dummy": {}
         },
         "scaling": {
             "car_pax": {
-                "constant": 0.41923,
+                "constant": 0.4192,
                 "individual_dummy": {
-                    "sh_cars1_hh2": 0.41923,
-                    "sh_cars2_hh2": 0.41923
+                    "sh_cars1_hh2": 0.4192,
+                    "sh_cars2_hh2": 0.4192
                 }
             },
             "transit_work": {
-                "constant": 0.41923
+                "constant": 0.4192
             },
             "bike": {
-                "constant": 0.41923
+                "constant": 0.4192
             },
             "walk": {
-                "constant": 0.41923
+                "constant": 0.4192
             }
         }
     },
