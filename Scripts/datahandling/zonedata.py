@@ -27,12 +27,18 @@ class ZoneData:
     zone_mapping : str
             Name of column where mapping between data zones (index)
             and assignment zones
+    extra_dummies : dict
+        key : str
+            Name of aggregation level
+        value : list
+            Additional dummy variables to create
     """
     def __init__(self, *args, **kwargs):
         self._init_data(*args, **kwargs)
 
     def _init_data(self, data_path: Path, zone_numbers: Sequence,
-                 zone_mapping: str, data_type: str = "trips"):
+                 zone_mapping: str, data_type: str = "trips",
+                 extra_dummies: Dict[str, Sequence[str]] = {}):
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
@@ -58,9 +64,11 @@ class ZoneData:
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.nr_zones = len(self.zone_numbers)
-        self._add_transformations(data)
+        self._add_transformations(data, extra_dummies)
 
-    def _add_transformations(self, data):
+    def _add_transformations(self,
+                             data: pandas.DataFrame,
+                             extra_dummies: Dict[str, Sequence[str]]):
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
@@ -104,15 +112,26 @@ class ZoneData:
         within_municipality = municipalities[:, numpy.newaxis] == municipalities
         self["within_municipality"] = within_municipality
         self["outside_municipality"] = ~within_municipality
-        for dummy in ("Helsingin_kantakaupunki", "Tampereen_kantakaupunki"):
-            self[dummy] = self.dummy("subarea", dummy)
-        self["Lappi"] = self.dummy("county", "Lappi")
-        pop = data["population"]
-        for key in ["Uusimaa", "Lounais-Suomi", "Ita-Suomi", "Pohjois-Suomi"]:
-            self["population_" + key] = self.dummy("submodel", key) * pop
+        dummies = {
+            "subarea": {
+                "Helsingin_kantakaupunki",
+                "Tampereen_kantakaupunki",
+            },
+            "county": {
+                "Lappi",
+            },
+            "municipality": {},
+            "submodel": {},
+        }
+        for division_type in dummies:
+            dummies[division_type].update(extra_dummies.get(division_type, []))
+            for dummy in dummies[division_type]:
+                self[dummy] = self.dummy(division_type, dummy)
 
     def dummy(self, division_type, name, bounds=slice(None)):
         dummy = self.aggregations.mappings[division_type][bounds] == name
+        if not dummy.any():
+            log.warn(f"Dummy variable {name} not found in {division_type}")
         return dummy
 
     @property
