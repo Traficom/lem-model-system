@@ -28,7 +28,10 @@ class ZoneData:
             Name of column where mapping between data zones (index)
             and assignment zones
     extra_dummies : dict
-        Additional dummy variables to create
+        key : str
+            Name of aggregation level
+        value : list
+            Additional dummy variables to create
     """
     def __init__(self, *args, **kwargs):
         self._init_data(*args, **kwargs)
@@ -117,12 +120,8 @@ class ZoneData:
             "county": {
                 "Lappi",
             },
-            "submodel": {
-                "Uusimaa",
-                "Lounais-Suomi",
-                "Ita-Suomi",
-                "Pohjois-Suomi",
-            },
+            "municipality": {},
+            "submodel": {},
         }
         for division_type in dummies:
             dummies[division_type].update(extra_dummies.get(division_type, []))
