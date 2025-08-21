@@ -229,12 +229,9 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
-        if model_type == "goods_transport":
-            forecast_zonedata = FreightZoneData(
-                Path(data_path), zone_numbers[submodel], submodel)
-        else:
-            forecast_zonedata = ZoneData(
-                Path(data_path), zone_numbers[submodel], submodel)
+        zonedata_args = Path(data_path), zone_numbers[submodel], submodel
+        forecast_zonedata = (FreightZoneData(*zonedata_args)
+            if model_type == "goods_transport" else ZoneData(*zonedata_args))
 
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):
