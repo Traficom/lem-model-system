@@ -22,7 +22,7 @@ def main(args):
         else Path(args.long_dist_demand_forecast))
     if args.end_assignment_only:
         iterations = 0
-    elif calculate_long_dist_demand or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment is not None:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
