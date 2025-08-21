@@ -38,23 +38,23 @@
     },
     "distance_boundaries": {
         "car_leisure": [
-            0,
+            0.1,
             9999
         ],
         "car_pax": [
-            0,
+            0.1,
             9999
         ],
         "airplane": [
-            0,
+            0.1,
             9999
         ],
         "train": [
-            0,
+            0.1,
             9999
         ],
         "long_d_bus": [
-            0,
+            0.1,
             9999
         ]
     },
