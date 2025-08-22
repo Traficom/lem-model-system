@@ -359,7 +359,9 @@ class TourPurpose(Purpose):
         if "vrk" in impedance:
             acc_splits = {}
             matrixdata = MatrixData(self.resultdata.path / "Matrices")
-            with matrixdata.open(f"logsum_{self.name}", "vrk", m='w') as mtx:
+            with matrixdata.open(
+                    f"logsum_{self.name}", "vrk", list(self.zone_numbers), m='w'
+                    ) as mtx:
                 for main_mode, acc_modes in intermodals.items():
                     mode_impedance = {mode: purpose_impedance.pop(mode)
                         for mode in [main_mode] + acc_modes}
