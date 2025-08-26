@@ -16,6 +16,7 @@ from datahandling.matrixdata import MatrixData
 from datatypes.purpose import FreightPurpose
 
 from utils.freight_utils import create_purposes, StoreDemand
+from utils.logistics_module import DetourDistributionInference, process_logistics_inference
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -63,6 +64,18 @@ def main(args):
     for purpose in purposes.values():
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
+        if purpose.logistics_module:
+            lcs_areas = zonedata["lc_area"]
+            lcs_sizes = lcs_areas[lcs_areas > 0].sort_values()
+            purpose_truck_costs = purpose.get_costs(impedance)["truck"]
+            logistics_module = DetourDistributionInference(cost_matrix=purpose_truck_costs,
+                                                           ddm_params=purpose.logistics_params,
+                                                           lc_indices=lcs_sizes.index.to_numpy(),
+                                                           lc_sizes=lcs_sizes.values) # TODO: Check if this works
+            final_demand = process_logistics_inference(model=logistics_module,
+                                                        n_zones=zonedata.nr_zones,
+                                                        demand=demand["truck"])
+            demand["truck"] = final_demand
         for mode in demand:
             omx_filename = ("freight_demand_tons" if purpose.name 
                             in args.specify_commodity_names else "")
