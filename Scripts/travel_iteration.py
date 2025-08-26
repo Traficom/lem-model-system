@@ -343,8 +343,7 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
-        self.dtm.init_demand(
-            [mode for mode in self.travel_modes if mode != "walk"])
+        self.dtm.init_demand({**self.travel_modes, "van": True})
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
 
