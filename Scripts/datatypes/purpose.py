@@ -16,6 +16,7 @@ import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
 from utils.freight_costs import calc_cost
+from utils.logistics_module import DDMParameters
 from utils.calibrate import attempt_calibration
 
 
@@ -586,6 +587,15 @@ class FreightPurpose(Purpose):
         else:
             self.model = logit.ModeDestModel(*args)
         self.modes = list(self.model.mode_choice_param)
+
+        if specification.get("logistics_module"):
+            self.logistics_module = specification["logistics_module"]
+            self.logistics_params = DDMParameters(w1a=self.logistics_module["orig_lc_detour"],
+                                                  w1b=self.logistics_module["lc_dest_detour"],
+                                                  w2=self.logistics_module["constant_detour"],
+                                                  w3=self.logistics_module["orig_dest_direct"],
+                                                  w4=self.logistics_module["constant_direct"],
+                                                  w5=self.logistics_module["size_factor"])
 
     def calc_traffic(self, impedance: dict):
         """Calculate freight traffic matrix.
