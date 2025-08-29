@@ -213,6 +213,10 @@ class ZoneData:
                 # If parameter is two-fold, they will be multiplied
                 return (self.get_data(keyl[0], bounds, generation)
                         * self.get_data(keyl[1], bounds, generation))
+            elif "beeline" in key:
+                beeline, lower, upper, _ = key.split('_')
+                mtx = self[beeline]
+                return (mtx > int(lower)) & (mtx <= int(upper))[bounds, :]
             else:
                 raise KeyError(err)
         if val.ndim == 1: # If not a compound (i.e., matrix)
