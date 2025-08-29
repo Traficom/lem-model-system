@@ -117,7 +117,8 @@
             "att_konela",
             "att_majon",
             "att_huonek",
-            "att_jate"
+            "att_jate",
+            "lc_area"
         ],
         "first": [
             "aggregate_results_municipality",
