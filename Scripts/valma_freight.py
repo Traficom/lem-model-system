@@ -66,12 +66,12 @@ def main(args):
         demand = purpose.calc_traffic(impedance)
         if purpose.logistics_module:
             lcs_areas = zonedata["lc_area"]
-            lcs_sizes = lcs_areas[lcs_areas > 0].sort_values()
-            purpose_truck_costs = purpose.get_costs(impedance)["truck"]
+            lcs_sizes = lcs_areas[lcs_areas > 0]
+            purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
             logistics_module = DetourDistributionInference(cost_matrix=purpose_truck_costs,
                                                            ddm_params=purpose.logistics_params,
                                                            lc_indices=lcs_sizes.index.to_numpy(),
-                                                           lc_sizes=lcs_sizes.values) # TODO: Check if this works
+                                                           lc_sizes=lcs_sizes.values)
             final_demand = process_logistics_inference(model=logistics_module,
                                                         n_zones=zonedata.nr_zones,
                                                         demand=demand["truck"])
