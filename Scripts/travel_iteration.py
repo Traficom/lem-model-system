@@ -163,7 +163,6 @@ class ModelSystem:
 
         # Mode and destination probability matrices are calculated first,
         # as logsums from probability calculation are used in tour generation.
-        self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
