@@ -25,7 +25,7 @@ class TourCombinationModel:
         self.tour_combinations = [combination for nr_tours in self.param
             for combination in self.param[nr_tours]]
 
-    def calc_prob(self, age_group, is_car_user, zones):
+    def calc_prob(self, age_group, zones):
         """Calculate choice probabilities for each tour combination.
 
         Calculation is done for one specific population group
@@ -36,8 +36,6 @@ class TourCombinationModel:
         ----------
         age_group : str
             Age group (age_7-17/age_18-29/...)
-        is_car_user : bool
-            True if is car user
         zones : int or slice
             Zone number (for agent model) or zone data slice
 
@@ -74,8 +72,6 @@ class TourCombinationModel:
                         util += b["zone"][i] * self.zone_data[i][zones]
                     dummies = b["individual_dummy"]
                     util += dummies[age_group]
-                    if is_car_user and "car_users" in dummies:
-                        util += dummies["car_users"]
                     combination_exps[tour_combination] = numpy.exp(util)
                 else:
                     combination_exps[tour_combination] = 0.0

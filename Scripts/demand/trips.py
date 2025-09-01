@@ -12,7 +12,7 @@ import utils.log as log
 import parameters.zone as param
 from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
-from models import car_use, car_ownership, linear, tour_combinations
+from models import car_ownership, linear, tour_combinations
 from parameters.car import cars_hh1, cars_hh2, cars_hh3
 
 
@@ -54,8 +54,6 @@ class DemandModel:
         bounds = param.purpose_areas[tour_combination_area]
         self.bounds = slice(*zone_data.all_zone_numbers.searchsorted(
             [bounds[0], bounds[-1]]))
-        self.car_use_model = car_use.CarUseModel(
-            zone_data, self.bounds, param.age_groups, self.resultdata)
         self.car_ownership_models = {
             "hh1": car_ownership.CarOwnershipModel(cars_hh1, zone_data, 
                                             self.bounds, self.resultdata),
@@ -82,28 +80,6 @@ class DemandModel:
     def _age_strings(self):
         for age_group in param.age_groups:
             yield "age_{}_{}".format(*age_group)
-
-    def create_population_segments(self):
-        """Create population segments.
-
-        Store dict of dicts of `pandas.Series`, where each series is a
-        zone array with number of people belonging to segment.
-        Upper-level dict keys are age group strings (age_7-17/...).
-        Lower-level dict keys are strings car_user and no_car.
-        """
-        cm = self.car_use_model
-        self.zone_data["car_users"] = cm.calc_prob()
-        self.segments = {}
-        pop = self.zone_data["population"][self.bounds]
-        for age in self._age_strings():
-            age_pop = self.zone_data["sh_" + age][self.bounds] * pop
-            car_share = sum(self.zone_data["share_" + gender][self.bounds]
-                            * cm.calc_individual_prob(age, gender)
-                for gender in cm.genders)
-            self.segments[age] = {
-                "car_users": car_share * age_pop,
-                "no_car": (1-car_share) * age_pop,
-            }
 
     def create_population(self):
         """Create population for agent-based simulation.
@@ -170,14 +146,12 @@ class DemandModel:
     def _generate_tour_combinations(self):
         gm = self.tour_generation_model
         for age in self._age_strings():
-            segments = self.segments[age]
-            prob_c = gm.calc_prob(age, is_car_user=True, zones=self.bounds)
-            prob_n = gm.calc_prob(age, is_car_user=False, zones=self.bounds)
+            pop_segment = self.zone_data[age]
+            prob = gm.calc_prob(age, zones=self.bounds)
             nr_tours_sums = pandas.Series(name="nr_tours")
-            for combination in prob_c:
+            for combination in prob:
                 # Each combination is a tuple of tours performed during a day
-                nr_tours = ( prob_c[combination] * segments["car_users"]
-                           + prob_n[combination] * segments["no_car"])
+                nr_tours = prob[combination] * pop_segment
                 for purpose in combination:
                     try:
                         self.purpose_dict[purpose].gen_model.tours += nr_tours
