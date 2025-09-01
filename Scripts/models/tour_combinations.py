@@ -1,3 +1,4 @@
+from typing import Union, Dict, Tuple
 import numpy # type: ignore
 
 import parameters.tour_generation as param
@@ -25,7 +26,9 @@ class TourCombinationModel:
         self.tour_combinations = [combination for nr_tours in self.param
             for combination in self.param[nr_tours]]
 
-    def calc_prob(self, age_group, zones):
+    def calc_prob(self,
+                  age_group: str,
+                  zones: Union[int, slice]) -> Dict[Tuple[str], numpy.ndarray]:
         """Calculate choice probabilities for each tour combination.
 
         Calculation is done for one specific population group
@@ -44,7 +47,7 @@ class TourCombinationModel:
         dict
             key : tuple of str
                 Tour combination (-/hw/hw-ho/...)
-            value : pandas.Series
+            value : numpy.ndarray
                 Choice probabilities per zone
         """
         prob = {}

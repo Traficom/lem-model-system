@@ -146,12 +146,12 @@ class DemandModel:
     def _generate_tour_combinations(self):
         gm = self.tour_generation_model
         for age in self._age_strings():
-            pop_segment = self.zone_data[age]
+            pop_segment: pandas.Series = self.zone_data[age]
             prob = gm.calc_prob(age, zones=self.bounds)
             nr_tours_sums = pandas.Series(name="nr_tours")
             for combination in prob:
                 # Each combination is a tuple of tours performed during a day
-                nr_tours = prob[combination] * pop_segment
+                nr_tours: pandas.Series = prob[combination] * pop_segment
                 for purpose in combination:
                     try:
                         self.purpose_dict[purpose].gen_model.tours += nr_tours
