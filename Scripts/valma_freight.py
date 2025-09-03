@@ -65,7 +65,7 @@ def main(args):
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         if purpose.logistics_module:
-            lcs_areas = zonedata["lc_area"]
+            lcs_areas = zonedata[f"lc_area{purpose.name}"] if zonedata[f"lc_area{purpose.name}"] else zonedata["lc_area"]
             lcs_sizes = lcs_areas[lcs_areas > 0]
             purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
             logistics_module = DetourDistributionInference(cost_matrix=purpose_truck_costs,
