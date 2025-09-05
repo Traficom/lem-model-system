@@ -144,11 +144,17 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         del mtxs["dist"]
         return mtxs
 
-    def end_assign(self) -> Dict[str, Dict[str, ndarray]]:
+    def end_assign(self,
+                   assign_transit=True) -> Dict[str, Dict[str, ndarray]]:
         """Get transit impedance matrices for one time period.
 
         Long-distance mode impedances are included if assignment period
         was created with delete_extra_matrices option disabled.
+
+        Parameters
+        ----------
+        assign_transit : bool (optional)
+            Whether to assign transit for this time period
 
         Returns
         -------
@@ -156,6 +162,8 @@ class TransitAssignmentPeriod(OffPeakPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (transit_work/...) : numpy 2-d matrix
         """
+        if not assign_transit:
+            return {}
         self._assign_transit(
             param.transit_classes, calc_network_results=True,
             delete_strat_files=self._delete_strat_files)
