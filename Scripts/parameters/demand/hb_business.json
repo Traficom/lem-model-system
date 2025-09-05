@@ -265,7 +265,7 @@
     "access_mode_choice": {
         "airplane": {
             "airplane": {
-                "constant": 0,
+                "constant": 80,
                 "generation": {},
                 "attraction": {},
                 "impedance": {
@@ -277,7 +277,7 @@
                 "individual_dummy": {}
             },
             "l_first_mile": {
-                "constant": -0.98,
+                "constant": 79.02,
                 "generation": {
                     "car_density": 4.83
                 },
@@ -293,7 +293,7 @@
                 "individual_dummy": {}
             },
             "l_first_taxi": {
-                "constant": -1.46,
+                "constant": 78.54,
                 "generation": {
                     "car_density": 4.54
                 },
@@ -310,7 +310,7 @@
         },
         "train": {
             "train": {
-                "constant": 0,
+                "constant": 80,
                 "generation": {},
                 "attraction": {},
                 "impedance": {
@@ -321,7 +321,7 @@
                 "individual_dummy": {}
             },
             "j_first_mile": {
-                "constant": -4.41,
+                "constant": 75.59,
                 "generation": {
                     "car_density": 4.83
                 },
@@ -336,7 +336,7 @@
                 "individual_dummy": {}
             },
             "j_first_taxi": {
-                "constant": -3.64,
+                "constant": 76.36,
                 "generation": {
                     "car_density": 4.54
                 },
@@ -352,7 +352,7 @@
         },
         "long_d_bus": {
             "long_d_bus": {
-                "constant": 0,
+                "constant": 80,
                 "generation": {},
                 "attraction": {},
                 "impedance": {
@@ -363,7 +363,7 @@
                 "individual_dummy": {}
             },
             "e_first_mile": {
-                "constant": -4.5,
+                "constant": 75.5,
                 "generation": {
                     "car_density": 4.54
                 },
