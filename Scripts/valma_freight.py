@@ -72,10 +72,11 @@ def main(args):
                                                            ddm_params=purpose.logistics_params,
                                                            lc_indices=lcs_sizes.index.to_numpy(),
                                                            lc_sizes=lcs_sizes.values)
-            final_demand = process_logistics_inference(model=logistics_module,
-                                                        n_zones=zonedata.nr_zones,
-                                                        demand=demand["truck"])
-            demand["truck"] = final_demand
+            for i in range(args.logistics_iterations):
+                final_demand = process_logistics_inference(model=logistics_module,
+                                                            n_zones=zonedata.nr_zones,
+                                                            demand=demand["truck"])
+                demand["truck"] = final_demand
         for mode in demand:
             omx_filename = ("freight_demand_tons" if purpose.name 
                             in args.specify_commodity_names else "")
