@@ -9,6 +9,11 @@
     ],
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "hb_work": 0.0687,
+        "hb_edu_basic": 0.0362,
+        "hb_edu_student": 0.0295
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [

@@ -248,9 +248,11 @@ class TourPurpose(Purpose):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args, mtx_adjustment)
         if self.orig == "source":
-            self.gen_model = generation.NonHomeGeneration(self, resultdata)
+            self.gen_model = generation.NonHomeGeneration(
+                self, resultdata, specification["generation"])
         else:
-            self.gen_model = generation.GenerationModel(self, resultdata)
+            self.gen_model = generation.GenerationModel(
+                self, resultdata, specification["generation"])
         if self.name == "sop":
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
@@ -265,7 +267,7 @@ class TourPurpose(Purpose):
         self.mappings = self.zone_data.aggregations.mappings
         self.aggregates = {name: {} for name in self.mappings}
         self.within_zone_tours = {}
-        self.sec_dest_purpose = None
+        self.sec_dest_purpose: SecDestPurpose = None
 
     @property
     def dist(self):
@@ -393,7 +395,8 @@ class TourPurpose(Purpose):
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
             try:
-                self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
+                self.sec_dest_purpose.gen_model.add_secondary_tours(
+                    mtx, mode, self)
             except AttributeError:
                 pass
             self.attracted_tours[mode] = mtx.sum(0)
@@ -449,7 +452,8 @@ class SecDestPurpose(Purpose):
     def __init__(self, specification, zone_data, resultdata, mtx_adjustment):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args, mtx_adjustment)
-        self.gen_model = generation.SecDestGeneration(self, resultdata)
+        self.gen_model = generation.SecDestGeneration(
+            self, resultdata, specification["generation"])
         self.model = logit.SecDestModel(*args)
         self.modes = list(self.model.dest_choice_param)
         for mode in self.demand_share:

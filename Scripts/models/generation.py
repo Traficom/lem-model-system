@@ -1,31 +1,45 @@
+from __future__ import annotations
 import numpy
 import pandas
 from collections import defaultdict
+from typing import TYPE_CHECKING, Dict
 
-import parameters.tour_generation as param
 from models.logit import divide
+if TYPE_CHECKING:
+    from datatypes.purpose import Purpose
+    from datahandling.resultdata import ResultsData
 
 
 class GenerationModel:
     """Container for tour vector.
 
-    Regular tours are created in `model.logit.TourCombinationModel`
+    Some tours are created in `model.logit.TourCombinationModel`
     and then added to the `tours` vector for each `TourPurpose`.
-    Peripheral tours are calculated directly in `add_tours()`.
-
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
+    Most tours are calculated directly in `add_tours()`.
     """
 
-    def __init__(self, purpose, resultdata):
+    def __init__(self, purpose: Purpose,
+                 resultdata: ResultsData,
+                 param: Dict[str, float]):
+        """
+        Initialize tour generation model.
+
+        Parameters
+        ----------
+        purpose : datatypes.purpose.TourPurpose
+            Travel purpose (hw/hs/ho/...)
+        resultdata : datahandling.resultdata.ResultData
+            Writer object for result directory
+        param : dict
+            key : str
+                Zone variable name
+            value : float
+                Generation factor
+        """
         self.resultdata = resultdata
         self.zone_data = purpose.zone_data
         self.purpose = purpose
-        self.param = param.tour_generation[purpose.name]
+        self.param = param
 
     def init_tours(self):
         """Initialize `tours` vector to 0."""
@@ -50,15 +64,7 @@ class GenerationModel:
 
 
 class NonHomeGeneration(GenerationModel):
-    """For calculating numbers of non-home tours starting in each zone.
-
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
-    """
+    """For calculating numbers of non-home tours starting in each zone."""
 
     def add_tours(self):
         pass
@@ -90,13 +96,6 @@ class SecDestGeneration(GenerationModel):
     """For calculating numbers of secondary-destination tours.
 
     Calculation is for each mode and origin-destination pair separately.
-
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
     """
 
     def init_tours(self):
@@ -104,7 +103,10 @@ class SecDestGeneration(GenerationModel):
         for mode in self.tours:
             self.tours[mode] = 0
     
-    def add_tours(self, demand, mode, purpose):
+    def add_tours(self):
+        pass
+
+    def add_secondary_tours(self, demand, mode, purpose):
         """Generate matrix of tour numbers from attracted source tours."""
         mod_mode = mode.replace("work", "leisure")
         if mod_mode in self.purpose.modes:

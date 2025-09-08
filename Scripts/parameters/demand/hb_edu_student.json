@@ -4,6 +4,13 @@
     "dest": "students_higher_education",
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "age_7_17": 0.0,
+        "age_18_29": 0.0,
+        "age_30_49": 0.0,
+        "age_50_64": 0.0,
+        "age_65_99": 0.0
+    },
     "impedance_share": {
         "car_work": {
             "aht": [

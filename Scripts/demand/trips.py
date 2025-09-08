@@ -136,8 +136,7 @@ class DemandModel:
         use_tour_combination_model = False
         for purpose in self.tour_purposes:
             purpose.gen_model.init_tours()
-            if not isinstance(purpose, SecDestPurpose):
-                purpose.gen_model.add_tours()
+            purpose.gen_model.add_tours()
             if purpose.name in combination_purposes:
                 use_tour_combination_model = True
         if use_tour_combination_model:
@@ -148,16 +147,11 @@ class DemandModel:
         for age in self._age_strings():
             pop_segment: pandas.Series = self.zone_data[age]
             prob = gm.calc_prob(age, zones=self.bounds)
-            nr_tours_sums = pandas.Series(name="nr_tours")
             for combination in prob:
                 # Each combination is a tuple of tours performed during a day
                 nr_tours: pandas.Series = prob[combination] * pop_segment
                 for purpose in combination:
-                    try:
-                        self.purpose_dict[purpose].gen_model.tours += nr_tours
-                    except KeyError:
-                        pass
-                nr_tours_sums["-".join(combination)] = nr_tours.sum()
+                    self.purpose_dict[purpose].gen_model.tours += nr_tours
 
     def generate_tour_probs(self) -> Dict[Tuple[int,int], numpy.ndarray]:
         """Generate matrices of cumulative tour combination probabilities.
