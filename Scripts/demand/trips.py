@@ -130,15 +130,10 @@ class DemandModel:
         Not used in agent-based simulation.
         Result is stored in `purpose.gen_model.tours`.
         """
-        gm = self.tour_generation_model
-        combination_purposes = {purpose for combination in gm.tour_combinations
-            for purpose in combination}
         use_tour_combination_model = False
         for purpose in self.tour_purposes:
             purpose.gen_model.init_tours()
-            purpose.gen_model.add_tours()
-            if purpose.name in combination_purposes:
-                use_tour_combination_model = True
+            use_tour_combination_model |= purpose.gen_model.add_tours()
         if use_tour_combination_model:
             self._generate_tour_combinations()
 

@@ -21,8 +21,7 @@ class GenerationModel:
     def __init__(self, purpose: Purpose,
                  resultdata: ResultsData,
                  param: Dict[str, float]):
-        """
-        Initialize tour generation model.
+        """Initialize tour generation model.
 
         Parameters
         ----------
@@ -47,16 +46,23 @@ class GenerationModel:
             0.0, self.purpose.zone_numbers, dtype=numpy.float32)
 
     def add_tours(self):
-        """Generate and add (peripheral) tours to zone vector."""
+        """Generate and add tours to zone vector.
+
+        Returns
+        -------
+        bool
+            Whether tours are instead generated in tour combination model
+        """
         b = self.param
         for i in b:
             self.tours += b[i] * self.zone_data[i][self.purpose.bounds]
+        return not b
 
     def get_tours(self):
         """Get vector of tour numbers per zone.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Vector of tour numbers per zone
         """
@@ -67,15 +73,15 @@ class NonHomeGeneration(GenerationModel):
     """For calculating numbers of non-home tours starting in each zone."""
 
     def add_tours(self):
-        pass
+        return False
     
     def get_tours(self):
         """Generate vector of tour numbers from attracted source tours.
 
         Assumes that home-based tours have been assigned destinations.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Vector of tour numbers per zone
         """
@@ -104,7 +110,7 @@ class SecDestGeneration(GenerationModel):
             self.tours[mode] = 0
     
     def add_tours(self):
-        pass
+        return False
 
     def add_secondary_tours(self, demand, mode, purpose):
         """Generate matrix of tour numbers from attracted source tours."""
@@ -118,8 +124,8 @@ class SecDestGeneration(GenerationModel):
     def get_tours(self, mode):
         """Get vector of tour numbers per od pair.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Matrix of tour numbers per origin-destination pair
         """
