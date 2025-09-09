@@ -56,7 +56,6 @@ class GenerationModel:
         b = self.param
         for i in b:
             self.tours += b[i] * self.zone_data[i][self.purpose.bounds]
-        return not b
 
     def get_tours(self):
         """Get vector of tour numbers per zone.
@@ -69,11 +68,17 @@ class GenerationModel:
         return self.tours.values
 
 
+class TourCombinationGeneration(GenerationModel):
+
+    def add_tours(self):
+        pass
+
+
 class NonHomeGeneration(GenerationModel):
     """For calculating numbers of non-home tours starting in each zone."""
 
     def add_tours(self):
-        return False
+        pass
     
     def get_tours(self):
         """Generate vector of tour numbers from attracted source tours.
@@ -110,7 +115,7 @@ class SecDestGeneration(GenerationModel):
             self.tours[mode] = 0
     
     def add_tours(self):
-        return False
+        pass
 
     def add_secondary_tours(self, demand, mode, purpose):
         """Generate matrix of tour numbers from attracted source tours."""
