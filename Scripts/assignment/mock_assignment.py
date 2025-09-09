@@ -151,7 +151,6 @@ class MockPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
-        self._end_assignment_classes.add("walk")
         return self._get_impedances(self._end_assignment_classes)
 
     def _get_impedances(self, assignment_classes: Iterable[str]):
@@ -258,6 +257,7 @@ class OffPeakPeriod(MockPeriod):
             Type (time/cost/dist) : dict
                 Assignment class (car_work/transit_leisure/...) : numpy 2-d matrix
         """
+        self._end_assignment_classes.add("walk")
         return self._get_impedances(self._end_assignment_classes)
 
 
