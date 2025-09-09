@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 class GenerationModel:
     """Container for tour vector.
 
-    Some tours are created in `model.logit.TourCombinationModel`
-    and then added to the `tours` vector for each `TourPurpose`.
-    Most tours are calculated directly in `add_tours()`.
+    In the base class, tours are calculated directly in `add_tours()`.
     """
 
     def __init__(self, purpose: Purpose,
@@ -46,13 +44,7 @@ class GenerationModel:
             0.0, self.purpose.zone_numbers, dtype=numpy.float32)
 
     def add_tours(self):
-        """Generate and add tours to zone vector.
-
-        Returns
-        -------
-        bool
-            Whether tours are instead generated in tour combination model
-        """
+        """Generate and add tours to zone vector."""
         b = self.param
         for i in b:
             self.tours += b[i] * self.zone_data[i][self.purpose.bounds]
@@ -69,6 +61,7 @@ class GenerationModel:
 
 
 class TourCombinationGeneration(GenerationModel):
+    """For this sub-class, tours are created in `model.logit.TourCombinationModel`."""
 
     def add_tours(self):
         pass
