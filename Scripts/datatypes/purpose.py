@@ -56,6 +56,7 @@ class Purpose:
         self.dest = specification["dest"]
         self.area = specification["area"]
         self.impedance_share = specification["impedance_share"]
+        self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
         self.area = cast(str, self.area) #type checker help
         zone_numbers = zone_data.all_zone_numbers
@@ -256,6 +257,9 @@ class TourPurpose(Purpose):
             self.model = logit.DestModeModel(*args)
         else:
             self.model = logit.ModeDestModel(*args)
+        for mode in self.impedance_share:
+            if mode not in self.demand_share:
+                self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}

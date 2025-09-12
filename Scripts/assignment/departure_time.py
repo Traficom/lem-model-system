@@ -93,7 +93,7 @@ class DepartureTimeModel:
         demand.purpose.name = cast(str, demand.purpose.name) #type checker hint
         position: Sequence[int] = demand.position
         if len(position) == 2:
-            share: Dict[str, Any] = demand.purpose.impedance_share[demand.mode]
+            share: Dict[str, Any] = demand.purpose.demand_share[demand.mode]
             for ap in self.assignment_periods:
                 if demand.mode in ap.assignment_modes:
                     self._add_2d_demand(
@@ -138,7 +138,7 @@ class DepartureTimeModel:
         mtx: numpy.ndarray = demand.matrix
         tp: str = time_period
         (o, d1, d2) = demand.position
-        share = demand.purpose.impedance_share[demand.mode][tp]
+        share = demand.purpose.demand_share[demand.mode][tp]
         if demand.dest is not None:
             # For agent simulation
             self._add_2d_demand(share, ass_class, tp, mtx, (o, d1))
