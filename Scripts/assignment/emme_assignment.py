@@ -290,7 +290,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 mode = line.vehicle.description
                 headway = line[ap.netfield("hdw")]
                 if 0 < headway < 990:
-                    departures = volume_factor * 60/headway
+                    departures =  60 /headway / volume_factor
                     for segment in line.segments():
                         miles["dist"][mode] += departures * segment.link.length
                         miles["time"][mode] += departures * segment[time_attr]
