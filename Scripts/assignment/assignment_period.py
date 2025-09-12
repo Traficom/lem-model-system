@@ -124,8 +124,7 @@ class AssignmentPeriod(Period):
             Whether matrices will be saved in Emme format for all time periods
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
-        self._prepare_walk_and_bike(save_matrices=True)
-        self._end_assignment_classes.add("walk")
+        self._prepare_walk_and_bike(save_matrices=False)
         self._prepare_transit(day_scenario, save_matrices, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
@@ -171,10 +170,7 @@ class AssignmentPeriod(Period):
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
-        self._assign_pedestrians()
-        self._set_bike_vdfs()
-        self._assign_bikes()
-        return self.get_soft_mode_impedances()
+        return []
 
     def get_soft_mode_impedances(self):
         """Get travel impedance matrices for walk and bike.
@@ -185,7 +181,7 @@ class AssignmentPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (walk/bike) : numpy 2-d matrix
         """
-        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
+        return []
 
     def assign_trucks_init(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -194,16 +190,10 @@ class AssignmentPeriod(Period):
         self._calc_background_traffic(include_trucks=True)
         self._set_car_vdfs()
 
-    def assign(self, modes: Iterable[str]
-            ) -> Dict[str, Dict[str, numpy.ndarray]]:
+    def assign(self, *args) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign cars and transit for one time period.
 
         Get travel impedance matrices for one time period from assignment.
-
-        Parameters
-        ----------
-        modes : Set of str
-            The assignment classes for which impedance matrices will be returned
 
         Returns
         -------
@@ -215,7 +205,8 @@ class AssignmentPeriod(Period):
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
         self._assign_transit(delete_strat_files=self._delete_strat_files)
-        mtxs = self._get_impedances(modes)
+        mtxs = self._get_impedances(
+            param.car_classes + param.local_transit_classes)
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
         del mtxs["toll_cost"]
