@@ -142,7 +142,7 @@ class DepartureTimeModel:
         if demand.dest is not None:
             # For agent simulation
             self._add_2d_demand(share, ass_class, tp, mtx, (o, d1))
-            share = demand.purpose.sec_dest_purpose.impedance_share[demand.mode][tp]
+            share = demand.purpose.sec_dest_purpose.demand_share[demand.mode][tp]
         colsum = mtx.sum(0)[:, numpy.newaxis]
         self._add_2d_demand(share[0], ass_class, tp, mtx, (d1, d2))
         self._add_2d_demand(share[1], ass_class, tp, colsum, (d2, o))
