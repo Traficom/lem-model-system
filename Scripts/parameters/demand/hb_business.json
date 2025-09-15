@@ -220,36 +220,5 @@
             }
         }
     },
-    "demand_share": {
-        "car_work": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "car_pax": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "airplane": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "train": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "long_d_bus": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        }
-    }
+    "demand_share": {}
 }

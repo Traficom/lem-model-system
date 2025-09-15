@@ -137,7 +137,6 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._prepare_cars(
             dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
             truck_classes=[])
-        self._prepare_walk_and_bike(save_matrices=False)
         self._prepare_other(day_scenario, save_matrices)
 
     def init_assign(self):

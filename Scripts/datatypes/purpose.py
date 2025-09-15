@@ -257,8 +257,9 @@ class TourPurpose(Purpose):
             self.model = logit.DestModeModel(*args)
         else:
             self.model = logit.ModeDestModel(*args)
-        for mode in self.demand_share:
-            self.demand_share[mode]["vrk"] = [1, 1]
+        for mode in self.impedance_share:
+            if mode not in self.demand_share:
+                self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
