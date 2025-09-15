@@ -250,7 +250,7 @@ class TourPurpose(Purpose):
         if self.orig == "source":
             self.gen_model = generation.NonHomeGeneration(
                 self, resultdata, specification["generation"])
-        elif not specification["generation"]:
+        elif isinstance(specification["generation"], str):
             self.gen_model = generation.TourCombinationGeneration(
                 self, resultdata, None)
         else:

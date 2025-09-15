@@ -4,7 +4,7 @@
     "dest": "students_higher_education",
     "area": "all",
     "struct": "mode>dest",
-    "generation": {},
+    "generation": "tour_combination_model",
     "impedance_share": {
         "car_work": {
             "aht": [
