@@ -257,8 +257,9 @@ class TourPurpose(Purpose):
             self.model = logit.DestModeModel(*args)
         else:
             self.model = logit.ModeDestModel(*args)
-        for mode in self.demand_share:
-            self.demand_share[mode]["vrk"] = [1, 1]
+        for mode in self.impedance_share:
+            if mode not in self.demand_share:
+                self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
@@ -557,11 +558,29 @@ class SecDestPurpose(Purpose):
             "attraction.txt")
 
 class FreightPurpose(Purpose):
+    """Standard purpose for handling freight calculations.
 
-    def __init__(self, specification, zone_data, resultdata, costdata):
+    Parameters
+    ----------
+    specification : dict
+        Model parameter specifications
+    zone_data : ZoneData
+        Data used for all demand calculations
+    resultdata : ResultData
+        Writer object to result directory
+    costdata : Dict[str, dict]
+        Freight mode (truck/freight_train/ship) : mode
+            Mode (truck/trailer_truck...) : unit cost name
+                unit cost name : unit cost value
+    category : str
+        purpose modelling category, within Finland as 'domestic, 
+        outside Finland as 'foreign'
+    """
+    def __init__(self, specification, zone_data, resultdata, costdata, category):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args)
         self.costdata = costdata
+        self.model_category = category
 
         if specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
@@ -576,7 +595,7 @@ class FreightPurpose(Purpose):
         ----------
         impedance : dict
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
 
         Return
         ------
@@ -591,21 +610,46 @@ class FreightPurpose(Purpose):
         demand = {mode: (probs.pop(mode) * generation).T for mode in self.modes}
         return demand
 
-    def get_costs(self, impedance: dict):
+    def calc_route(self, impedance: dict, origs: dict, dests: dict):
+        """Calculates route choice for foreign freight trade. 
+        
+        Parameters
+        ----------
+        impedance : dict
+            Mode (truck/train/...) : dict
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        
+        """
+        costs = self.get_costs(impedance, origs, dests)
+
+    def get_costs(self, impedance: dict, origs: dict = None, dests: dict = None):
         """Fetches calculated costs for each mode in model's mode choice.
 
         Parameters
         ----------
         impedance : dict 
             Mode (truck/train/...) : dict
-                Type (time/cost/dist) : numpy 2d matrix
+                Type (time/dist/toll_cost/canal_cost) : numpy 2d matrix
+        origs : dict
+            Origin border id (FIHEL/SESTO...) : str
+                Centroid id : int
+        dests : dict
+            Destination border id (FIHEL/SESTO...) : str
+                Centroid id : int
 
         Returns
         -------
         dict
             Mode (truck/freight_train/...) : cost : numpy.ndarray
         """
-        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode])}
+        return {mode: {"cost": calc_cost(mode, self.costdata, impedance[mode],
+                                         self.model_category, origs, dests)}
                 for mode in self.modes}
 
     def calc_vehicles(self, matrix: numpy.ndarray, ass_class: str):
@@ -625,6 +669,7 @@ class FreightPurpose(Purpose):
             vehicle matrix
         """
         costdata = self.costdata["truck"][ass_class]
-        vehicles = matrix * costdata["distribution"] / costdata["avg_load"] / 365
-        vehicles += vehicles.T * (costdata["empty_share"] - 1)
+        vehicles = (matrix * costdata[f"{self.model_category}_distribution"] 
+                    / costdata["avg_load"] / 365)
+        vehicles += vehicles.T * costdata["empty_share"]
         return vehicles

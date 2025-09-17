@@ -8,7 +8,7 @@ import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 from assignment.assignment_period import AssignmentPeriod
-from modelsystem import ModelSystem, AgentModelSystem
+from travel_iteration import ModelSystem, AgentModelSystem
 from datahandling.matrixdata import MatrixData
 
 
@@ -22,7 +22,7 @@ def main(args):
         else Path(args.long_dist_demand_forecast))
     if args.end_assignment_only:
         iterations = 0
-    elif calculate_long_dist_demand or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment is not None:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
@@ -91,6 +91,7 @@ def main(args):
         ep.start()
         ass_model = EmmeAssignmentModel(
             ep, first_scenario_id=args.first_scenario_id,
+            submodel=args.submodel,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id, **kwargs)
@@ -113,6 +114,11 @@ def main(args):
         extra=log_extra)
     stored_speed_assignment = (None if args.stored_speed_assignment is None
         else [Path(path) for path in args.stored_speed_assignment])
+    try:
+        if len(stored_speed_assignment) == 0:
+            stored_speed_assignment.append(results_path)
+    except TypeError:
+        pass
     impedance = model.assign_base_demand(
         iterations==0, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
@@ -168,7 +174,7 @@ if __name__ == "__main__":
     # Initially read defaults from config file ("dev-config.json")
     # but allow override via command-line arguments
     config = utils.config.read_from_file()
-    parser = ArgumentParser(epilog="HELMET model system entry point script.")
+    parser = ArgumentParser(epilog="VALMA travel model-system entry point script.")
     parser.add_argument(
         "--version",
         action="version",

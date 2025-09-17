@@ -7,7 +7,7 @@ from pathlib import Path
 
 from typing import TYPE_CHECKING, Dict, Union, Iterable
 import utils.log as log
-from utils.divide_matrices import divide_matrices
+from utils.validate_assignment import divide_matrices, output_od_los
 import parameters.assignment as param
 from assignment.datatypes.assignment_mode import AssignmentMode, BikeMode, WalkMode
 from assignment.datatypes.car import CarMode, TruckMode
@@ -69,9 +69,8 @@ class AssignmentPeriod(Period):
         if use_stored_speeds:
             for criteria in self.stopping_criteria.values():
                 criteria["max_iterations"] = 0
-        self.transport_classes = (param.private_classes
-                                  + param.local_transit_classes)
-        self._end_assignment_classes = set(self.transport_classes
+        self._end_assignment_classes = set(param.private_classes
+                                           + param.local_transit_classes
             if delete_extra_matrices else param.transport_classes)
         self.assignment_modes: Dict[str, AssignmentMode] = {}
 
@@ -125,8 +124,7 @@ class AssignmentPeriod(Period):
             Whether matrices will be saved in Emme format for all time periods
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
-        self._prepare_walk_and_bike(save_matrices=True)
-        self._end_assignment_classes.add("walk")
+        self._prepare_walk_and_bike(save_matrices=False)
         self._prepare_transit(day_scenario, save_matrices, save_matrices)
 
     def _prepare_cars(self, dist_unit_cost: Dict[str, float],
@@ -172,10 +170,7 @@ class AssignmentPeriod(Period):
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
-        self._assign_pedestrians()
-        self._set_bike_vdfs()
-        self._assign_bikes()
-        return self.get_soft_mode_impedances()
+        return []
 
     def get_soft_mode_impedances(self):
         """Get travel impedance matrices for walk and bike.
@@ -186,7 +181,7 @@ class AssignmentPeriod(Period):
             Type (time/cost/dist) : dict
                 Assignment class (walk/bike) : numpy 2-d matrix
         """
-        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
+        return []
 
     def assign_trucks_init(self):
         self._set_car_vdfs(use_free_flow_speeds=True)
@@ -195,16 +190,10 @@ class AssignmentPeriod(Period):
         self._calc_background_traffic(include_trucks=True)
         self._set_car_vdfs()
 
-    def assign(self, modes: Iterable[str]
-            ) -> Dict[str, Dict[str, numpy.ndarray]]:
+    def assign(self, *args) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign cars and transit for one time period.
 
         Get travel impedance matrices for one time period from assignment.
-
-        Parameters
-        ----------
-        modes : Set of str
-            The assignment classes for which impedance matrices will be returned
 
         Returns
         -------
@@ -216,7 +205,8 @@ class AssignmentPeriod(Period):
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
         self._assign_transit(delete_strat_files=self._delete_strat_files)
-        mtxs = self._get_impedances(modes)
+        mtxs = self._get_impedances(
+            param.car_classes + param.local_transit_classes)
         self._check_congestion()
         for ass_cl in param.car_classes:
             del mtxs["dist"][ass_cl]
@@ -263,6 +253,7 @@ class AssignmentPeriod(Period):
             except KeyError:
                 pass
             for mtx_type, mtx in mtxs[mode].items():
+                output_od_los(mtx, self.mapping, mtx_type, mode)
                 if numpy.any(mtx > 1e10):
                     log.warn(f"Matrix with infinite values: {mtx_type} {mode}")
         impedance = {mtx_type: {mode: mtxs[mode][mtx_type]
@@ -277,6 +268,14 @@ class AssignmentPeriod(Period):
                       + f"is {mode.max_congestion:.0%} of free flow time")
             if mode.max_congestion == 0:
                 log.warn(f"No car congestion in time period {self.name}!")
+
+    @property
+    def mapping(self) -> Dict[int, int]:
+        """Dictionary of zone numbers and corresponding indices."""
+        mapping = {}
+        for idx, zone in enumerate(self.emme_scenario.zone_numbers):
+            mapping[zone] = idx
+        return mapping
 
     def calc_transit_cost(self, fares: pandas.DataFrame):
         """Insert line costs.
@@ -359,7 +358,6 @@ class AssignmentPeriod(Period):
         }
         park_and_ride_mode = network.mode(param.park_and_ride_mode)
         car_time_zero = []
-        car_time_ok = False
         for link in network.links():
             linktype = link.type % 100
             if link.type > 80 and linktype in param.roadclasses:
@@ -405,7 +403,6 @@ class AssignmentPeriod(Period):
                     car_time = link[car_time_attr]
                     if 0 < car_time < 1440:
                         link.data2 = (link.length / car_time) * 60
-                        car_time_ok = True
                     elif car_time == 0:
                         car_time_zero.append(link.id)
                     else:
@@ -418,14 +415,15 @@ class AssignmentPeriod(Period):
                 link.modes -= {main_mode, park_and_ride_mode}
         self.emme_scenario.publish_network(network)
         if car_time_zero and not use_free_flow_speeds:
-            if car_time_ok:
+            if len(car_time_zero) < 50000:
                 links = ", ".join(car_time_zero)
                 log.warn(
                     f"Car_time attribute on links {links} "
                      + "is zero. Free flow speed used on these links.")
             else:
-                log.warn(
-                    "No car times on links. Demand calculation not reliable!")
+                msg = "No car times on links. Demand calculation not reliable!"
+                log.error(msg)
+                raise ValueError(msg)
 
     def _set_transit_vdfs(self):
         log.info("Sets transit functions for scenario {}".format(

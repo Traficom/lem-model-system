@@ -190,10 +190,9 @@ vot_inv = {
 }
 congested_time_weight = 1.5
 freight_terminal_cost = {
-    'd': 0,
+    'D': 0,
     'J': 0,
-    'W': 0,
-    's': 0,
+    'W': 0
 }
 # Boarding penalties for different transit modes
 boarding_penalty = {
@@ -312,105 +311,140 @@ bike_dist = {
 # TODO: Trucks and vans
 volume_factors = {
     "car": {
-        "aht": 1. / 0.465,
-        "pt": 1. / 0.094,
-        "iht": 1. / 0.369,
+        "aht": 0.4878,
+        "pt": 0.0984,
+        "iht": 0.4310,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "car_work": {
-        "aht": 1. / 0.456,
-        "pt": 1. / 0.102,
-        "iht": 1. / 0.433,
+        "aht": 0.454,
+        "pt": 0.100,
+        "iht": 0.482,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "car_leisure": {
-        "aht": 1. / 0.488,
-        "pt": 1. / 0.089,
-        "iht": 1. / 0.289,
+        "aht": 0.617,
+        "pt": 0.0978,
+        "iht": 0.397,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "transit": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 0.546,
+        "pt": 0.167,
+        "iht": 0.404,
+        "it": 0.238,
+        "vrk": 1.0,
     },
     "transit_work": {
-        "aht": 1. / 0.445,
-        "pt": 1. / 0.103,
-        "iht": 1. / 0.414,
+        "aht": 0.532,
+        "pt": 0.167,
+        "iht": 0.432,
+        "it": 0.222,
+        "vrk": 1.0,
     },
     "transit_leisure": {
-        "aht": 1. / 0.571,
-        "pt": 1. / 0.117,
-        "iht": 1. / 0.373,
+        "aht": 0.845,
+        "pt": 0.167,
+        "iht": 0.340,
+        "it": 0.248,
+        "vrk": 1.0,
     },
     "car_first_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 0.478,
+        "pt": 0.109,
+        "iht": 0.405,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "car_last_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "aht": 0.478,
+        "pt": 0.109,
+        "iht": 0.405,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "train": {
-        "aht": 2.8,
-        "pt": 10,
-        "iht": 3.4,
+        "aht": 0.429,
+        "pt": 0.167,
+        "iht": 0.407,
+        "it": 0.255,
+        "vrk": 1.0,
     },
     "long_d_bus": {
-        "aht": 2.8,
-        "pt": 10,
-        "iht": 3.4,
+        "aht": 0.429,
+        "pt": 0.167,
+        "iht": 0.407,
+        "it": 0.255,
+        "vrk": 1.0,
     },
     "airplane": {
-        "aht": 2.8,
-        "pt": 10,
-        "iht": 3.4,
+        "aht": 0.429,
+        "pt": 0.167,
+        "iht": 0.407,
+        "it": 0.255,
+        "vrk": 1.0,
     },
     "bike": {
-        "aht": 1. / 0.604,
-        "pt": 1. / 0.105,
-        "iht": 1. / 0.430,
+        "aht": 0.538,
+        "pt": 0.110,
+        "iht": 0.404,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "bike_work": {
-        "aht": 1. / 0.542,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.500,
+        "aht": 0.538,
+        "pt": 0.134,
+        "iht": 0.424,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "bike_leisure": {
-        "aht": 1. / 0.725,
-        "pt": 1. / 0.103,
-        "iht": 1. / 0.332,
+        "aht": 0.528,
+        "pt": 0.0957,
+        "iht": 0.386,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "trailer_truck": {
-        "aht": 1 / 0.3,
-        "pt": 1 / 0.1,
-        "iht": 1 / 0.3,
+        "aht": 0.3,
+        "pt": 0.1,
+        "iht": 0.3,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "semi_trailer": {
-        "aht": 1 / 0.3,
-        "pt": 1 / 0.1,
-        "iht": 1 / 0.3,
+        "aht": 0.3,
+        "pt": 0.1,
+        "iht": 0.3,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "truck": {
-         "aht": 1 / 0.3,
-        "pt": 1 / 0.1,
-        "iht": 1 / 0.3,
+        "aht": 0.3,
+        "pt": 0.1,
+        "iht": 0.3,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "van": {
-        "aht": 1 / 0.3,
-        "pt": 1 / 0.1,
-        "iht": 1 / 0.3,
+        "aht": 0.3,
+        "pt": 0.1,
+        "iht": 0.3,
+        "it": 0.3,
+        "vrk": 1.0,
     },
     "bus": {
-        "aht": 1 / 0.497, 
-        "pt": 1 / 0.090, 
-        "iht": 1 / 0.497,
+        "aht": 0.546,
+        "pt": 0.167,
+        "iht": 0.404,
+        "it": 0.238,
+        "vrk": 1.0,
     },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]
-for mode in volume_factors:
-        volume_factors[mode]["vrk"] = 1
-        volume_factors[mode]["it"] = 0
 # Factor for converting weekday traffic into yearly day average
 years_average_day_factor = 0.85
 # Factor for converting day traffic into 7:00-22:00 traffic
@@ -477,15 +511,11 @@ assignment_classes = {
     "hb_leisure": "leisure",
     "hb_sport": "leisure",
     "hb_visit": "leisure",
-    "hb_overnight": "leisure",
+    "hb_leisure_overnight": "leisure",
     "hb_business": "work",
     "wb_business": "work",
     "wb_other": "leisure",
     "ob_other": "leisure",
-    "hb_work_long": "work",
-    "hb_business_long": "work",
-    "hb_private_day": "leisure",
-    "hb_private_week": "leisure",
     "external": "leisure",
 }
 main_mode = 'h'
@@ -521,6 +551,7 @@ local_transit_modes = [
     'r',
     't',
     'w',
+    'e',
 ]
 long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],
@@ -537,13 +568,32 @@ aux_modes = [
 park_and_ride_mode = 'u'
 freight_modes = {
     "freight_train": {
-        'd': "@diesel_train",
+        'D': "@diesel_train",
         'J': "@electric_train",
     },
     "ship": {
-        'W': "@ship_4m",
-        's': "@ship_9m",
+        'W': "@ship",
     },
+}
+freight_marine_modes = {
+    "container_ship": {
+        "C": "@container_ship"
+    },
+    "general_cargo": {
+        "G": "@general_cargo"
+    },
+    "lng_carrier": {
+        "L": "@lng_carrier"
+    },
+    "oil_tanker": {
+        "O": "@oil_tanker"
+    },
+    "product_tanker": {
+        "P": "@product_tanker"
+    },
+    "roro_vessel": {
+        "R": "@roro_vessel"
+    }
 }
 external_modes = [
     "car_leisure",
@@ -580,6 +630,10 @@ transit_delay_attr = "us1"
 line_penalty_attr = "us2"
 line_operator_attr = "ut1"
 effective_headway_attr = "ut2"
+ship_attrs = {
+    "dist": "ut1",
+    "frequency": "ut2",
+}
 boarding_penalty_attr = "@boa_"
 dist_fare_attr = "@dist_fare"
 board_fare_attr = "@board_fare"

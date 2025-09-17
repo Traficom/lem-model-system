@@ -75,12 +75,14 @@ class ModelSystem:
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
-        cost_data = json.loads(cost_data_path.read_text("utf-8"))
+        cost_data: dict = json.loads(cost_data_path.read_text("utf-8"))
         self.car_dist_cost = cost_data["car_cost"]
         self.transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
+        extra_dummies = cost_data.get("area_calibration", {})
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, submodel)
+            zone_data_path, self.zone_numbers, submodel,
+            extra_dummies=extra_dummies)
         self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
                                        * self.car_dist_cost["car_work"])
 
@@ -94,9 +96,16 @@ class ModelSystem:
         other_work_purposes = []
         other_leisure_purposes = []
         for file in parameters_path.rglob("*.json"):
+            specification = json.loads(file.read_text("utf-8"))
+            for dummies in extra_dummies.values():
+                for subarea in dummies:
+                    for mode, coeff in dummies[subarea].items():
+                        if mode in specification["mode_choice"]:
+                            (specification["mode_choice"][mode]
+                                          ["generation"][subarea]) = coeff
             purpose = new_tour_purpose(
-                json.loads(file.read_text("utf-8")), self.zdata_forecast,
-                self.resultdata, cost_data["cost_changes"])
+                specification, self.zdata_forecast, self.resultdata,
+                cost_data["cost_changes"])
             required_time_periods = sorted(
                 {tp for m in purpose.impedance_share.values() for tp in m})
             if required_time_periods == sorted(assignment_model.time_periods):
@@ -154,7 +163,6 @@ class ModelSystem:
 
         # Mode and destination probability matrices are calculated first,
         # as logsums from probability calculation are used in tour generation.
-        self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
@@ -255,8 +263,8 @@ class ModelSystem:
                                      and car_time_files is None):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
-                        transport_classes=ap.transport_classes) as mtx:
-                    for ass_class in ap.transport_classes:
+                        transport_classes=ap.assignment_modes) as mtx:
+                    for ass_class in ap.assignment_modes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
         if self.long_dist_matrices is not None:
@@ -267,6 +275,10 @@ class ModelSystem:
             self.dtm.init_demand(param.truck_classes)
             self._add_external_demand(
                 self.freight_matrices, param.truck_classes)
+
+        # Add beeline distance dummy
+        idx = numpy.isin(self.zone_numbers, self.zdata_forecast.zone_numbers)
+        self.zdata_forecast["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
 
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
@@ -325,8 +337,7 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
-        self.dtm.init_demand(
-            [mode for mode in self.travel_modes if mode != "walk"])
+        self.dtm.init_demand({**self.travel_modes, "van": True})
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
 
@@ -391,7 +402,7 @@ class ModelSystem:
         tp = ap.name
         demand_sum_string = tp
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in ap.assignment_modes.keys():
+            for ass_class in ap.assignment_modes:
                 demand = self.dtm.demand[tp][ass_class]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
