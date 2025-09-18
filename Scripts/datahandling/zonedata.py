@@ -55,13 +55,13 @@ class ZoneData:
                     self.share[col] = data[col]
                 else:
                     self[col] = data[col]
-        self["car_density"].clip(upper=1, inplace=True)
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.nr_zones = len(self.zone_numbers)
         self._add_transformations(data)
 
     def _add_transformations(self, data):
+        self["car_density"].clip(upper=1, inplace=True)
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
