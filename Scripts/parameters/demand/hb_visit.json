@@ -2,7 +2,7 @@
     "name": "hb_visit",
     "orig": "home",
     "dest": "population",
-    "area": "all",
+    "area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_leisure": {

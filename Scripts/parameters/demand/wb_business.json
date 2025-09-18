@@ -5,7 +5,7 @@
     "source": [
         "hb_work"
     ],
-    "area": "all",
+    "area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_work": {

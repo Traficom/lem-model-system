@@ -2,7 +2,7 @@
     "name": "hb_work",
     "orig": "home",
     "dest": "work",
-    "area": "all",
+    "area": "domestic",
     "struct": "dest>mode",
     "impedance_share": {
         "car_work": {

@@ -7,7 +7,7 @@
         "hb_edu_basic",
         "hb_edu_student"
     ],
-    "area": "all",
+    "area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_leisure": {

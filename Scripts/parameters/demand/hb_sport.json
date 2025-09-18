@@ -2,7 +2,7 @@
     "name": "hb_sport",
     "orig": "home",
     "dest": "sport",
-    "area": "all",
+    "area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_leisure": {
