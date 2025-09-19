@@ -2,7 +2,8 @@
     "name": "hb_edu_basic",
     "orig": "home",
     "dest": "students_students_comprehensive",
-    "area": "domestic",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_pax": {

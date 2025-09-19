@@ -7,7 +7,8 @@
         "hb_sport",
         "hb_visit"
     ],
-    "area": "domestic",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_leisure": {

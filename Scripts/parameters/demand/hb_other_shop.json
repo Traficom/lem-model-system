@@ -2,7 +2,8 @@
     "name": "hb_other_shop",
     "orig": "home",
     "dest": "wrk_shop",
-    "area": "domestic",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
     "impedance_share": {
         "car_leisure": {

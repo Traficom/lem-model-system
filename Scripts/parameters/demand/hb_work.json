@@ -2,7 +2,8 @@
     "name": "hb_work",
     "orig": "home",
     "dest": "work",
-    "area": "domestic",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "dest>mode",
     "impedance_share": {
         "car_work": {

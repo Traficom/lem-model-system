@@ -54,7 +54,7 @@ class Purpose:
         self.name = specification["name"]
         self.orig = specification["orig"]
         self.dest = specification["dest"]
-        self.area = specification["area"]
+        self.area = specification["generation_area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
@@ -193,8 +193,8 @@ def new_tour_purpose(*args):
             Origin of the tours (home/source)
         "dest" : str
             Destination of the tours (work/other/source/...)
-        "area" : str
-            Model area (metropolitan/peripheral)
+        "generation_area" : str
+            Model area (domestic/foreign)
         "struct" : str
             Model structure (dest>mode/mode>dest)
         "impedance_share" : dict
@@ -216,8 +216,7 @@ def new_tour_purpose(*args):
     attempt_calibration(specification)
     if "sec_dest" in specification:
         purpose = SecDestPurpose(*args)
-    elif (specification["area"] == "peripheral"
-          or specification["dest"] == "source"
+    elif (specification["dest"] == "source"
           or specification["name"] == "oop"):
         purpose = SimpleTourPurpose(*args)
     else:
