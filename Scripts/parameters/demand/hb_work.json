@@ -4,6 +4,13 @@
     "dest": "work",
     "area": "all",
     "struct": "dest>mode",
+    "generation": {
+        "age_7_17": 0.0046,
+        "age_18_29": 0.2808,
+        "age_30_49": 0.393,
+        "age_50_64": 0.3071,
+        "age_65_99": 0.0149
+    },
     "impedance_share": {
         "car_work": {
             "aht": [

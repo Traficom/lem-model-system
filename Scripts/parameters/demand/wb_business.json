@@ -7,6 +7,9 @@
     ],
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "hb_work": 0.0454
+    },
     "impedance_share": {
         "car_work": {
             "aht": [

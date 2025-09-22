@@ -9,6 +9,11 @@
     ],
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "hb_leisure": 0.0206,
+        "hb_sport": 0.0107,
+        "hb_visit": 0.0544
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [

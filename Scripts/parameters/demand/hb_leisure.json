@@ -4,6 +4,13 @@
     "dest": "leisure",
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "age_7_17": 0.1512,
+        "age_18_29": 0.0936,
+        "age_30_49": 0.1036,
+        "age_50_64": 0.1174,
+        "age_65_99": 0.1316
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [

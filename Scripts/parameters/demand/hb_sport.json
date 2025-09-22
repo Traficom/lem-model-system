@@ -4,6 +4,13 @@
     "dest": "sport",
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "age_7_17": 0.1535,
+        "age_18_29": 0.0724,
+        "age_30_49": 0.096,
+        "age_50_64": 0.0647,
+        "age_65_99": 0.0545
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [

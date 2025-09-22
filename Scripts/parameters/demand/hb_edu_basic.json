@@ -4,6 +4,13 @@
     "dest": "students_students_comprehensive",
     "area": "all",
     "struct": "mode>dest",
+    "generation": {
+        "age_7_17": 0.396,
+        "age_18_29": 0.0024,
+        "age_30_49": 0.0077,
+        "age_50_64": 0.0003,
+        "age_65_99": 0.0005
+    },
     "impedance_share": {
         "car_pax": {
             "aht": [
