@@ -379,8 +379,9 @@ class TourPurpose(Purpose):
         # mode probability for each intermodal class in EMME assignment
         if "vrk" in impedance:
             for main_mode, split in acc_splits.items():
+                prob = self.prob[main_mode]
                 for acc_mode in split:
-                    self.prob[acc_mode] = split[acc_mode] * self.prob[main_mode]
+                    self.prob[acc_mode] = split[acc_mode] * prob
 
     def split_connection_mode(self, impedance, pt_mode, car_acc_modes):
         access_modes = car_acc_modes + [pt_mode]
