@@ -47,7 +47,8 @@ class GenerationModel:
         """Generate and add tours to zone vector."""
         b = self.param
         for i in b:
-            self.tours += b[i] * self.zone_data[i][self.purpose.bounds]
+            self.tours += b[i] * self.zone_data.get_data(
+                i, self.purpose.bounds, generation=True)
 
     def get_tours(self):
         """Get vector of tour numbers per zone.
