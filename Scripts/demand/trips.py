@@ -12,9 +12,10 @@ import utils.log as log
 import parameters.zone as param
 from parameters.tour_generation import tour_combination_area
 from datatypes.purpose import SecDestPurpose
-from models import car_ownership, linear, tour_combinations
+from models import linear, tour_combinations
+from models.car_ownership import CarOwnershipModel
 from models.generation import TourCombinationGeneration
-from parameters.car import cars_hh1, cars_hh2, cars_hh3
+from parameters.car import car_ownership
 
 
 
@@ -59,13 +60,9 @@ class DemandModel:
         self.bounds = slice(*zone_data.all_zone_numbers.searchsorted(
             [bounds[0], bounds[-1]]))
         self.car_ownership_models = {
-            "hh1": car_ownership.CarOwnershipModel(cars_hh1, zone_data, 
-                                            self.bounds, self.resultdata),
-            "hh2": car_ownership.CarOwnershipModel(cars_hh2, zone_data, 
-                                            self.bounds, self.resultdata),
-            "hh3": car_ownership.CarOwnershipModel(cars_hh3, zone_data, 
-                                            self.bounds, self.resultdata)
-        }
+            hh_size: CarOwnershipModel(
+                car_ownership[hh_size], zone_data, self.bounds, self.resultdata)
+            for hh_size in car_ownership}
     
         self.tour_generation_model = tour_combinations.TourCombinationModel(
             self.zone_data)
