@@ -2,7 +2,8 @@
     "name": "hb_work",
     "orig": "home",
     "dest": "work",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "dest>mode",
     "generation": {
         "age_7_17": 0.0046,

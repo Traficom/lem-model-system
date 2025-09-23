@@ -2,7 +2,8 @@
     "name": "hb_visit",
     "orig": "home",
     "dest": "population",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
     "generation": {
         "age_7_17": 0.1351,

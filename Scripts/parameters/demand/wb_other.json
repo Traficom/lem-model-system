@@ -7,7 +7,8 @@
         "hb_edu_basic",
         "hb_edu_student"
     ],
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
     "generation": {
         "hb_work": 0.0687,
