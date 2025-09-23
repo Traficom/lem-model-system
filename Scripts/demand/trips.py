@@ -192,6 +192,9 @@ class DemandModel:
                                     + zd["sh_pop_hh3"]*prob["hh3"][1])
         zd.share["sh_cars2_hh2"] = (zd["sh_pop_hh2"]*prob["hh2"][2]
                                     + zd["sh_pop_hh3"]*prob["hh3"][2])
+        zd.share["sh_car"] = (zd["sh_cars1_hh1"]
+                              + zd["sh_cars1_hh2"]
+                              + zd["sh_cars2_hh2"])
         result = {"cars": numpy.zeros_like(zd["population"])}
         for n_cars in range(3):
             result[f"sh_cars{n_cars}"] = numpy.zeros_like(zd["population"])
