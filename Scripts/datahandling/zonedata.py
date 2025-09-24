@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, List, Sequence, Union, Dict
+from typing import Any, List, Sequence, Union, Dict, Optional
 from pathlib import Path
 from collections import defaultdict
 import numpy # type: ignore
@@ -32,6 +32,8 @@ class ZoneData:
             Name of aggregation level
         value : list
             Additional dummy variables to create
+    car_dist_cost : float
+        Car cost (eur) per km
     """
     def __init__(self, *args, **kwargs):
         self._init_data(*args, **kwargs)
@@ -39,7 +41,8 @@ class ZoneData:
     def _init_data(self, data_path: Path, zone_numbers: Sequence,
                  zone_mapping: str, data_type: str = "domestic_travel",
                  model_area: str = "domestic",
-                 extra_dummies: Dict[str, Sequence[str]] = {}):
+                 extra_dummies: Dict[str, Sequence[str]] = {},
+                 car_dist_cost: Optional[float] = None):
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
@@ -65,11 +68,12 @@ class ZoneData:
         self.zones = {number: Zone(number, self.aggregations)
             for number in self.zone_numbers}
         self.nr_zones = len(self.zone_numbers)
-        self._add_transformations(data, extra_dummies)
+        self._add_transformations(data, extra_dummies, car_dist_cost)
 
     def _add_transformations(self,
                              data: pandas.DataFrame,
-                             extra_dummies: Dict[str, Sequence[str]]):
+                             extra_dummies: Dict[str, Sequence[str]],
+                             car_dist_cost: float):
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
@@ -104,6 +108,7 @@ class ZoneData:
         # Two-way intrazonal distances from building distances
         self["dist"] = data["avg_building_distance"] * 2
         self["time"] = self["dist"] / (20/60) # 20 km/h
+        self["cost"] = car_dist_cost * self["dist"]
         # Unavailability of intrazonal tours
         self["within_zone_inf"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
         self["within_zone_inf"][numpy.diag_indices(self.nr_zones)] = numpy.inf
