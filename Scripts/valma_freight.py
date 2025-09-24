@@ -64,7 +64,7 @@ def main(args):
     for purpose in purposes.values():
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
-        if purpose.logistics_module:
+        if hasattr(purpose, "logistics_module"):
             lcs_areas = zonedata[f"lc_area_{purpose.name}"] if hasattr(zonedata, f"lc_area_{purpose.name}") else zonedata["lc_area"]
             lcs_sizes = lcs_areas[lcs_areas > 0]
             purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
