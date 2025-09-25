@@ -137,10 +137,12 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._prepare_cars(
             dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
             truck_classes=[])
+        self.car_mode = self.assignment_modes.pop("car_leisure")
         self._prepare_other(day_scenario, save_matrices)
 
     def init_assign(self):
         self._init_assign_transit()
+        self.car_mode.get_matrices()
         return []
 
     def get_soft_mode_impedances(self):
