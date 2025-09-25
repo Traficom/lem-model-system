@@ -37,8 +37,11 @@ class Purpose:
             Model area
         "impedance_share" : dict
             Impedance shares
-    zone_data : ZoneData
-        Data used for all demand calculations
+    zone_datas : Dict
+        key : str
+            Model area (domestic/foreign)
+        val : ZoneData
+            Data used for all demand calculations
     resultdata : ResultsData (optional)
         Writer object to result directory
     mtx_adjustment : dict (optional)
@@ -48,8 +51,7 @@ class Purpose:
 
     def __init__(self, 
                  specification: Dict[str,Optional[str]],
-                 generation_zone_data: ZoneData,
-                 attraction_zone_data: ZoneData,
+                 zone_datas: Dict[str, ZoneData],
                  resultdata: Optional[ResultsData] = None,
                  mtx_adjustment: Optional[Dict] = None):
         self.name = specification["name"]
@@ -59,13 +61,13 @@ class Purpose:
         self.attraction_area = specification["attraction_area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
-        zone_numbers = generation_zone_data.all_zone_numbers
+        self.generation_zone_data = zone_datas[self.generation_area]
+        self.attraction_zone_data = zone_datas[self.attraction_area]
+        zone_numbers = self.generation_zone_data.all_zone_numbers
         self.bounds = slice(*zone_numbers.searchsorted(
             param.purpose_areas[self.generation_area]))
         self.dest_interval = slice(*zone_numbers.searchsorted(
             param.purpose_areas[self.attraction_area]))
-        self.generation_zone_data = generation_zone_data
-        self.attraction_zone_data = attraction_zone_data
         self.resultdata = resultdata
         self.mtx_adjustment = mtx_adjustment
         self.generated_tours: Dict[str, numpy.array] = {}
@@ -233,20 +235,20 @@ class TourPurpose(Purpose):
     ----------
     specification : dict
         See `new_tour_purpose()`
-    zone_data : ZoneData
-        Data used for all demand calculations
+    zone_datas : Dict
+        key : str
+            Model area (domestic/foreign)
+        val : ZoneData
+            Data used for all demand calculations
     resultdata : ResultData
         Writer object for result directory
     mtx_adjustment : dict (optional)
         Dict of matrix adjustments for testing elasticities
     """
 
-    def __init__(
-            self, specification, generation_zone_data, attraction_zone_data,
-            resultdata, mtx_adjustment):
+    def __init__(self, specification, zone_datas, resultdata, mtx_adjustment):
         Purpose.__init__(
-            self, specification, generation_zone_data, attraction_zone_data,
-            resultdata, mtx_adjustment)
+            self, specification, zone_datas, resultdata, mtx_adjustment)
         if self.orig == "source":
             self.gen_model = generation.NonHomeGeneration(
                 self, resultdata, specification["generation"])
@@ -256,7 +258,7 @@ class TourPurpose(Purpose):
         else:
             self.gen_model = generation.GenerationModel(
                 self, resultdata, specification["generation"])
-        args = (self, specification, attraction_zone_data, resultdata)
+        args = (self, specification, self.attraction_zone_data, resultdata)
         if self.name == "sop":
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":

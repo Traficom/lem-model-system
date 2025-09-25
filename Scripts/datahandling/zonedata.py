@@ -242,7 +242,7 @@ class ZoneData:
             if self.mapping.name == submodel.lower().replace('-', '_'):
                 return mapping == submodel
         else:
-            return slice(None)
+            return pandas.Series(True, self.zone_numbers)
 
 
 class FreightZoneData(ZoneData):
