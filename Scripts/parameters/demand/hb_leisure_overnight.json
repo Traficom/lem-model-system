@@ -109,7 +109,7 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "logsum": 0.1461
+                "logsum": -0.1461
             },
             "log": {
                 "attraction_size": 1
@@ -128,7 +128,7 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "logsum": 0.1461
+                "logsum": -0.1461
             },
             "log": {
                 "attraction_size": 1
@@ -147,7 +147,7 @@
                 "within_zone_inf": -1
             },
             "impedance": {
-                "logsum": 0.1461
+                "logsum": -0.1461
             },
             "log": {
                 "attraction_size": 1
@@ -234,7 +234,7 @@
             "individual_dummy": {}
         },
         "car_leisure": {
-            "constant": 10.631,
+            "constant": -2.518,
             "generation": {},
             "attraction": {},
             "impedance": {},
@@ -248,7 +248,7 @@
             }
         },
         "car_pax": {
-            "constant": 16.391,
+            "constant": 3.242,
             "generation": {},
             "attraction": {},
             "impedance": {},
