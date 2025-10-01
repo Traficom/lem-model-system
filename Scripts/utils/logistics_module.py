@@ -68,13 +68,16 @@ class DetourDistributionInference:
         
         weighted = self.compute_utilities(origin_indices=origin_set, destination_indices=destination_set)
         
-        # Now you have 2 top-level utilities: direct_utility vs. detour_utility
-        top_level_utilities = np.stack([-weighted[:, -1] / self.scale, self.logsumexp(-weighted[:, :-1] / self.scale, axis=1)], axis=1)
+        # Now you have 2 top-level utilities: direct_util vs. detour_util_top
+        detour_util = -weighted[:, :-1] / self.scale
+        detour_util_top = self.logsumexp(detour_util, axis=1)
+        direct_util = -weighted[:, -1] / self.scale
+        top_level_utilities = np.stack([direct_util, detour_util_top], axis=1)
         p_top = self.softmax(top_level_utilities, axis=1)
         
         # Combine into final choice probabilities
         p_direct = np.expand_dims(p_top[:, 0], axis=1)
-        p_detour = np.expand_dims(p_top[:, 1], axis=1) * self.softmax(-weighted[:, :-1] / self.scale, axis=1)
+        p_detour = np.expand_dims(p_top[:, 1], axis=1) * np.exp(detour_util - np.expand_dims(detour_util_top, axis=1))  
         
         probs_batch = np.concatenate([p_detour, p_direct], axis=1)
         return probs_batch
