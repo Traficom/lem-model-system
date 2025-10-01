@@ -31,7 +31,7 @@ class DetourDistributionInference:
 
     def softmax(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
         """Compute softmax values."""
-        exp_x = np.exp(x - np.max(x, axis=axis, keepdims=True))
+        exp_x = np.exp(x)
         return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
     def logsumexp(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
