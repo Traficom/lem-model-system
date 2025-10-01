@@ -79,9 +79,11 @@ class DetourDistributionInference:
         probs_batch = np.concatenate([p_detour, p_direct], axis=1)
         return probs_batch
     
-def process_batch(args):
+def process_batch(origin_offset: int, batch_size: int, n: int, k_plus1: int,
+                  model: DetourDistributionInference, demand: np.ndarray,
+                  lcs: Sequence[int], final_demand: np.ndarray,
+                  total_per_route: np.ndarray, lock: Lock):
     """Process a single batch of origins."""
-    origin_offset, batch_size, n, k_plus1, model, demand, lcs, final_demand, total_per_route, lock = args
     
     current_batch_size = min(batch_size, n - origin_offset)
     
