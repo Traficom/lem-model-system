@@ -590,12 +590,12 @@ class FreightPurpose(Purpose):
 
         if specification.get("logistics_module"):
             self.logistics_module = specification["logistics_module"]
-            self.logistics_params = DDMParameters(w1a=self.logistics_module["orig_lc_detour"],
-                                                  w1b=self.logistics_module["lc_dest_detour"],
-                                                  w2=self.logistics_module["constant_detour"],
-                                                  w3=self.logistics_module["orig_dest_direct"],
-                                                  w4=self.logistics_module["constant_direct"],
-                                                  w5=self.logistics_module["size_factor"])
+            self.logistics_params = DDMParameters(orig_lc_detour=self.logistics_module["orig_lc_detour"],
+                                                  lc_dest_detour=self.logistics_module["lc_dest_detour"],
+                                                  constant_detour=self.logistics_module["constant_detour"],
+                                                  orig_dest_direct=self.logistics_module["orig_dest_direct"],
+                                                  constant_direct=self.logistics_module["constant_direct"],
+                                                  size_factor=self.logistics_module["size_factor"])
 
     def calc_traffic(self, impedance: dict):
         """Calculate freight traffic matrix.

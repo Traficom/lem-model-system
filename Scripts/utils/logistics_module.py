@@ -4,25 +4,25 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
 class DDMParameters(NamedTuple):
-    w1a: float
-    w1b: float
-    w2: float
-    w3: float
-    w4: float
-    w5: float
+    orig_lc_detour: float
+    lc_dest_detour: float
+    constant_detour: float
+    orig_dest_direct: float
+    constant_direct: float
+    size_factor: float
     
 class DetourDistributionInference:
     def __init__(self, cost_matrix: np.ndarray, ddm_params: DDMParameters, lc_indices: Sequence[int], lc_sizes: Sequence[int]) -> None:
-        self.lc_size_factors = ddm_params.w5 * np.log(lc_sizes)
+        self.lc_size_factors = ddm_params.size_factor * np.log(lc_sizes)
         self.cost_matrix = cost_matrix
         self.lc_indices = lc_indices
         self.lc_sizes = lc_sizes
-        self.w1a = ddm_params.w1a
-        self.w1b = ddm_params.w1b
-        self.w2 = ddm_params.w2
-        self.w3 = ddm_params.w3
-        self.w4 = ddm_params.w4
-        self.w5 = ddm_params.w5
+        self.orig_lc_detour = ddm_params.orig_lc_detour
+        self.lc_dest_detour = ddm_params.lc_dest_detour
+        self.constant_detour = ddm_params.constant_detour
+        self.orig_dest_direct = ddm_params.orig_dest_direct
+        self.constant_direct = ddm_params.constant_direct
+        self.size_factor = ddm_params.size_factor
         self.temperature = 5.0
 
     def sigmoid(self, x: np.ndarray) -> np.ndarray:
@@ -50,12 +50,12 @@ class DetourDistributionInference:
         lc_exp = np.broadcast_to(self.lc_indices, (len(origin_indices), k)) # Shape: (n, k)
         
         # weighted costs for k logistics centers
-        detour_size_factor = (self.sigmoid(self.w1a) * self.cost_matrix[o_idx_exp, lc_exp] +
-                 self.sigmoid(self.w1b) * self.cost_matrix[lc_exp, d_idx_exp] +
-                 self.w2) + self.lc_size_factors # Shape: (n, k)
+        detour_size_factor = (self.sigmoid(self.orig_lc_detour) * self.cost_matrix[o_idx_exp, lc_exp] +
+                 self.sigmoid(self.lc_dest_detour) * self.cost_matrix[lc_exp, d_idx_exp] +
+                 self.constant_detour) + self.lc_size_factors # Shape: (n, k)
         
         # direct cost with no scaling
-        direct = self.sigmoid(self.w3) * self.cost_matrix[origin_indices, destination_indices] + self.w4
+        direct = self.sigmoid(self.orig_dest_direct) * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
         
         # combine detour and direct
         return np.concatenate([detour_size_factor, np.expand_dims(direct, axis=1)], axis=1)
