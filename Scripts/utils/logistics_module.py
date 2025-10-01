@@ -23,7 +23,7 @@ class DetourDistributionInference:
         self.orig_dest_direct = ddm_params.orig_dest_direct
         self.constant_direct = ddm_params.constant_direct
         self.size_factor = ddm_params.size_factor
-        self.temperature = 5.0
+        self.scale = 5.0
 
     def sigmoid(self, x: np.ndarray) -> np.ndarray:
         """Compute sigmoid function."""
@@ -39,9 +39,9 @@ class DetourDistributionInference:
         max_x = np.max(x, axis=axis, keepdims=True)
         return np.log(np.sum(np.exp(x - max_x), axis=axis)) + np.squeeze(max_x)
 
-    def compute_weighted(self, origin_indices: Union[Sequence[int], np.ndarray] = None, 
+    def compute_utilities(self, origin_indices: Union[Sequence[int], np.ndarray] = None, 
                         destination_indices: Union[Sequence[int], np.ndarray] = None) -> np.ndarray:
-        """Compute weighted detour and direct costs for given origins and destinations."""
+        """Compute utilities for detour and direct routes for given origins and destinations."""
         k = self.lc_indices.shape[0]
         
         # Expand dimensions for broadcasting
@@ -66,15 +66,15 @@ class DetourDistributionInference:
         # compute only for destination with data
         destination_set = probs_indices[:,1]
         
-        weighted = self.compute_weighted(origin_indices=origin_set, destination_indices=destination_set)
+        weighted = self.compute_utilities(origin_indices=origin_set, destination_indices=destination_set)
         
         # Now you have 2 top-level utilities: direct_cost vs. detour_utility
-        top_level_utilities = np.stack([-weighted[:, -1] / self.temperature, self.logsumexp(-weighted[:, :-1] / self.temperature, axis=1)], axis=1)
+        top_level_utilities = np.stack([-weighted[:, -1] / self.scale, self.logsumexp(-weighted[:, :-1] / self.scale, axis=1)], axis=1)
         p_top = self.softmax(top_level_utilities, axis=1)
         
         # Combine into final choice probabilities
         p_direct = np.expand_dims(p_top[:, 0], axis=1)
-        p_detour = np.expand_dims(p_top[:, 1], axis=1) * self.softmax(-weighted[:, :-1] / self.temperature, axis=1)
+        p_detour = np.expand_dims(p_top[:, 1], axis=1) * self.softmax(-weighted[:, :-1] / self.scale, axis=1)
         
         probs_batch = np.concatenate([p_detour, p_direct], axis=1)
         return probs_batch
@@ -83,20 +83,20 @@ def process_batch(args):
     """Process a single batch of origins."""
     origin_offset, batch_size, n, k_plus1, model, demand, lcs, final_demand, total_per_route, lock = args
     
-    B = min(batch_size, n - origin_offset)
+    current_batch_size = min(batch_size, n - origin_offset)
     
     # Create indices using meshgrid
-    origin_indices = np.arange(origin_offset, origin_offset + B, dtype=np.int32)
+    origin_indices = np.arange(origin_offset, origin_offset + current_batch_size, dtype=np.int32)
     dest_indices = np.arange(n, dtype=np.int32)
     o_grid, d_grid = np.meshgrid(origin_indices, dest_indices, indexing='ij')
     eval_indices = np.stack([o_grid.ravel(), d_grid.ravel()], axis=1)
     
     # Get probabilities and reshape
     probs_batch_flat = model.forward(probs_indices=eval_indices)
-    probs_batch = probs_batch_flat.reshape(B, n, k_plus1)
+    probs_batch = probs_batch_flat.reshape(current_batch_size, n, k_plus1)
     
     # Get demand batch and expand dimensions
-    demand_batch = demand[origin_offset:origin_offset+B, :, np.newaxis]
+    demand_batch = demand[origin_offset:origin_offset+current_batch_size, :, np.newaxis]
     
     # Compute distribution using broadcasting
     dist_batch = demand_batch * probs_batch
@@ -110,12 +110,12 @@ def process_batch(args):
     
     # Update shared arrays with lock to ensure thread safety
     with lock:
-        final_demand[origin_offset:origin_offset+B, lcs] += orig_to_c
+        final_demand[origin_offset:origin_offset+current_batch_size, lcs] += orig_to_c
         final_demand[lcs] += c_to_dest.T
-        final_demand[origin_offset:origin_offset+B, :] += direct
+        final_demand[origin_offset:origin_offset+current_batch_size, :] += direct
         total_per_route += route_totals
     
-    return origin_offset, B
+    return origin_offset, current_batch_size
 
 def process_logistics_inference(model: DetourDistributionInference, n_zones: int, demand: np.ndarray) -> None:
 
