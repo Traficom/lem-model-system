@@ -49,16 +49,16 @@ class DetourDistributionInference:
         d_idx_exp = np.expand_dims(destination_indices, axis=1) # Shape: (n, 1)
         lc_exp = np.broadcast_to(self.lc_indices, (len(origin_indices), k)) # Shape: (n, k)
         
-        # weighted costs for k logistics centers
-        detour_size_factor = (self.sigmoid(self.orig_lc_detour) * self.cost_matrix[o_idx_exp, lc_exp] +
+        # utilities for routes through k logistics centers
+        detour_utilities = (self.sigmoid(self.orig_lc_detour) * self.cost_matrix[o_idx_exp, lc_exp] +
                  self.sigmoid(self.lc_dest_detour) * self.cost_matrix[lc_exp, d_idx_exp] +
                  self.constant_detour) + self.lc_size_factors # Shape: (n, k)
         
-        # direct cost with no scaling
-        direct = self.sigmoid(self.orig_dest_direct) * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
+        # utilities for direct routes
+        direct_utilities = self.sigmoid(self.orig_dest_direct) * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
         
         # combine detour and direct
-        return np.concatenate([detour_size_factor, np.expand_dims(direct, axis=1)], axis=1)
+        return np.concatenate([detour_utilities, np.expand_dims(direct_utilities, axis=1)], axis=1)
 
     def forward(self, probs_indices: np.ndarray) -> np.ndarray:
         # compute only for origins with data
@@ -68,7 +68,7 @@ class DetourDistributionInference:
         
         weighted = self.compute_utilities(origin_indices=origin_set, destination_indices=destination_set)
         
-        # Now you have 2 top-level utilities: direct_cost vs. detour_utility
+        # Now you have 2 top-level utilities: direct_utility vs. detour_utility
         top_level_utilities = np.stack([-weighted[:, -1] / self.scale, self.logsumexp(-weighted[:, :-1] / self.scale, axis=1)], axis=1)
         p_top = self.softmax(top_level_utilities, axis=1)
         
