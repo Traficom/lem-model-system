@@ -65,9 +65,9 @@ class DetourDistributionInference:
         weighted = self.compute_utilities(origin_indices=origin_set, destination_indices=destination_set)
         
         # Now you have 2 top-level utilities: direct_util vs. detour_util_top
-        detour_util = -weighted[:, :-1] / self.scale
+        detour_util = weighted[:, :-1] / self.scale
         detour_util_top = self.logsumexp(detour_util, axis=1)
-        direct_util = -weighted[:, -1] / self.scale
+        direct_util = weighted[:, -1] / self.scale
         top_level_utilities = np.stack([direct_util, detour_util_top], axis=1)
         p_top = self.softmax(top_level_utilities, axis=1)
         
