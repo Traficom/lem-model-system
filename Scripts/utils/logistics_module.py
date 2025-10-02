@@ -25,10 +25,6 @@ class DetourDistributionInference:
         self.size_factor = ddm_params.size_factor
         self.scale = 5.0
 
-    def sigmoid(self, x: np.ndarray) -> np.ndarray:
-        """Compute sigmoid function."""
-        return 1 / (1 + np.exp(-x))
-
     def softmax(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
         """Compute softmax values."""
         exp_x = np.exp(x)
@@ -50,12 +46,12 @@ class DetourDistributionInference:
         lc_exp = np.broadcast_to(self.lc_indices, (len(origin_indices), k)) # Shape: (n, k)
         
         # utilities for routes through k logistics centers
-        detour_utilities = (self.sigmoid(self.orig_lc_detour) * self.cost_matrix[o_idx_exp, lc_exp] +
-                 self.sigmoid(self.lc_dest_detour) * self.cost_matrix[lc_exp, d_idx_exp] +
+        detour_utilities = (self.orig_lc_detour * self.cost_matrix[o_idx_exp, lc_exp] +
+                 self.lc_dest_detour * self.cost_matrix[lc_exp, d_idx_exp] +
                  self.constant_detour) + self.lc_size_factors # Shape: (n, k)
         
         # utilities for direct routes
-        direct_utilities = self.sigmoid(self.orig_dest_direct) * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
+        direct_utilities = self.orig_dest_direct * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
         
         # combine detour and direct
         return np.concatenate([detour_utilities, np.expand_dims(direct_utilities, axis=1)], axis=1)
