@@ -32,8 +32,7 @@ class DetourDistributionInference:
 
     def logsumexp(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
         """Compute log sum exp."""
-        max_x = np.max(x, axis=axis, keepdims=True)
-        return np.log(np.sum(np.exp(x - max_x), axis=axis)) + np.squeeze(max_x)
+        return np.log(np.sum(np.exp(x), axis=axis))
 
     def compute_utilities(self, origin_indices: Union[Sequence[int], np.ndarray] = None, 
                         destination_indices: Union[Sequence[int], np.ndarray] = None) -> np.ndarray:
