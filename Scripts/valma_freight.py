@@ -16,7 +16,7 @@ from datahandling.matrixdata import MatrixData
 from datatypes.purpose import FreightPurpose
 
 from utils.freight_utils import create_purposes, StoreDemand
-from utils.logistics_module import DetourDistributionInference, process_logistics_inference
+from models.logistics import DetourDistributionInference, process_logistics_inference
 from utils.get_zone_indices import get_zone_indices
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion

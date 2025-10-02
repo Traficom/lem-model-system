@@ -16,7 +16,7 @@ import models.generation as generation
 from datatypes.demand import Demand
 from datatypes.histogram import TourLengthHistogram
 from utils.freight_costs import calc_cost
-from utils.logistics_module import DDMParameters
+from models.logistics import DDMParameters
 from utils.calibrate import attempt_calibration
 
 
