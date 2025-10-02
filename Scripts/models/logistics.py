@@ -48,7 +48,7 @@ class DetourDistributionInference:
         # utilities for routes through k logistics centers
         detour_utilities = (self.orig_lc_detour * self.cost_matrix[o_idx_exp, lc_exp] +
                  self.lc_dest_detour * self.cost_matrix[lc_exp, d_idx_exp] +
-                 self.constant_detour) - self.lc_size_factors # Shape: (n, k)
+                 self.constant_detour) + self.lc_size_factors # Shape: (n, k)
         
         # utilities for direct routes
         direct_utilities = self.orig_dest_direct * self.cost_matrix[origin_indices, destination_indices] + self.constant_direct
