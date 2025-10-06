@@ -73,7 +73,7 @@ class DetourDistributionInference:
         
         # Combine into final choice probabilities
         p_direct = np.expand_dims(p_top[:, 0], axis=1)
-        p_detour = np.expand_dims(p_top[:, 1], axis=1) * (exp_x_detour / np.exp(detour_util_top))
+        p_detour = np.expand_dims(p_top[:, 1], axis=1) * (exp_x_detour / np.exp(np.expand_dims(detour_util_top, axis=1)))
         
         probs_batch = np.concatenate([p_detour, p_direct], axis=1)
         return probs_batch
@@ -136,7 +136,8 @@ def process_logistics_inference(model: DetourDistributionInference, n_zones: int
     
     # Process batches in parallel
     with ThreadPoolExecutor(max_workers=16) as executor:
-        futures = list(executor.map(process_batch, batch_args))
+        futures = [executor.submit(process_batch, *args) for args in batch_args]
+        results = [future.result() for future in futures]
     
     # after processing all batches
     detour_total = np.sum(total_per_route[:-1])
