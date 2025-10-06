@@ -55,7 +55,7 @@ class Purpose:
         self.name = specification["name"]
         self.orig = specification["orig"]
         self.dest = specification["dest"]
-        self.area = specification["area"]
+        self.area = specification["generation_area"]
         self.impedance_share = specification["impedance_share"]
         self.demand_share = specification["demand_share"]
         self.name = cast(str, self.name) #type checker help
@@ -194,8 +194,8 @@ def new_tour_purpose(*args):
             Origin of the tours (home/source)
         "dest" : str
             Destination of the tours (work/other/source/...)
-        "area" : str
-            Model area (metropolitan/peripheral)
+        "generation_area" : str
+            Model area (domestic/foreign)
         "struct" : str
             Model structure (dest>mode/mode>dest)
         "impedance_share" : dict
@@ -217,8 +217,7 @@ def new_tour_purpose(*args):
     attempt_calibration(specification)
     if "sec_dest" in specification:
         purpose = SecDestPurpose(*args)
-    elif (specification["area"] == "peripheral"
-          or specification["dest"] == "source"
+    elif (specification["dest"] == "source"
           or specification["name"] == "oop"):
         purpose = SimpleTourPurpose(*args)
     else:
@@ -249,24 +248,30 @@ class TourPurpose(Purpose):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args, mtx_adjustment)
         if self.orig == "source":
-            self.gen_model = generation.NonHomeGeneration(self, resultdata)
+            self.gen_model = generation.NonHomeGeneration(
+                self, resultdata, specification["generation"])
+        elif isinstance(specification["generation"], str):
+            self.gen_model = generation.TourCombinationGeneration(
+                self, resultdata, None)
         else:
-            self.gen_model = generation.GenerationModel(self, resultdata)
+            self.gen_model = generation.GenerationModel(
+                self, resultdata, specification["generation"])
         if self.name == "sop":
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
             self.model = logit.DestModeModel(*args)
         else:
             self.model = logit.ModeDestModel(*args)
-        for mode in self.demand_share:
-            self.demand_share[mode]["vrk"] = [1, 1]
+        for mode in self.impedance_share:
+            if mode not in self.demand_share:
+                self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
         self.aggregates = {name: {} for name in self.mappings}
         self.within_zone_tours = {}
-        self.sec_dest_purpose = None
+        self.sec_dest_purpose: SecDestPurpose = None
 
     @property
     def dist(self):
@@ -394,7 +399,8 @@ class TourPurpose(Purpose):
         for mode in self.modes:
             mtx = (self.prob.pop(mode) * tours).T
             try:
-                self.sec_dest_purpose.gen_model.add_tours(mtx, mode, self)
+                self.sec_dest_purpose.gen_model.add_secondary_tours(
+                    mtx, mode, self)
             except AttributeError:
                 pass
             self.attracted_tours[mode] = mtx.sum(0)
@@ -450,7 +456,8 @@ class SecDestPurpose(Purpose):
     def __init__(self, specification, zone_data, resultdata, mtx_adjustment):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args, mtx_adjustment)
-        self.gen_model = generation.SecDestGeneration(self, resultdata)
+        self.gen_model = generation.SecDestGeneration(
+            self, resultdata, specification["generation"])
         self.model = logit.SecDestModel(*args)
         self.modes = list(self.model.dest_choice_param)
         for mode in self.demand_share:

@@ -163,7 +163,6 @@ class ModelSystem:
 
         # Mode and destination probability matrices are calculated first,
         # as logsums from probability calculation are used in tour generation.
-        self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
@@ -278,13 +277,8 @@ class ModelSystem:
                 self.freight_matrices, param.truck_classes)
 
         # Add beeline distance dummy
-        mtx = self.ass_model.beeline_dist
-        idx = numpy.where(numpy.isin(self.zdata_forecast.zone_numbers, self.zone_numbers))[0]
-        mtx = mtx[idx[:, None], idx]
-        self.zdata_forecast["beeline_10km"] = mtx<10
-        self.zdata_forecast["beeline_100km"] = (mtx>10) & (mtx<100)
-        self.zdata_forecast["beeline_200km"] = (mtx>100) & (mtx<200)
-        self.zdata_forecast["beeline_9999km"] = mtx>200
+        idx = numpy.isin(self.zone_numbers, self.zdata_forecast.zone_numbers)
+        self.zdata_forecast["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
 
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
@@ -343,8 +337,7 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
-        self.dtm.init_demand(
-            [mode for mode in self.travel_modes if mode != "walk"])
+        self.dtm.init_demand({**self.travel_modes, "van": True})
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
 

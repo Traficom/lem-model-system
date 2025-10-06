@@ -2,8 +2,16 @@
     "name": "hb_leisure_overnight",
     "orig": "home",
     "dest": "leisure",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": {
+        "age_7_17": 0.0357,
+        "age_18_29": 0.052,
+        "age_30_49": 0.0279,
+        "age_50_64": 0.0375,
+        "age_65_99": 0.0299
+    },
     "impedance_share": {
         "car_leisure": {
             "vrk": [
@@ -72,10 +80,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 13.06582,
-                "wrk_hospitality*beeline_100km": 46.24716,
-                "wrk_hospitality*beeline_200km": 80.39886,
-                "wrk_hospitality*beeline_9999km": 282.87356,
+                "wrk_hospitality*beeline_0_10_km": 13.06582,
+                "wrk_hospitality*beeline_10_100_km": 46.24716,
+                "wrk_hospitality*beeline_100_200_km": 80.39886,
+                "wrk_hospitality*beeline_200_9999_km": 282.87356,
                 "population": 1.9478
             }
         },
@@ -92,10 +100,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 13.06582,
-                "wrk_hospitality*beeline_100km": 46.24716,
-                "wrk_hospitality*beeline_200km": 80.39886,
-                "wrk_hospitality*beeline_9999km": 282.87356,
+                "wrk_hospitality*beeline_0_10_km": 13.06582,
+                "wrk_hospitality*beeline_10_100_km": 46.24716,
+                "wrk_hospitality*beeline_100_200_km": 80.39886,
+                "wrk_hospitality*beeline_200_9999_km": 282.87356,
                 "population": 1.9478
             }
         },
@@ -112,10 +120,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 13.06582,
-                "wrk_hospitality*beeline_100km": 46.24716,
-                "wrk_hospitality*beeline_200km": 80.39886,
-                "wrk_hospitality*beeline_9999km": 282.87356,
+                "wrk_hospitality*beeline_0_10_km": 13.06582,
+                "wrk_hospitality*beeline_10_100_km": 46.24716,
+                "wrk_hospitality*beeline_100_200_km": 80.39886,
+                "wrk_hospitality*beeline_200_9999_km": 282.87356,
                 "population": 1.9478
             }
         },
@@ -132,10 +140,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 13.06582,
-                "wrk_hospitality*beeline_100km": 46.24716,
-                "wrk_hospitality*beeline_200km": 80.39886,
-                "wrk_hospitality*beeline_9999km": 282.87356,
+                "wrk_hospitality*beeline_0_10_km": 13.06582,
+                "wrk_hospitality*beeline_10_100_km": 46.24716,
+                "wrk_hospitality*beeline_100_200_km": 80.39886,
+                "wrk_hospitality*beeline_200_9999_km": 282.87356,
                 "population": 1.9478
             }
         },
@@ -152,10 +160,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 13.06582,
-                "wrk_hospitality*beeline_100km": 46.24716,
-                "wrk_hospitality*beeline_200km": 80.39886,
-                "wrk_hospitality*beeline_9999km": 282.87356,
+                "wrk_hospitality*beeline_0_10_km": 13.06582,
+                "wrk_hospitality*beeline_10_100_km": 46.24716,
+                "wrk_hospitality*beeline_100_200_km": 80.39886,
+                "wrk_hospitality*beeline_200_9999_km": 282.87356,
                 "population": 1.9478
             }
         }
@@ -245,36 +253,5 @@
             }
         }
     },
-    "demand_share": {
-        "car_leisure": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "car_pax": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "airplane": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "train": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        },
-        "long_d_bus": {
-            "vrk": [
-                1.0,
-                1.0
-              ]
-        }
-    }
+    "demand_share": {}
 }
