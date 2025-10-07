@@ -128,7 +128,7 @@ class Purpose:
                         day_imp[mode][mtx_type] += share[1] * imp[cols, rows].T
             if mode in day_imp and abs(share_sum/len(day_imp[mode]) - 2) > 0.001:
                 raise ValueError(f"False impedance shares: {self.name} : {mode}")
-        day_imp = dict(day_imp)
+        day_imp = {mode: dict(day_imp[mode]) for mode in day_imp}
         # Apply cost change to validate model elasticities
         if self.mtx_adjustment is not None:
             for t in self.mtx_adjustment:

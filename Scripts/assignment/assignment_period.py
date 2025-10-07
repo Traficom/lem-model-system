@@ -207,8 +207,7 @@ class AssignmentPeriod(Period):
         self._assign_transit(delete_strat_files=self._delete_strat_files)
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
-        for ass_cl in param.car_classes:
-            del mtxs["dist"][ass_cl]
+        del mtxs["dist"]
         del mtxs["toll_cost"]
         return mtxs
 
