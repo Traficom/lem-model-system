@@ -26,14 +26,17 @@ class DetourDistributionInference:
         self.scale = 5.0
 
     def softmax(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
-        """Compute softmax values."""
-        exp_x = np.exp(x)
+        """Compute numerically stable softmax."""
+        x_max = np.max(x, axis=axis, keepdims=True)
+        exp_x = np.exp(x - x_max)
         return exp_x / np.sum(exp_x, axis=axis, keepdims=True)
 
-    def logsumexp(self, x: np.ndarray, axis: int = -1) -> np.ndarray:
-        """Compute log sum exp."""
-        exp_x = np.exp(x)
-        return (exp_x, np.log(np.sum(exp_x, axis=axis)))
+    def sumexp(self, x: np.ndarray, axis: int = -1) -> tuple[np.ndarray, np.ndarray]:
+        """Compute numerically stable exp and sum(exp(x))."""
+        x_max = np.max(x, axis=axis, keepdims=True)
+        exp_x = np.exp(x - x_max)
+        sum_exp = np.sum(exp_x, axis=axis)
+        return exp_x, sum_exp
 
     def compute_utilities(self, origin_indices: Union[Sequence[int], np.ndarray] = None, 
                         destination_indices: Union[Sequence[int], np.ndarray] = None) -> np.ndarray:
@@ -66,14 +69,14 @@ class DetourDistributionInference:
         
         # Now you have 2 top-level utilities: direct_util vs. detour_util_top
         detour_util = weighted[:, :-1] / self.scale
-        exp_x_detour, detour_util_top = self.logsumexp(detour_util, axis=1)
+        exp_x_detour, detour_util_sum_exp = self.sumexp(detour_util, axis=1)
         direct_util = weighted[:, -1] / self.scale
-        top_level_utilities = np.stack([direct_util, detour_util_top], axis=1)
+        top_level_utilities = np.stack([direct_util, np.log(detour_util_sum_exp)], axis=1)
         p_top = self.softmax(top_level_utilities, axis=1)
         
         # Combine into final choice probabilities
         p_direct = np.expand_dims(p_top[:, 0], axis=1)
-        p_detour = np.expand_dims(p_top[:, 1], axis=1) * (exp_x_detour / np.exp(np.expand_dims(detour_util_top, axis=1)))
+        p_detour = np.expand_dims(p_top[:, 1], axis=1) * (exp_x_detour / np.expand_dims(detour_util_sum_exp, axis=1))
         
         probs_batch = np.concatenate([p_detour, p_direct], axis=1)
         return probs_batch
