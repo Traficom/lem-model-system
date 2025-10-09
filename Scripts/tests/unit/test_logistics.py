@@ -36,8 +36,10 @@ class LogisticsModelTest(unittest.TestCase):
             costdata = json.load(file)
         purposes = create_purposes(PARAMETERS_PATH / "domestic", zonedata, 
                                    resultdata, costdata["freight"])
-        ass_model = MockAssignmentModel(MatrixData(
-            RESULT_PATH / "test" / "Matrices" / "uusimaa"))
+        
+        mapping = {}
+        for idx, zone in enumerate(zonedata.zone_numbers):
+            mapping[zone] = idx
         
         time_impedance = omx.open_file(TEST_MATRICES / "freight_time.omx", "r")
         dist_impedance = omx.open_file(TEST_MATRICES / "freight_dist.omx", "r")
@@ -73,7 +75,7 @@ class LogisticsModelTest(unittest.TestCase):
             if hasattr(purpose, "logistics_module"):
                 lcs_areas = zonedata[f"lc_area_{purpose.name}"] if hasattr(zonedata, f"lc_area_{purpose.name}") else zonedata["lc_area"]
                 lcs_sizes = lcs_areas[lcs_areas > 0]
-                lc_indices = get_zone_indices(ass_model.mapping, lcs_sizes.index.to_list())
+                lc_indices = get_zone_indices(mapping, lcs_sizes.index.to_list())
                 purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
                 logistics_module = DetourDistributionInference(cost_matrix=purpose_truck_costs,
                                                             ddm_params=purpose.logistics_params,
