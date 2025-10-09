@@ -95,6 +95,9 @@ class ZoneData:
             (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
              + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
             hh_pop)
+        self.share["sh_car"] = (self["sh_cars1_hh1"]
+                                + self["sh_cars1_hh2"]
+                                + self["sh_cars2_hh2"])
         self["pop_density"] = divide(data["population"], data["land_area"])
         self["log_pop_density"] = numpy.log(self["pop_density"]+1)
 
