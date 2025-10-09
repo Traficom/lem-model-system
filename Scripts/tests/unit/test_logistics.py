@@ -87,3 +87,4 @@ class LogisticsModelTest(unittest.TestCase):
                 demand["truck"] = final_demand
                 self.assertTrue(numpy.isfinite(demand["truck"]).all())
                 self.assertTrue((demand["truck"] >= 0).all())
+                self.assertTrue(demand["truck"].shape == (zonedata.nr_zones, zonedata.nr_zones))
