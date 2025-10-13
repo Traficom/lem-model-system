@@ -401,20 +401,6 @@ volume_factors = {
         "it": 0.248,
         "vrk": 1.0,
     },
-    "car_first_mile": {
-        "aht": 0.478,
-        "pt": 0.109,
-        "iht": 0.405,
-        "it": 0.3,
-        "vrk": 1.0,
-    },
-    "car_last_mile": {
-        "aht": 0.478,
-        "pt": 0.109,
-        "iht": 0.405,
-        "it": 0.3,
-        "vrk": 1.0,
-    },
     "train": {
         "aht": 0.429,
         "pt": 0.167,
@@ -500,44 +486,28 @@ volume_factors = {
         "vrk": 1.0,
     },
     "l_first_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "j_first_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "j_first_taxi": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "e_first_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "l_last_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "j_last_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "j_last_taxi": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
     "e_last_mile": {
-        "aht": 1. / 0.478,
-        "pt": 1. / 0.109,
-        "iht": 1. / 0.405,
+        "vrk": 1.0,
     },
 }
 volume_factors["aux_transit"] = volume_factors["transit"]

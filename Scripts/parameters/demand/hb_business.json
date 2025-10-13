@@ -286,8 +286,7 @@
                 "attraction": {},
                 "impedance": {
                     "cost": -0.047,
-                    "time": -0.035,
-                    "transfer_time": 0.018
+                    "time": -0.035
                 },
                 "log": {},
                 "individual_dummy": {}

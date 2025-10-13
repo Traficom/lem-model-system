@@ -133,7 +133,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 use_stored_speeds=(car_time_files is not None),
                 delete_extra_matrices=self.delete_extra_matrices,
                 delete_strat_files=self._delete_strat_files))
-        ass_classes = param.transport_classes + ("bus",)
+        ass_classes = (param.car_classes + param.long_distance_transit_classes
+            if self.use_free_flow_speeds else param.simple_transport_classes)
+        ass_classes += ("bus",)
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield)
         self._segment_results = self._create_transit_attributes(
@@ -274,7 +276,7 @@ class EmmeAssignmentModel(AssignmentModel):
             log.info("Attribute {} aggregated to 24h (scenario {})".format(
                 res, self.day_scenario.id))
         ass_classes = (param.car_classes + param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transport_classes)
+            if self.use_free_flow_speeds else param.simple_transport_classes)
         ass_classes += ("bus", "aux_transit")
         self._link_24h(network, networks, ass_classes)
         self.day_scenario.publish_network(network)

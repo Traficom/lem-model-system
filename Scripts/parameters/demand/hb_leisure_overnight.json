@@ -133,10 +133,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 11.54209,
-                "wrk_hospitality*beeline_100km": 71.73652,
-                "wrk_hospitality*beeline_200km": 169.35549,
-                "wrk_hospitality*beeline_9999km": 349.32405,
+                "wrk_hospitality*beeline_0_10_km": 11.54209,
+                "wrk_hospitality*beeline_10_100_km": 71.73652,
+                "wrk_hospitality*beeline_100_200_km": 169.35549,
+                "wrk_hospitality*beeline_200_9999_km": 349.32405,
                 "population": 2.02891
             }
         },
@@ -152,10 +152,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 11.54209,
-                "wrk_hospitality*beeline_100km": 71.73652,
-                "wrk_hospitality*beeline_200km": 169.35549,
-                "wrk_hospitality*beeline_9999km": 349.32405,
+                "wrk_hospitality*beeline_0_10_km": 11.54209,
+                "wrk_hospitality*beeline_10_100_km": 71.73652,
+                "wrk_hospitality*beeline_100_200_km": 169.35549,
+                "wrk_hospitality*beeline_200_9999_km": 349.32405,
                 "population": 2.02891
             }
         },
@@ -171,10 +171,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 11.54209,
-                "wrk_hospitality*beeline_100km": 71.73652,
-                "wrk_hospitality*beeline_200km": 169.35549,
-                "wrk_hospitality*beeline_9999km": 349.32405,
+                "wrk_hospitality*beeline_0_10_km": 11.54209,
+                "wrk_hospitality*beeline_10_100_km": 71.73652,
+                "wrk_hospitality*beeline_100_200_km": 169.35549,
+                "wrk_hospitality*beeline_200_9999_km": 349.32405,
                 "population": 2.02891
             }
         },
@@ -191,10 +191,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 11.54209,
-                "wrk_hospitality*beeline_100km": 71.73652,
-                "wrk_hospitality*beeline_200km": 169.35549,
-                "wrk_hospitality*beeline_9999km": 349.32405,
+                "wrk_hospitality*beeline_0_10_km": 11.54209,
+                "wrk_hospitality*beeline_10_100_km": 71.73652,
+                "wrk_hospitality*beeline_100_200_km": 169.35549,
+                "wrk_hospitality*beeline_200_9999_km": 349.32405,
                 "population": 2.02891
             }
         },
@@ -211,10 +211,10 @@
             },
             "attraction_size": {
                 "area_leisure_buildings": 1,
-                "wrk_hospitality*beeline_10km": 11.54209,
-                "wrk_hospitality*beeline_100km": 71.73652,
-                "wrk_hospitality*beeline_200km": 169.35549,
-                "wrk_hospitality*beeline_9999km": 349.32405,
+                "wrk_hospitality*beeline_0_10_km": 11.54209,
+                "wrk_hospitality*beeline_10_100_km": 71.73652,
+                "wrk_hospitality*beeline_100_200_km": 169.35549,
+                "wrk_hospitality*beeline_200_9999_km": 349.32405,
                 "population": 2.02891
             }
         }
@@ -312,8 +312,7 @@
                 "attraction": {},
                 "impedance": {
                     "cost": -0.047,
-                    "time": -0.035,
-                    "transfer_time": 0.018
+                    "time": -0.035
                 },
                 "log": {},
                 "individual_dummy": {}
