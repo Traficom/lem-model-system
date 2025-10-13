@@ -1,31 +1,42 @@
+from __future__ import annotations
 import numpy
 import pandas
 from collections import defaultdict
+from typing import TYPE_CHECKING, Dict
 
-import parameters.tour_generation as param
 from models.logit import divide
+if TYPE_CHECKING:
+    from datatypes.purpose import Purpose
+    from datahandling.resultdata import ResultsData
 
 
 class GenerationModel:
     """Container for tour vector.
 
-    Regular tours are created in `model.logit.TourCombinationModel`
-    and then added to the `tours` vector for each `TourPurpose`.
-    Peripheral tours are calculated directly in `add_tours()`.
-
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
+    In the base class, tours are calculated directly in `add_tours()`.
     """
 
-    def __init__(self, purpose, resultdata):
+    def __init__(self, purpose: Purpose,
+                 resultdata: ResultsData,
+                 param: Dict[str, float]):
+        """Initialize tour generation model.
+
+        Parameters
+        ----------
+        purpose : datatypes.purpose.TourPurpose
+            Travel purpose (hw/hs/ho/...)
+        resultdata : datahandling.resultdata.ResultData
+            Writer object for result directory
+        param : dict
+            key : str
+                Zone variable name
+            value : float
+                Generation factor
+        """
         self.resultdata = resultdata
         self.zone_data = purpose.zone_data
         self.purpose = purpose
-        self.param = param.tour_generation[purpose.name]
+        self.param = param
 
     def init_tours(self):
         """Initialize `tours` vector to 0."""
@@ -33,32 +44,35 @@ class GenerationModel:
             0.0, self.purpose.zone_numbers, dtype=numpy.float32)
 
     def add_tours(self):
-        """Generate and add (peripheral) tours to zone vector."""
-        b = self.param
-        for i in b:
-            self.tours += b[i] * self.zone_data[i][self.purpose.bounds]
+        """Generate and add tours to zone vector."""
+        shares = {
+            "has_car": self.zone_data["sh_car"],
+            "no_car": 1 - self.zone_data["sh_car"]
+        }
+        for car_availibility, b in self.param.items():
+            tours = sum(b[i]*self.zone_data[i][self.purpose.bounds] for i in b)
+            self.tours += shares[car_availibility] * tours
 
     def get_tours(self):
         """Get vector of tour numbers per zone.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Vector of tour numbers per zone
         """
         return self.tours.values
 
 
-class NonHomeGeneration(GenerationModel):
-    """For calculating numbers of non-home tours starting in each zone.
+class TourCombinationGeneration(GenerationModel):
+    """For this sub-class, tours are created in `model.logit.TourCombinationModel`."""
 
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
-    """
+    def add_tours(self):
+        pass
+
+
+class NonHomeGeneration(GenerationModel):
+    """For calculating numbers of non-home tours starting in each zone."""
 
     def add_tours(self):
         pass
@@ -68,8 +82,8 @@ class NonHomeGeneration(GenerationModel):
 
         Assumes that home-based tours have been assigned destinations.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Vector of tour numbers per zone
         """
@@ -90,13 +104,6 @@ class SecDestGeneration(GenerationModel):
     """For calculating numbers of secondary-destination tours.
 
     Calculation is for each mode and origin-destination pair separately.
-
-    Parameters
-    ----------
-    purpose : datatypes.purpose.TourPurpose
-        Travel purpose (hw/hs/ho/...)
-    resultdata : ResultData
-        Writer object for result directory
     """
 
     def init_tours(self):
@@ -104,7 +111,10 @@ class SecDestGeneration(GenerationModel):
         for mode in self.tours:
             self.tours[mode] = 0
     
-    def add_tours(self, demand, mode, purpose):
+    def add_tours(self):
+        pass
+
+    def add_secondary_tours(self, demand, mode, purpose):
         """Generate matrix of tour numbers from attracted source tours."""
         mod_mode = mode.replace("work", "leisure")
         if mod_mode in self.purpose.modes:
@@ -116,8 +126,8 @@ class SecDestGeneration(GenerationModel):
     def get_tours(self, mode):
         """Get vector of tour numbers per od pair.
         
-        Return
-        ------
+        Returns
+        -------
         numpy.ndarray
             Matrix of tour numbers per origin-destination pair
         """

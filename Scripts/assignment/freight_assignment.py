@@ -98,7 +98,10 @@ class FreightAssignmentPeriod(AssignmentPeriod):
     def _set_freight_vdfs(self):
         network = self.emme_scenario.get_network()
         for segment in network.transit_segments():
-            segment.transit_time_func = 7
+            if segment.data1 > 0:
+                segment.transit_time_func = 6
+            else:
+                segment.transit_time_func = 7
         self.emme_scenario.publish_network(network)
 
     def _assign_freight(self):

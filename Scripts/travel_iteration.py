@@ -75,12 +75,14 @@ class ModelSystem:
             if long_dist_matrices_path is not None else None)
         self.freight_matrices = (MatrixData(freight_matrices_path)
             if freight_matrices_path is not None else None)
-        cost_data = json.loads(cost_data_path.read_text("utf-8"))
+        cost_data: dict = json.loads(cost_data_path.read_text("utf-8"))
         self.car_dist_cost = cost_data["car_cost"]
         self.transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
+        extra_dummies = cost_data.get("area_calibration", {})
         self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, submodel)
+            zone_data_path, self.zone_numbers, submodel,
+            extra_dummies=extra_dummies)
         self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
                                        * self.car_dist_cost["car_work"])
 
@@ -94,9 +96,16 @@ class ModelSystem:
         other_work_purposes = []
         other_leisure_purposes = []
         for file in parameters_path.rglob("*.json"):
+            specification = json.loads(file.read_text("utf-8"))
+            for dummies in extra_dummies.values():
+                for subarea in dummies:
+                    for mode, coeff in dummies[subarea].items():
+                        if mode in specification["mode_choice"]:
+                            (specification["mode_choice"][mode]
+                                          ["generation"][subarea]) = coeff
             purpose = new_tour_purpose(
-                json.loads(file.read_text("utf-8")), self.zdata_forecast,
-                self.resultdata, cost_data["cost_changes"])
+                specification, self.zdata_forecast, self.resultdata,
+                cost_data["cost_changes"])
             required_time_periods = sorted(
                 {tp for m in purpose.impedance_share.values() for tp in m})
             if required_time_periods == sorted(assignment_model.time_periods):
@@ -154,7 +163,6 @@ class ModelSystem:
 
         # Mode and destination probability matrices are calculated first,
         # as logsums from probability calculation are used in tour generation.
-        self.dm.create_population_segments()
         for purpose in self.dm.tour_purposes:
             if param.assignment_classes[purpose.name] == "leisure":
                 for tp_imp in previous_iter_impedance.values():
@@ -269,13 +277,8 @@ class ModelSystem:
                 self.freight_matrices, param.truck_classes)
 
         # Add beeline distance dummy
-        mtx = self.ass_model.beeline_dist
-        idx = numpy.where(numpy.isin(self.zdata_forecast.zone_numbers, self.zone_numbers))[0]
-        mtx = mtx[idx[:, None], idx]
-        self.zdata_forecast["beeline_10km"] = mtx<10
-        self.zdata_forecast["beeline_100km"] = (mtx>10) & (mtx<100)
-        self.zdata_forecast["beeline_200km"] = (mtx>100) & (mtx<200)
-        self.zdata_forecast["beeline_9999km"] = mtx>200
+        idx = numpy.isin(self.zone_numbers, self.zdata_forecast.zone_numbers)
+        self.zdata_forecast["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
 
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
@@ -334,8 +337,7 @@ class ModelSystem:
                     Impedance (float 2-d matrix)
         """
         impedance = {}
-        self.dtm.init_demand(
-            [mode for mode in self.travel_modes if mode != "walk"])
+        self.dtm.init_demand({**self.travel_modes, "van": True})
 
         self.dm.calculate_car_ownership(previous_iter_impedance)
 

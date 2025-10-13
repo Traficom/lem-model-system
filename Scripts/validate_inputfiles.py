@@ -11,7 +11,7 @@ import utils.log as log
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import ZoneData, FreightZoneData
 import parameters.assignment as param
 from valma_travel import BASE_ZONEDATA_FILE
 
@@ -119,12 +119,12 @@ def main(args):
             else:
                 emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
-            zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
                 msg = "Project {} has no scenario {}".format(
                     emp_path, first_scenario_ids[i])
                 log.error(msg)
                 raise ValueError(msg)
+            zone_numbers[args.submodel[i]] = scen.zone_numbers
             for scenario in emmebank.scenarios():
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
@@ -218,8 +218,10 @@ def main(args):
         if long_dist == "calc":
             long_dist_result_paths.append(
                 Path(args.results_path, name, "Matrices", "koko_suomi"))
-    for data_path, submodel, long_dist_forecast, freight_path in zip(
-            forecast_zonedata_paths, args.submodel,
+    model_types = (args.model_types if args.model_types
+                   else ["passenger_transport" for _ in forecast_zonedata_paths])
+    for model_type, data_path, submodel, long_dist_forecast, freight_path in zip(
+            model_types, forecast_zonedata_paths, args.submodel,
             args.long_dist_demand_forecast, args.freight_matrix_paths):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
@@ -227,8 +229,9 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
-        forecast_zonedata = ZoneData(
-            Path(data_path), zone_numbers[submodel], submodel)
+        zonedata_args = Path(data_path), zone_numbers[submodel], submodel
+        forecast_zonedata = (FreightZoneData(*zonedata_args)
+            if model_type == "goods_transport" else ZoneData(*zonedata_args))
 
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):
@@ -268,6 +271,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
+    )
+    parser.add_argument(
+        "--model-types",
+        type=str,
+        nargs="+",
+        help=("List of scenario model types "
+              + "('passenger_transport'/'goods_transport'/...)")
     )
     parser.add_argument(
         "-o", "--end-assignment-only",
