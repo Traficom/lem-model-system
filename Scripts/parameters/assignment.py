@@ -189,42 +189,42 @@ vot_inv = {
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
 tour_duration = {
-    "j_first_mile": {
+    "train_fm": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "j_first_taxi": {
+    "train_ftx": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "e_first_mile": {
+    "coach_fm": {
         "avg": 2.62,
         "hb_business": 2.43,
         "hb_leisure_overnight": 14,
     },
-    "l_first_mile": {
+    "airplane_fm": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
     },
-    "j_last_mile": {
+    "train_lm": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "j_last_taxi": {
+    "train_ltx": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "e_last_mile": {
+    "coach_lm": {
         "avg": 2.62,
         "hb_business": 2.43,
         "hb_leisure_overnight": 14,
     },
-    "l_last_mile": {
+    "airplane_lm": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
@@ -328,16 +328,16 @@ transfer_penalty = {
     "car_last_mile": 5,
     "transit": 5,
     "train": 5,
-    "long_d_bus": 5,
+    "coach": 5,
     "airplane": 5,
-    "j_first_mile": 5,
-    "j_first_taxi": 5,
-    "e_first_mile": 5,
-    "l_first_mile": 5,
-    "j_last_mile": 5,
-    "j_last_taxi": 5,
-    "e_last_mile": 5,
-    "l_last_mile": 5,
+    "train_fm": 5,
+    "train_ftx": 5,
+    "coach_fm": 5,
+    "airplane_fm": 5,
+    "train_lm": 5,
+    "train_ltx": 5,
+    "coach_lm": 5,
+    "airplane_lm": 5,
 }
 extra_waiting_time = {
     "penalty": "@wait_time_dev",
@@ -408,7 +408,7 @@ volume_factors = {
         "it": 0.255,
         "vrk": 1.0,
     },
-    "long_d_bus": {
+    "coach": {
         "aht": 0.429,
         "pt": 0.167,
         "iht": 0.407,
@@ -485,28 +485,28 @@ volume_factors = {
         "it": 0.238,
         "vrk": 1.0,
     },
-    "l_first_mile": {
+    "airplane_fm": {
         "vrk": 1.0,
     },
-    "j_first_mile": {
+    "train_fm": {
         "vrk": 1.0,
     },
-    "j_first_taxi": {
+    "train_ftx": {
         "vrk": 1.0,
     },
-    "e_first_mile": {
+    "coach_fm": {
         "vrk": 1.0,
     },
-    "l_last_mile": {
+    "airplane_lm": {
         "vrk": 1.0,
     },
-    "j_last_mile": {
+    "train_lm": {
         "vrk": 1.0,
     },
-    "j_last_taxi": {
+    "train_ltx": {
         "vrk": 1.0,
     },
-    "e_last_mile": {
+    "coach_lm": {
         "vrk": 1.0,
     },
 }
@@ -553,21 +553,21 @@ car_classes = (
 car_and_van_classes = car_classes + ("van",)
 private_classes = car_and_van_classes + ("bike",)
 car_access_classes = (
-    "j_first_mile",
-    "j_first_taxi",
-    "e_first_mile",
-    "l_first_mile",
+    "train_fm",
+    "train_ftx",
+    "coach_fm",
+    "airplane_fm",
 )
 car_egress_classes = (
-    "j_last_mile",
-    "e_last_mile",
-    "j_last_taxi",
-    "l_last_mile",
+    "train_lm",
+    "coach_lm",
+    "train_ltx",
+    "airplane_lm",
 )
 mixed_mode_classes = car_access_classes + car_egress_classes
 long_dist_simple_classes = (
     "train",
-    "long_d_bus",
+    "coach",
     "airplane",
 )
 long_distance_transit_classes = (mixed_mode_classes
@@ -588,9 +588,9 @@ simple_transport_classes = (private_classes
                             + truck_classes)
 transport_classes = simple_transport_classes + mixed_mode_classes
 intermodals = {
-    "train": ["j_first_mile", "j_first_taxi"],
-    "long_d_bus": ["e_first_mile"],
-    "airplane": ["l_first_mile"],
+    "train": ["train_fm", "train_ftx"],
+    "coach": ["coach_fm"],
+    "airplane": ["airplane_fm"],
 }
 assignment_classes = {
     "hb_work": "work",
@@ -630,16 +630,16 @@ vot_classes = {
     "car_first_mile": "work",
     "car_last_mile": "work",
     "train": "work",
-    "long_d_bus": "leisure",
+    "coach": "leisure",
     "airplane": "work",
-    "j_first_mile": "work",
-    "j_first_taxi": "work",
-    "e_first_mile": "leisure",
-    "l_first_mile": "work",
-    "j_last_mile": "work",
-    "j_last_taxi": "work",
-    "e_last_mile": "leisure",
-    "l_last_mile": "work",
+    "train_fm": "work",
+    "train_ftx": "work",
+    "coach_fm": "leisure",
+    "airplane_fm": "work",
+    "train_lm": "work",
+    "train_ltx": "work",
+    "coach_lm": "leisure",
+    "airplane_lm": "work",
 }
 local_transit_modes = [
     'b',
@@ -655,16 +655,16 @@ long_dist_transit_modes = {
   	"transit_work": ['e', 'j', 'l'],
     "transit_leisure": ['e', 'j', 'l'],
     "train": ['j'],
-    "long_d_bus": ['e'],
+    "coach": ['e'],
     "airplane": ['l'],
-    "j_first_mile": ['j'],
-    "j_first_taxi": ['j'],
-    "e_first_mile": ['e'],
-    "l_first_mile": ['l'],
-    "j_last_mile": ['j'],
-    "j_last_taxi": ['j'],
-    "e_last_mile": ['e'],
-    "l_last_mile": ['l'],
+    "train_fm": ['j'],
+    "train_ftx": ['j'],
+    "coach_fm": ['e'],
+    "airplane_fm": ['l'],
+    "train_lm": ['j'],
+    "train_ltx": ['j'],
+    "coach_lm": ['e'],
+    "airplane_lm": ['l'],
 }
 aux_modes = [
     'a'

@@ -46,31 +46,31 @@
                 1.0
               ]
             },
-        "long_d_bus": {
+        "coach": {
             "vrk": [
                 1.0,
                 1.0
               ]
             },
-        "l_first_mile": {
+        "airplane_fm": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "j_first_mile": {
+        "train_fm": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "j_first_taxi": {
+        "train_ftx": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "e_first_mile": {
+        "coach_fm": {
             "vrk": [
                 2.0,
                 0.0
@@ -91,11 +91,11 @@
             0.1,
             9999
         ],
-        "l_first_mile": [
+        "airplane_fm": [
             0,
             9999
         ],
-        "l_first_taxi": [
+        "airplane_ftx": [
             0,
             9999
         ],
@@ -103,19 +103,19 @@
             0.1,
             9999
         ],
-        "j_first_mile": [
+        "train_fm": [
             0,
             9999
         ],
-        "j_first_taxi": [
+        "train_ftx": [
             0,
             9999
         ],
-        "long_d_bus": [
+        "coach": [
             0.1,
             9999
         ],
-        "e_first_mile": [
+        "coach_fm": [
             0,
             9999
         ]
@@ -159,7 +159,7 @@
                 "population": 2.02891
             }
         },
-        "long_d_bus": {
+        "coach": {
             "attraction": {
                 "within_zone_inf": -1
             },
@@ -240,7 +240,7 @@
             },
             "individual_dummy": {}
         },
-        "long_d_bus": {
+        "coach": {
             "constant": 7.418,
             "generation": {},
             "attraction": {},
@@ -296,7 +296,7 @@
             "train": {
                 "constant": 0.1531
             },
-            "long_d_bus": {
+            "coach": {
                 "constant": 0.1531
             },
             "airplane": {
@@ -317,7 +317,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "l_first_mile": {
+            "airplane_fm": {
                 "constant": 79.02,
                 "generation": {
                     "car_density": 4.83
@@ -333,7 +333,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "l_first_taxi": {
+            "airplane_ftx": {
                 "constant": 78.54,
                 "generation": {
                     "car_density": 4.54
@@ -361,7 +361,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "j_first_mile": {
+            "train_fm": {
                 "constant": 75.59,
                 "generation": {
                     "car_density": 4.83
@@ -376,7 +376,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "j_first_taxi": {
+            "train_ftx": {
                 "constant": 76.36,
                 "generation": {
                     "car_density": 4.54
@@ -391,8 +391,8 @@
                 "individual_dummy": {}
             }
         },
-        "long_d_bus": {
-            "long_d_bus": {
+        "coach": {
+            "coach": {
                 "constant": 80,
                 "generation": {},
                 "attraction": {},
@@ -403,7 +403,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "e_first_mile": {
+            "coach_fm": {
                 "constant": 75.5,
                 "generation": {
                     "car_density": 4.54
@@ -444,31 +444,31 @@
                 1.0
               ]
         },
-        "long_d_bus": {
+        "coach": {
             "vrk": [
                 1.0,
                 1.0
               ]
         },
-        "l_first_mile": {
+        "airplane_fm": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "j_first_mile": {
+        "train_fm": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "j_first_taxi": {
+        "train_ftx": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "e_first_mile": {
+        "coach_fm": {
             "vrk": [
                 1.0,
                 0.0
