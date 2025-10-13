@@ -2,8 +2,25 @@
     "name": "hb_leisure_overnight",
     "orig": "home",
     "dest": "leisure",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": {
+        "no_car": {
+            "age_7_17": 0.0545,
+            "age_18_29": 0.063,
+            "age_30_49": 0.0203,
+            "age_50_64": 0.0213,
+            "age_65_99": 0.0158
+        },
+        "has_car": {
+            "age_7_17": 0.0343,
+            "age_18_29": 0.0461,
+            "age_30_49": 0.0284,
+            "age_50_64": 0.0381,
+            "age_65_99": 0.0334
+        }
+    },
     "impedance_share": {
         "car_leisure": {
             "vrk": [

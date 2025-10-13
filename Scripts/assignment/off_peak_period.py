@@ -96,7 +96,8 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_cars(self.stopping_criteria["coarse"])
         mtxs = self._get_impedances(modes)
         self._check_congestion()
-        del mtxs["dist"]
+        for ass_cl in param.car_classes:
+            del mtxs["dist"][ass_cl]
         del mtxs["toll_cost"]
         return mtxs
 
@@ -138,10 +139,12 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._prepare_cars(
             dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
             truck_classes=[])
+        self.car_mode = self.assignment_modes.pop("car_leisure")
         self._prepare_other(day_scenario, save_matrices)
 
     def init_assign(self):
         self._init_assign_transit()
+        self.car_mode.get_matrices()
         return []
 
     def get_soft_mode_impedances(self):

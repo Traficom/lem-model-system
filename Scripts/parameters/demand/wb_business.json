@@ -5,8 +5,12 @@
     "source": [
         "hb_work"
     ],
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": {
+        "hb_work": 0.0454
+    },
     "impedance_share": {
         "car_work": {
             "aht": [

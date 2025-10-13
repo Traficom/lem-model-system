@@ -37,15 +37,16 @@ class ZoneData:
         self._init_data(*args, **kwargs)
 
     def _init_data(self, data_path: Path, zone_numbers: Sequence,
-                 zone_mapping: str, data_type: str = "trips",
+                 zone_mapping: str, data_type: str = "domestic_travel",
+                 model_area: str = "domestic",
                  extra_dummies: Dict[str, Sequence[str]] = {}):
         self._values = {}
         self.share = ShareChecker(self)
         all_zone_numbers = numpy.array(zone_numbers)
         self.all_zone_numbers = all_zone_numbers
-        peripheral = param.purpose_areas["peripheral"]
+        area = param.purpose_areas[model_area]
         self.zone_numbers = pandas.Index(
-            all_zone_numbers[:all_zone_numbers.searchsorted(peripheral[1])],
+            all_zone_numbers[slice(*all_zone_numbers.searchsorted(area))],
             name="analysis_zone_id")
         Zone.counter = 0
         data, mapping = read_zonedata(
@@ -94,6 +95,9 @@ class ZoneData:
             (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
              + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
             hh_pop)
+        self.share["sh_car"] = (self["sh_cars1_hh1"]
+                                + self["sh_cars1_hh2"]
+                                + self["sh_cars2_hh2"])
         self["pop_density"] = divide(data["population"], data["land_area"])
         self["log_pop_density"] = numpy.log(self["pop_density"]+1)
 

@@ -2,8 +2,10 @@
     "name": "hb_edu_student",
     "orig": "home",
     "dest": "students_higher_education",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": "tour_combination_model",
     "impedance_share": {
         "car_work": {
             "aht": [

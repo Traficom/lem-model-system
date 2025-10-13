@@ -208,8 +208,7 @@ class AssignmentPeriod(Period):
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
         self._check_congestion()
-        for ass_cl in param.car_classes:
-            del mtxs["dist"][ass_cl]
+        del mtxs["dist"]
         del mtxs["toll_cost"]
         return mtxs
 

@@ -408,6 +408,13 @@ volume_factors = {
         "it": 0.3,
         "vrk": 1.0,
     },
+    "walk": {
+        "aht": 0.538,
+        "pt": 0.110,
+        "iht": 0.404,
+        "it": 0.3,
+        "vrk": 1.0,
+    },
     "trailer_truck": {
         "aht": 0.3,
         "pt": 0.1,

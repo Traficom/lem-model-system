@@ -40,8 +40,8 @@ inode #municipality #subarea #transit_stop_b #transit_stop_e #transit_stop_g #tr
 23678 'Lahti' 0 0 0 0 0 0
 50107 'Ulkomaa' 0 0 0 0 0 0
 50127 'Ulkomaa' 0 0 0 0 0 0
-50201 'Ulkomaa' 0 0 0 0 0 0
-50205 'Ulkomaa' 0 0 0 0 0 0
+60021 'Ulkomaa' 0 0 0 0 0 0
+60031 'Ulkomaa' 0 0 0 0 0 0
 100097 'Vantaa' 2 0 0 0 0 0
 100351 'Espoo' 2 0 0 0 0 0
 100352 'Espoo' 2 1 0 1 0 0

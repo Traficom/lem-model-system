@@ -2,8 +2,25 @@
     "name": "hb_other_shop",
     "orig": "home",
     "dest": "wrk_shop",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": {
+        "no_car": {
+            "age_7_17": 0.0563,
+            "age_18_29": 0.0731,
+            "age_30_49": 0.1188,
+            "age_50_64": 0.1692,
+            "age_65_99": 0.1796
+        },
+        "has_car": {
+            "age_7_17": 0.0696,
+            "age_18_29": 0.0948,
+            "age_30_49": 0.1294,
+            "age_50_64": 0.1425,
+            "age_65_99": 0.2178
+        }
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [

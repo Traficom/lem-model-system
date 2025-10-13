@@ -2,8 +2,25 @@
     "name": "hb_visit",
     "orig": "home",
     "dest": "population",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "mode>dest",
+    "generation": {
+        "no_car": {
+            "age_7_17": 0.0689,
+            "age_18_29": 0.0733,
+            "age_30_49": 0.0455,
+            "age_50_64": 0.0487,
+            "age_65_99": 0.0573
+        },
+        "has_car": {
+            "age_7_17": 0.1349,
+            "age_18_29": 0.1036,
+            "age_30_49": 0.0813,
+            "age_50_64": 0.0856,
+            "age_65_99": 0.102
+        }
+    },
     "impedance_share": {
         "car_leisure": {
             "aht": [
