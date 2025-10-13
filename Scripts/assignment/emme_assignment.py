@@ -108,6 +108,9 @@ class EmmeAssignmentModel(AssignmentModel):
                         file, field_separator="TAB",
                         revert_on_error=False, scenario=self.mod_scenario)
         self._add_bus_stops()
+        self.emme_project.create_extra_attribute(
+            "LINK", param.free_flow_time_attr, "free-flow car time",
+            overwrite=True, scenario=self.mod_scenario)
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
                 self.mod_scenario, self.mod_scenario.number + 1,
@@ -165,6 +168,9 @@ class EmmeAssignmentModel(AssignmentModel):
         self.freight_network = FreightAssignmentPeriod(
             "vrk", self.mod_scenario.number, self.emme_project)
         self.assignment_periods = [self.freight_network]
+        self.emme_project.create_extra_attribute(
+            "LINK", param.free_flow_time_attr, "free-flow car time",
+            overwrite=True, scenario=self.mod_scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
             overwrite=True, scenario=self.mod_scenario)

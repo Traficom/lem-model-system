@@ -207,6 +207,7 @@ class AssignmentPeriod(Period):
         self._assign_transit(delete_strat_files=self._delete_strat_files)
         mtxs = self._get_impedances(
             param.car_classes + param.local_transit_classes)
+        self._check_congestion()
         del mtxs["dist"]
         del mtxs["toll_cost"]
         return mtxs
@@ -235,6 +236,7 @@ class AssignmentPeriod(Period):
             delete_strat_files=self._delete_strat_files)
         self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)
+        self._check_congestion()
         for tc in self.assignment_modes:
             self.assignment_modes[tc].release_matrices()
         return mtxs
@@ -257,6 +259,14 @@ class AssignmentPeriod(Period):
                 for mode in mtxs if mtx_type in mtxs[mode]}
             for mtx_type in param.impedance_output}
         return impedance
+
+    def _check_congestion(self):
+        for car_class in param.car_classes:
+            mode: CarMode = self.assignment_modes[car_class]
+            log.debug(f"Maximum {self.name} {car_class} link congestion "
+                      + f"is {mode.max_congestion:.0%} of free flow time")
+            if mode.max_congestion == 0:
+                log.warn(f"No car congestion in time period {self.name}!")
 
     @property
     def mapping(self) -> Dict[int, int]:
@@ -360,6 +370,8 @@ class AssignmentPeriod(Period):
                         link.volume_delay_func = roadclass.volume_delay_func
                 link.data1 = roadclass.lane_capacity
                 link.data2 = roadclass.free_flow_speed
+                link[param.free_flow_time_attr] = (60 * link.length
+                                                   / roadclass.free_flow_speed)
             elif linktype in param.custom_roadtypes:
                 # Custom car link
                 if link.volume_delay_func != 90:
@@ -367,6 +379,8 @@ class AssignmentPeriod(Period):
                         link.volume_delay_func = 91
                     else:
                         link.volume_delay_func = linktype - 90
+                link[param.free_flow_time_attr] = (60 * link.length
+                                                   / link.data2)
                 for linktype in param.roadclasses:
                     roadclass = param.roadclasses[linktype]
                     if (link.volume_delay_func == roadclass.volume_delay_func

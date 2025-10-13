@@ -188,6 +188,7 @@ vot_inv = {
     "semi_trailer": 1.709, # 1 / ((35.11 eur/h) / (60 min/h)) = 1.709 min/eur
     "trailer_truck": 1.667, # 1 / ((36 eur/h) / (60 min/h)) = 1.667 min/eur
 }
+congested_time_weight = 1.5
 freight_terminal_cost = {
     'D': 0,
     'J': 0,
@@ -651,6 +652,7 @@ municipality_attr = "#municipality"
 terminal_cost_attr = "@freight_term_cost"
 freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
+free_flow_time_attr = "@free_flow_time"
 extra_freight_cost_attr = "#extra_cost"
 railtypes = {
     2: "tram",
