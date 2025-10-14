@@ -391,15 +391,15 @@ class TourPurpose(Purpose):
     def split_connection_mode(self, impedance, pt_mode, car_acc_modes):
         access_modes = car_acc_modes + [pt_mode]
         if pt_mode == "airplane":
-            access_modes.append("airplane_ftx")
-            impedance["airplane_ftx"] = impedance["airplane_fm"]
+            access_modes.append("airpl_taxi_acc")
+            impedance["airpl_taxi_acc"] = impedance["airpl_car_acc"]
         for mode in access_modes:
             if mode in mixed_mode_classes:
                 self.reweight_parking_cost(impedance[mode], tour_duration[mode])
         model = self.connection_models[pt_mode]
         prob, logsum = model.calc_mode_prob(impedance)
-        if "airplane_ftx" in prob:
-            prob["airplane_fm"] += prob.pop("airplane_ftx")
+        if "airpl_taxi_acc" in prob:
+            prob["airpl_car_acc"] += prob.pop("airpl_taxi_acc")
         return prob, logsum
 
     def reweight_parking_cost(self, impedance, duration):

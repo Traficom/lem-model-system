@@ -99,8 +99,8 @@ class DepartureTimeModel:
                     self._add_2d_demand(
                         share[ap.name], demand.mode, ap.name,
                         demand.matrix, position)
-            if "first" in demand.mode:
-                mode = demand.mode.replace("first", "last")
+            if "acc" in demand.mode:
+                mode = demand.mode.replace("acc", "egr")
                 share: Dict[str, Any] = demand.purpose.demand_share[mode]
                 for ap in self.assignment_periods:
                     if demand.mode in ap.assignment_modes:

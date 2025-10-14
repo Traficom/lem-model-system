@@ -52,25 +52,25 @@
                 1.0
               ]
             },
-        "airplane_fm": {
+        "airpl_car_acc": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "train_fm": {
+        "train_car_acc": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "train_ftx": {
+        "train_taxi_acc": {
             "vrk": [
                 2.0,
                 0.0
                 ]
             },
-        "coach_fm": {
+        "coach_car_acc": {
             "vrk": [
                 2.0,
                 0.0
@@ -91,11 +91,11 @@
             0.1,
             9999
         ],
-        "airplane_fm": [
+        "airpl_car_acc": [
             0,
             9999
         ],
-        "airplane_ftx": [
+        "airpl_taxi_acc": [
             0,
             9999
         ],
@@ -103,11 +103,11 @@
             0.1,
             9999
         ],
-        "train_fm": [
+        "train_car_acc": [
             0,
             9999
         ],
-        "train_ftx": [
+        "train_taxi_acc": [
             0,
             9999
         ],
@@ -115,7 +115,7 @@
             0.1,
             9999
         ],
-        "coach_fm": [
+        "coach_car_acc": [
             0,
             9999
         ]
@@ -317,7 +317,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "airplane_fm": {
+            "airpl_car_acc": {
                 "constant": 79.02,
                 "generation": {
                     "car_density": 4.83
@@ -333,7 +333,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "airplane_ftx": {
+            "airpl_taxi_acc": {
                 "constant": 78.54,
                 "generation": {
                     "car_density": 4.54
@@ -361,7 +361,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "train_fm": {
+            "train_car_acc": {
                 "constant": 75.59,
                 "generation": {
                     "car_density": 4.83
@@ -376,7 +376,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "train_ftx": {
+            "train_taxi_acc": {
                 "constant": 76.36,
                 "generation": {
                     "car_density": 4.54
@@ -403,7 +403,7 @@
                 "log": {},
                 "individual_dummy": {}
             },
-            "coach_fm": {
+            "coach_car_acc": {
                 "constant": 75.5,
                 "generation": {
                     "car_density": 4.54
@@ -450,49 +450,49 @@
                 1.0
               ]
         },
-        "airplane_fm": {
+        "airpl_car_acc": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "train_fm": {
+        "train_car_acc": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "train_ftx": {
+        "train_taxi_acc": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "coach_fm": {
+        "coach_car_acc": {
             "vrk": [
                 1.0,
                 0.0
               ]
         },
-        "l_last_mile": {
+        "airpl_car_egr": {
             "vrk": [
                 0.0,
                 1.0
                 ]
         },
-        "j_last_mile": {
+        "train_car_egr": {
             "vrk": [
                 0.0,
                 1.0
                 ]
         },
-        "j_last_taxi": {
+        "train_taxi_egr": {
             "vrk": [
                 0.0,
                 1.0
                 ]
         },
-        "e_last_mile": {
+        "coach_car_egr": {
             "vrk": [
                 0.0,
                 1.0

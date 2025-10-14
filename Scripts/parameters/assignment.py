@@ -190,42 +190,42 @@ vot_inv = {
 }
 congested_time_weight = 1.5
 tour_duration = {
-    "train_fm": {
+    "train_car_acc": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "train_ftx": {
+    "train_taxi_acc": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "coach_fm": {
+    "coach_car_acc": {
         "avg": 2.62,
         "hb_business": 2.43,
         "hb_leisure_overnight": 14,
     },
-    "airplane_fm": {
+    "airpl_car_acc": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
     },
-    "train_lm": {
+    "train_car_egr": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "train_ltx": {
+    "train_taxi_egr": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "coach_lm": {
+    "coach_car_egr": {
         "avg": 2.62,
         "hb_business": 2.43,
         "hb_leisure_overnight": 14,
     },
-    "airplane_lm": {
+    "airpl_car_egr": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
@@ -331,14 +331,14 @@ transfer_penalty = {
     "train": 5,
     "coach": 5,
     "airplane": 5,
-    "train_fm": 5,
-    "train_ftx": 5,
-    "coach_fm": 5,
-    "airplane_fm": 5,
-    "train_lm": 5,
-    "train_ltx": 5,
-    "coach_lm": 5,
-    "airplane_lm": 5,
+    "train_car_acc": 5,
+    "train_taxi_acc": 5,
+    "coach_car_acc": 5,
+    "airpl_car_acc": 5,
+    "train_car_egr": 5,
+    "train_taxi_egr": 5,
+    "coach_car_egr": 5,
+    "airpl_car_egr": 5,
 }
 extra_waiting_time = {
     "penalty": "@wait_time_dev",
@@ -486,28 +486,28 @@ volume_factors = {
         "it": 0.238,
         "vrk": 1.0,
     },
-    "airplane_fm": {
+    "airpl_car_acc": {
         "vrk": 1.0,
     },
-    "train_fm": {
+    "train_car_acc": {
         "vrk": 1.0,
     },
-    "train_ftx": {
+    "train_taxi_acc": {
         "vrk": 1.0,
     },
-    "coach_fm": {
+    "coach_car_acc": {
         "vrk": 1.0,
     },
-    "airplane_lm": {
+    "airpl_car_egr": {
         "vrk": 1.0,
     },
-    "train_lm": {
+    "train_car_egr": {
         "vrk": 1.0,
     },
-    "train_ltx": {
+    "train_taxi_egr": {
         "vrk": 1.0,
     },
-    "coach_lm": {
+    "coach_car_egr": {
         "vrk": 1.0,
     },
 }
@@ -554,16 +554,16 @@ car_classes = (
 car_and_van_classes = car_classes + ("van",)
 private_classes = car_and_van_classes + ("bike",)
 car_access_classes = (
-    "train_fm",
-    "train_ftx",
-    "coach_fm",
-    "airplane_fm",
+    "train_car_acc",
+    "train_taxi_acc",
+    "coach_car_acc",
+    "airpl_car_acc",
 )
 car_egress_classes = (
-    "train_lm",
-    "coach_lm",
-    "train_ltx",
-    "airplane_lm",
+    "train_car_egr",
+    "coach_car_egr",
+    "train_taxi_egr",
+    "airpl_car_egr",
 )
 mixed_mode_classes = car_access_classes + car_egress_classes
 long_dist_simple_classes = (
@@ -589,9 +589,9 @@ simple_transport_classes = (private_classes
                             + truck_classes)
 transport_classes = simple_transport_classes + mixed_mode_classes
 intermodals = {
-    "train": ["train_fm", "train_ftx"],
-    "coach": ["coach_fm"],
-    "airplane": ["airplane_fm"],
+    "train": ["train_car_acc", "train_taxi_acc"],
+    "coach": ["coach_car_acc"],
+    "airplane": ["airpl_car_acc"],
 }
 assignment_classes = {
     "hb_work": "work",
@@ -633,14 +633,14 @@ vot_classes = {
     "train": "work",
     "coach": "leisure",
     "airplane": "work",
-    "train_fm": "work",
-    "train_ftx": "work",
-    "coach_fm": "leisure",
-    "airplane_fm": "work",
-    "train_lm": "work",
-    "train_ltx": "work",
-    "coach_lm": "leisure",
-    "airplane_lm": "work",
+    "train_car_acc": "work",
+    "train_taxi_acc": "work",
+    "coach_car_acc": "leisure",
+    "airpl_car_acc": "work",
+    "train_car_egr": "work",
+    "train_taxi_egr": "work",
+    "coach_car_egr": "leisure",
+    "airpl_car_egr": "work",
 }
 local_transit_modes = [
     'b',
@@ -658,14 +658,14 @@ long_dist_transit_modes = {
     "train": ['j'],
     "coach": ['e'],
     "airplane": ['l'],
-    "train_fm": ['j'],
-    "train_ftx": ['j'],
-    "coach_fm": ['e'],
-    "airplane_fm": ['l'],
-    "train_lm": ['j'],
-    "train_ltx": ['j'],
-    "coach_lm": ['e'],
-    "airplane_lm": ['l'],
+    "train_car_acc": ['j'],
+    "train_taxi_acc": ['j'],
+    "coach_car_acc": ['e'],
+    "airpl_car_acc": ['l'],
+    "train_car_egr": ['j'],
+    "train_taxi_egr": ['j'],
+    "coach_car_egr": ['e'],
+    "airpl_car_egr": ['l'],
 }
 aux_modes = [
     'a'
