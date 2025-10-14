@@ -6,11 +6,15 @@ import numpy # type: ignore
 import pandas
 from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
-
+from datahandling.matrixdata import MatrixData
 import utils.log as log
 import parameters.zone as param
 import models.logit as logit
-from parameters.assignment import assignment_classes
+from parameters.assignment import (
+    assignment_classes,
+    intermodals,
+    tour_duration,
+    mixed_mode_classes)
 import parameters.cost as cost
 import models.generation as generation
 from datatypes.demand import Demand
@@ -265,6 +269,14 @@ class TourPurpose(Purpose):
             if mode not in self.demand_share:
                 self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
+        self.connection_models: Dict[str, logit.LogitModel] = {}
+        for mode in intermodals:
+            if mode in self.modes:
+                self.modes += intermodals[mode]
+                new_spec = copy(specification)
+                new_spec["mode_choice"] = new_spec["access_mode_choice"][mode]
+                self.connection_models[mode] = logit.LogitModel(
+                    self, new_spec, zone_data, resultdata)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.mappings = self.zone_data.aggregations.mappings
@@ -346,8 +358,54 @@ class TourPurpose(Purpose):
                     Mode (car/transit/bike/...) : numpy.ndarray
         """
         purpose_impedance = self.transform_impedance(impedance)
+
+        #If the trip is long-distance, calculate unimodal/intermodal
+        # probability split for each main mode
+        if "vrk" in impedance:
+            acc_splits = {}
+            matrixdata = MatrixData(self.resultdata.path / "Matrices")
+            with matrixdata.open(
+                    f"logsum_{self.name}", "vrk", list(self.zone_numbers), m='w'
+                    ) as mtx:
+                for main_mode, acc_modes in intermodals.items():
+                    mode_impedance = {mode: purpose_impedance.pop(mode)
+                        for mode in [main_mode] + acc_modes}
+                    acc_splits[main_mode], logsum = self.split_connection_mode(
+                        mode_impedance, main_mode, acc_modes)
+                    purpose_impedance[main_mode] = {"logsum": logsum}
+                    mtx[main_mode] = logsum
+
+        # Calculate main mode probability after access mode probability
+        # to have access mode logsum as variable
         self.prob = self.model.calc_prob(purpose_impedance, is_last_iteration)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
+
+        # If the trip is long-distance, calculate joint main mode/access
+        # mode probability for each intermodal class in EMME assignment
+        if "vrk" in impedance:
+            for main_mode, split in acc_splits.items():
+                prob = self.prob[main_mode]
+                for acc_mode in split:
+                    self.prob[acc_mode] = split[acc_mode] * prob
+
+    def split_connection_mode(self, impedance, pt_mode, car_acc_modes):
+        access_modes = car_acc_modes + [pt_mode]
+        if pt_mode == "airplane":
+            access_modes.append("airpl_taxi_acc")
+            impedance["airpl_taxi_acc"] = impedance["airpl_car_acc"]
+        for mode in access_modes:
+            if mode in mixed_mode_classes:
+                self.reweight_parking_cost(impedance[mode], tour_duration[mode])
+        model = self.connection_models[pt_mode]
+        prob, logsum = model.calc_mode_prob(impedance)
+        if "airpl_taxi_acc" in prob:
+            prob["airpl_car_acc"] += prob.pop("airpl_taxi_acc")
+        return prob, logsum
+
+    def reweight_parking_cost(self, impedance, duration):
+        impedance["park_cost"] = (impedance["park_cost"]
+                                  * duration[self.name]
+                                  / duration["avg"])
 
     def calc_basic_prob(self, impedance, is_last_iteration):
         """Calculate mode and destination probabilities.

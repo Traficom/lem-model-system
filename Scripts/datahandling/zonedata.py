@@ -70,6 +70,7 @@ class ZoneData:
     def _add_transformations(self,
                              data: pandas.DataFrame,
                              extra_dummies: Dict[str, Sequence[str]]):
+        self["car_density"].clip(upper=1, inplace=True)
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(

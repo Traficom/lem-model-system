@@ -44,10 +44,18 @@ class LogitModel:
         self.purpose = purpose
         self.bounds = purpose.bounds
         self.zone_data = zone_data
-        self.mode_utils: Dict[str, numpy.array] = {}
+        self.mode_utils: Dict[str, numpy.ndarray] = {}
         self.dest_choice_param: Dict[str, Dict[str, Any]] = parameters["destination_choice"]
         self.mode_choice_param: Optional[Dict[str, Dict[str, Any]]] = parameters["mode_choice"]
         self.distance_boundary = parameters["distance_boundaries"]
+
+    def calc_mode_prob(self, impedance: Dict[str, numpy.ndarray]):
+        expsum, mode_exps = self._calc_mode_utils(impedance)
+        impedance.clear()
+        self.mode_utils.clear()
+        prob = {mode: divide(mode_exps.pop(mode), expsum).T
+            for mode in self.mode_choice_param}
+        return prob, -log(expsum) + 90
 
     def _calc_alt_util(self, mode: str, utility: numpy.ndarray,
                        impedance: Dict[str, numpy.ndarray],

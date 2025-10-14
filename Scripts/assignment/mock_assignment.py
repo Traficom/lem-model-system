@@ -77,7 +77,7 @@ class MockPeriod(Period):
                  end_assignment_classes: Iterable[str]):
         self.name = name
         self.matrices = matrices
-        self.assignment_modes = param.transport_classes
+        self.assignment_modes = param.simple_transport_classes
         self._end_assignment_classes = set(end_assignment_classes)
 
     @property
@@ -153,8 +153,10 @@ class MockPeriod(Period):
         """
         return self._get_impedances(self._end_assignment_classes)
 
-    def _get_impedances(self, assignment_classes: Iterable[str]):
-        impedance_output = [mtx_type for mtx_type in param.impedance_output
+    def _get_impedances(
+            self, assignment_classes: Iterable[str],
+            impedance_output: Iterable[str] = param.basic_impedance_output):
+        impedance_output = [mtx_type for mtx_type in impedance_output
             if mtx_type != "toll_cost"]
         mtxs = {mtx_type: self._get_matrices(mtx_type, assignment_classes)
             for mtx_type in impedance_output}
@@ -243,6 +245,10 @@ class WholeDayPeriod(MockPeriod):
         """
         return self._get_impedances(self.assignment_modes)
 
+    def _get_impedances(self, assignment_classes):
+        return MockPeriod._get_impedances(
+            self, assignment_classes, param.impedance_output)
+
 
 class OffPeakPeriod(MockPeriod):
     def end_assign(self) -> Dict[str, Dict[str, numpy.ndarray]]:
@@ -264,7 +270,7 @@ class OffPeakPeriod(MockPeriod):
 class TransitAssignmentPeriod(OffPeakPeriod):
     def __init__(self, *args, **kwargs):
         MockPeriod.__init__(self, *args, **kwargs)
-        self.assignment_modes = param.transit_classes
+        self.assignment_modes = param.simple_transit_classes
         self._end_assignment_classes -= set(
             param.private_classes + param.truck_classes)
 
