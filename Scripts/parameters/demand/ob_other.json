@@ -10,6 +10,7 @@
     "generation_area": "domestic",
     "attraction_area": "domestic",
     "struct": "mode>dest",
+    "gen_model": "rate",
     "generation": {
         "hb_leisure": 0.0206,
         "hb_sport": 0.0107,

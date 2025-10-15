@@ -8,6 +8,7 @@
     "generation_area": "domestic",
     "attraction_area": "domestic",
     "struct": "mode>dest",
+    "gen_model": "rate",
     "generation": {
         "hb_work": 0.0454
     },

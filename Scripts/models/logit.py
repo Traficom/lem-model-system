@@ -4,6 +4,7 @@ import numpy # type: ignore
 import pandas
 import copy
 from collections import defaultdict
+from utils.calibrate import attempt_calibration
 
 if TYPE_CHECKING:
     from datahandling.resultdata import ResultsData
@@ -680,3 +681,123 @@ class SecDestModel(LogitModel):
 
 class OriginModel(DestModeModel):
     pass
+
+class GenerationLogit(LogitModel):
+    """Logit model with generation count response.
+
+    Parameters
+    ----------
+    zone_data : ZoneData
+        Data used for all demand calculations
+    bounds : slice
+        Zone bounds
+    age_groups : list
+        tuple
+            int
+                Age intervals
+    resultdata : ResultData
+        Writer object to result directory
+    """
+
+    def __init__(self, 
+                 parameters: dict,
+                 zone_data: ZoneData, 
+                 bounds: slice, 
+                 resultdata: ResultsData):
+        self.resultdata = resultdata
+        self.zone_data = zone_data
+        self.bounds = bounds
+        attempt_calibration(parameters)
+        self.param = parameters
+
+    def calc_basic_prob(self) -> Dict[int, numpy.ndarray]:
+        prob = {}
+        self.exps = {}
+        nr_expsum = 0
+        # First calc probabilites without individual dummies
+        for nr in self.param:
+            b = self.param[nr]
+            utility = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+            utility += b["constant"]
+            utility = self._add_zone_util(utility, b["generation"], True)
+            self.exps[nr] = numpy.minimum(numpy.exp(utility), 99999)
+            nr_expsum += self.exps[nr]
+        for nr in self.param:
+            prob[nr] = divide(self.exps[nr], nr_expsum)
+        return prob
+
+
+    def calc_prob(self) -> Dict[int, numpy.ndarray]:
+        """Calculate tour generation probabilities with individual dummies included.
+
+        Returns
+        -------
+        dict
+            key : int
+                Number of cars in household / Number of tours per day 
+            value : numpy.ndarray
+                Choice probabilities
+        """
+        self.calc_basic_prob()
+        prob = {}
+        for nr in self.param:
+            prob[nr] = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+        # Calculate probability with individual dummies and combine
+        for dummy in self.param["0"]["individual_dummy"]:
+            nr_exp = {}
+            nr_expsum = numpy.zeros(self.bounds.stop, dtype=numpy.float32)
+            for nr in self.param:
+                b = self.param[nr]["individual_dummy"][dummy]
+                nr_exp[nr] = self.exps[nr] * numpy.exp(b)
+                nr_expsum += nr_exp[nr]
+            for nr in self.param:
+                ind_prob = nr_exp[nr] / nr_expsum
+                dummy_share = self.zone_data.get_data(
+                    dummy, self.bounds, generation=True)
+                with_dummy = dummy_share * ind_prob
+                prob[nr] += with_dummy
+        return prob
+
+    def calc_individual_prob(self, 
+                             income: str, 
+                             gender: str, 
+                             zone: Optional[int] = None):
+        """Calculate tour generation probabilities with individual dummies included.
+
+        Uses results from previously run `calc_basic_prob()`.
+
+        Parameters
+        ----------
+        income : str
+            Agent/segment income group
+        gender : str
+            Agent/segment gender (female/male)
+        zone : int (optional)
+            Index of zone where the agent lives, if no zone index is given,
+            calculation is done for all zones
+
+        Returns
+        -------
+        dict
+            key : int
+                Number of cars in household (0, 1, 2(+))
+            value : numpy.ndarray
+                Choice probabilities
+        """
+        prob = {}
+        exps = {}
+        nr_expsum = 0
+        for nr in self.param:
+            if zone is None:
+                exps[nr] = self.exps[nr]
+            else:
+                exps[nr] = self.exps[nr][self.zone_data.zone_index(zone)]
+            b = self.param
+            if income in b["individual_dummy"]:
+                exps[nr] *= numpy.exp(b["individual_dummy"][income])
+            if gender in b["individual_dummy"]:
+                exps[nr] *= numpy.exp(b["individual_dummy"][gender])
+            nr_expsum += exps[nr]
+        for nr in self.param:
+            prob = exps[nr] / nr_expsum
+        return prob

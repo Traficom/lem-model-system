@@ -4,10 +4,12 @@ import pandas
 from collections import defaultdict
 from typing import TYPE_CHECKING, Dict
 
+from models.logit import GenerationLogit
 from models.logit import divide
 if TYPE_CHECKING:
     from datatypes.purpose import Purpose
     from datahandling.resultdata import ResultsData
+    from datahandling.zonedata import ZoneData
 
 
 class GenerationModel:
@@ -63,6 +65,40 @@ class GenerationModel:
         """
         return self.tours.values
 
+class LogitTourGeneration(GenerationModel):
+    """For this sub-class, tours are created in `model.logit.TourCombinationModel`."""
+
+    def __init__(self, 
+                 purpose: Purpose,
+                 parameters: dict,
+                 zone_data: ZoneData, 
+                 bounds: slice, 
+                 resultdata: ResultsData):
+        """Initialize tour generation model.
+
+        Parameters
+        ----------
+        purpose : datatypes.purpose.TourPurpose
+            Travel purpose (hw/hs/ho/...)
+        resultdata : datahandling.resultdata.ResultData
+            Writer object for result directory
+        param : dict
+            key : str
+                Zone variable name
+            value : float
+                Generation factor
+        """
+        self.purpose = purpose
+        self.zone_data = zone_data
+        self.gen_model = GenerationLogit(parameters, zone_data, bounds, resultdata)
+
+    def add_tours(self):
+        prob = self.gen_model.calc_prob()
+        for nr in range(2):
+            # Each combination is a tuple of tours performed during a day
+            nr_tours: pandas.Series = (nr * prob[str(nr)] * 
+                                       self.zone_data["population"])
+            self.tours += nr_tours
 
 class TourCombinationGeneration(GenerationModel):
     """For this sub-class, tours are created in `model.logit.TourCombinationModel`."""

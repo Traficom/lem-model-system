@@ -5,7 +5,34 @@
     "generation_area": "domestic",
     "attraction_area": "domestic",
     "struct": "mode>dest",
-    "generation": "tour_combination_model",
+    "gen_model": "logit",
+    "generation": {
+        "0": {
+            "constant":   0,
+            "individual_dummy": {
+                "sh_age_7_17": 0.0,
+                "sh_age_18_29":  0.0,
+                "sh_age_30_49":  0.0,
+                "sh_age_50_64": 0.0,
+                "sh_age_65_99": 0.0
+            },
+            "generation": {}
+        },
+        "1": {
+            "constant":   -2.538089,
+            "individual_dummy": {
+                "sh_age_7_17": 1.208474,
+                "sh_age_18_29": 0.0,
+                "sh_age_30_49": -2.230785,
+                "sh_age_50_64": -2.817654,
+                "sh_age_65_99": -4.072479
+            },
+            "generation": {
+                "hb_edu_student": 0.397998,
+                "log_pop_density": -0.167866
+            }
+        }
+    },
     "impedance_share": {
         "car_work": {
             "aht": [

@@ -250,15 +250,21 @@ class TourPurpose(Purpose):
     def __init__(self, specification, zone_data, resultdata, mtx_adjustment):
         args = (self, specification, zone_data, resultdata)
         Purpose.__init__(*args, mtx_adjustment)
-        if self.orig == "source":
-            self.gen_model = generation.NonHomeGeneration(
-                self, resultdata, specification["generation"])
-        elif isinstance(specification["generation"], str):
-            self.gen_model = generation.TourCombinationGeneration(
-                self, resultdata, None)
-        else:
+        if (self.orig == "home" and 
+            specification["gen_model"] == "rate"):
             self.gen_model = generation.GenerationModel(
                 self, resultdata, specification["generation"])
+        elif (self.orig == "source" and 
+              specification["gen_model"] == "rate"):
+            self.gen_model = generation.NonHomeGeneration(
+                self, resultdata, specification["generation"])
+        elif (self.orig == "home" and 
+              specification["gen_model"] == "logit"):
+            self.gen_model = generation.LogitTourGeneration(
+                self, specification["generation"], zone_data, 
+                self.bounds, resultdata)
+        else:
+            log.error(f"Tour generation model not defined for {self.name}")
         if self.name == "sop":
             self.model = logit.OriginModel(*args)
         elif specification["struct"] == "dest>mode":
