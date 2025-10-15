@@ -70,6 +70,7 @@ class ZoneData:
     def _add_transformations(self,
                              data: pandas.DataFrame,
                              extra_dummies: Dict[str, Sequence[str]]):
+        self["car_density"].clip(upper=1, inplace=True)
         self.share["share_female"] = pandas.Series(
             0.5, self.zone_numbers, dtype=numpy.float32)
         self.share["share_male"] = pandas.Series(
@@ -95,6 +96,9 @@ class ZoneData:
             (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
              + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
             hh_pop)
+        self.share["sh_car"] = (self["sh_cars1_hh1"]
+                                + self["sh_cars1_hh2"]
+                                + self["sh_cars2_hh2"])
 
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)

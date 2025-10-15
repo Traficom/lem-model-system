@@ -268,9 +268,9 @@ class ModelSystem:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
             soft_mode_impedance[tp] = ap.init_assign()
         if self.long_dist_matrices is not None:
-            self.dtm.init_demand(param.long_distance_transit_classes)
+            self.dtm.init_demand(param.long_dist_simple_classes)
             self._add_external_demand(
-                self.long_dist_matrices, param.long_distance_transit_classes)
+                self.long_dist_matrices, param.long_dist_simple_classes)
         if self.freight_matrices is not None:
             self.dtm.init_demand(param.truck_classes)
             self._add_external_demand(
@@ -401,9 +401,16 @@ class ModelSystem:
         zone_numbers = self.ass_model.zone_numbers
         tp = ap.name
         demand_sum_string = tp
+        transport_classes = (param.car_classes + param.long_dist_simple_classes
+            if self.ass_model.use_free_flow_speeds
+            else ap.assignment_modes)
         with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
-            for ass_class in ap.assignment_modes:
+            for ass_class in transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
+                if (self.ass_model.use_free_flow_speeds
+                    and ass_class in param.intermodals):
+                    for intermodal in param.intermodals[ass_class]:
+                        demand += self.dtm.demand[tp][intermodal]
                 mtx[ass_class] = demand
                 demand_sum_string += "\t{:8.0f}".format(demand.sum())
         self.resultdata.print_line(demand_sum_string, "result_summary")

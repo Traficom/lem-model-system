@@ -57,7 +57,7 @@ class EmmeAssignmentTest:
             "transit_vehicles": 35,
             "transit_lines": 40,
             "transit_segments": 850,
-            "extra_attribute_values": 1100000,
+            "extra_attribute_values": 1300000,
             "functions": 99,
             "operators": 5000,
             "sola_analyses": 240,
@@ -77,7 +77,10 @@ class EmmeAssignmentTest:
             project_dir.parent / "Network", scenario_num, "test",
             overwrite=True)
         self.ass_model = ass.EmmeAssignmentModel(
-            emme_context, scenario_num, "uusimaa")
+             emme_context, scenario_num, "uusimaa")
+        self.long_dist_model = ass.EmmeAssignmentModel(
+            emme_context, scenario_num, "koko_suomi",
+            use_free_flow_speeds=True, time_periods={"vrk": "WholeDayPeriod"})
         self.dist_cost = {
             "car_work": 0.12,
             "car_leisure": 0.12,
@@ -97,8 +100,6 @@ class EmmeAssignmentTest:
             "car_leisure": car_matrix,
             "transit_work": car_matrix,
             "transit_leisure": car_matrix,
-            # "car_first_mile": car_matrix,
-            # "car_last_mile": car_matrix,
             "bike": car_matrix,
             "trailer_truck": car_matrix,
             "semi_trailer": car_matrix,
@@ -140,6 +141,42 @@ class EmmeAssignmentTest:
                         cost_data = travel_cost[time_period][mtx_type][ass_class]
                         mtx[ass_class] = cost_data
 
+    def test_park_and_ride(self):
+        self.long_dist_model.prepare_network(self.dist_cost)
+        nr_zones = self.ass_model.nr_zones
+        car_matrix = numpy.full((nr_zones, nr_zones), 10.0)
+        ass_classes = [
+            "car_work",
+            "car_leisure",
+            "train",
+            "coach",
+            "airplane",
+            "train_car_acc",
+            "train_taxi_acc",
+            "coach_car_acc",
+            "airpl_car_acc",
+            "train_car_egr",
+            "train_taxi_egr",
+            "coach_car_egr",
+            "airpl_car_egr",
+        ]
+        demand = {ass_class: car_matrix for ass_class in ass_classes}
+        for ap in self.long_dist_model.assignment_periods:
+            for ass_class in demand:
+                ap.set_matrix(ass_class, car_matrix)
+            ap.init_assign()
+            ap.assign_trucks_init()
+            travel_cost = ap.end_assign()
+            costs_files = MatrixData(
+                TEST_DATA_PATH / "Results" / "assignment" / "Matrices")
+            for mtx_type in travel_cost:
+                zone_numbers = self.ass_model.zone_numbers
+                with costs_files.open(mtx_type, ap.name, zone_numbers, m='w') as mtx:
+                    for ass_class in travel_cost[mtx_type]:
+                        cost_data = travel_cost[mtx_type][ass_class]
+                        mtx[ass_class] = cost_data
+            ap.transit_results_links_nodes()
+
     def test_transit_cost(self):
         firstb_single = (2, 3, 5, 70, 0, 1.5)
         dist_single = (0.1, 0.2, 0.1, 0.3, 0.1, 0.2)
@@ -178,4 +215,5 @@ class EmmeAssignmentTest:
 if emme_available:
     em = EmmeAssignmentTest()
     em.test_assignment()
+    em.test_park_and_ride()
     em.test_freight_assignment()

@@ -461,7 +461,8 @@ class MockProject:
         for category in ["on_links","on_segments","at_nodes"]:
             if category in specification:
                 for attr in specification[category].values():
-                    if scenario.extra_attribute(attr) is None:
+                    if (not isinstance(attr, list)
+                        and scenario.extra_attribute(attr) is None):
                         raise AttributeError(f"Attribute {attr} does not exist")
 
     def traversal_analysis(self, specification: Dict, output_file: str,
@@ -900,6 +901,12 @@ class Node(NetworkObject):
     @property
     def id(self):
         return str(self.number)
+
+    def incoming_links(self):
+        return (l for l in self.network.links() if l.j_node is self)
+
+    def outgoing_links(self):
+        return (l for l in self.network.links() if l.i_node is self)
 
     def outgoing_segments(self, include_hidden=False):
         return (s for s in self.network.transit_segments(include_hidden)

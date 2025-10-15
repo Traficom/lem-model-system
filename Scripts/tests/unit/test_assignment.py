@@ -55,8 +55,6 @@ class EmmeAssignmentTest(unittest.TestCase):
             "car_leisure",
             "transit_work",
             "transit_leisure",
-            # "car_first_mile",
-            # "car_last_mile",
             "bike",
             "trailer_truck",
             "semi_trailer",
@@ -92,7 +90,7 @@ class EmmeAssignmentTest(unittest.TestCase):
             "car_work",
             "car_leisure",
             "train",
-            "long_d_bus",
+            "coach",
             "airplane",
         ]
         for ap in ass_model.assignment_periods:
