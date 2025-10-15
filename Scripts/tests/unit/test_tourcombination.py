@@ -26,3 +26,4 @@ class TourCombinationModelTest(unittest.TestCase):
         self.assertAlmostEquals(sum(prob.values()), 1)
         prob = model.calc_prob("age_7_17", slice(0, 9))
         self.assertIs(type(prob[()]), pandas.core.series.Series)
+        self.assertEquals(prob[("hb_edu_student", "hb_edu_student")].values.ndim, 1)

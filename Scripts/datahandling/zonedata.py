@@ -95,8 +95,6 @@ class ZoneData:
             (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
              + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
             hh_pop)
-        self["pop_density"] = divide(data["population"], data["land_area"])
-        self["log_pop_density"] = numpy.log(self["pop_density"]+1)
 
         # Create diagonal matrix
         self["within_zone"] = numpy.full((self.nr_zones, self.nr_zones), 0.0)
