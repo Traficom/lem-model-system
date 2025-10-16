@@ -13,7 +13,7 @@ tour_number_increase = {
 tour_combinations = {
     0: {
         () : {
-            "constant":   0,
+            "constant":   6.051171,
             "individual_dummy": {
                 "age_7_17": 0.0,
                 "age_18_29":  0.0,
@@ -26,17 +26,16 @@ tour_combinations = {
     },
     1: {
         ("hb_edu_student",) : {
-            "constant":   -2.538089,
+            "constant":   0.0,
             "individual_dummy": {
-                "age_7_17": 1.208474,
-                "age_18_29": 0.0,
-                "age_30_49": -2.230785,
-                "age_50_64": -2.817654,
-                "age_65_99": -4.072479
+                "age_7_17": 2.516453,
+                "age_18_29": 3.286894,
+                "age_30_49": 1.412812,
+                "age_50_64": 0.0,
+                "age_65_99": 0.0
             },
             "zone": {
-                "hb_edu_student": .397998,
-                "log_pop_density": -0.167866
+                "hb_edu_student": 0.143613
             }
         }
     }
