@@ -8,28 +8,27 @@
     "gen_model": "logit",
     "generation": {
         "0": {
-            "constant":   0,
+            "constant": 6.051171,
             "individual_dummy": {
                 "sh_age_7_17": 0.0,
-                "sh_age_18_29":  0.0,
-                "sh_age_30_49":  0.0,
+                "sh_age_18_29": 0.0,
+                "sh_age_30_49": 0.0,
                 "sh_age_50_64": 0.0,
                 "sh_age_65_99": 0.0
             },
             "generation": {}
         },
         "1": {
-            "constant":   -2.538089,
+            "constant": 0.0,
             "individual_dummy": {
-                "sh_age_7_17": 1.208474,
-                "sh_age_18_29": 0.0,
-                "sh_age_30_49": -2.230785,
-                "sh_age_50_64": -2.817654,
-                "sh_age_65_99": -4.072479
+                "sh_age_7_17": 2.516453,
+                "sh_age_18_29": 3.286894,
+                "sh_age_30_49": 1.412812,
+                "sh_age_50_64": 0.0,
+                "sh_age_65_99": 0.0
             },
             "generation": {
-                "hb_edu_student": 0.397998,
-                "log_pop_density": -0.167866
+                "hb_edu_student": 0.143613
             }
         }
     },
