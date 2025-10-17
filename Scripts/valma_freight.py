@@ -66,7 +66,10 @@ def main(args):
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
         if hasattr(purpose, "logistics_module"):
-            lcs_areas = zonedata[f"lc_area_{purpose.name}"] if hasattr(zonedata, f"lc_area_{purpose.name}") else zonedata["lc_area"]
+            try:
+                lcs_areas = zonedata[f"lc_area_{purpose.name}"]
+            except KeyError:
+                lcs_areas = zonedata["lc_area"]
             lcs_sizes = lcs_areas[lcs_areas > 0]
             lc_indices = get_zone_indices(ass_model.mapping, lcs_sizes.index.to_list())
             purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
