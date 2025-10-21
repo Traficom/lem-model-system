@@ -135,7 +135,10 @@ class TransitMode(AssignmentMode):
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
         self.inv_cost = self._create_matrix("inv_cost")
+        self.inv_time = self._create_matrix("inv_time")
         self.board_cost = self._create_matrix("board_cost")
+        if self.name in param.long_distance_transit_classes:
+            self.main_inv_time = self._create_matrix("main_inv_time")
 
     def _add_park_and_ride(self):
         return False
@@ -148,10 +151,19 @@ class TransitMode(AssignmentMode):
             subset: {
                 "modes": modes,
                 "actual_in_vehicle_costs": self.inv_cost.id,
+                "actual_in_vehicle_times": self.inv_time.id,
                 "actual_total_boarding_costs": self.board_cost.id,
                 "avg_boardings": self.num_board.id,
             },
         }]
+        if self.name in param.long_distance_transit_classes:
+            self.transit_result_specs.append({
+                "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
+                subset: {
+                    "modes": param.long_dist_transit_modes[self.name],
+                    "actual_in_vehicle_times": self.main_inv_time.id,
+                },
+            })
         return [
             self.transit_result_specs[0],
             self.transit_result_specs[0][subset],
@@ -163,6 +175,8 @@ class TransitMode(AssignmentMode):
         cost = self.inv_cost.data + self.board_cost.data
         time = self.gen_cost.data - self.vot_inv*cost - transfer_penalty
         time[cost > 999999] = 999999
+        if self.name in param.long_distance_transit_classes:
+            time[self.main_inv_time.data < 0.5*self.inv_time.data] = 999999
         mtxs = {"time": time, "cost": cost}
         for mtx_name in param.impedance_output:
             if mtx_name in self._matrices:
