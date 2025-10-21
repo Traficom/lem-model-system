@@ -280,7 +280,7 @@ class TourPurpose(Purpose):
                 new_spec = copy(specification)
                 new_spec["mode_choice"] = new_spec["access_mode_choice"][mode]
                 self.connection_models[mode] = logit.LogitModel(
-                    self, new_spec, zone_data, resultdata)
+                    self, new_spec, self.generation_zone_data, resultdata)
         self.histograms = {mode: TourLengthHistogram(self.name)
             for mode in self.modes}
         self.orig_mappings = self.generation_zone_data.aggregations.mappings
@@ -372,7 +372,7 @@ class TourPurpose(Purpose):
             acc_splits = {}
             matrixdata = MatrixData(self.resultdata.path / "Matrices")
             with matrixdata.open(
-                    f"logsum_{self.name}", "vrk", list(self.zone_numbers), m='w'
+                    f"logsum_{self.name}", "vrk", list(self.orig_zone_numbers), m='w'
                     ) as mtx:
                 for main_mode, acc_modes in intermodals.items():
                     mode_impedance = {mode: purpose_impedance.pop(mode)
