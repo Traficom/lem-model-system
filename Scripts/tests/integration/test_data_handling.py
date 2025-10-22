@@ -71,6 +71,7 @@ class ZoneDataTest(unittest.TestCase):
         return df
 
     def test_csv_file_read(self):
-        zdata = ZoneData(ZONEDATA_PATH, ZONE_INDEXES, "uusimaa")
+        zdata = ZoneData(
+            ZONEDATA_PATH, ZONE_INDEXES, "uusimaa", car_dist_cost=0.12)
         self.assertIsNotNone(zdata["population"])
         self.assertIsNotNone(zdata["workplaces"])
