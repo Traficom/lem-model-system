@@ -259,8 +259,10 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info(f"Initializing assignment for period {tp}...")
-            if is_end_assignment or (not self.ass_model.use_free_flow_speeds
-                                     and car_time_files is None):
+            if (is_end_assignment
+                    or (not self.ass_model.use_free_flow_speeds
+                        and car_time_files is None
+                        and not isinstance(self.ass_model, MockAssignmentModel))):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes=ap.assignment_modes) as mtx:
@@ -343,7 +345,8 @@ class ModelSystem:
 
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
-        if not self.ass_model.use_free_flow_speeds:
+        if (not self.ass_model.use_free_flow_speeds
+                and not isinstance(self.ass_model, MockAssignmentModel)):
             car_matrices = (self.basematrices if self.long_dist_matrices is None
                 else self.long_dist_matrices)
             self._add_external_demand(car_matrices, param.car_classes)
