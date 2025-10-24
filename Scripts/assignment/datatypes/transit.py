@@ -164,7 +164,7 @@ class TransitMode(AssignmentMode):
         })
         if self.name not in param.long_distance_transit_classes:
             # For daily tours, use main_inv_time for analyzing train usage
-            self.transit_result_specs[1]["modes"] = ['j']
+            self.transit_result_specs[1][subset]["modes"] = ['j', 'r']
         return [
             self.transit_result_specs[0],
             self.transit_result_specs[0][subset],
