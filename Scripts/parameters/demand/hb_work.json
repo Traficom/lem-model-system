@@ -5,6 +5,7 @@
     "generation_area": "domestic",
     "attraction_area": "domestic",
     "struct": "dest>mode",
+    "gen_model": "rate",
     "generation": {
         "no_car": {
             "age_7_17": 0.0056,
