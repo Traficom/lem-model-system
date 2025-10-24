@@ -38,14 +38,15 @@ class OffPeakPeriod(AssignmentPeriod):
             Whether matrices will be saved in Emme format for all time periods.
         """
         self._prepare_cars(dist_unit_cost, save_matrices)
+        self._prepare_walk_and_bike(save_matrices=True)
+        self._end_assignment_classes.add("walk")
         self._prepare_other(day_scenario, save_matrices)
 
     def _prepare_other(self, day_scenario: Dict[str, float],
                        save_matrices: bool):
-        self._prepare_walk_and_bike(save_matrices=False)
         long_dist_transit_modes = {mode: TransitMode(
                 mode, self, day_scenario, save_matrices, save_matrices)
-            for mode in param.long_distance_transit_classes}
+            for mode in param.long_dist_simple_classes}
         self.assignment_modes.update(long_dist_transit_modes)
         self._prepare_transit(
             day_scenario, save_standard_matrices=True,
@@ -53,6 +54,13 @@ class OffPeakPeriod(AssignmentPeriod):
             transit_classes=param.local_transit_classes)
 
     def init_assign(self):
+        self._init_assign_transit()
+        self._assign_pedestrians()
+        self._set_bike_vdfs()
+        self._assign_bikes()
+        return self.get_soft_mode_impedances()
+
+    def _init_assign_transit(self):
         """Assign transit for one time period with free-flow bus speed."""
         self._set_car_vdfs(use_free_flow_speeds=True)
         stopping_criteria = copy.copy(
@@ -62,13 +70,17 @@ class OffPeakPeriod(AssignmentPeriod):
         self._assign_transit(
             param.local_transit_classes,
             delete_strat_files=self._delete_strat_files)
-        return []
 
     def get_soft_mode_impedances(self):
-        return []
+        return self._get_impedances([self.bike_mode.name, self.walk_mode.name])
 
-    def assign(self, *args) -> Dict[str, Dict[str, ndarray]]:
+    def assign(self, modes: Iterable[str]) -> Dict[str, Dict[str, ndarray]]:
         """Assign cars for one time period.
+
+        Parameters
+        ----------
+        modes : Set of str
+            The assignment classes for which impedance matrices will be returned
 
         Get travel impedance matrices for one time period from assignment.
         Transit impedance is fetched from free-flow init assignment.
@@ -82,9 +94,10 @@ class OffPeakPeriod(AssignmentPeriod):
         if not self._separate_emme_scenarios:
             self._calc_background_traffic(include_trucks=True)
         self._assign_cars(self.stopping_criteria["coarse"])
-        mtxs = self._get_impedances(
-            param.car_classes + param.local_transit_classes)
-        del mtxs["dist"]
+        mtxs = self._get_impedances(modes)
+        self._check_congestion()
+        for ass_cl in param.car_classes:
+            del mtxs["dist"][ass_cl]
         del mtxs["toll_cost"]
         return mtxs
 
@@ -126,7 +139,16 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         self._prepare_cars(
             dist_unit_cost, save_matrices=False, car_classes=["car_leisure"],
             truck_classes=[])
+        self.car_mode = self.assignment_modes.pop("car_leisure")
         self._prepare_other(day_scenario, save_matrices)
+
+    def init_assign(self):
+        self._init_assign_transit()
+        self.car_mode.get_matrices()
+        return []
+
+    def get_soft_mode_impedances(self):
+        return []
 
     def assign_trucks_init(self):
         pass
@@ -165,7 +187,7 @@ class TransitAssignmentPeriod(OffPeakPeriod):
         if not assign_transit:
             return {}
         self._assign_transit(
-            param.transit_classes, calc_network_results=True,
+            param.simple_transit_classes, calc_network_results=True,
             delete_strat_files=self._delete_strat_files)
         self._calc_transit_link_results()
         mtxs = self._get_impedances(self._end_assignment_classes)

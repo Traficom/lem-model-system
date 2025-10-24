@@ -70,7 +70,7 @@ class JourneyLevel:
                 "next_journey_level": next,
             } for mode in param.long_dist_transit_modes[transit_class]]
         if park_and_ride:
-            if "first_mile" in park_and_ride:
+            if transit_class in param.car_access_classes:
                 # Park-and-ride (car) mode allowed only on level 0.
                 car = FORBIDDEN if level >= PARKED else NOT_BOARDED
                 # If we want parking to be allowed only on specific links
@@ -78,7 +78,7 @@ class JourneyLevel:
                 # own mode for these links. For now, parking is allowed
                 # on all links where walking to a stop is possible.
                 walk = PARKED if level == NOT_BOARDED else level
-            elif "last_mile" in park_and_ride:
+            elif transit_class in param.car_egress_classes:
                 # Transfer to park-and-ride (car) mode only allowed after first
                 # boarding. If we want parking to be allowed only on specific
                 # links, we should specify an own mode for these links.

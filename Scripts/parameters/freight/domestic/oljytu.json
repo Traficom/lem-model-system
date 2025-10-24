@@ -1,8 +1,9 @@
 {
-    "name": "rkoljy",
+    "name": "oljytu",
     "orig": "null",
     "dest": "null",
-    "area": "all",
+    "generation_area": "domestic",
+    "attraction_area": "domestic",
     "struct": "dest>mode",
     "impedance_share": {},
     "distance_boundaries": {
@@ -25,10 +26,10 @@
             "impedance": {},
             "log": {
                 "attraction_size": 1.0,
-                "logsum": 2.824
+                "logsum": 0.4868
             },
             "attraction_size": {
-                "att_rkoljy": 1
+                "att_oljytu": 1
             }
         }
     },
@@ -38,20 +39,30 @@
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.2065
+                "cost": -0.3869
             },
             "log": {},
             "individual_dummy": {}
+        },
+        "freight_train": {
+            "generation": {},
+            "attraction": {},
+            "impedance": {
+                "cost": -0.4142
+            },
+            "log": {},
+            "individual_dummy": {},
+            "constant": 4.765
         },
         "ship": {
             "generation": {},
             "attraction": {},
             "impedance": {
-                "cost": -0.004761
+                "cost": -0.7465
             },
             "log": {},
             "individual_dummy": {},
-            "constant": -3.907
+            "constant": 13.02
         }
     },
     "demand_share": {}

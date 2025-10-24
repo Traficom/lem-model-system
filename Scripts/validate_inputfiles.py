@@ -157,7 +157,7 @@ def main(args):
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
                 "nodes": nr_transit_classes * (nr_segment_results-1),
-                "links": nr_veh_classes + 3,
+                "links": nr_veh_classes + 4,
                 "transit_lines": nr_transit_classes + 2,
                 "transit_segments": nr_transit_classes*nr_segment_results + 2,
             }
@@ -203,9 +203,9 @@ def main(args):
                 raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
-                tc = (param.transit_classes
+                tc = (param.simple_transit_classes
                       if param.time_periods[tp] == "TransitAssignmentPeriod"
-                      else param.transport_classes)
+                      else param.simple_transport_classes)
                 with matrixdata.open(
                         "demand", tp, zone_numbers[submodel],
                         transport_classes=tc) as mtx:
@@ -231,12 +231,13 @@ def main(args):
             raise ValueError(msg)
         zonedata_args = Path(data_path), zone_numbers[submodel], submodel
         forecast_zonedata = (FreightZoneData(*zonedata_args)
-            if model_type == "goods_transport" else ZoneData(*zonedata_args))
+                             if model_type == "goods_transport"
+                             else ZoneData(*zonedata_args, car_dist_cost=0.12))
 
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):
             long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)
+                                 + param.long_dist_simple_classes)
             long_dist_path = Path(long_dist_forecast)
             if long_dist_path not in long_dist_result_paths:
                 long_dist_matrices = MatrixData(long_dist_path)
