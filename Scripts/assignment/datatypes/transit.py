@@ -135,9 +135,9 @@ class TransitMode(AssignmentMode):
         self.num_board = self._create_matrix("num_board")
         self.gen_cost = self._create_matrix("gen_cost")
         self.inv_cost = self._create_matrix("inv_cost")
-        self.inv_time = self._create_matrix("inv_time")
         self.board_cost = self._create_matrix("board_cost")
-        self.main_inv_time = self._create_matrix("main_inv_time")
+        self.dist = self._create_matrix("dist")
+        self.main_mode_dist = self._create_matrix("main_mode_dist")
 
     def _add_park_and_ride(self):
         return False
@@ -149,8 +149,8 @@ class TransitMode(AssignmentMode):
             "total_impedance": self.gen_cost.id,
             subset: {
                 "modes": modes,
+                "distance": self.dist.id,
                 "actual_in_vehicle_costs": self.inv_cost.id,
-                "actual_in_vehicle_times": self.inv_time.id,
                 "actual_total_boarding_costs": self.board_cost.id,
                 "avg_boardings": self.num_board.id,
             },
@@ -159,7 +159,7 @@ class TransitMode(AssignmentMode):
             "type": "EXTENDED_TRANSIT_MATRIX_RESULTS",
             subset: {
                 "modes": param.long_dist_transit_modes[self.name],
-                "actual_in_vehicle_times": self.main_inv_time.id,
+                "distance": self.main_mode_dist.id,
             },
         })
         if self.name not in param.long_distance_transit_classes:
@@ -178,10 +178,10 @@ class TransitMode(AssignmentMode):
         time[cost > 999999] = 999999
         mtxs = {"time": time, "cost": cost}
         if self.name in param.long_distance_transit_classes:
-            time[self.main_inv_time.data < 0.5*self.inv_time.data] = 999999
+            time[self.main_mode_dist.data < 0.5*self.dist.data] = 999999
         else:
             mtxs["train_users"] = self.demand.data
-            mtxs["train_users"][self.main_inv_time.data == 0] = 0
+            mtxs["train_users"][self.main_mode_dist.data == 0] = 0
         for mtx_name in param.impedance_output:
             if mtx_name in self._matrices:
                 mtxs[mtx_name] = self._matrices[mtx_name].data
