@@ -445,7 +445,7 @@ class ModeDestModel(LogitModel):
             pass
         mode_expsum: numpy.ndarray = sum(mode_exps.values())
         logsum = pandas.Series(
-            log(mode_expsum), self.purpose.zone_numbers,
+            log(mode_expsum), self.purpose.orig_zone_numbers,
             name=self.purpose.name)
         self.zone_data._values[self.purpose.name] = logsum
         return mode_exps, mode_expsum, dest_exps, dest_expsums
@@ -464,7 +464,7 @@ class ModeDestModel(LogitModel):
             dest_expsums[mode] = {"logsum": expsum}
             label = self.purpose.name + "_" + mode
             logsum = pandas.Series(
-                log(expsum), self.purpose.zone_numbers, name=label)
+                log(expsum), self.purpose.orig_zone_numbers, name=label)
             self.zone_data._values[label] = logsum
             mode_exps[mode] = self._calc_mode_util(mode, dest_expsums[mode])
         return mode_exps, dest_exps, dest_expsums
@@ -530,11 +530,11 @@ class ModeDestModel(LogitModel):
                 sustainable_expsum += mode_exps[mode]
         label = f"{self.purpose.name}_sustainable"
         logsum_sustainable = pandas.Series(
-            log(sustainable_expsum), self.purpose.zone_numbers, name=label)
+            log(sustainable_expsum), self.purpose.orig_zone_numbers, name=label)
         self.zone_data._values[label] = logsum_sustainable
         self.accessibility["sustainable"] = logsum_sustainable
         self.accessibility["car"] = pandas.Series(
-            log(car_expsum), self.purpose.zone_numbers,
+            log(car_expsum), self.purpose.orig_zone_numbers,
             name=f"{self.purpose.name}_car")
         for key in ["all", "sustainable", "car"]:
             scaled_access = self.money_utility * self.accessibility[key]
@@ -618,7 +618,7 @@ class DestModeModel(LogitModel):
             dest_expsum = dest_exps.sum()
         if store_logsum:
             logsum = pandas.Series(
-                log(dest_expsum), self.purpose.zone_numbers,
+                log(dest_expsum), self.purpose.orig_zone_numbers,
                 name=self.purpose.name)
             self.accessibility = {"all": logsum}
             self.zone_data._values[self.purpose.name] = logsum

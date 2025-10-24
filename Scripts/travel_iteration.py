@@ -18,7 +18,7 @@ from datahandling.resultdata import ResultsData
 from datahandling.zonedata import ZoneData
 from datahandling.matrixdata import MatrixData
 from demand.trips import DemandModel
-from demand.external import ExternalModel
+from demand.external import ExternalPurpose
 from datatypes.purpose import new_tour_purpose
 from datatypes.purpose import Purpose, TourPurpose, SecDestPurpose
 from datatypes.person import Person
@@ -67,7 +67,7 @@ class ModelSystem:
                  long_dist_matrices_path: Optional[Path] = None,
                  freight_matrices_path: Optional[Path] = None):
         self.ass_model = cast(Union[MockAssignmentModel,EmmeAssignmentModel], assignment_model) #type checker hint
-        self.zone_numbers: numpy.array = self.ass_model.zone_numbers
+        self.zone_numbers: numpy.ndarray = self.ass_model.zone_numbers
 
         # Input data
         self.basematrices = MatrixData(base_matrices_path / submodel)
@@ -80,11 +80,12 @@ class ModelSystem:
         self.transit_cost = {data.pop("id"): data for data
             in cost_data["transit_cost"].values()}
         extra_dummies = cost_data.get("area_calibration", {})
-        self.zdata_forecast = ZoneData(
-            zone_data_path, self.zone_numbers, submodel,
-            extra_dummies=extra_dummies)
-        self.zdata_forecast["cost"] = (self.zdata_forecast["dist"]
-                                       * self.car_dist_cost["car_work"])
+        self._zone_datas = {
+            model_area: ZoneData(
+                zone_data_path, self.zone_numbers, submodel,
+                model_area=model_area, extra_dummies=extra_dummies,
+                car_dist_cost=self.car_dist_cost["car_work"]
+            ) for model_area in ["domestic"]}
 
         # Output data
         self.resultdata = ResultsData(results_path)
@@ -104,7 +105,7 @@ class ModelSystem:
                             (specification["mode_choice"][mode]
                                           ["generation"][subarea]) = coeff
             purpose = new_tour_purpose(
-                specification, self.zdata_forecast, self.resultdata,
+                specification, self._zone_datas, self.resultdata,
                 cost_data["cost_changes"])
             required_time_periods = sorted(
                 {tp for m in purpose.impedance_share.values() for tp in m})
@@ -127,14 +128,13 @@ class ModelSystem:
             + sec_dest_purposes)
         self.travel_modes = {mode: True for purpose in self.dm.tour_purposes
             for mode in purpose.modes}  # Dict instead of set, to preserve order
-        self.em = ExternalModel(
-            self.basematrices, self.zdata_forecast, self.zone_numbers)
+        self.external_purpose = ExternalPurpose(numpy.array(self.zone_numbers))
         self.mode_share: List[Dict[str,Any]] = []
         self.convergence = []
 
     def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         return DemandModel(
-            self.zdata_forecast, self.resultdata, tour_purposes,
+            self._zone_datas["domestic"], self.resultdata, tour_purposes,
             is_agent_model=False)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
@@ -205,9 +205,9 @@ class ModelSystem:
         car_matrices = {}
         with long_dist_matrices.open(
                 "demand", "vrk", zone_numbers,
-                self.zdata_forecast.mapping, long_dist_classes) as mtx:
+                self._zone_datas["domestic"].mapping, long_dist_classes) as mtx:
             for ass_class in long_dist_classes:
-                demand = Demand(self.em.purpose, ass_class, mtx[ass_class])
+                demand = Demand(self.external_purpose, ass_class, mtx[ass_class])
                 self.dtm.add_demand(demand)
                 if ass_class in param.car_classes:
                     car_matrices[ass_class] = demand.matrix
@@ -259,8 +259,10 @@ class ModelSystem:
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info(f"Initializing assignment for period {tp}...")
-            if is_end_assignment or (not self.ass_model.use_free_flow_speeds
-                                     and car_time_files is None):
+            if (is_end_assignment
+                    or (not self.ass_model.use_free_flow_speeds
+                        and car_time_files is None
+                        and not isinstance(self.ass_model, MockAssignmentModel))):
                 with self.basematrices.open(
                         "demand", tp, self.ass_model.zone_numbers,
                         transport_classes=ap.assignment_modes) as mtx:
@@ -277,8 +279,9 @@ class ModelSystem:
                 self.freight_matrices, param.truck_classes)
 
         # Add beeline distance dummy
-        idx = numpy.isin(self.zone_numbers, self.zdata_forecast.zone_numbers)
-        self.zdata_forecast["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
+        zd = self._zone_datas["domestic"]
+        idx = numpy.isin(self.zone_numbers, zd.zone_numbers)
+        zd["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
 
         if not is_end_assignment:
             log.info("Calculate probabilities for bike and walk...")
@@ -300,8 +303,7 @@ class ModelSystem:
                 impedance.clear()
         if is_end_assignment:
             self.ass_model.aggregate_results(
-                self.resultdata,
-                self.zdata_forecast.aggregations.municipality_mapping)
+                self.resultdata, zd.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         return impedance
@@ -343,20 +345,24 @@ class ModelSystem:
 
         # Calculate demand and add external demand
         self._add_internal_demand(previous_iter_impedance, iteration=="last")
-        if not self.ass_model.use_free_flow_speeds:
+        if (not self.ass_model.use_free_flow_speeds
+                and not isinstance(self.ass_model, MockAssignmentModel)):
             car_matrices = (self.basematrices if self.long_dist_matrices is None
                 else self.long_dist_matrices)
             self._add_external_demand(car_matrices, param.car_classes)
 
         # Add vans and save demand matrices
+        zd = self._zone_datas["domestic"]
         for ap in self.ass_model.assignment_periods:
-            self.dtm.add_vans(ap.name, self.zdata_forecast.nr_zones)
+            self.dtm.add_vans(ap.name, zd.nr_zones)
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap)
 
         # Log mode shares
-        idx = self.zdata_forecast.is_in_submodel
+        is_in_submodel = zd.is_in_submodel
+        idx = pandas.Series(False, self.zone_numbers)
+        idx[is_in_submodel.index] = is_in_submodel
         tours, _ = self._get_mode_tours()
         sum_all = sum(tours.values())[idx].sum()
         mode_shares = {}
@@ -391,8 +397,7 @@ class ModelSystem:
                 impedance.clear()
         if iteration=="last":
             self.ass_model.aggregate_results(
-                self.resultdata,
-                self.zdata_forecast.aggregations.municipality_mapping)
+                self.resultdata, zd.aggregations.municipality_mapping)
             self._calculate_noise_areas()
             self.resultdata.flush()
         return impedance
@@ -425,10 +430,10 @@ class ModelSystem:
 
     def _calculate_noise_areas(self):
         data = {}
+        zd = self._zone_datas["domestic"]
         data["area"] = self.ass_model.calc_noise(
-            self.zdata_forecast.aggregations.municipality_mapping)
-        pop = self.zdata_forecast.aggregations.aggregate_array(
-            self.zdata_forecast["population"], "county")
+            zd.aggregations.municipality_mapping)
+        pop = zd.aggregations.aggregate_array(zd["population"], "county")
         conversion = pandas.Series(zone_param.pop_share_per_noise_area)
         data["population"] = conversion * data["area"] * pop
         self.resultdata.print_data(data, "noise_areas.txt")
@@ -440,7 +445,7 @@ class ModelSystem:
     
     def _export_model_results(self):
         self.resultdata.print_data(
-            self.zdata_forecast.zone_values, "zonedata_input.txt")
+            self._zone_datas["domestic"].zone_values, "zonedata_input.txt")
         gen_tours_purpose = {purpose.name: purpose.generated_tours_all
                              for purpose in self.dm.tour_purposes}
         self.resultdata.print_data(
@@ -482,19 +487,18 @@ class ModelSystem:
         tours: Dict[str, pandas.Series] = {}
         dists: Dict[str, pandas.Series] = {}
         for mode in self.travel_modes:
-            demand = pandas.Series(
-                0.0, self.zdata_forecast.zone_numbers, name=mode)
-            dist = pandas.Series(
-                0.0, self.zdata_forecast.zone_numbers, name=mode)
+            demand = pandas.Series(0.0, self.zone_numbers, name=mode)
+            dist = pandas.Series(0.0, self.zone_numbers, name=mode)
             for purpose in self.dm.tour_purposes:
                 if mode in purpose.modes and purpose.dest != "source":
-                    bounds = (next(iter(purpose.sources)).bounds
-                        if isinstance(purpose, SecDestPurpose)
-                        else purpose.bounds)
                     if generation:
+                        bounds = (next(iter(purpose.sources)).bounds
+                            if isinstance(purpose, SecDestPurpose)
+                            else purpose.bounds)
                         demand[bounds] += purpose.generated_tours[mode]
                         dist[bounds] += purpose.generated_distance[mode]
                     else:
+                        bounds = purpose.dest_interval
                         demand[bounds] += purpose.attracted_tours[mode]
                         dist[bounds] += purpose.attracted_distance[mode]
             tours[mode] = demand
@@ -535,37 +539,6 @@ class ModelSystem:
             demand = purpose.distribute_tours(mode, impedance[mode], orig)
             container.add_demand(demand)
 
-    def _update_ratios(self, impedance, tp):
-        """Calculate time and cost ratios.
-        
-        Parameters
-        ----------
-        impedance : dict
-            Impedance matrices.
-        tp : str
-            Time period (usually aht in this function).
-        """ 
-        car_time = numpy.ma.average(
-            impedance["time"]["car_work"], axis=1,
-            weights=self.dtm.demand[tp]["car_work"])
-        transit_time = numpy.ma.average(
-            impedance["time"]["transit_work"], axis=1,
-            weights=self.dtm.demand[tp]["transit_work"])
-        time_ratio = transit_time / car_time
-        time_ratio = time_ratio.clip(0.01, None)
-        self.zdata_forecast["time_ratio"] = pandas.Series(
-            numpy.ma.getdata(time_ratio), self.zone_numbers)
-        car_cost = numpy.ma.average(
-            impedance["cost"]["car_work"], axis=1,
-            weights=self.dtm.demand[tp]["car_work"])
-        transit_cost = numpy.ma.average(
-            impedance["cost"]["transit_work"], axis=1,
-            weights=self.dtm.demand[tp]["transit_work"])
-        cost_ratio = transit_cost / 44. / car_cost
-        cost_ratio = cost_ratio.clip(0.01, None)
-        self.zdata_forecast["cost_ratio"] = pandas.Series(
-            numpy.ma.getdata(cost_ratio), self.zone_numbers)
-
 
 class AgentModelSystem(ModelSystem):
     """Object keeping track of all sub-models and tasks in agent model system.
@@ -594,7 +567,7 @@ class AgentModelSystem(ModelSystem):
         log.info("Creating synthetic population")
         random.seed(zone_param.population_draw)
         return DemandModel(
-            self.zdata_forecast, self.resultdata, tour_purposes,
+            self._zone_datas["domestic"], self.resultdata, tour_purposes,
             is_agent_model=True)
 
     def _add_internal_demand(self, previous_iter_impedance, is_last_iteration):
@@ -630,7 +603,7 @@ class AgentModelSystem(ModelSystem):
         log.info("Assigning mode and destination for {} agents ({} % of total population)".format(
             len(self.dm.population), int(zone_param.agent_demand_fraction*100)))
         purpose = self.dm.purpose_dict["hoo"]
-        sec_dest_tours = {mode: [defaultdict(list) for _ in purpose.zone_numbers]
+        sec_dest_tours = {mode: [defaultdict(list) for _ in purpose.orig_zone_numbers]
             for mode in purpose.modes}
         # Add keys for work-tour-related modes (e.g., "car_work"),
         # which refer to the same demand containers as for leisure tours.
@@ -639,7 +612,7 @@ class AgentModelSystem(ModelSystem):
                       for mode in sec_dest_tours}
         sec_dest_tours.update(work_tours)
         car_users = pandas.Series(
-            0, self.zdata_forecast.zone_numbers[self.dm.car_use_model.bounds])
+            0, self.zone_numbers[self.dm.car_use_model.bounds])
         for person in self.dm.population:
             person.decide_car_use()
             car_users[person.zone.number] += person.is_car_user

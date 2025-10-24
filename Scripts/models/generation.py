@@ -36,14 +36,14 @@ class GenerationModel:
                 Generation factor
         """
         self.resultdata = resultdata
-        self.zone_data = purpose.zone_data
+        self.zone_data = purpose.attraction_zone_data
         self.purpose = purpose
         self.param = param
 
     def init_tours(self):
         """Initialize `tours` vector to 0."""
         self.tours = pandas.Series(
-            0.0, self.purpose.zone_numbers, dtype=numpy.float32)
+            0.0, self.purpose.orig_zone_numbers, dtype=numpy.float32)
 
     def add_tours(self):
         """Generate and add tours to zone vector."""
@@ -132,7 +132,7 @@ class NonHomeGeneration(GenerationModel):
         for mode in mode_tours:
             key = f"{self.purpose.name}_parent_{mode}_share"
             self.zone_data.share[key] = pandas.Series(
-                divide(mode_tours[mode], tours), self.purpose.zone_numbers)
+                divide(mode_tours[mode], tours), self.purpose.orig_zone_numbers)
         return tours
 
 
