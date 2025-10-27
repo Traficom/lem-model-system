@@ -369,6 +369,8 @@ class TourPurpose(Purpose):
             Time period (aht/pt/iht/it) : dict
                 Type (time/cost/dist) : dict
                     Mode (car/transit/bike/...) : numpy.ndarray
+        is_last_iteration : bool
+            Whether to calclulate and store accessibility indicators
         """
         purpose_impedance = self.transform_impedance(impedance)
 
@@ -445,25 +447,36 @@ class TourPurpose(Purpose):
         log.info(f"Mode and dest probabilities calculated for {self.name}")
         return []
 
-    def calc_demand(self, impedance) -> Iterator[Demand]:
+    def calc_demand(
+            self, impedance, soft_mode_impedance,
+            is_last_iteration: bool) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
 
         Parameters
         ----------
         impedance : dict
             Time period (aht/pt/iht/it) : dict
+                Type (time/cost/dist) : dict
+                    Mode (car/transit/bike/...) : numpy.ndarray
+        soft_mode_impedance : dict
+            Time period (aht/pt/iht/it) : dict
                 Type (time/dist) : dict
                     Mode (bike/walk) : numpy.ndarray
+        is_last_iteration : bool
+            Whether to calclulate and store accessibility indicators
 
         Yields
         -------
         Demand
                 Mode-specific demand matrix for whole day
         """
+        self.calc_prob(impedance, is_last_iteration)
+        self.gen_model.init_tours()
+        self.gen_model.add_tours()
         tours = self.gen_model.get_tours()
         if self.prob is None:
             self.prob = self.model.calc_prob_again()
-        purpose_impedance = self.transform_impedance(impedance)
+        purpose_impedance = self.transform_impedance(soft_mode_impedance)
         self.prob.update(self.model.calc_soft_mode_prob(purpose_impedance))
         orig_agg = self.generation_zone_data.aggregations
         dest_agg = self.attraction_zone_data.aggregations
@@ -552,6 +565,7 @@ class SecDestPurpose(Purpose):
 
     def generate_tours(self):
         """Generate the source tours without secondary destinations."""
+        self.gen_model.init_tours()
         self.tours = {}
         self._init_sums()
         for mode in self.model.dest_choice_param:

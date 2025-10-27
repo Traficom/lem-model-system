@@ -161,28 +161,16 @@ class ModelSystem:
         """
         log.info("Demand calculation started...")
 
-        # Mode and destination probability matrices are calculated first,
-        # as logsums from probability calculation are used in tour generation.
-        for purpose in self.dm.tour_purposes:
-            if param.assignment_classes[purpose.name] == "leisure":
-                for tp_imp in previous_iter_impedance.values():
-                    for imp in tp_imp.values():
-                        for mode in ("car_work", "transit_work", "walk", "bike"):
-                            imp.pop(mode, None)
-            purpose_impedance = purpose.calc_prob(
-                previous_iter_impedance, is_last_iteration)
-        previous_iter_impedance.clear()
-
-        # Tour generation
-        self.dm.generate_tours()
-
         soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             soft_mode_impedance[ap.name] = ap.get_soft_mode_impedances()
 
-        # Assigning of tours to mode, destination and time period
+        # Mode and destination probability matrices are calculated first,
+        # as logsums from probability calculation are used in tour generation.
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
+                purpose_impedance = purpose.calc_prob(
+                    previous_iter_impedance, is_last_iteration)
                 purpose.generate_tours()
                 if is_last_iteration:
                     for mode in purpose.model.dest_choice_param:
@@ -192,8 +180,17 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                for mode_demand in purpose.calc_demand(soft_mode_impedance):
+                if param.assignment_classes[purpose.name] == "leisure":
+                    for tp_imp in previous_iter_impedance.values():
+                        for imp in tp_imp.values():
+                            for mode in ("car_work", "transit_work"):
+                                imp.pop(mode, None)
+                for mode_demand in purpose.calc_demand(
+                        previous_iter_impedance, soft_mode_impedance,
+                        is_last_iteration):
                     self.dtm.add_demand(mode_demand)
+            
+        previous_iter_impedance.clear()
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
@@ -395,6 +392,11 @@ class ModelSystem:
                 if not isinstance(self.ass_model, MockAssignmentModel):
                     self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
+            else:
+                for tp_imp in impedance.values():
+                    for imp in tp_imp.values():
+                        for mode in ("bike", "walk"):
+                            imp.pop(mode, None)
         if iteration=="last":
             self.ass_model.aggregate_results(
                 self.resultdata, zd.aggregations.municipality_mapping)
