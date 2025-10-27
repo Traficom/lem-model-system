@@ -543,9 +543,6 @@ class EmmeAssignmentModel(AssignmentModel):
             overwrite=True, scenario=scenario)
         # Create transit line attributes
         self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", param.dist_fare_attr,
-            "distance fare attribute", overwrite=True, scenario=scenario)
-        self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.board_fare_attr,
             "boarding fare attribute", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
@@ -558,6 +555,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 scenario=scenario)
         # Create transit segment attributes
         self.emme_project.create_extra_attribute(
+            "TRANSIT_SEGMENT", param.dist_fare_attr,
+            "distance fare attribute", overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.extra_waiting_time["penalty"],
             "wait time st.dev.", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
@@ -567,6 +567,9 @@ class EmmeAssignmentModel(AssignmentModel):
             self.emme_project.create_extra_attribute(
                 "TRANSIT_SEGMENT", attr_name, result, overwrite=True,
                 scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.park_ride_vol_attr, "park-and-ride car volume",
+            overwrite=True, scenario=scenario)
 
     def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.
@@ -695,7 +698,7 @@ class EmmeAssignmentModel(AssignmentModel):
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attrs = {transit_class: transit_class + "_node_" + attr[1:]
+        attrs = {transit_class: f"node_{transit_class}_{attr[1:]}"
             for transit_class in self.simple_transit_classes}
         netfields = self._netfields(attrs)
         # save node volumes to result network

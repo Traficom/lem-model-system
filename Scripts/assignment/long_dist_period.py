@@ -4,8 +4,7 @@ import numpy
 
 from assignment.assignment_period import AssignmentPeriod
 import parameters.assignment as param
-from assignment.datatypes.car import CarMode
-from assignment.datatypes.car_specification import CarSpecification
+from assignment.datatypes.transit import TransitMode
 if TYPE_CHECKING:
     from assignment.emme_bindings.emme_project import EmmeProject
 
@@ -102,7 +101,8 @@ class WholeDayPeriod(AssignmentPeriod):
         if self._long_distance_trips_assigned:
             for transit_class in (param.long_dist_simple_classes
                                   + param.car_access_classes):
-                self._calc_transit_network_results(transit_class)
+                tc: TransitMode = self.assignment_modes[transit_class]
+                tc.calc_transit_network_results()
                 if self._delete_strat_files:
                     strategy_paths[transit_class].unlink(missing_ok=True)
             self._assign_transit(
