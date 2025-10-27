@@ -764,6 +764,13 @@ class AssignmentPeriod(Period):
             self.assignment_modes[transit_class].ntw_results_spec,
             scenario=self.emme_scenario,
             class_name=transit_class)
+        mode: TransitMode = self.assignment_modes[transit_class]
+        network = self.emme_scenario.get_network()
+        for result, attr in param.segment_results.items():
+            netfield = mode.segment_results[result]
+            for segment in network.transit_segments():
+                segment[netfield] = segment[attr]
+        self.emme_scenario.publish_network(network)
 
     def _calc_transit_link_results(self):
         volax_attr = self.extra("aux_transit")

@@ -38,16 +38,16 @@ class TransitMode(AssignmentMode):
         for scenario, tp in (
                 (day_scenario, "vrk"), (self.emme_scenario, self.time_period)):
             for res, attr in param.segment_results.items():
-                attr_name = f"@{self.name[:11]}_{attr}_{tp}"
+                attr_name = f"#{self.name}_{attr[1:]}_{tp}"
                 self.segment_results[res] = attr_name
-                self.emme_project.create_extra_attribute(
-                    "TRANSIT_SEGMENT", attr_name, f"{self.name} {res}",
+                self.emme_project.create_network_field(
+                    "TRANSIT_SEGMENT", "REAL", attr_name, f"{self.name} {res}",
                     overwrite=True, scenario=scenario)
                 if res != "transit_volumes":
-                    attr_name = f"@{self.name[:10]}n_{attr}_{tp}"
+                    attr_name = f"#{self.name}_node_{attr[1:]}_{tp}"
                     self.node_results[res] = attr_name
-                    self.emme_project.create_extra_attribute(
-                        "NODE", attr_name, f"{self.name} {res}",
+                    self.emme_project.create_network_field(
+                        "NODE", "REAL", attr_name, f"{self.name} {res}",
                         overwrite=True, scenario=scenario)
 
         # Specify
@@ -117,7 +117,7 @@ class TransitMode(AssignmentMode):
         self.ntw_results_spec = {
             "type": "EXTENDED_TRANSIT_NETWORK_RESULTS",
             "analyzed_demand": self.demand.id,
-            "on_segments": self.segment_results,
+            "on_segments": param.segment_results,
         }
         is_park_and_ride = self._add_park_and_ride()
         self.transit_spec["journey_levels"] = [JourneyLevel(

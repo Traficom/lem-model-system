@@ -111,6 +111,8 @@ class EmmeProject:
             "inro.emme.transit_assignment.extended.traversal_analysis")
         self.create_extra_attribute = self.modeller.tool(
             "inro.emme.data.extra_attribute.create_extra_attribute")
+        self.create_network_field = self.modeller.tool(
+            "inro.emme.data.network_field.create_network_field")
         self.set_extra_function_parameters = self.modeller.tool(
             "inro.emme.traffic_assignment.set_extra_function_parameters")
     

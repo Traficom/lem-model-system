@@ -556,13 +556,17 @@ class EmmeAssignmentModel(AssignmentModel):
                 "TRANSIT_LINE", param.boarding_penalty_attr + transit_class,
                 "boarding pentalty attribute", overwrite=True,
                 scenario=scenario)
-        # Create node and transit segment attributes
+        # Create transit segment attributes
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.extra_waiting_time["penalty"],
             "wait time st.dev.", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", extra(param.uncongested_transit_time),
             "uncongested transit time", overwrite=True, scenario=scenario)
+        for result, attr_name in param.segment_results.items():
+            self.emme_project.create_extra_attribute(
+                "TRANSIT_SEGMENT", attr_name, result, overwrite=True,
+                scenario=scenario)
 
     def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.
@@ -665,10 +669,13 @@ class EmmeAssignmentModel(AssignmentModel):
         attrs : list of str
             List of attributes corresponding to assignment class volumes
         """
-        extras = self._extras({attr: attr for attr in attrs})
+        attrs = {attr: attr for attr in attrs}
+        extras = {ap.name: {attr: ap.extra(attrs[attr]) for attr in attrs}
+            for ap in self.assignment_periods}
+        extra = {attr: self._extra(attrs[attr]) for attr in attrs}
         # save link volumes to result network
         for link in network.links():
-            sum24.sum_24h(link, networks, *extras, sum24.get_link)
+            sum24.sum_24h(link, networks, extras, extra, sum24.get_link)
         return network
 
     def _node_24h(self, network: Network, networks: Dict[str, Network],
@@ -688,12 +695,12 @@ class EmmeAssignmentModel(AssignmentModel):
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attrs = {transit_class: transit_class[:10] + 'n_' + attr
+        attrs = {transit_class: transit_class + "_node_" + attr[1:]
             for transit_class in self.simple_transit_classes}
-        extras = self._extras(attrs)
+        netfields = self._netfields(attrs)
         # save node volumes to result network
         for node in network.nodes():
-            sum24.sum_24h(node, networks, *extras, sum24.get_node)
+            sum24.sum_24h(node, networks, *netfields, sum24.get_node)
         return network
 
     def _transit_segment_24h(self, network: Network,
@@ -713,16 +720,16 @@ class EmmeAssignmentModel(AssignmentModel):
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attrs = {transit_class: transit_class[:11] + '_' + attr
+        attrs = {transit_class: transit_class + '_' + attr[1:]
             for transit_class in self.simple_transit_classes}
-        extras = self._extras(attrs)
+        netfields = self._netfields(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():
-            sum24.sum_24h(segment, networks, *extras, sum24.get_segment)
+            sum24.sum_24h(segment, networks, *netfields, sum24.get_segment)
         return network
 
-    def _extras(self, attrs: Dict[str, str]):
-        extras = {ap.name: {attr: ap.extra(attrs[attr]) for attr in attrs}
+    def _netfields(self, attrs: Dict[str, str]):
+        extras = {ap.name: {attr: ap.netfield(attrs[attr]) for attr in attrs}
             for ap in self.assignment_periods}
-        extra = {attr: self._extra(attrs[attr]) for attr in attrs}
+        extra = {attr: self._netfield(attrs[attr]) for attr in attrs}
         return extras, extra
