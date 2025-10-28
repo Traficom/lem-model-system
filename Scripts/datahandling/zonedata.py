@@ -83,23 +83,28 @@ class ZoneData:
         # Convert household shares to population shares
         avg_hh_size = {
             "hh1": 1,
-            "hh2": 2,
-            "hh3": 4.13,  # Average size of 3+ households
+            "hh2": 2,  ## TODO calculate average size of 2+ households
         }
         hh_pop = sum(avg_hh_size[hh] * self[f"sh_{hh}"] for hh in avg_hh_size)
         for hh, avg_size in avg_hh_size.items():
             self.share[f"sh_pop_{hh}"] = divide(
                 avg_size*self[f"sh_{hh}"], hh_pop)
             self[hh] = self[f"sh_pop_{hh}"] * self["population"] / avg_size
+
+        # Simple combinatorial household license share calculations assuming
+        # no correlation between license distribution in population and
+        # household size
+        sh_lic = self["sh_licence"]
+        self.share["sh_pop_hh1_lic1"] = sh_lic * self["sh_pop_hh1"]
+        self.share["sh_pop_hh2_lic1"] = (2 * sh_lic * (1-sh_lic)
+                                         * self["sh_pop_hh2"])
+        self.share["sh_pop_hh2_lic2"] = sh_lic**2 * self["sh_pop_hh2"]
+
         self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_pop)
         self.share["sh_cars1_hh2"] = divide(
-            (avg_hh_size["hh2"]*self["sh_cars1_hh2"]
-             + avg_hh_size["hh3"]*self["sh_cars1_hh3"]),
-            hh_pop)
+            avg_hh_size["hh2"]*self["sh_cars1_hh2"], hh_pop)
         self.share["sh_cars2_hh2"] = divide(
-            (avg_hh_size["hh2"]*self["sh_cars2_hh2"]
-             + avg_hh_size["hh3"]*self["sh_cars2_hh3"]),
-            hh_pop)
+            avg_hh_size["hh2"]*self["sh_cars2_hh2"], hh_pop)
         self.share["sh_car"] = (self["sh_cars1_hh1"]
                                 + self["sh_cars1_hh2"]
                                 + self["sh_cars2_hh2"])

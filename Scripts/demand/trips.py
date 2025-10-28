@@ -167,11 +167,10 @@ class DemandModel:
         zd = self.zone_data
         prob = {hh_size: model.calc_prob()
             for hh_size, model in self.car_ownership_models.items()}
-        zd.share["sh_cars1_hh1"] = zd["sh_pop_hh1"]*prob["hh1"]["1"]
-        zd.share["sh_cars1_hh2"] = (zd["sh_pop_hh2"]*prob["hh2"]["1"]
-                                    + zd["sh_pop_hh3"]*prob["hh3"]["1"])
-        zd.share["sh_cars2_hh2"] = (zd["sh_pop_hh2"]*prob["hh2"]["2"]
-                                    + zd["sh_pop_hh3"]*prob["hh3"]["2"])
+        zd.share["sh_cars1_hh1"] = zd["sh_pop_hh1_lic1"]*prob["hh1_lic1"]["1"]
+        zd.share["sh_cars1_hh2"] = (zd["sh_pop_hh2_lic1"]*prob["hh2_lic1"]["1"]
+                                    + zd["sh_pop_hh2_lic2"]*prob["hh2_lic2"]["1"])
+        zd.share["sh_cars2_hh2"] = zd["sh_pop_hh2_lic2"]*prob["hh2_lic2"]["2"]
         zd.share["sh_car"] = (zd["sh_cars1_hh1"]
                               + zd["sh_cars1_hh2"]
                               + zd["sh_cars2_hh2"])
