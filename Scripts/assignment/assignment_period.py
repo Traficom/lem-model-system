@@ -723,47 +723,13 @@ class AssignmentPeriod(Period):
         self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
-            spec: TransitMode = self.assignment_modes[transit_class]
-            spec.init_matrices()
-            if transit_class in param.tour_duration:
-                self._set_link_parking_costs(transit_class)
-            self.emme_project.transit_assignment(
-                specification=spec.transit_spec, scenario=self.emme_scenario,
-                add_volumes=i, save_strategies=True, class_name=transit_class)
-            for result_spec in spec.transit_result_specs:
-                self.emme_project.matrix_results(
-                    result_spec, scenario=self.emme_scenario,
-                    class_name=transit_class)
+            tc: TransitMode = self.assignment_modes[transit_class]
+            tc.assign(i)
             if calc_network_results:
-                self._calc_transit_network_results(transit_class)
+                tc.calc_transit_network_results()
             if delete_strat_files:
                 self._strategy_paths[transit_class].unlink(missing_ok=True)
             log.info(f"Transit class {transit_class} assigned")
-
-    def _set_link_parking_costs(self, transit_class):
-        network = self.emme_scenario.get_network()
-        avg_days = param.tour_duration[transit_class]["avg"]
-        for node in network.nodes():
-            parking_cost = node[param.park_cost_attr_n]
-            if parking_cost > 0:
-                parking_cost *= 0.5 * avg_days
-                if transit_class in param.car_access_classes:
-                    parking_links = node.incoming_links()
-                    other_links = node.outgoing_links()
-                else:
-                    other_links = node.incoming_links()
-                    parking_links = node.outgoing_links()
-                for link in parking_links:
-                    link[param.park_cost_attr_l] = parking_cost
-                for link in other_links:
-                    link[param.park_cost_attr_l] = 0
-        self.emme_scenario.publish_network(network)
-
-    def _calc_transit_network_results(self, transit_class):
-        self.emme_project.network_results(
-            self.assignment_modes[transit_class].ntw_results_spec,
-            scenario=self.emme_scenario,
-            class_name=transit_class)
 
     def _calc_transit_link_results(self):
         volax_attr = self.extra("aux_transit")
