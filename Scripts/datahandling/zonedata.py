@@ -94,28 +94,31 @@ class ZoneData:
 
         # Calculate household adult number share
         avg_two_adult_share = {
-            "hh2": 0.5,
-            "hh3": 0.7,
+            "hh2": 0.926,
+            "hh3": 0.949,
         }
-        self.share["sh_pop_hh_2_adults"] = sum(
-            avg_two_adult_share[hh] * self[f"sh_pop_{hh}"]
-            for hh in avg_two_adult_share)
-        self.share["sh_pop_hh_1_adult"] = 1 - self["sh_pop_hh_2_adults"]
-        self.share["sh_hh_1_adult_children"] = sum(
+        singles_no_children = self["sh_pop_hh1"]
+        singles_children = sum(
             (1-avg_two_adult_share[hh]) * self[f"sh_pop_{hh}"]
             for hh in avg_two_adult_share)
-        self.share["sh_hh_2_adults_children"] = (avg_two_adult_share["hh3"]
-                                                 *self["sh_pop_hh3"])
+        couples_no_children = avg_two_adult_share["hh2"] * self["sh_pop_hh2"]
+        couples_children = avg_two_adult_share["hh3"] * self["sh_pop_hh3"]
+        couples = couples_no_children + couples_children
+        singles = singles_no_children + singles_children
+        self.share["sh_hh_1_adult_children"] = singles_children / singles
+        self.share["sh_hh_1_adult_no_children"] = singles_no_children / singles
+        self.share["sh_hh_2_adults_children"] = couples_children / couples
+        self.share["sh_hh_2_adults_no_children"] = couples_no_children / couples
 
         # Simple combinatorial household license share calculations assuming
         # no correlation between license distribution in population and
         # household size
-        sh_lic = self["sh_licence"]
-        self.share["sh_pop_hh1_lic1"] = sh_lic * self["sh_pop_hh_1_adult"]
-        self.share["sh_pop_hh2_lic1"] = (2 * sh_lic * (1-sh_lic)
-                                         * self["sh_pop_hh_2_adults"])
-        self.share["sh_pop_hh2_lic2"] = sh_lic**2 * self["sh_pop_hh_2_adults"]
+        sh_lic = self["sh_adult_license"]
+        self.share["sh_pop_hh1_lic1"] = sh_lic * singles
+        self.share["sh_pop_hh2_lic1"] = 2 * sh_lic * (1-sh_lic) * couples
+        self.share["sh_pop_hh2_lic2"] = sh_lic**2 * couples
 
+        # Convert household shares to population shares
         self.share["sh_cars1_hh1"] = divide(self["sh_cars1_hh1"], hh_pop)
         self.share["sh_cars1_hh2"] = divide(
             (avg_hh_size["hh2"]*self["sh_cars1_hh2"]
@@ -128,6 +131,7 @@ class ZoneData:
         self.share["sh_car"] = (self["sh_cars1_hh1"]
                                 + self["sh_cars1_hh2"]
                                 + self["sh_cars2_hh2"])
+
         self["pop_density"] = divide(data["population"], data["land_area"])
         self["log_pop_density"] = numpy.log(self["pop_density"]+1)
 

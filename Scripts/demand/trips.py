@@ -178,12 +178,14 @@ class DemandModel:
         for n_cars in range(3):
             result[f"sh_cars{n_cars}"] = numpy.zeros_like(zd["population"])
             for hh_size in prob:
+                pop_hh_size = zd[f"sh_pop_{hh_size}"] * zd["population"]
                 if str(n_cars) in prob[hh_size]:
-                    hh_car = prob[hh_size][str(n_cars)] * zd[hh_size]
+                    hh_car = prob[hh_size][str(n_cars)] * pop_hh_size
                     result["cars"] += hh_car * n_cars
-                    national_share = sum(hh_car) / sum(zd[hh_size])
+                    national_share = sum(hh_car) / sum(pop_hh_size)
                     self.resultdata.print_line(
                         f"{hh_size},cars{n_cars},{national_share}", "car_ownership")
-                    result[f"sh_cars{n_cars}"] += prob[hh_size][str(n_cars)] * zd[f"sh_{hh_size}"]                
+                    result[f"sh_cars{n_cars}"] += (prob[hh_size][str(n_cars)]
+                                                   * zd[f"sh_pop_{hh_size}"])
         self.resultdata.print_data(result, "zone_car_ownership.txt")
         log.info("New car-ownership values calculated.")
