@@ -707,9 +707,9 @@ external_modes = [
     "trailer_truck",
 ]
 segment_results = {
-    "transit_volumes": "vol",
-    "total_boardings": "boa",
-    "transfer_boardings": "trb",
+    "transit_volumes": "@voltr",
+    "total_boardings": "@total_board",
+    "transfer_boardings": "@transfer_board",
 }
 uncongested_transit_time = "base_timtr"
 basic_impedance_output = ["time", "cost", "dist", "toll_cost", "inv_time"]
@@ -756,6 +756,7 @@ freight_gate_attr = "@freight_gate"
 ferry_wait_attr = "@ferry_wait_time"
 free_flow_time_attr = "@free_flow_time"
 extra_freight_cost_attr = "#extra_cost"
+park_ride_vol_attr = "@park_and_ride_vol"
 railtypes = {
     2: "tram",
     3: "metro",
