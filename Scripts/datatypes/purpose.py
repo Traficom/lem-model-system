@@ -448,8 +448,7 @@ class TourPurpose(Purpose):
         return []
 
     def calc_demand(
-            self, impedance, soft_mode_impedance,
-            is_last_iteration: bool) -> Iterator[Demand]:
+            self, impedance, is_last_iteration: bool) -> Iterator[Demand]:
         """Calculate purpose specific demand matrices.
 
         Parameters
@@ -458,10 +457,6 @@ class TourPurpose(Purpose):
             Time period (aht/pt/iht/it) : dict
                 Type (time/cost/dist) : dict
                     Mode (car/transit/bike/...) : numpy.ndarray
-        soft_mode_impedance : dict
-            Time period (aht/pt/iht/it) : dict
-                Type (time/dist) : dict
-                    Mode (bike/walk) : numpy.ndarray
         is_last_iteration : bool
             Whether to calclulate and store accessibility indicators
 
@@ -476,8 +471,6 @@ class TourPurpose(Purpose):
         tours = self.gen_model.get_tours()
         if self.prob is None:
             self.prob = self.model.calc_prob_again()
-        purpose_impedance = self.transform_impedance(soft_mode_impedance)
-        self.prob.update(self.model.calc_soft_mode_prob(purpose_impedance))
         orig_agg = self.generation_zone_data.aggregations
         dest_agg = self.attraction_zone_data.aggregations
         for mode in self.modes:
