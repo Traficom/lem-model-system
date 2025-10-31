@@ -371,6 +371,12 @@ class TourPurpose(Purpose):
                     Mode (car/transit/bike/...) : numpy.ndarray
         is_last_iteration : bool
             Whether to calclulate and store accessibility indicators
+
+        Returns
+        -------
+        dict
+            Mode (car/transit/bike/walk) : numpy 2-d matrix
+                Choice probabilities
         """
         purpose_impedance = self.transform_impedance(impedance)
 
@@ -392,16 +398,17 @@ class TourPurpose(Purpose):
 
         # Calculate main mode probability after access mode probability
         # to have access mode logsum as variable
-        self.prob = self.model.calc_prob(purpose_impedance, is_last_iteration)
+        prob = self.model.calc_prob(purpose_impedance, is_last_iteration)
         log.info(f"Mode and dest probabilities calculated for {self.name}")
 
         # If the trip is long-distance, calculate joint main mode/access
         # mode probability for each intermodal class in EMME assignment
         if "vrk" in impedance:
             for main_mode, split in acc_splits.items():
-                prob = self.prob[main_mode]
+                main_prob = prob[main_mode]
                 for acc_mode in split:
-                    self.prob[acc_mode] = split[acc_mode] * prob
+                    prob[acc_mode] = split[acc_mode] * main_prob
+        return prob
 
     def split_connection_mode(self, impedance, pt_mode, car_acc_modes):
         access_modes = car_acc_modes + [pt_mode]
@@ -458,23 +465,23 @@ class TourPurpose(Purpose):
                 Type (time/cost/dist) : dict
                     Mode (car/transit/bike/...) : numpy.ndarray
         is_last_iteration : bool
-            Whether to calclulate and store accessibility indicators
+            Whether to calculate and store accessibility indicators
 
         Yields
         -------
         Demand
                 Mode-specific demand matrix for whole day
         """
-        self.calc_prob(impedance, is_last_iteration)
+        prob = self.calc_prob(impedance, is_last_iteration)
         self.gen_model.init_tours()
         self.gen_model.add_tours()
         tours = self.gen_model.get_tours()
-        if self.prob is None:
-            self.prob = self.model.calc_prob_again()
+        if prob is None:
+            prob = self.model.calc_prob_again()
         orig_agg = self.generation_zone_data.aggregations
         dest_agg = self.attraction_zone_data.aggregations
         for mode in self.modes:
-            mtx = (self.prob.pop(mode) * tours).T
+            mtx = (prob.pop(mode) * tours).T
             try:
                 self.sec_dest_purpose.gen_model.add_secondary_tours(
                     mtx, mode, self)
@@ -510,10 +517,7 @@ class SimpleTourPurpose(TourPurpose):
         Demand
                 Mode-specific demand matrix for whole day
         """
-        self.calc_prob(impedance, is_last_iteration)
-        self.gen_model.init_tours()
-        self.gen_model.add_tours()
-        return self.calc_demand()
+        return self.calc_demand(impedance, is_last_iteration)
 
 
 class SecDestPurpose(Purpose):
