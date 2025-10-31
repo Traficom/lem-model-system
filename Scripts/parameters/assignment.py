@@ -190,40 +190,30 @@ vot_inv = {
 }
 congested_time_weight = 1.5
 tour_duration = {
-    "train_car_acc": {
+    "pt_car_acc": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "train_taxi_acc": {
+    "pt_taxi_acc": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
-    },
-    "coach_car_acc": {
-        "avg": 2.62,
-        "hb_business": 2.43,
-        "hb_leisure_overnight": 14,
     },
     "airpl_car_acc": {
         "avg": 2.39,
         "hb_business": 2.01,
         "hb_leisure_overnight": 9,
     },
-    "train_car_egr": {
+    "pt_car_egr": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
     },
-    "train_taxi_egr": {
+    "pt_taxi_egr": {
         "avg": 2.18,
         "hb_business": 1.12,
         "hb_leisure_overnight": 9,
-    },
-    "coach_car_egr": {
-        "avg": 2.62,
-        "hb_business": 2.43,
-        "hb_leisure_overnight": 14,
     },
     "airpl_car_egr": {
         "avg": 2.39,
@@ -325,19 +315,14 @@ trass_stop = {
 transfer_penalty = {
     "transit_work": 3,
     "transit_leisure": 5,
-    "car_first_mile": 5,
-    "car_last_mile": 5,
     "transit": 5,
     "train": 5,
-    "coach": 5,
     "airplane": 5,
-    "train_car_acc": 5,
-    "train_taxi_acc": 5,
-    "coach_car_acc": 5,
+    "pt_car_acc": 5,
+    "pt_taxi_acc": 5,
     "airpl_car_acc": 5,
-    "train_car_egr": 5,
-    "train_taxi_egr": 5,
-    "coach_car_egr": 5,
+    "pt_car_egr": 5,
+    "pt_taxi_egr": 5,
     "airpl_car_egr": 5,
 }
 extra_waiting_time = {
@@ -489,25 +474,19 @@ volume_factors = {
     "airpl_car_acc": {
         "vrk": 1.0,
     },
-    "train_car_acc": {
+    "pt_car_acc": {
         "vrk": 1.0,
     },
-    "train_taxi_acc": {
-        "vrk": 1.0,
-    },
-    "coach_car_acc": {
+    "pt_taxi_acc": {
         "vrk": 1.0,
     },
     "airpl_car_egr": {
         "vrk": 1.0,
     },
-    "train_car_egr": {
+    "pt_car_egr": {
         "vrk": 1.0,
     },
-    "train_taxi_egr": {
-        "vrk": 1.0,
-    },
-    "coach_car_egr": {
+    "pt_taxi_egr": {
         "vrk": 1.0,
     },
 }
@@ -554,21 +533,17 @@ car_classes = (
 car_and_van_classes = car_classes + ("van",)
 private_classes = car_and_van_classes + ("bike",)
 car_access_classes = (
-    "train_car_acc",
-    "train_taxi_acc",
-    "coach_car_acc",
+    "pt_car_acc",
+    "pt_taxi_acc",
     "airpl_car_acc",
 )
 car_egress_classes = (
-    "train_car_egr",
-    "coach_car_egr",
-    "train_taxi_egr",
+    "pt_car_egr",
+    "pt_taxi_egr",
     "airpl_car_egr",
 )
 mixed_mode_classes = car_access_classes + car_egress_classes
 long_dist_simple_classes = (
-    "train",
-    "coach",
     "airplane",
 )
 long_distance_transit_classes = (mixed_mode_classes
@@ -589,8 +564,7 @@ simple_transport_classes = (private_classes
                             + truck_classes)
 transport_classes = simple_transport_classes + mixed_mode_classes
 intermodals = {
-    "train": ["train_car_acc", "train_taxi_acc"],
-    "coach": ["coach_car_acc"],
+    "transit_leisure": ["pt_car_acc", "pt_taxi_acc"],
     "airplane": ["airpl_car_acc"],
 }
 assignment_classes = {
@@ -628,18 +602,13 @@ vot_classes = {
     "van": "business",
     "transit_work": "work",
     "transit_leisure": "leisure",
-    "car_first_mile": "work",
-    "car_last_mile": "work",
-    "train": "work",
     "coach": "leisure",
     "airplane": "work",
-    "train_car_acc": "work",
-    "train_taxi_acc": "work",
-    "coach_car_acc": "leisure",
+    "pt_car_acc": "work",
+    "pt_taxi_acc": "work",
     "airpl_car_acc": "work",
-    "train_car_egr": "work",
-    "train_taxi_egr": "work",
-    "coach_car_egr": "leisure",
+    "pt_car_egr": "work",
+    "pt_taxi_egr": "work",
     "airpl_car_egr": "work",
 }
 local_transit_modes = [
@@ -653,18 +622,16 @@ local_transit_modes = [
     'e',
 ]
 long_dist_transit_modes = {
-  	"transit_work": ['e', 'j', 'l'],
-    "transit_leisure": ['e', 'j', 'l'],
+    "transit_work": ['e', 'j'],
+    "transit_leisure": ['e', 'j'],
     "train": ['j'],
     "coach": ['e'],
     "airplane": ['l'],
-    "train_car_acc": ['j'],
-    "train_taxi_acc": ['j'],
-    "coach_car_acc": ['e'],
+    "pt_car_acc": ['e', 'j'],
+    "pt_taxi_acc": ['e', 'j'],
     "airpl_car_acc": ['l'],
-    "train_car_egr": ['j'],
-    "train_taxi_egr": ['j'],
-    "coach_car_egr": ['e'],
+    "pt_car_egr": ['e', 'j'],
+    "pt_taxi_egr": ['e', 'j'],
     "airpl_car_egr": ['l'],
 }
 aux_modes = [

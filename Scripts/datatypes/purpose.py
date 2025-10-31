@@ -280,8 +280,8 @@ class TourPurpose(Purpose):
                 self.demand_share[mode] = self.impedance_share[mode]
         self.modes = list(self.model.mode_choice_param)
         self.connection_models: Dict[str, logit.LogitModel] = {}
-        for mode in intermodals:
-            if mode in self.modes:
+        if "access_mode_choice" in specification:
+            for mode in intermodals:
                 self.modes += intermodals[mode]
                 new_spec = copy(specification)
                 new_spec["mode_choice"] = new_spec["access_mode_choice"][mode]
