@@ -20,7 +20,7 @@ def main(args):
     long_dist_matrices_path = (None
         if args.long_dist_demand_forecast in ("calc", "base")
         else Path(args.long_dist_demand_forecast))
-    if args.end_assignment_only:
+    if args.end_assignment_only or args.car_end_assignment_only:
         iterations = 0
     elif calculate_long_dist_demand or args.stored_speed_assignment is not None:
         iterations = 1
@@ -120,7 +120,7 @@ def main(args):
     except TypeError:
         pass
     impedance = model.assign_base_demand(
-        iterations==0, stored_speed_assignment)
+        iterations==0, args.car_end_assignment_only, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -193,11 +193,16 @@ if __name__ == "__main__":
         "--log-format",
         choices={"TEXT", "JSON"},
     )
-    # HELMET scenario metadata
     parser.add_argument(
         "-o", "--end-assignment-only",
         action="store_true",
         help="Using this flag runs only end assignment of base demand matrices.",
+    )
+    parser.add_argument(
+        "-c", "--car-end-assignment-only",
+        action="store_true",
+        help=("Using this flag runs only end assignment of base demand "
+              + "matrices for car trips."),
     )
     parser.add_argument(
         "-l", "--long-dist-demand-forecast",

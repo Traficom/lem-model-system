@@ -160,29 +160,10 @@ class ModelSystem:
             secondary destinations are calculated for all modes
         """
         log.info("Demand calculation started...")
-
-        # Mode and destination probability matrices are calculated first,
-        # as logsums from probability calculation are used in tour generation.
-        for purpose in self.dm.tour_purposes:
-            if param.assignment_classes[purpose.name] == "leisure":
-                for tp_imp in previous_iter_impedance.values():
-                    for imp in tp_imp.values():
-                        for mode in ("car_work", "transit_work", "walk", "bike"):
-                            imp.pop(mode, None)
-            purpose_impedance = purpose.calc_prob(
-                previous_iter_impedance, is_last_iteration)
-        previous_iter_impedance.clear()
-
-        # Tour generation
-        self.dm.generate_tours()
-
-        soft_mode_impedance = {}
-        for ap in self.ass_model.assignment_periods:
-            soft_mode_impedance[ap.name] = ap.get_soft_mode_impedances()
-
-        # Assigning of tours to mode, destination and time period
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
+                purpose_impedance = purpose.calc_prob(
+                    previous_iter_impedance, is_last_iteration)
                 purpose.generate_tours()
                 if is_last_iteration:
                     for mode in purpose.model.dest_choice_param:
@@ -192,8 +173,15 @@ class ModelSystem:
                     self._distribute_sec_dests(
                         purpose, "car_leisure", purpose_impedance)
             else:
-                for mode_demand in purpose.calc_demand(soft_mode_impedance):
+                if param.assignment_classes[purpose.name] == "leisure":
+                    for tp_imp in previous_iter_impedance.values():
+                        for imp in tp_imp.values():
+                            for mode in ("car_work", "transit_work"):
+                                imp.pop(mode, None)
+                for mode_demand in purpose.calc_demand(
+                        previous_iter_impedance, is_last_iteration):
                     self.dtm.add_demand(mode_demand)
+        previous_iter_impedance.clear()
         log.info("Demand calculation completed")
 
     def _add_external_demand(self,
@@ -221,6 +209,7 @@ class ModelSystem:
     # possibly merge with init
     def assign_base_demand(self, 
             is_end_assignment: bool = False,
+            is_car_end_assignment: bool = False,
             car_time_files: Optional[List[str]] = None) -> Dict[str, Dict[str, numpy.ndarray]]:
         """Assign base demand to network (before first iteration).
 
@@ -228,6 +217,8 @@ class ModelSystem:
         ----------
         is_end_assignment : bool (optional)
             If base demand is assigned without demand calculations
+        is_car_end_assignment : bool (optional)
+            If base demand is assigned only for cars
 
         Returns
         -------
@@ -255,7 +246,6 @@ class ModelSystem:
             with self.resultmatrices.open(
                     "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
                 mtx["all"] = Purpose.distance
-        soft_mode_impedance = {}
         for ap in self.ass_model.assignment_periods:
             tp = ap.name
             log.info(f"Initializing assignment for period {tp}...")
@@ -268,7 +258,8 @@ class ModelSystem:
                         transport_classes=ap.assignment_modes) as mtx:
                     for ass_class in ap.assignment_modes:
                         self.dtm.demand[tp][ass_class] = mtx[ass_class]
-            soft_mode_impedance[tp] = ap.init_assign()
+            if not is_car_end_assignment:
+                ap.init_assign()
         if self.long_dist_matrices is not None:
             self.dtm.init_demand(param.long_dist_simple_classes)
             self._add_external_demand(
@@ -283,11 +274,6 @@ class ModelSystem:
         idx = numpy.isin(self.zone_numbers, zd.zone_numbers)
         zd["beeline"] = Purpose.distance[numpy.ix_(idx, idx)]
 
-        if not is_end_assignment:
-            log.info("Calculate probabilities for bike and walk...")
-            for purpose in self.dm.tour_purposes:
-                purpose.calc_soft_mode_prob(soft_mode_impedance)
-            log.info("Bike and walk calculation completed")
         # Perform traffic assignment and get result impedance,
         # for each time period
         impedance = {}
@@ -295,7 +281,8 @@ class ModelSystem:
             tp = ap.name
             log.info(f"--- ASSIGNING PERIOD {tp.upper()} ---")
             ap.assign_trucks_init()
-            impedance[tp] = (ap.end_assign() if is_end_assignment
+            impedance[tp] = (ap.end_assign(not is_car_end_assignment)
+                             if is_end_assignment
                              else ap.assign(self.travel_modes))
             if is_end_assignment:
                 if not isinstance(self.ass_model, MockAssignmentModel):
