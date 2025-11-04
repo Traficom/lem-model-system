@@ -173,6 +173,7 @@ class AssignmentPeriod(Period):
         self.assignment_modes.update(mixed_modes)
         self._calc_boarding_penalties()
         self._set_transit_vdfs()
+        self._set_walk_time()
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
@@ -719,7 +720,6 @@ class AssignmentPeriod(Period):
                         calc_network_results=False, delete_strat_files=False):
         """Perform transit assignment for one scenario."""
         self._calc_extra_wait_time()
-        self._set_walk_time()
         log.info("Transit assignment started...")
         for i, transit_class in enumerate(transit_classes):
             tc: TransitMode = self.assignment_modes[transit_class]

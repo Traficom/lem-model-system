@@ -57,7 +57,6 @@ class OffPeakPeriod(AssignmentPeriod):
     def init_assign(self):
         self._init_assign_transit()
         log.info("Pedestrian assignment started...")
-        self._set_walk_time()
         self.walk_mode.assign()
         log.info(f"Pedestrians assigned for scenario {self.emme_scenario.id}")
         self._set_bike_vdfs()
