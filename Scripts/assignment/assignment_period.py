@@ -173,7 +173,6 @@ class AssignmentPeriod(Period):
         self.assignment_modes.update(mixed_modes)
         self._calc_boarding_penalties()
         self._set_transit_vdfs()
-        self._set_walk_time()
         self._long_distance_trips_assigned = False
 
     def init_assign(self):
@@ -652,15 +651,6 @@ class AssignmentPeriod(Period):
         self.emme_project.car_assignment(
             specification=self.bike_mode.spec, scenario=scen)
         log.info("Bike assignment performed for scenario " + str(scen.id))
-
-    def _assign_pedestrians(self):
-        """Perform pedestrian assignment for one scenario."""
-        self.walk_mode.init_matrices()
-        self._set_walk_time()
-        log.info("Pedestrian assignment started...")
-        self.emme_project.pedestrian_assignment(
-            specification=self.walk_mode.spec, scenario=self.emme_scenario)
-        log.info("Pedestrian assignment performed for scenario " + str(self.emme_scenario.id))
 
     def _calc_extra_wait_time(self):
         """Calculate extra waiting time for one scenario."""
