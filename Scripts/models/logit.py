@@ -56,7 +56,7 @@ class LogitModel:
         self.mode_utils.clear()
         prob = {mode: divide(mode_exps.pop(mode), expsum).T
             for mode in self.mode_choice_param}
-        return prob, -log(expsum) + 90
+        return prob, log(expsum)
 
     def _calc_alt_util(self, mode: str, utility: numpy.ndarray,
                        impedance: Dict[str, numpy.ndarray],
