@@ -105,8 +105,8 @@ class WholeDayPeriod(AssignmentPeriod):
         """
         self._assign_cars(self.stopping_criteria["fine"])
         if assign_transit:
-            strategy_paths = self._strategy_paths
             if self._long_distance_trips_assigned:
+                strategy_paths = self._strategy_paths
                 for transit_class in (param.long_dist_simple_classes
                                     + param.car_access_classes):
                     tc: TransitMode = self.assignment_modes[transit_class]
