@@ -316,12 +316,12 @@ a'FIHNK-SESTO_sailio' O  24   1.00  30.00 'FIHNK-SESTO_sailio'    301      5  11
 c 'FIHNK-SESTO_sailio' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
 a'Finnair-AY285-1' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
   path=no
-   249870      dwt=>0.01   ttf=0   us1=0   us2=0   us3=0
+   249870      dwt=>0.01   ttf=0   us1=50   us2=0   us3=0
    249881        lay=0.00
 c 'Finnair-AY285-1' first:      dwt=<0.01 hidden:    us1=0   us2=0   us3=0
 a'Finnair-AY285-2' l   6 999.00  30.00 'AY285-EFJY'              3      0      0
   path=no
-   249881         dwt=>0   ttf=0   us1=0   us2=0   us3=0
+   249881         dwt=>0   ttf=0   us1=50   us2=0   us3=0
    249870        lay=0.00
 c 'Finnair-AY285-2' first:         dwt=<0 hidden:    us1=0   us2=0   us3=0
 a'Helsingin-15-1' p   7   8.90  30.00 'Itakeskus-Keilaniemi'      0      0      0

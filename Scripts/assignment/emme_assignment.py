@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, Optional, cast, Iterable
 from collections import defaultdict
+from pathlib import Path
 import numpy
 import pandas
 from math import log10
@@ -30,6 +31,8 @@ class EmmeAssignmentModel(AssignmentModel):
         Emme projekt to connect to this assignment
     first_scenario_id : int
         Id fo EMME scenario where network is stored and modified.
+    submodel : str
+        Name of regional submodel (or koko_suomi)
     separate_emme_scenarios : bool (optional)
         Whether four new scenarios will be created in EMME
         (with ids following directly after first scenario id)
@@ -57,6 +60,7 @@ class EmmeAssignmentModel(AssignmentModel):
     def __init__(self, 
                  emme_context: EmmeProject,
                  first_scenario_id: int,
+                 submodel: str,
                  separate_emme_scenarios: bool = False,
                  save_matrices: bool = False,
                  use_free_flow_speeds: bool = False,
@@ -64,11 +68,14 @@ class EmmeAssignmentModel(AssignmentModel):
                  delete_strat_files: bool = False,
                  time_periods: dict[str, str] = param.time_periods,
                  first_matrix_id: int = 100):
+        self.submodel = submodel
         self.separate_emme_scenarios = separate_emme_scenarios
         self.save_matrices = save_matrices
         self.use_free_flow_speeds = use_free_flow_speeds
         self.transit_classes = (param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transit_classes)
+            if self.use_free_flow_speeds else param.simple_transit_classes)
+        self.simple_transit_classes = (param.long_dist_simple_classes
+            if self.use_free_flow_speeds else param.simple_transit_classes)
         self.delete_extra_matrices = delete_extra_matrices
         self._delete_strat_files = delete_strat_files
         self.time_periods = time_periods
@@ -80,7 +87,7 @@ class EmmeAssignmentModel(AssignmentModel):
             raise ValueError(f"EMME project has no scenario {first_scenario_id}")
 
     def prepare_network(self, car_dist_unit_cost: Dict[str, float],
-                        car_time_files: Optional[List[str]] = None):
+                        car_time_files: Optional[List[Path]] = None):
         """Create matrices, extra attributes and calc background variables.
 
         Parameters
@@ -98,10 +105,14 @@ class EmmeAssignmentModel(AssignmentModel):
         """
         if car_time_files is not None:
             for path in car_time_files:
-                self.emme_project.import_network_fields(
-                    path / "netfield_links.txt", field_separator="TAB",
-                    revert_on_error=False, scenario=self.mod_scenario)
+                for file in path.rglob("netfield_links*"):
+                    self.emme_project.import_network_fields(
+                        file, field_separator="TAB",
+                        revert_on_error=False, scenario=self.mod_scenario)
         self._add_bus_stops()
+        self.emme_project.create_extra_attribute(
+            "LINK", param.free_flow_time_attr, "free-flow car time",
+            overwrite=True, scenario=self.mod_scenario)
         if self.separate_emme_scenarios:
             self.day_scenario = self.emme_project.copy_scenario(
                 self.mod_scenario, self.mod_scenario.number + 1,
@@ -125,7 +136,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 use_stored_speeds=(car_time_files is not None),
                 delete_extra_matrices=self.delete_extra_matrices,
                 delete_strat_files=self._delete_strat_files))
-        ass_classes = param.transport_classes + ("bus",)
+        ass_classes = (param.car_classes + param.long_distance_transit_classes
+            if self.use_free_flow_speeds else param.simple_transport_classes)
+        ass_classes += ("bus",)
         self._create_attributes(
             self.day_scenario, ass_classes, self._extra, self._netfield)
         self._segment_results = self._create_transit_attributes(
@@ -159,6 +172,9 @@ class EmmeAssignmentModel(AssignmentModel):
         self.freight_network = FreightAssignmentPeriod(
             "vrk", self.mod_scenario.number, self.emme_project)
         self.assignment_periods = [self.freight_network]
+        self.emme_project.create_extra_attribute(
+            "LINK", param.free_flow_time_attr, "free-flow car time",
+            overwrite=True, scenario=self.mod_scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
             overwrite=True, scenario=self.mod_scenario)
@@ -249,7 +265,8 @@ class EmmeAssignmentModel(AssignmentModel):
                 for ap in self.assignment_periods})
         if not car_times.empty:
             car_times.index.names = ("i_node", "j_node")
-            resultdata.print_data(car_times, "netfield_links.txt")
+            resultdata.print_data(
+                car_times, f"netfield_links_{self.submodel}.txt")
 
         # Aggregate results to 24h
         for ap in self.assignment_periods:
@@ -265,7 +282,7 @@ class EmmeAssignmentModel(AssignmentModel):
             log.info("Attribute {} aggregated to 24h (scenario {})".format(
                 res, self.day_scenario.id))
         ass_classes = (param.car_classes + param.long_distance_transit_classes
-            if self.use_free_flow_speeds else param.transport_classes)
+            if self.use_free_flow_speeds else param.simple_transport_classes)
         ass_classes += ("bus", "aux_transit")
         self._link_24h(network, networks, ass_classes)
         self.day_scenario.publish_network(network)
@@ -283,7 +300,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 mode = line.vehicle.description
                 headway = line[ap.netfield("hdw")]
                 if 0 < headway < 990:
-                    departures = volume_factor * 60/headway
+                    departures = 60 / headway / volume_factor
                     for segment in line.segments():
                         miles["dist"][mode] += departures * segment.link.length
                         miles["time"][mode] += departures * segment[time_attr]
@@ -489,6 +506,9 @@ class EmmeAssignmentModel(AssignmentModel):
                 "LINK", extra(ass_class), ass_class + " volume",
                 overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
+            "LINK", param.aux_car_time_attr, "walk time",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
             "LINK", extra("truck_time"), "truck time",
             overwrite=True, scenario=scenario)
         if scenario.network_field("LINK", netfield("hinta")) is not None:
@@ -515,10 +535,13 @@ class EmmeAssignmentModel(AssignmentModel):
         self.emme_project.create_extra_attribute(
             "LINK", extra("aux_transit"), "aux transit volume",
             overwrite=True, scenario=scenario)
-        # Create transit line attributes
         self.emme_project.create_extra_attribute(
-            "TRANSIT_SEGMENT", param.dist_fare_attr,
-            "distance fare attribute", overwrite=True, scenario=scenario)
+            "LINK", param.park_cost_attr_l, "terminal parking cost",
+            overwrite=True, scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.aux_transit_time_attr, "walk time",
+            overwrite=True, scenario=scenario)
+        # Create transit line attributes
         self.emme_project.create_extra_attribute(
             "TRANSIT_LINE", param.board_fare_attr,
             "boarding fare attribute", overwrite=True, scenario=scenario)
@@ -530,13 +553,23 @@ class EmmeAssignmentModel(AssignmentModel):
                 "TRANSIT_LINE", param.boarding_penalty_attr + transit_class,
                 "boarding pentalty attribute", overwrite=True,
                 scenario=scenario)
-        # Create node and transit segment attributes
+        # Create transit segment attributes
+        self.emme_project.create_extra_attribute(
+            "TRANSIT_SEGMENT", param.dist_fare_attr,
+            "distance fare attribute", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.extra_waiting_time["penalty"],
             "wait time st.dev.", overwrite=True, scenario=scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", extra(param.uncongested_transit_time),
             "uncongested transit time", overwrite=True, scenario=scenario)
+        for result, attr_name in param.segment_results.items():
+            self.emme_project.create_extra_attribute(
+                "TRANSIT_SEGMENT", attr_name, result, overwrite=True,
+                scenario=scenario)
+        self.emme_project.create_extra_attribute(
+            "LINK", param.park_ride_vol_attr, "park-and-ride car volume",
+            overwrite=True, scenario=scenario)
 
     def calc_noise(self, mapping: pandas.Series) -> pandas.Series:
         """Calculate noise according to Road Traffic Noise Nordic 1996.
@@ -639,10 +672,13 @@ class EmmeAssignmentModel(AssignmentModel):
         attrs : list of str
             List of attributes corresponding to assignment class volumes
         """
-        extras = self._extras({attr: attr for attr in attrs})
+        attrs = {attr: attr for attr in attrs}
+        extras = {ap.name: {attr: ap.extra(attrs[attr]) for attr in attrs}
+            for ap in self.assignment_periods}
+        extra = {attr: self._extra(attrs[attr]) for attr in attrs}
         # save link volumes to result network
         for link in network.links():
-            sum24.sum_24h(link, networks, *extras, sum24.get_link)
+            sum24.sum_24h(link, networks, extras, extra, sum24.get_link)
         return network
 
     def _node_24h(self, network: Network, networks: Dict[str, Network],
@@ -662,12 +698,12 @@ class EmmeAssignmentModel(AssignmentModel):
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attrs = {transit_class: transit_class[:10] + 'n_' + attr
-            for transit_class in self.transit_classes}
-        extras = self._extras(attrs)
+        attrs = {transit_class: f"node_{transit_class}_{attr[1:]}"
+            for transit_class in self.simple_transit_classes}
+        netfields = self._netfields(attrs)
         # save node volumes to result network
         for node in network.nodes():
-            sum24.sum_24h(node, networks, *extras, sum24.get_node)
+            sum24.sum_24h(node, networks, *netfields, sum24.get_node)
         return network
 
     def _transit_segment_24h(self, network: Network,
@@ -687,16 +723,16 @@ class EmmeAssignmentModel(AssignmentModel):
         attr : str
             Attribute name that is usually in param.segment_results
         """
-        attrs = {transit_class: transit_class[:11] + '_' + attr
-            for transit_class in self.transit_classes}
-        extras = self._extras(attrs)
+        attrs = {transit_class: transit_class + '_' + attr[1:]
+            for transit_class in self.simple_transit_classes}
+        netfields = self._netfields(attrs)
         # save segment volumes to result network
         for segment in network.transit_segments():
-            sum24.sum_24h(segment, networks, *extras, sum24.get_segment)
+            sum24.sum_24h(segment, networks, *netfields, sum24.get_segment)
         return network
 
-    def _extras(self, attrs: Dict[str, str]):
-        extras = {ap.name: {attr: ap.extra(attrs[attr]) for attr in attrs}
+    def _netfields(self, attrs: Dict[str, str]):
+        extras = {ap.name: {attr: ap.netfield(attrs[attr]) for attr in attrs}
             for ap in self.assignment_periods}
-        extra = {attr: self._extra(attrs[attr]) for attr in attrs}
+        extra = {attr: self._netfield(attrs[attr]) for attr in attrs}
         return extras, extra

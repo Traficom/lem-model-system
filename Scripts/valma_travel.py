@@ -20,9 +20,9 @@ def main(args):
     long_dist_matrices_path = (None
         if args.long_dist_demand_forecast in ("calc", "base")
         else Path(args.long_dist_demand_forecast))
-    if args.end_assignment_only:
+    if args.end_assignment_only or args.car_end_assignment_only:
         iterations = 0
-    elif calculate_long_dist_demand or args.stored_speed_assignment:
+    elif calculate_long_dist_demand or args.stored_speed_assignment is not None:
         iterations = 1
     elif args.iterations > 0:
         iterations = args.iterations
@@ -91,6 +91,7 @@ def main(args):
         ep.start()
         ass_model = EmmeAssignmentModel(
             ep, first_scenario_id=args.first_scenario_id,
+            submodel=args.submodel,
             separate_emme_scenarios=args.separate_emme_scenarios,
             save_matrices=args.save_matrices,
             first_matrix_id=args.first_matrix_id, **kwargs)
@@ -113,8 +114,13 @@ def main(args):
         extra=log_extra)
     stored_speed_assignment = (None if args.stored_speed_assignment is None
         else [Path(path) for path in args.stored_speed_assignment])
+    try:
+        if len(stored_speed_assignment) == 0:
+            stored_speed_assignment.append(results_path)
+    except TypeError:
+        pass
     impedance = model.assign_base_demand(
-        iterations==0, stored_speed_assignment)
+        iterations==0, args.car_end_assignment_only, stored_speed_assignment)
     log_extra["status"]["state"] = "running"
     i = 1
     while i <= iterations:
@@ -187,11 +193,16 @@ if __name__ == "__main__":
         "--log-format",
         choices={"TEXT", "JSON"},
     )
-    # HELMET scenario metadata
     parser.add_argument(
         "-o", "--end-assignment-only",
         action="store_true",
         help="Using this flag runs only end assignment of base demand matrices.",
+    )
+    parser.add_argument(
+        "-c", "--car-end-assignment-only",
+        action="store_true",
+        help=("Using this flag runs only end assignment of base demand "
+              + "matrices for car trips."),
     )
     parser.add_argument(
         "-l", "--long-dist-demand-forecast",

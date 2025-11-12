@@ -16,6 +16,8 @@ from datahandling.matrixdata import MatrixData
 from datatypes.purpose import FreightPurpose
 
 from utils.freight_utils import create_purposes, StoreDemand
+from models.logistics import DetourDistributionInference, process_logistics_inference
+from utils.get_zone_indices import get_zone_indices
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
 
@@ -32,6 +34,7 @@ def main(args):
     ep.start()
     ass_model = EmmeAssignmentModel(ep,
                                     first_scenario_id=args.first_scenario_id,
+                                    submodel="freight",
                                     save_matrices=save_matrices,
                                     first_matrix_id=args.first_matrix_id)
     zonedata = FreightZoneData(zonedata_path, ass_model.zone_numbers, "koko_suomi")
@@ -56,11 +59,29 @@ def main(args):
                         if mode in impedance[mtx_type]}
                         for mode in ("truck", "freight_train", "ship")}
     
-    total_demand = {mode: numpy.zeros([zonedata.nr_zones, zonedata.nr_zones])
+    total_demand = {mode: numpy.zeros([zonedata.nr_zones, zonedata.nr_zones], 
+                                      dtype="float32")
                     for mode in param.truck_classes}
     for purpose in purposes.values():
         log.info(f"Calculating demand for domestic purpose: {purpose.name}")
         demand = purpose.calc_traffic(impedance)
+        if hasattr(purpose, "logistics_module"):
+            try:
+                lcs_areas = zonedata[f"lc_area_{purpose.name}"]
+            except KeyError:
+                lcs_areas = zonedata["lc_area"]
+            lcs_sizes = lcs_areas[lcs_areas > 0]
+            lc_indices = get_zone_indices(ass_model.mapping, lcs_sizes.index.to_list())
+            purpose_truck_costs = purpose.get_costs(impedance)["truck"]["cost"]
+            logistics_module = DetourDistributionInference(cost_matrix=purpose_truck_costs,
+                                                           ddm_params=purpose.logistics_params,
+                                                           lc_indices=numpy.array(lc_indices),
+                                                           lc_sizes=numpy.array(lcs_sizes.values))
+            for i in range(args.logistics_iterations):
+                final_demand = process_logistics_inference(model=logistics_module,
+                                                            n_zones=zonedata.nr_zones,
+                                                            demand=demand["truck"])
+                demand["truck"] = final_demand
         for mode in demand:
             omx_filename = ("freight_demand_tons" if purpose.name 
                             in args.specify_commodity_names else "")
@@ -68,10 +89,11 @@ def main(args):
         if purpose.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(purpose.name)
         ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
-        demand["truck"] += transform_traversal_data(resultdata.path, zonedata.zone_numbers)
+        aux_demand = transform_traversal_data(resultdata.path, zonedata.zone_numbers)
         for mode in param.truck_classes:
-            total_demand[mode] += purpose.calc_vehicles(demand["truck"], mode)
-        write_purpose_summary(purpose, demand, impedance, resultdata)
+            ton_demand = demand["truck"] + sum(aux_demand.values())
+            total_demand[mode] += purpose.calc_vehicles(ton_demand, mode)
+        write_purpose_summary(purpose, demand, aux_demand, impedance, resultdata)
         write_zone_summary(purpose.name, zonedata.zone_numbers, demand, resultdata)
     write_vehicle_summary(total_demand, truck_distances, resultdata)
     resultdata.flush()
@@ -79,21 +101,24 @@ def main(args):
     purposes = create_purposes(parameters_path / "foreign", zonedata, 
                                resultdata, costdata["freight"])
     for purpose in purposes.values():
-        log.info(f"Calculating demand for foreign purpose: {purpose.name}")
+        log.info(f"Calculating route for foreign purpose: {purpose.name}")
         imp, origs, dests = ass_model.freight_network.read_ship_impedances(
             is_export=True)
         impedance["ship"] = imp
+        purpose.calc_route(impedance, origs, dests)
+
     log.info("Starting end assigment")
     for ass_class in total_demand:
-        store_demand.store(mode, total_demand[ass_class], "freight_demand")
+        store_demand.store(ass_class, total_demand[ass_class], "freight_demand")
     ass_model.freight_network._assign_trucks()
     log.info("Simulation ready.")
 
-def write_purpose_summary(purpose: FreightPurpose, demand: dict, impedance: dict, 
-                          resultdata: ResultsData):
+def write_purpose_summary(purpose: FreightPurpose, demand: dict, aux_demand: dict, 
+                          impedance: dict, resultdata: ResultsData):
     """Write purpose-mode specific summary as txt-file containing mode shares 
     calculated from demand (tons), mode specific demand (tons), mode shares 
-    calculated from mileage, mode specific ton-mileage and total eur-ton product.
+    calculated from mileage, mode specific ton-mileage, mode auxiliary ton-mileage
+    and total eur-ton product.
     """
     modes = list(demand)
     mode_tons = [numpy.sum(demand[mode])+0.01 for mode in modes]
@@ -104,6 +129,8 @@ def write_purpose_summary(purpose: FreightPurpose, demand: dict, impedance: dict
     for cost in costs.values():
         cost[cost == numpy.inf] = 0
     ton_costs = [numpy.sum(costs.pop(mode)*demand[mode]) for mode in modes]
+    aux_ton_dist = [numpy.sum(aux_demand[mode]*impedance["truck"]["dist"]) 
+                    if mode != "truck" else 0 for mode in modes]
     df = DataFrame(data={
         "Commodity": [purpose.name]*len(modes),
         "Mode": modes,
@@ -111,6 +138,7 @@ def write_purpose_summary(purpose: FreightPurpose, demand: dict, impedance: dict
         "Tons (t/annual)": [int(i) for i in mode_tons],
         "Mode share from mileage (%)": [round(i, 3) for i in shares_mileage],
         "Ton mileage (tkm/annual)": [int(i) for i in mode_ton_dist],
+        "Aux ton mileage (tkm/annual)": [int(i) for i in aux_ton_dist],
         "Costs (eur-ton/annual)": [int(i) for i in ton_costs]
         })
     filename = "freight_purpose_summary.txt"
@@ -189,7 +217,7 @@ if __name__ == "__main__":
         choices=commodity_conversion,
         help="Commodity names in 29 classification. Assigned and saved as mtx.")
     parser.add_argument(
-        "--trade-path",
+        "--trade-demand-data-path",
         type=str,
         help="Path to .omx file containing freight foreign trade demand.")
 

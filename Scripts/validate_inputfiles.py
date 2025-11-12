@@ -11,7 +11,7 @@ import utils.log as log
 from utils.validate_network import validate
 from assignment.mock_assignment import MockAssignmentModel
 from datahandling.matrixdata import MatrixData
-from datahandling.zonedata import ZoneData
+from datahandling.zonedata import ZoneData, FreightZoneData
 import parameters.assignment as param
 from valma_travel import BASE_ZONEDATA_FILE
 
@@ -119,12 +119,12 @@ def main(args):
             else:
                 emmebank = data_expl.active_database().core_emmebank
             scen = emmebank.scenario(first_scenario_ids[i])
-            zone_numbers[args.submodel[i]] = scen.zone_numbers
             if scen is None:
                 msg = "Project {} has no scenario {}".format(
                     emp_path, first_scenario_ids[i])
                 log.error(msg)
                 raise ValueError(msg)
+            zone_numbers[args.submodel[i]] = scen.zone_numbers
             for scenario in emmebank.scenarios():
                 if scenario.zone_numbers != scen.zone_numbers:
                     log.warn("Scenarios with different zones found in EMME bank!")
@@ -152,14 +152,13 @@ def main(args):
             # TODO Count existing extra attributes which are NOT included
             # in the set of attributes created during model run
             nr_transit_classes = len(param.transit_classes)
-            nr_segment_results = len(param.segment_results)
             nr_veh_classes = len(param.transport_classes)
             nr_assignment_modes = len(param.assignment_modes)
             nr_new_attr = {
-                "nodes": nr_transit_classes * (nr_segment_results-1),
+                "nodes": 1,
                 "links": nr_veh_classes + 3,
-                "transit_lines": nr_transit_classes + 2,
-                "transit_segments": nr_transit_classes*nr_segment_results + 2,
+                "transit_lines": nr_transit_classes,
+                "transit_segments": 2,
             }
             link_costs_defined = False
             for tp in time_periods:
@@ -178,6 +177,9 @@ def main(args):
                 # EMME scenario
                 for key in nr_new_attr:
                     nr_new_attr[key] *= len(time_periods) + 1
+            nr_new_attr["links"] += 3
+            nr_new_attr["transit_lines"] += 2
+            nr_new_attr["transit_segments"] += 5
             dim = emmebank.dimensions
             dim["nodes"] = dim["centroids"] + dim["regular_nodes"]
             attr_space = 0
@@ -203,9 +205,9 @@ def main(args):
                 raise ValueError(msg)
             matrixdata = MatrixData(base_matrices_path)
             for tp in time_periods:
-                tc = (param.transit_classes
+                tc = (param.simple_transit_classes
                       if param.time_periods[tp] == "TransitAssignmentPeriod"
-                      else param.transport_classes)
+                      else param.simple_transport_classes)
                 with matrixdata.open(
                         "demand", tp, zone_numbers[submodel],
                         transport_classes=tc) as mtx:
@@ -218,8 +220,10 @@ def main(args):
         if long_dist == "calc":
             long_dist_result_paths.append(
                 Path(args.results_path, name, "Matrices", "koko_suomi"))
-    for data_path, submodel, long_dist_forecast, freight_path in zip(
-            forecast_zonedata_paths, args.submodel,
+    model_types = (args.model_types if args.model_types
+                   else ["passenger_transport" for _ in forecast_zonedata_paths])
+    for model_type, data_path, submodel, long_dist_forecast, freight_path in zip(
+            model_types, forecast_zonedata_paths, args.submodel,
             args.long_dist_demand_forecast, args.freight_matrix_paths):
         # Check forecasted zonedata
         if not os.path.exists(data_path):
@@ -227,13 +231,15 @@ def main(args):
                 data_path)
             log.error(msg)
             raise ValueError(msg)
-        forecast_zonedata = ZoneData(
-            Path(data_path), zone_numbers[submodel], submodel)
+        zonedata_args = Path(data_path), zone_numbers[submodel], submodel
+        forecast_zonedata = (FreightZoneData(*zonedata_args)
+                             if model_type == "goods_transport"
+                             else ZoneData(*zonedata_args, car_dist_cost=0.12))
 
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):
             long_dist_classes = (param.car_classes
-                                 + param.long_distance_transit_classes)
+                                 + param.long_dist_simple_classes)
             long_dist_path = Path(long_dist_forecast)
             if long_dist_path not in long_dist_result_paths:
                 long_dist_matrices = MatrixData(long_dist_path)
@@ -268,6 +274,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--log-format",
         choices={"TEXT", "JSON"},
+    )
+    parser.add_argument(
+        "--model-types",
+        type=str,
+        nargs="+",
+        help=("List of scenario model types "
+              + "('passenger_transport'/'goods_transport'/...)")
     )
     parser.add_argument(
         "-o", "--end-assignment-only",
