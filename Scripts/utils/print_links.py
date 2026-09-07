@@ -60,12 +60,11 @@ def attr_type(attr_name, obj):
 def attr_value(attr_name, obj):
     if attr_name == "modes":
         return "".join([mode.id for mode in obj.modes])
-    if attr_name == "line_id":
-        return str(obj.line.id)
-    if attr_name == "link_id":
-        return str(obj.link.id if obj.link is not None else "No link")
-    if attr_name in ["mode", "vehicle", "i_node", "j_node", "modes"]:
-        return str(getattr(obj, attr_name).id)
+    if attr_name in ["mode", "vehicle", "i_node", "j_node", "modes", "line", "link"]:
+        try:
+            return str(getattr(obj, attr_name).id)
+        except AttributeError:
+            return "No link"
     if isinstance(obj[attr_name], np.generic):
         return obj[attr_name].item()
     else:
