@@ -341,10 +341,6 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Link, network.links()),
                 (Segment, network.transit_segments()),
                 (Line, network.transit_lines())):
-            attrs = [attr.name for attr in self.day_scenario.extra_attributes()
-                if attr.type == geom_type.name]
-            attrs += [attr.name for attr in self.day_scenario.network_fields()
-                if attr.type == geom_type.name and attr.atype == "REAL"]
             attrs += geom_type.attrs
             attrs += [attr_name for attr_name in self.day_scenario.attributes(geom_type.name)]
             if geom_type == Link:
