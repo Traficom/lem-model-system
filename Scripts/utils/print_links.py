@@ -23,7 +23,7 @@ class Node(GeometryType):
 class Link(GeometryType):
     name = "LINK"
     geom_type = "LineString"
-    attrs = GeometryType.attrs + ["type",  "num_lanes", "volume_delay_func"]
+    attrs = GeometryType.attrs + ["type",  "num_lanes", "volume_delay_func", "i_node", "j_node", "modes"]
 
     def __new__(cls, link):
         return LineString(link.shape)
@@ -31,6 +31,7 @@ class Link(GeometryType):
 class Line(GeometryType):
     name = "TRANSIT_LINE"
     geom_type = "Point"
+    attrs = GeometryType.attrs + ["mode", "vehicle"]
 
     def __new__(cls, line):
         return Node(next(line.segments()).i_node)
@@ -39,6 +40,7 @@ class Line(GeometryType):
 class Segment(GeometryType):
     name = "TRANSIT_SEGMENT"
     geom_type = "Point"
+    attrs = GeometryType.attrs + ["line_id", "link_id"]
 
     def __new__(cls, segment):
         return Node(segment.i_node)

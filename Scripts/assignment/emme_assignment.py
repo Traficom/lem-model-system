@@ -343,12 +343,6 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Line, network.transit_lines())):
             attrs += geom_type.attrs
             attrs += [attr_name for attr_name in self.day_scenario.attributes(geom_type.name)]
-            if geom_type == Link:
-                attrs += ["i_node", "j_node", "modes"]
-            if geom_type == Segment:
-                attrs += ["line_id", "link_id"]
-            if geom_type == Line:
-                attrs += ["mode", "vehicle"]
             attrs = list(set(attrs))
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
