@@ -602,14 +602,16 @@ mode_impedance = {
     "airpl_car_acc": ["airpl_car_acc"],
     "pt_car_egr": ["pt_car_egr"],
     "pt_taxi_egr": ["pt_taxi_egr"],
-    "airpl_car_egr": ["airpl_car_egr"]
-
+    "airpl_car_egr": ["airpl_car_egr"],
 }
 # Modes in choice model : [assignment classes]
 # If the mode has two assignment classes, demand
 # will be transposed for the second one.
 mode_assignment_classes = {
     "car_drv": ["icev", "bev", "phev"],
+    "icev": ["icev"],
+    "bev": ["bev"],
+    "phev": ["phev"],
     "car_pax": [],
     "transit": ["transit"],
     "airplane": ["airplane"],
