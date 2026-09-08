@@ -26,6 +26,7 @@ import parameters.zone as zone_param
 from utils.validate_assignment import validate_assignment
 
 
+DEMAND_MATRIX_FOLDER = "demand_matrices"
 LOS_MATRIX_FOLDER = "los_matrices"
 
 
@@ -116,7 +117,7 @@ class ModelSystem:
             results_path / "aggregated_results" / submodel)
         self.linkdata = ResultsData(results_path / "link_results")
         self.demand_matrices = MatrixData(
-            results_path / "demand_matrices" / submodel)
+            results_path / DEMAND_MATRIX_FOLDER / submodel)
         self.los_matrices = MatrixData(
             results_path / LOS_MATRIX_FOLDER / submodel)
         parameters_path = Path(__file__).parent / "parameters" / "demand"
