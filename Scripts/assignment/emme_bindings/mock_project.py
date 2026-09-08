@@ -565,12 +565,7 @@ class Scenario:
 
     def attributes(self, obj_type: str):
         names = set() # Add basic attributes here if necessary
-        for attr in self.extra_attributes():
-            if attr.type == obj_type:
-                names.add(attr.name)
-        for attr in self.network_fields():
-            if attr.type == obj_type:
-                names.add(attr.name)
+        names.add("id")
         return list(names)
 
     def extra_attribute(self, idx: str):
