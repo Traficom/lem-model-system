@@ -41,7 +41,7 @@ def main(args):
                                     first_matrix_id=args.first_matrix_id)
     zonedata = FreightZoneData(zone_data_file, ass_model.zone_numbers, "koko_suomi")
     resultdata = ResultsData(result_data_folder)
-    resultmatrices = MatrixData(result_data_folder / "Matrices" / "koko_suomi")
+    resultmatrices = MatrixData(result_data_folder / "demand_matrices" / "koko_suomi")
     costdata = json.loads(cost_data_file.read_text("utf-8"))
     
     # Set foreign purposes and fetch impedances
