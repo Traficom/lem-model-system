@@ -1,7 +1,6 @@
-from typing import Iterable, Tuple
+from typing import Dict, Iterable, Tuple
 from shapely.geometry import Point, LineString
 import numpy as np
-from itertools import tee
 
 class GeometryType:
     name: str
@@ -15,6 +14,7 @@ class GeometryType:
 class Node(GeometryType):
     name = "NODE"
     geom_type = "Point"
+    special_attr_names = []
 
     def __new__(cls, node):
         return Point(node.x, node.y)
@@ -24,6 +24,7 @@ class Link(GeometryType):
     name = "LINK"
     geom_type = "LineString"
     attrs = GeometryType.attrs + ["type",  "num_lanes", "volume_delay_func", "i_node", "j_node", "modes"]
+    special_attr_names = ["i_node", "j_node", "modes"]
 
     def __new__(cls, link):
         return LineString(link.shape)
@@ -32,6 +33,7 @@ class Line(GeometryType):
     name = "TRANSIT_LINE"
     geom_type = "Point"
     attrs = GeometryType.attrs + ["mode", "vehicle"]
+    special_attr_names = ["mode", "vehicle"]
 
     def __new__(cls, line):
         return Node(next(line.segments()).i_node)
@@ -40,46 +42,33 @@ class Line(GeometryType):
 class Segment(GeometryType):
     name = "TRANSIT_SEGMENT"
     geom_type = "Point"
-    attrs = GeometryType.attrs + ["line_id", "link_id"]
+    attrs = GeometryType.attrs + ["line", "link"]
+    special_attr_names = ["line", "link"]
 
     def __new__(cls, segment):
         return Node(segment.i_node)
 
-def attr_type(attr_name, obj):
-    value = attr_value(attr_name, obj)
-    if isinstance(value, (bool, np.bool_)):
-        return "bool"
-    if isinstance(value, (int, np.integer)):
-        return "int"
-    if isinstance(value, (float, np.floating)):
-        return "float"
-    if isinstance(value, str):
-        return "str"
-    raise TypeError(f"Unsupported attribute type: {type(value)}")
-
-def attr_value(attr_name, obj):
-    if attr_name == "modes":
-        return "".join([mode.id for mode in obj.modes])
-    if attr_name in ["mode", "vehicle", "i_node", "j_node", "modes", "line", "link"]:
+def attr_value(attr_name, obj, geom_type):
+    value = getattr(obj, attr_name)
+    if attr_name in geom_type.special_attr_names:
         try:
-            return str(getattr(obj, attr_name).id)
+            return "".join(map(str, value)) if isinstance(value, frozenset) else str(value)
         except AttributeError:
-            return "No link"
-    if isinstance(obj[attr_name], np.generic):
-        return obj[attr_name].item()
-    else:
-        return obj[attr_name]
+            return "None"
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
 
 
-def geometries(attr_names: Iterable[str],
+def geometries(attrs: Dict[str, str],
                objects: Iterable,
                geom_type: GeometryType) -> Tuple[Iterable, dict]:
     """Turn EMME network objects into GeoJSON records.
 
     Parameters
     ----------
-    attr_names : List of str
-        List of extra attributes in network objects
+    attrs : Dict[str, str]
+        Dictionary mapping attribute names to their types
     objects : Iterable
         Iterator over network objects (links or nodes or segments)
     geom_type : GeometryType
@@ -92,20 +81,18 @@ def geometries(attr_names: Iterable[str],
     dict
         Fiona schema of record types
     """
-    objects, objects_for_schema = tee(objects)
-    first_obj = next(iter(objects_for_schema), None)
 
     recs = ({
         "geometry": geom_type(obj),
         "properties": {
             "id": obj.id,
-            **{attr_name.lstrip("@#"): attr_value(attr_name, obj) for attr_name in attr_names},
+            **{attr_name.lstrip("@#"): attr_value(attr_name, obj, geom_type) for attr_name in attrs.keys()},
         }
     } for obj in objects)
     
     schema_properties = {"id": "str"}
-    for attr_name in attr_names:
-            schema_properties[attr_name.lstrip("@#")] = attr_type(attr_name, first_obj)
+    for attr_name, attr_type in attrs.items():
+            schema_properties[attr_name.lstrip("@#")] = attr_type
     schema = {
         "geometry": geom_type.geom_type,
         "properties": schema_properties,

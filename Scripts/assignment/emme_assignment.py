@@ -341,9 +341,10 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Link, network.links()),
                 (Segment, network.transit_segments()),
                 (Line, network.transit_lines())):
-            attrs += geom_type.attrs
-            attrs += [attr_name for attr_name in self.day_scenario.attributes(geom_type.name)]
-            attrs = list(set(attrs))
+            obj = next(objects)
+            attrs = {attr_name: type(getattr(obj, attr_name)).__name__.rstrip("0123456789_")
+                     for attr_name in self.day_scenario.attributes(geom_type.name)}
+            attrs.update({attr_name: "str" for attr_name in geom_type.special_attr_names})
             resultdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")
