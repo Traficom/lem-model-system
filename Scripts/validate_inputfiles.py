@@ -14,6 +14,7 @@ from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData, FreightZoneData
 import parameters.assignment as param
 from valma_travel import BASE_ZONEDATA_FILE
+from valma_travel import LOS_MATRIX_FOLDER
 
 
 def main(args):
@@ -87,8 +88,8 @@ def main(args):
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
-                args.result_data_folder, args.scenario_name[i], "Matrices",
-                args.submodel[i])
+                args.result_data_folder, args.scenario_name[i],
+                LOS_MATRIX_FOLDER, args.submodel[i])
             if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
                     mock_result_path)

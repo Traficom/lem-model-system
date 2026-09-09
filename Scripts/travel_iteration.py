@@ -26,6 +26,10 @@ import parameters.zone as zone_param
 from utils.validate_assignment import validate_assignment
 
 
+DEMAND_MATRIX_FOLDER = "demand_matrices"
+LOS_MATRIX_FOLDER = "los_matrices"
+
+
 class ModelSystem:
     """Object keeping track of all sub-models and tasks in model system.
     
@@ -109,8 +113,13 @@ class ModelSystem:
             ) for model_area in ["domestic"]}
 
         # Output data
-        self.resultdata = ResultsData(results_path)
-        self.resultmatrices = MatrixData(results_path / "Matrices" / submodel)
+        self.resultdata = ResultsData(
+            results_path / "aggregated_results" / submodel)
+        self.linkdata = ResultsData(results_path / "link_results")
+        self.demand_matrices = MatrixData(
+            results_path / DEMAND_MATRIX_FOLDER / submodel)
+        self.los_matrices = MatrixData(
+            results_path / LOS_MATRIX_FOLDER / submodel)
         parameters_path = Path(__file__).parent / "parameters" / "demand"
         foreign_external_path = self.basematrices.path / "ext_foreign_passenger_vrk.omx"
         home_based_purposes = []
@@ -225,7 +234,7 @@ class ModelSystem:
                     matrices_to_add[ass_class] = demand.matrix
             log.info(f"Demand imported from {long_dist_matrices.path}")
         if matrices_to_add:
-            with self.resultmatrices.open(
+            with self.demand_matrices.open(
                     "demand", "vrk", zone_numbers, m='w') as mtx:
                 for ass_class in matrices_to_add:
                     mtx[ass_class] = matrices_to_add[ass_class]
@@ -268,7 +277,7 @@ class ModelSystem:
         self.ass_model.calc_transit_cost(self.transit_cost)
         ZoneData.beeline_dist = self.ass_model.beeline_dist
         if not isinstance(self.ass_model, MockAssignmentModel):
-            with self.resultmatrices.open(
+            with self.los_matrices.open(
                     "beeline", "", self.ass_model.zone_numbers, m="w") as mtx:
                 mtx["all"] = ZoneData.beeline_dist
         for ap in self.ass_model.assignment_periods:
@@ -309,7 +318,7 @@ class ModelSystem:
                     self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if is_end_assignment:
-            self.ass_model.aggregate_results(self.resultdata)
+            self.ass_model.aggregate_results(self.resultdata, self.linkdata)
             self.resultdata.flush()
         return impedance
 
@@ -399,7 +408,7 @@ class ModelSystem:
                     self._save_to_omx(impedance[tp], tp)
                 impedance.clear()
         if iteration=="last":
-            self.ass_model.aggregate_results(self.resultdata)
+            self.ass_model.aggregate_results(self.resultdata, self.linkdata)
             self.resultdata.flush()
         return impedance
 
@@ -410,7 +419,7 @@ class ModelSystem:
         transport_classes = (param.car_classes + param.simple_transit_classes
             if self.ass_model.use_free_flow_speeds
             else ap.assignment_modes)
-        with self.resultmatrices.open("demand", tp, zone_numbers, m='w') as mtx:
+        with self.demand_matrices.open("demand", tp, zone_numbers, m='w') as mtx:
             for ass_class in transport_classes:
                 demand = self.dtm.demand[tp][ass_class]
                 if (self.ass_model.use_free_flow_speeds
@@ -425,7 +434,7 @@ class ModelSystem:
     def _save_to_omx(self, impedance, tp):
         zone_numbers = self.ass_model.zone_numbers
         for mtx_type in impedance:
-            with self.resultmatrices.open(mtx_type, tp, zone_numbers, m='w') as mtx:
+            with self.los_matrices.open(mtx_type, tp, zone_numbers, m='w') as mtx:
                 for ass_class in impedance[mtx_type]:
                     mtx[ass_class] = impedance[mtx_type][ass_class]
 
