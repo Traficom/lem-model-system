@@ -189,16 +189,19 @@ class EmmeAssignmentModel(AssignmentModel):
             "TRANSIT_LINE", param.terminal_cost_attr, "terminal cost",
             overwrite=True, scenario=self.mod_scenario)
         self.emme_project.create_extra_attribute(
+            "TRANSIT_LINE", param.freight_time_perception_attr,
+            "freight time perception",
+            overwrite=True, scenario=self.mod_scenario)
+        self.emme_project.create_extra_attribute(
             "LINK", param.aux_commodity_flow_attr, "commodity flow",
             overwrite=True, scenario=self.mod_scenario)
         self.emme_project.create_extra_attribute(
             "TRANSIT_SEGMENT", param.commodity_flow_attr, "commodity flow",
             overwrite=True, scenario=self.mod_scenario)
-        for ass_class in param.freight_modes.values():
-            for attr in ass_class.values():
-                self.emme_project.create_extra_attribute(
-                    "TRANSIT_LINE", attr, "terminal cost",
-                    overwrite=True, scenario=self.mod_scenario)
+        for attr in param.terminal_change_attrs.values():
+            self.emme_project.create_extra_attribute(
+                "TRANSIT_LINE", attr, "terminal cost",
+                overwrite=True, scenario=self.mod_scenario)
         self._create_attributes(
             self.mod_scenario,
             list(param.truck_classes) + list(param.freight_modes),
@@ -249,15 +252,15 @@ class EmmeAssignmentModel(AssignmentModel):
         return numpy.sqrt(
             sum((xy[:, axis] - xy[:, axis, None])**2 for axis in (0, 1)))
 
-    def aggregate_results(self, resultdata: ResultsData):
+    def aggregate_results(self, resultdata: ResultsData, linkdata: ResultsData):
         """Aggregate results to 24h and print vehicle kms.
 
         Parameters
         ----------
         resultdata : datahandling.resultdata.Resultdata
             Result data container to print to
-        mapping : pandas.Series
-            Mapping between municipality and county
+        linkdata : datahandling.resultdata.Resultdata
+            Link data container to print to
         """
         car_times = pandas.DataFrame(
             {ap.netfield("car_time"): ap.get_car_times()
@@ -336,7 +339,7 @@ class EmmeAssignmentModel(AssignmentModel):
         resultdata.print_data(linklengths, "link_lengths.txt")
 
         # Export link, node and segnment extra attributes to GeoPackage file
-        fname = "assignment_results.gpkg"
+        fname = f"assignment_results_{self.submodel}.gpkg"
         for geom_type, objects in (
                 (Node, network.nodes()),
                 (Link, network.links()),
@@ -347,7 +350,7 @@ class EmmeAssignmentModel(AssignmentModel):
             attrs = {attr_name: type(getattr(obj, attr_name)).__name__.rstrip("0123456789_")
                      for attr_name in self.day_scenario.attributes(geom_type.name)}
             attrs.update({attr_name: "str" for attr_name in geom_type.special_attr_names})
-            resultdata.print_gpkg(
+            linkdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")
 

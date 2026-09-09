@@ -14,6 +14,7 @@ from datahandling.matrixdata import MatrixData
 from datahandling.zonedata import ZoneData, FreightZoneData
 import parameters.assignment as param
 from valma_travel import BASE_ZONEDATA_FILE
+from valma_travel import LOS_MATRIX_FOLDER
 
 
 def main(args):
@@ -87,8 +88,8 @@ def main(args):
         # Check network
         if args.do_not_use_emme:
             mock_result_path = Path(
-                args.result_data_folder, args.scenario_name[i], "Matrices",
-                args.submodel[i])
+                args.result_data_folder, args.scenario_name[i],
+                LOS_MATRIX_FOLDER, args.submodel[i])
             if not mock_result_path.exists():
                 msg = "Mock Results directory {} does not exist.".format(
                     mock_result_path)
@@ -223,6 +224,7 @@ def main(args):
                 Path(args.result_data_folder, name, "Matrices", "koko_suomi"))
     model_types = (args.model_types if args.model_types
                    else ["passenger_transport" for _ in zone_data_files])
+    electric_car_share = {"default": {"bev": 0.1, "phev": 0.2}}
     for i, (model_type, data_path, submodel, long_dist_forecast, freight_path) in enumerate(zip(
             model_types, zone_data_files, args.submodel,
             args.long_dist_demand_forecast, args.freight_matrix_paths)):
@@ -235,7 +237,9 @@ def main(args):
         zonedata_args = Path(data_path), zone_numbers[submodel], submodel
         forecast_zonedata = (FreightZoneData(*zonedata_args)
                              if model_type == "goods_transport"
-                             else ZoneData(*zonedata_args, car_dist_cost=0.12))
+                             else ZoneData(
+                                 *zonedata_args, car_dist_cost=0.12,
+                                 electric_car_share=electric_car_share))
 
         # Check long-distance base matrices
         if long_dist_forecast not in ("calc", "base"):

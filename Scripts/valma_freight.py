@@ -20,6 +20,7 @@ from utils.freight_utils import (
 )
 from datahandling.traversaldata import transform_traversal_data
 from parameters.commodity import commodity_conversion
+from travel_iteration import DEMAND_MATRIX_FOLDER
 
 
 def main(args):
@@ -41,7 +42,8 @@ def main(args):
                                     first_matrix_id=args.first_matrix_id)
     zonedata = FreightZoneData(zone_data_file, ass_model.zone_numbers, "koko_suomi")
     resultdata = ResultsData(result_data_folder)
-    resultmatrices = MatrixData(result_data_folder / "Matrices" / "koko_suomi")
+    resultmatrices = MatrixData(
+        result_data_folder / DEMAND_MATRIX_FOLDER / "koko_suomi")
     costdata = json.loads(cost_data_file.read_text("utf-8"))
     
     # Set foreign purposes and fetch impedances
@@ -87,7 +89,13 @@ def main(args):
             store_demand.store(mode, demand[mode], omx_filename, commodity.name)
         if commodity.name in args.specify_commodity_names:
             ass_model.freight_network.save_network_volumes(commodity.name)
-        
+        for mode in impedance:
+            dist = 0
+            for imp_type in impedance[mode]:
+                if "dist" in imp_type:
+                    dist += impedance[mode][imp_type]
+            if isinstance(dist, numpy.ndarray):
+                impedance[mode]["dist"] = dist
         if "truck" in demand:
             # Calc aux tons and transform tons to vehicles
             ass_model.freight_network.output_traversal_matrix(set(demand), resultdata.path)
