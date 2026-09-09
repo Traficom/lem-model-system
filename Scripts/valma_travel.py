@@ -8,7 +8,7 @@ import utils.log as log
 from assignment.emme_assignment import EmmeAssignmentModel
 from assignment.mock_assignment import MockAssignmentModel
 from assignment.assignment_period import AssignmentPeriod
-from travel_iteration import ModelSystem
+from travel_iteration import ModelSystem, LOS_MATRIX_FOLDER, DEMAND_MATRIX_FOLDER
 from datahandling.matrixdata import MatrixData
 
 
@@ -30,7 +30,7 @@ def main(args):
         raise ArgumentTypeError(
             "Iteration number {} not valid".format(args.iterations))
     base_zonedata_path = Path(args.base_data_folder, BASE_ZONEDATA_FILE)
-    base_matrices_path = Path(args.base_data_folder, "Matrices")
+    base_matrices_path = Path(args.base_data_folder, DEMAND_MATRIX_FOLDER)
     freight_matrices_path = (Path(args.freight_matrix_path)
         if args.freight_matrix_path is not None else None)
     zone_data_file = Path(args.zone_data_file)
@@ -73,7 +73,7 @@ def main(args):
         kwargs["time_periods"] = {"vrk": "WholeDayPeriod"}
     if args.do_not_use_emme:
         log.info("Initializing MockAssignmentModel...")
-        mock_result_path = result_data_folder / "Matrices" / args.submodel
+        mock_result_path = result_data_folder / LOS_MATRIX_FOLDER / args.submodel
         if not mock_result_path.is_dir():
             raise NameError(
                 "Mock Results directory {} does not exist.".format(
