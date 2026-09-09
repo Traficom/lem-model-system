@@ -5,7 +5,6 @@ import numpy as np
 class GeometryType:
     name: str
     geom_type: str
-    attrs = ["data1", "data2", "data3"]
 
     def __new__(cls, obj):
         pass
@@ -23,7 +22,6 @@ class Node(GeometryType):
 class Link(GeometryType):
     name = "LINK"
     geom_type = "LineString"
-    attrs = GeometryType.attrs + ["type",  "num_lanes", "volume_delay_func", "i_node", "j_node", "modes"]
     special_attr_names = ["i_node", "j_node", "modes"]
 
     def __new__(cls, link):
@@ -32,7 +30,6 @@ class Link(GeometryType):
 class Line(GeometryType):
     name = "TRANSIT_LINE"
     geom_type = "Point"
-    attrs = GeometryType.attrs + ["mode", "vehicle"]
     special_attr_names = ["mode", "vehicle"]
 
     def __new__(cls, line):
@@ -42,7 +39,6 @@ class Line(GeometryType):
 class Segment(GeometryType):
     name = "TRANSIT_SEGMENT"
     geom_type = "Point"
-    attrs = GeometryType.attrs + ["line", "link"]
     special_attr_names = ["line", "link"]
 
     def __new__(cls, segment):
