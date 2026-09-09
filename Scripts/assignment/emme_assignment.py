@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, Optional, cast, Iterable
 from collections import defaultdict
 from pathlib import Path
+from itertools import chain
 import numpy
 import pandas
 from math import log10
@@ -342,6 +343,7 @@ class EmmeAssignmentModel(AssignmentModel):
                 (Segment, network.transit_segments()),
                 (Line, network.transit_lines())):
             obj = next(objects)
+            objects = chain([obj], objects)
             attrs = {attr_name: type(getattr(obj, attr_name)).__name__.rstrip("0123456789_")
                      for attr_name in self.day_scenario.attributes(geom_type.name)}
             attrs.update({attr_name: "str" for attr_name in geom_type.special_attr_names})
