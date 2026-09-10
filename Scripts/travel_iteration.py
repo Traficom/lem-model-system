@@ -215,7 +215,7 @@ class ModelSystem:
                 for mode_demand in purpose.calc_demand(
                         previous_iter_impedance, is_last_iteration):
                     self.dtm.add_demand(mode_demand)
-                    if is_last_iteration:
+                    if is_last_iteration and self.ass_model.use_free_flow_speeds:
                         if mode_demand.mode in self.daily_matrices:
                             self.daily_matrices[mode_demand.mode] += mode_demand.matrix
                         else:
@@ -379,7 +379,7 @@ class ModelSystem:
                 self._save_demand_to_omx(ap)
 
         # Save daily demand matrices
-        if iteration == "last":
+        if iteration == "last" and self.ass_model.use_free_flow_speeds:
             for mode in self.daily_matrices:
                 self.daily_matrices[mode] += self.daily_matrices[mode].T # Convert from tours to trips
             with self.demand_matrices.open(
