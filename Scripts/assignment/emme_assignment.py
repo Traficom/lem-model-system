@@ -2,12 +2,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Tuple, Union, Optional, cast, Iterable
 from collections import defaultdict
 from pathlib import Path
+from itertools import chain
 import numpy
 import pandas
 from math import log10
 
 import utils.log as log
-from utils.print_links import geometries, Node, Link, Segment
+from utils.print_links import geometries, Node, Link, Line, Segment
 import utils.sum_24h as sum24
 import parameters.assignment as param
 from assignment.abstract_assignment import AssignmentModel
@@ -342,12 +343,13 @@ class EmmeAssignmentModel(AssignmentModel):
         for geom_type, objects in (
                 (Node, network.nodes()),
                 (Link, network.links()),
-                (Segment, network.transit_segments())):
-            attrs = [attr.name for attr in self.day_scenario.extra_attributes()
-                if attr.type == geom_type.name]
-            attrs += [attr.name for attr in self.day_scenario.network_fields()
-                if attr.type == geom_type.name and attr.atype == "REAL"]
-            attrs += geom_type.attrs
+                (Segment, network.transit_segments()),
+                (Line, network.transit_lines())):
+            obj = next(objects)
+            objects = chain([obj], objects)
+            attrs = {attr_name: type(getattr(obj, attr_name)).__name__.rstrip("0123456789_")
+                     for attr_name in self.day_scenario.attributes(geom_type.name)}
+            attrs.update({attr_name: "str" for attr_name in geom_type.special_attr_names})
             linkdata.print_gpkg(
                 *geometries(attrs, objects, geom_type), fname, geom_type.name)
         log.info(f"EMME extra attributes exported to file {fname}")
