@@ -553,9 +553,4 @@ class ModelSystem:
     def _distribute_tours(self, container, purpose, mode, impedance, origs):
         for orig in origs:
             demand = purpose.distribute_tours(mode, impedance[mode], orig)
-            if not self.ass_model.use_free_flow_speeds:
-                if demand.mode in self.daily_matrices:
-                    self.daily_matrices[demand.mode] += demand.matrix
-                else:
-                    self.daily_matrices[demand.mode] = demand.matrix
             container.add_demand(demand)
