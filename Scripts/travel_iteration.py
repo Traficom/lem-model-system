@@ -197,6 +197,7 @@ class ModelSystem:
             If this is the last iteration, 
             secondary destinations are calculated for all modes
         """
+        daily_matrices = {}
         log.info("Demand calculation started...")
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
@@ -214,8 +215,22 @@ class ModelSystem:
                 for mode_demand in purpose.calc_demand(
                         previous_iter_impedance, is_last_iteration):
                     self.dtm.add_demand(mode_demand)
+                    if is_last_iteration and not self.ass_model.use_free_flow_speeds:
+                        if mode_demand.mode in daily_matrices:
+                            daily_matrices[mode_demand.mode] += mode_demand.matrix
+                        else:
+                            daily_matrices[mode_demand.mode] = mode_demand.matrix
         previous_iter_impedance.clear()
         log.info("Demand calculation completed")
+
+        # Save daily demand matrices
+        if is_last_iteration and not self.ass_model.use_free_flow_speeds:
+            for mode in daily_matrices:
+                daily_matrices[mode] += daily_matrices[mode].T # Convert from tours to trips
+            with self.demand_matrices.open(
+                    "demand", "vrk", self.zone_numbers, m='w') as mtx:
+                for mode in daily_matrices:
+                    mtx[mode] = daily_matrices[mode]
 
     def _add_external_demand(self,
                              long_dist_matrices: MatrixData,
