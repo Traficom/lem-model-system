@@ -170,7 +170,6 @@ class ModelSystem:
         self.external_purpose = ExternalPurpose(numpy.array(self.zone_numbers))
         self.mode_share: List[Dict[str,Any]] = []
         self.convergence = []
-        self.daily_matrices = {}
 
     def _init_demand_model(self, tour_purposes: List[TourPurpose]):
         return DemandModel(
@@ -198,6 +197,7 @@ class ModelSystem:
             If this is the last iteration, 
             secondary destinations are calculated for all modes
         """
+        daily_matrices = {}
         log.info("Demand calculation started...")
         for purpose in self.dm.tour_purposes:
             if isinstance(purpose, SecDestPurpose):
@@ -216,12 +216,21 @@ class ModelSystem:
                         previous_iter_impedance, is_last_iteration):
                     self.dtm.add_demand(mode_demand)
                     if is_last_iteration and not self.ass_model.use_free_flow_speeds:
-                        if mode_demand.mode in self.daily_matrices:
-                            self.daily_matrices[mode_demand.mode] += mode_demand.matrix
+                        if mode_demand.mode in daily_matrices:
+                            daily_matrices[mode_demand.mode] += mode_demand.matrix
                         else:
-                            self.daily_matrices[mode_demand.mode] = mode_demand.matrix
+                            daily_matrices[mode_demand.mode] = mode_demand.matrix
         previous_iter_impedance.clear()
         log.info("Demand calculation completed")
+
+        # Save daily demand matrices
+        if is_last_iteration and not self.ass_model.use_free_flow_speeds:
+            for mode in daily_matrices:
+                daily_matrices[mode] += daily_matrices[mode].T # Convert from tours to trips
+            with self.demand_matrices.open(
+                    "demand", "vrk", self.zone_numbers, m='w') as mtx:
+                for mode in daily_matrices:
+                    mtx[mode] = daily_matrices[mode]
 
     def _add_external_demand(self,
                              long_dist_matrices: MatrixData,
@@ -377,15 +386,6 @@ class ModelSystem:
             if (iteration=="last"
                     and not isinstance(self.ass_model, MockAssignmentModel)):
                 self._save_demand_to_omx(ap)
-
-        # Save daily demand matrices
-        if iteration == "last" and not self.ass_model.use_free_flow_speeds:
-            for mode in self.daily_matrices:
-                self.daily_matrices[mode] += self.daily_matrices[mode].T # Convert from tours to trips
-            with self.demand_matrices.open(
-                    "demand", "vrk", self.zone_numbers, m='w') as mtx:
-                for mode in self.daily_matrices:
-                    mtx[mode] = self.daily_matrices[mode]
 
         # Log mode shares
         is_in_submodel = zd.is_in_submodel
